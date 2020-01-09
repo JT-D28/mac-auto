@@ -175,7 +175,7 @@ LOGGING = {
 
    'class': 'logging.FileHandler',
 
-   'filename': 'F:\WorkSpace\ME2/monitor.log',
+   'filename': '../monitor.log',
 
    'formatter': 'verbose'
 

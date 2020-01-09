@@ -20,7 +20,6 @@ from . import views
 from manager import views as mv
 
 urlpatterns = [
-    path('login/',views.login),
-
+   # path('login/',views.login),
 
 ]

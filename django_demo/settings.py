@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
-BASE_URL='http://10.60.44.59:18005'
+BASE_URL='http://127.0.0.1'
 ##Redis配置
 REDIS_HOST='10.60.44.59'
 REDIS_PORT=6379
@@ -75,7 +75,7 @@ ROOT_URLCONF = 'django_demo.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR,'login/template'),os.path.join(BASE_DIR,'manager/template')],
+        'DIRS': [os.path.join(BASE_DIR,'login/template'),os.path.join(BASE_DIR,'manager/template'),os.path.join(BASE_DIR,'homepage/template')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

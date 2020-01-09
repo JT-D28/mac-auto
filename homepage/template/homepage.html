@@ -1,0 +1,259 @@
+{% load static %}
+<!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>首页</title>
+        <link rel="stylesheet" type="text/css" href="{% static 'homepage/layui/css/layui.css' %}">
+        <script type="text/javascript" src="https://assets.pyecharts.org/assets/echarts.min.js"></script>
+    </head>
+
+
+
+    <body>
+
+
+  <div class="layui-row">
+      <div class="layui-col-xs5">
+          <form class="layui-form" action="">
+              <div class="layui-form-item" style="margin-bottom: 3px;margin-top: 3px">
+                  <label class="layui-form-label">选择项目:</label>
+                  <div class="layui-input-block">
+                      <select name="city" lay-filter="test" lay-verify="required">
+                          <option value="0">全部</option>
+                      </select>
+                  </div>
+              </div>
+          </form>
+    </div>
+{#    <div class="layui-col-xs3" style="margin-bottom: 3px;margin-top: 3px">#}
+{#       <button id='projectset' class="layui-btn layui-btn-radius layui-btn-primary layui-icon layui-icon-set" style="font-size: 30px; color: #1E9FFF;border: 0px"></button>#}
+{#    </div>#}
+  </div>
+<hr style="margin: 0"  color=#987cb9 SIZE=1>
+
+
+
+
+        <table id="jacoco">
+            <div class="layui-row">
+                <div class="layui-col-md8">
+                    <div class="layui-col-md6">
+                        <div class="layui-card">
+                            <div class="layui-card-header">代码覆盖率统计
+                                <button id='jacocoset' class="layui-btn layui-btn-radius layui-btn-primary layui-icon layui-icon-set" style="font-size: 30px; color: #1E9FFF;float: right;border: 0px"></button>
+                                <button id='jacocoedit' class="layui-btn layui-btn-radius layui-btn-primary layui-icon layui-icon-edit" style="font-size: 30px; color: #1E9FFF;float: right;border: 0px"></button>
+                            </div>
+                            <div class="layui-card-body">
+                                <div id="bar" style="width:300px; height:200px;"></div>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </table>
+
+
+
+
+        <form id='addhtml' hidden style="padding:10px;">
+          <div class="layui-form-item">
+            <label class="layui-form-label">jenkins地址</label>
+            <div class="layui-input-block">
+              <input type="text" name="jenkinsurl" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+          </div>
+          <div class="layui-form-item">
+            <label class="layui-form-label">job名称</label>
+            <div class="layui-input-block">
+              <input type="text" name="jobname" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+          </div>
+              <div class="layui-form-item">
+            <label class="layui-form-label">服务名称</label>
+            <div class="layui-input-block">
+              <input type="text" name="servicename" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+          </div>
+        </form>
+
+
+
+<script src="{% static 'homepage/layui/layui.js' %}"></script>
+  <script src="{% static 'homepage/js/jquery.min.js' %}"></script>
+<script src="{% static 'homepage/js/utils.js' %}"></script>
+<script type="text/javascript">
+layui.use(['layer','table','form'], function(){
+  var table = layui.table;
+  var layer=layui.layer;
+  var form=layui.form;
+  var $=layui.jquery;
+
+  success2=function(data){
+      console.log('函数列表信息=>'+data)
+      data=JSON.parse(data)
+      data=data.data
+      console.log(data)
+      for(var index=0;index<data.length;index++){
+        $("[name='city']").append("<option value='"+data[index]['servicename']+"'>"+data[index]['servicename']+"</option>")
+      }
+      layui.form.render('select')
+    }
+   _post('/manager/queryservice/',{},success2)
+
+
+
+
+    form.on('select(test)', function(data){
+      console.log(data.value);
+    });
+{#    var chart = echarts.init(document.getElementById('bar'), 'white', {renderer: 'canvas'});#}
+{#        $(function () {#}
+{#            fetchData(chart);#}
+{#        });#}
+{#        function fetchData() {#}
+{#            $.ajax({#}
+{#                type: "GET",#}
+{#                url: "/manager/charttest/",#}
+{#                dataType: 'json',#}
+{#                success: function (result) {#}
+{#                    chart.setOption(result.data);#}
+{#                }#}
+{#            });#}
+{#        }#}
+
+$('#projectset').click(
+    function () {
+
+        layui.form.render()
+        layer.open({
+            type : 1,
+            title : "jenkins配置",
+            content: $('#addhtml'),
+            area: ['600px', '300px'],
+            offset: 'auto',
+            closeBtn: 2,
+            shade: [0.1, '#393D49'],
+            shadeClose  :true,
+            btn: ['确认', '取消'],
+                yes: function(index, layero){
+                    layer.close(index)
+                    $.ajax({
+                        url:"/manager/jacoco_add/",
+                        data:{
+                            'jenkinsurl':$("[name='jenkinsurl']").val(),
+                            'jobname':$("[name='jobname']").val(),
+                            'servicename':$("[name='servicename']").val()
+                        },
+                        type:"Post",
+                        beforeSend:function(){
+                            layui.use(['layer'], function(){
+                                loadIndex = layer.load(1, {
+                                    shade: [0.1, '#393D49'],
+                                });
+                            })
+                        },
+                        complete:function(XMLHttpRequest,status){
+                            layui.use(['layer'], function(){
+                                layer.close(loadIndex);
+                            })
+                        },
+                        dataType:"json",
+                        success:function(e){
+                            e=JSON.parse(e)
+                            if(e.code==0){
+                            layer.alert(e.msg,{icon:1,time:3000})
+                            }else
+                                layer.alert(e.msg,{icon:5,time:3000})
+                        },
+                        error:function(e){
+                            layer.alert(e.msg,{icon:5,time:3000})
+                        }
+                    });
+                },
+                btn2: function(index, layero){
+                    layer.close(index)
+                },
+                cancel: function(index, layero){
+                    layer.close(index)
+                }
+        })
+
+
+    }
+);
+
+
+
+
+$('#jacocoedit').click(
+    function () {
+
+        layui.form.render()
+        layer.open({
+            type : 1,
+            title : "jenkins编辑",
+            content: $('#addhtml'),
+            area: ['600px', '300px'],
+            offset: 'auto',
+            closeBtn: 2,
+            shade: [0.1, '#393D49'],
+            shadeClose  :true,
+            btn: ['确认', '取消'],
+                yes: function(index, layero){
+                    layer.close(index)
+                    $.ajax({
+                        url:"/manager/jacoco_add/",
+                        data:{
+                            'jenkinsurl':$("[name='jenkinsurl']").val(),
+                            'jobname':$("[name='jobname']").val(),
+                            'servicename':$("[name='servicename']").val()
+                        },
+                        type:"Post",
+                        beforeSend:function(){
+                            layui.use(['layer'], function(){
+                                loadIndex = layer.load(1, {
+                                    shade: [0.1, '#393D49'],
+                                });
+                            })
+                        },
+                        complete:function(XMLHttpRequest,status){
+                            layui.use(['layer'], function(){
+                                layer.close(loadIndex);
+                            })
+                        },
+                        dataType:"json",
+                        success:function(e){
+                            e=JSON.parse(e)
+                            if(e.code==0){
+                                layer.close(loadIndex);
+                                layer.alert(e.msg,{icon:1,time:3000})
+                            }else
+                                layer.alert(e.msg,{icon:5,time:3000})
+                        },
+                        error:function(e){
+                            layer.alert(e.msg,{icon:5,time:3000})
+                        }
+                    });
+                },
+                btn2: function(index, layero){
+                    layer.close(index)
+                },
+                cancel: function(index, layero){
+                    layer.close(index)
+                }
+        })
+
+
+    }
+)
+
+
+
+
+});
+</script>
+
+    </body>
+    </html>

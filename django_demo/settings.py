@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'captcha',
     'channels',
     'corsheaders',
+    'homepage',
     # 'django_crontab',
 ]
 

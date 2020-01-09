@@ -1128,7 +1128,7 @@ def queryfunc(request):
 		res=list(Function.objects.all())
 
 	##
-	res=res+getbuiltin()
+	res=res+getbuiltin(searchvalue)
 	limit=request.GET.get('limit')
 	page=request.GET.get('page')
 	res,total=getpagedata(res, page, limit)

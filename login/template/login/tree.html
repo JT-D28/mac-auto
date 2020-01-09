@@ -1,0 +1,87 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>树组件</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'manager/ztree/zTreeStyle.css' %}">  
+<!--   <link rel="stylesheet" type="text/css" href="{% static 'manager/ztree/demo.css' %}"> -->
+  <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+  <style type="text/css">
+  .ztree li span.button.add {margin-left:2px; margin-right: -1px; background-position:-144px 0; vertical-align:top; *vertical-align:middle}
+
+  .ztree li span.button.diy01_ico_open, .ztree li span.button.diy01_ico_close{margin-right:2px; background: url(../../static/manager/ztree/img/diy/1_open.png) no-repeat scroll 0 0 transparent; vertical-align:top; *vertical-align:middle}
+  .ztree li span.button.diy02_ico_docu{margin-right:2px; background: url(../../static/manager/ztree/img/diy/2.png) no-repeat scroll 0 0 transparent; vertical-align:top; *vertical-align:middle}
+
+  .ztree li span.button.diy03_ico_docu{margin-right:2px; background: url(../../static/manager/ztree/img/diy/3.png) no-repeat scroll 0 0 transparent; vertical-align:top; *vertical-align:middle}
+
+  .fa{
+
+    color:#FF6699;
+  }
+
+  .fa.fa-file-code-o{
+    color:#c2c2c2;
+  }
+  .fa.fa-database{
+    color:#c2c2c2;
+  }
+  .fa.fa-home{
+    color:#3399FF;
+  }
+  .fa.fa-folder{
+    color:#FFCC66;
+  
+  }
+
+  .fa.fa-folder-open{
+    color:#FFCC66;
+  }
+
+  .fa.fa-info{
+    color:#FF0033;
+  }
+  .fa.fa-facebook{
+    color: #FF9999;
+
+  }
+
+
+
+  </style>
+</head>
+<body>
+
+
+
+
+<div class="layui-container">  
+  <div class="layui-row">
+    <div class="layui-col-md4" style="border: 0px solid red;">
+      <ul id="case-manager" class="ztree"></ul>
+
+    </div>
+
+    <div class="layui-col-md7">
+      <hr  style="height:600px;width:1px;margin-top:2px;margin-bottom:10px;margin-right: 10px;">
+      <div id='fuzu'></div>
+    </div>
+  </div>
+
+
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+<script src="{% static 'manager/js/mytree.js' %}"></script>
+<script src="{% static 'manager/ztree/jquery.ztree.all.min.js' %}"></script>
+<!-- <script src="{% static 'manager/ztree/jquery.ztree.core.min.js' %}"></script> -->
+<script src="{% static 'manager/ztree/jquery.ztree.core.js' %}"></script>
+<script src="{% static 'manager/ztree/jquery.ztree.excheck.min.js' %}"></script>
+<script src="{% static 'manager/ztree/jquery.ztree.exedit.min.js' %}"></script>
+<script type="text/javascript">
+tree.init()
+
+</script>
+</body>
+</html>

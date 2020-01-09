@@ -1,0 +1,185 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+
+    <title>步骤管理</title>
+    <style type="text/css">
+
+      .layui-table-cell {
+      height: inherit;
+      }
+            
+      .layui-icon:hover{
+        cursor: pointer;
+      }
+
+      #adddata:hover{
+        cursor: pointer;
+        color:#009688;
+
+      }
+      #deldata:hover{
+        cursor: pointer;
+        color: #009688;
+
+      }
+      #copydata:hover{
+        cursor: pointer;
+        color:#009688;
+      }
+
+
+      .required::after{
+      content:'*';
+      position:absolute;
+      right: :2px;
+      top:0;
+      color:red;
+      }
+    </style>
+
+
+</head>
+<form id='addbusiness' class='layui-form' style="padding:10px;">
+  <span>业务数据</span>
+
+  <div class="layui-form-item ">
+    <label class="layui-form-label required">测试点</label>
+    <div class="layui-input-block">
+      <input type="text" name="businessname" placeholder="请输入" autocomplete="off" class="layui-input" lay-verify="required">
+    </div>
+  </div>
+
+    <div class="layui-form-item ">
+    <label class="layui-form-label">前置操作</label>
+    <div class="layui-input-block">
+      <input type="text" id='pre' name="pre" placeholder="请输入" autocomplete="off" class="layui-input" lay-verify="required">
+    </div>
+  </div>
+
+    <div class="layui-form-item ">
+    <label class="layui-form-label ">后置操作</label>
+    <div class="layui-input-block">
+      <input type="text" id='post' name="post" placeholder="请输入" autocomplete="off" class="layui-input" lay-verify="required">
+    </div>
+  </div>
+  <div class="layui-form-item ">
+    <label class="layui-form-label required">接口校验</label>
+    <div class="layui-input-block">
+      <input type="text" id='itf_check' name="itf_check" placeholder="请输入" autocomplete="off" class="layui-input" lay-verify="required">
+    </div>
+  </div>
+  <div class="layui-form-item ">
+    <label class="layui-form-label required">DB校验</label>
+    <div class="layui-input-block">
+      <input type="text" id='db_check' name="db_check" placeholder="请输入" autocomplete="off" class="layui-input" lay-verify="required">
+    </div>
+  </div>
+  <div class="layui-form-item ">
+    <label class="layui-form-label required">参数信息</label>
+    <div class="layui-input-block">
+      <textarea name="params" id='params' placeholder="接口时输入json字符串 函数时直接输入参数,多个时,分隔" autocomplete="off" class="layui-textarea" lay-verify="required"  style="min-height:140px!important;"></textarea>
+    </div>
+  </div>
+  <button class="layui-btn" id='save' style="visibility:hidden;">保存</button>
+</form>
+<body>
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+<script type="text/javascript">
+
+
+layui.use(['table','element','form'],function(){
+
+  var table = layui.table;
+  var $=layui.jquery
+  var layer=layui.layer;
+  var form=layui.form
+  uid=_get_query_param('uid')
+  pid=_get_query_param('pid')
+  action=_get_query_param('action')
+  detail='addbusiness'
+  if(action!='view')
+    $('#save').css('visibility','visible')
+  else
+    $('#save').css('visibility','hidden')
+
+  // alert(uid)
+
+  if(uid){
+    detail='editbusiness'
+    success=function(d){
+      data=d.data[0]
+      $("[name='businessname']").val(data['businessname'])
+      $("[name='itf_check']").val(data['itf_check'])
+      $("[name='db_check']").val(data['db_check'])
+      $("[name='params']").val(data['params'])
+      $("[name='pre']").val(data['preposition'])
+      $("[name='post']").val(data['postposition'])
+
+    };
+    _post('/manager/queryonebusiness/',{'vid':uid},success);
+
+  }
+
+
+  //save
+
+  btn=$('#save')
+  if(btn)btn.bind('click',function(){
+    data={
+      'uid':uid,
+      'pid':pid,
+      'action':detail,
+      'businessname':$("[name='businessname']").val(),
+      'itf_check':$("[name='itf_check']").val(),
+      'db_check':$("[name='db_check']").val(),
+      'params':$("[name='params']").val(),
+      'preposition':$("[name='pre']").val(),
+      'postposition':$("[name='post']").val(),
+
+    }
+    _post('/manager/treecontrol/',data,function(e){
+      if(e.code==0){
+        layer.alert(e.msg,{icon:1,time:2000})
+
+            var treeObj = parent.$.fn.zTree.getZTreeObj('case-manager');
+
+            if(detail=='addbusiness'){
+              var node = treeObj.getNodeByParam('id',pid); 
+              console.log('addbusiness=>'+JSON.stringify(e.data)) 
+              treeObj.addNodes(node,e.data);
+              treeObj.expandNode(node,true)
+
+            }else{
+              var node = treeObj.getNodeByParam('id',uid);
+              // console.log('search tid '+utid+'=>'+node)
+              node.name=e.data['name']
+              treeObj.updateNode(node)
+
+            }
+
+        
+      }
+      else
+        layer.alert(e.msg,{icon:2})
+
+
+    });
+
+    return false;
+
+
+
+
+  });
+
+})
+
+</script>
+
+</html>

@@ -1,0 +1,85 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>任务详情</title>
+<meta name="description" content="">
+<meta name="keywords" content="">
+<link href="" rel="stylesheet">
+<style type="text/css">
+
+body{
+	font-family: Microsoft YaHei
+}
+.success{
+	color:#009933;
+}
+.fail{
+	color:#FF0033;
+}
+.skip{
+	color:#FF9900;
+}
+.error{
+	color:#FF00FF;
+}
+
+table{
+	width: 95%;
+	margin:auto;
+}
+th{
+	background-color:#3399CC;
+	color:#FFFFFF;
+}
+td{
+	background-color:#EEEEEE;
+	text-align: center;
+}
+
+</style>
+</head>
+<body>
+<h2 style="text-align: center;">[{{detail.planname}}]接口测试报告</h2>
+<!-- <p style="color:blue;">计划名[{{detail.planname}}-{{detail.taskid}}]</p> -->
+<p class='attribute'><strong>测试结果</strong></p>
+<table>
+	<tr><th>#Samples</th><th>Failures</th><th>Success Rate</th><th>Average Time</th><th>Min Time</th><th>Max Time</th></tr>
+	<tr>
+		<td>{{detail.total}}</td>
+		<td>{{detail.fail}}</td>
+		<td>{{detail.success_rate}}</td>
+		<td>{{detail.average}}</td>
+		<td>{{detail.min}}</td>
+		<td>{{detail.max}}</td></tr>
+</table>
+
+<strong>测试详情</strong>
+{% for case in detail.cases %}
+<p style="text-indent:2em;" >用例名[{{case.caseorder}}-{{case.casename}}]</p>
+<table>
+<tr><th>执行序号</th><th>结果</th><th>耗时(ms)</th><th>步骤名称</th><th>业务名称</th><th>api</th><th>接口验证</th><th>数据验证</th><th>消息</th></tr>
+ {% for step in case.steps %}
+ <tr>
+ 	<td style="width:100px;">{{step.num}}</td>
+ 	<td style="width:100px;" class='{{step.result}}'>{{step.result}}</td>
+ 	<td style="width:100px;">{{step.spend}}</td>
+ 	<td style="width:200px;" title="{{step.stepname}}">{{step.stepname}}</td>
+ 	<td style="width:200px;" title="{{step.businessname}}">{{step.businessname}}</td>
+	<td style="width:200px;">{{step.api}}</td>
+ 	<td style="width:100px;">{{step.itf_check}}</td>
+ 	<td style="width:100px;">{{step.db_check}}</td>
+ 	<td>{{step.error}}</td>
+ </tr>
+
+ {% endfor %}
+</table>
+
+{% endfor %}
+
+
+    
+</body>
+</html>

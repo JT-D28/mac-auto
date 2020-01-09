@@ -1,0 +1,225 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>账号注册</title>
+<meta name="description" content="">
+<meta name="keywords" content="">
+<link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+<style type="text/css">
+.layui-icon:hover{
+cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="layui-inline"> 
+<div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="名称|键|值" class="layui-input"></div>
+<button class="layui-btn " id='querybtn'>查询</button>
+<button class="layui-btn" id='adduser'>新建用户</button>
+<button class="layui-btn layui-btn-danger" id='deluser'>删除用户</button>
+
+</div>
+
+<form id='addhtml' hidden style="padding:10px;">
+  <div class="layui-form-item">
+    <label class="layui-form-label">用户名</label>
+    <div class="layui-input-block">
+      <input type="text" name="username" placeholder="请输入" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">密码</label>
+    <div class="layui-input-block">
+      <input type="password" name="password" placeholder="请输入" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+</form>
+
+<table id='table-user' class="layui-table" lay-data="{height:400, cellMinWidth: 80, page: true, limit:10, url:'{{BASE_URL}}/account/queryaccount/'}" lay-filter='target' style="border: 2px solid red">
+  <thead>
+    <tr>
+      <th lay-data="{type:'checkbox'}"></th>
+      <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
+      <th lay-data="{field: 'name',width:160, sort: true}">用户名</th>
+      <th lay-data="{field: 'password', sort: true}">密码</th>
+
+      <th lay-data="{field: 'createtime',sort:true}">创建时间</th>
+      <th lay-data="{field: 'updatetime'}">更改时间</th>
+      <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:100}">操作</th>
+ 
+    </tr>
+  </thead>
+</table>
+
+
+
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+<script type="text/javascript">
+layui.use(['layer','table'],function(){
+  var table = layui.table;
+  var layer=layui.layer;
+  var $=layui.jquery
+
+
+$("#querybtn").click(function(e){
+  table.reload('table-user',{
+    page:{
+      curr:1
+    },
+    where:{
+      searchvalue:$("#search-value").val()
+
+    }
+
+  });  
+});
+
+$('#adduser').click(function(){
+
+    $("#addhtml")[0].reset()
+    layui.form.render()
+
+    layer.open({
+        type:1,
+
+        title:'新建用户',
+        content:$('#addhtml'),
+        btn:['ok','cancel'],
+        yes:function(index,layero){
+
+            layer.close(index)
+
+            success=function(e){
+                e=JSON.parse(e)
+                if(e.code==0){
+                  layer.alert(e.msg,{icon:1,time:1000})
+                  table.reload('table-user',{
+                    page:{
+                      curr:1
+                    },
+                    where:{
+                      searchvalue:$("#search-value").val()
+
+                    }
+
+                  });
+                }
+  
+                else
+                    layer.alert(e.msg,{icon:2})
+
+
+
+            }
+
+            _post('/account/addaccount/',{
+                'username':$("[name='username']").val(),
+                'password':$("[name='password']").val()
+            },success)
+        }
+    })
+});
+
+$("#deluser").click(function(){
+  var checkStatus = table.checkStatus("table-user");
+  data = checkStatus.data;
+  ids=[]
+  if(data.length<1)
+  {
+    layer.alert('你有选择用户么',{icon:3,time:1500})
+    return
+  }
+  else{
+    for(var index=0;index<data.length;index++){
+      ids.splice(0,0,data[index]['id'])
+
+    }
+  }
+
+  layer.confirm('确认删除么?',function(index){
+
+    success=function(e){
+      e=JSON.parse(e)
+      if(e.code==0){
+        layer.alert(e.msg,{icon:1,time:1500})
+        table.reload('table-user',{
+          page:{
+            curr:1
+          },
+          where:{
+            searchvalue:$("#search-value").val()
+
+          }
+
+        });
+      }else{
+        layer.alert(e.msg,{icon:2})
+      }
+
+    }
+    layer.close(index);
+    _post('/account/delaccount/',{'ids':ids.join()},success)
+
+  })
+
+});
+
+
+//edit
+table.on("tool(target)",function(e){
+  id=e.data['id']
+  if(e.event=='edit'){
+    success=function(data){
+      // data=JSON.parse(data)
+      if(data.code==0){
+        $("[name='username']").val(data.data['name']);
+        $("[name='password']").val(data.data['password']);
+
+        layer.open({
+            type:1,
+            title:'编辑用户',
+            content:$('#addhtml'),
+            btn:['提交','取消'],
+            yes:function(index,layero){
+              layer.close(index)
+              success2=function(e){
+                e=JSON.parse(e)
+                if(e.code==0){
+                 layer.alert(e.msg,{icon:1,time:1000})
+                }else{
+                  layer.alert(e.msg,{icon:2})
+                }
+
+
+              }
+              _post('/account/editaccount/',{'uid':id,
+                'username':$('#username').val(),
+                'password':$('#password').val(),
+              },success2)
+
+            }
+        });
+
+      }else{
+        alert(e.msg,{icon:2})
+
+      }
+
+    }
+    _post('/account/queryoneaccount/',{'uid':id},success)
+
+    }
+})
+});
+</script>
+<script type="text/html" id="toolbar">
+  <i class="layui-icon layui-icon-edit" lay-event="edit"></i>
+</script>
+</body>
+</html>

@@ -1,0 +1,320 @@
+
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+
+    <title>函数管理</title>
+    <style type="text/css">
+      
+      .layui-icon:hover{
+        cursor: pointer;
+      }
+    </style>
+</head>
+<body>
+<div class="layui-inline"> 
+	<div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="名称|键|值" class="layui-input"></div>
+	<button class="layui-btn" id='querybtn'>查询</button>
+  <button class="layui-btn" id='addbtn'>新增</button>
+  <button class="layui-btn" id='updatebtn'>更新</button>
+  <button class="layui-btn layui-btn-danger" id='delbtn'>删除</button>
+
+
+</div>
+
+<table id='table-func' class="layui-table" lay-data="{height:400, cellMinWidth: 80, page: true, limit:10, url:'{{BASE_URL}}/manager/queryfunc/'}" lay-filter='target'>
+  <thead>
+    <tr>
+      <th lay-data="{type:'checkbox'}"></th>
+      <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
+      <th lay-data="{field: 'name',width:160, sort: true}">名称</th>
+      <th lay-data="{field: 'description', sort: true}">描述</th>
+      <th lay-data="{field: 'kind',width:140, sort: true}">类型</th>
+      <th lay-data="{field: 'flag',width:200}">flag</th>
+
+<!--       <th lay-data="{field: 'createtime', width:160,sort:true}">创建时间</th>
+      <th lay-data="{field: 'updatetime', width:160}">更改时间</th> -->
+      <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:100}">操作</th>
+ 
+    </tr>
+  </thead>
+</table>
+
+<form id='addhtml' hidden=true class="layui-form" style="padding:10px;">
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">描述</label>
+    <div class="layui-input-block">
+      <input id='desp' type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">代码定义</label>
+    <div  class="layui-input-block" id='code-define' >
+      <textarea id='code' type="textarea" name="code" placeholder="请输入" autocomplete="off" class="layui-textarea"></textarea> 
+    </div>
+  </div>
+
+</form>
+</body>
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+
+<script type="text/javascript">
+layui.use(['table','layer','code'], function(){
+  var table = layui.table;
+  var $=layui.jquery
+  var layer=layui.layer;
+  // layui.code({elem:$("#code-define"),'title':'python','skin':'notepad',encode:true});
+
+//更新功能
+
+  $("#updatebtn").click(function(e){
+
+    console.log(host)
+    //console.log(_post)
+
+    _post('/manager/updatefunc/',{},function(res){
+      var code=JSON.parse(res).code
+      if(code==0){
+
+        layer.alert("函数信息更新完毕",{icon:1,time:1000})
+      }else{
+        layer.alert("函数更新失败.",{icon:2,time:1000})
+      }
+    })
+    console.log("更新函数信息")
+
+  });
+//查询功能
+  $("#querybtn").click(function(e){
+
+    console.log('query var');
+
+
+    table.reload('table-func',{
+      page:{
+        curr:1
+      },
+      where:{
+        searchvalue:$("#search-value").val()
+
+      }
+
+    });
+
+    
+  });
+
+//删除功能
+  $("#delbtn").click(function(e){
+
+    var checkStatus = table.checkStatus("table-func");
+    data = checkStatus.data;
+    ids=[]
+    if(data.length<1)
+    {
+      layer.alert('你有选择要删除的函数么',{icon:3,time:1500})
+      return
+    }
+    else{
+      for(var index=0;index<data.length;index++){
+        ids.splice(0,0,data[index]['id'])
+
+      }
+    }
+
+    layer.confirm('确认删除么?',function(index){
+
+      success=function(e){
+
+        table.reload('table-func',{
+          page:{
+            curr:1
+          },
+          where:{
+            searchvalue:$("#search-value").val()
+
+          }
+
+        });
+        e=JSON.parse(e)
+        if(e.code==0){
+          layer.alert(e.msg,{icon:1,time:1500})
+        }else{
+          layer.alert(e.msg,{icon:2})
+        }
+
+      }
+      layer.close(index);
+
+      _post('/manager/delfunc/',{'ids':ids.join()},success)
+   
+
+    })
+
+  });
+
+
+//新增功能
+
+  $("#addbtn").click(function(e){
+    var o=layer.open(
+      {
+        title:'添加函数',
+        type:1,
+        // area:["350px","350px"],
+        content:$('#addhtml'),
+        btn:['提交','取消'],
+
+        yes: function(index, layero){
+          //按钮【按钮一】的回调
+          console.log('yes')
+
+
+          success=function(data){
+
+            $('#addhtml')[0].reset()
+            layui.form.render()
+          table.reload('table-func',{
+            page:{
+              curr:1
+            },
+            where:{
+              searchvalue:$("#search-value").val()
+
+            }
+
+          });
+
+            data=JSON.parse(data)
+            layer.close(index)
+            if(data.code==0)
+              layer.alert(data.msg,{icon:1,time:1000})
+            else
+              layer.alert(data.msg,{icon:2,time:1000})
+
+
+          }
+          var description=$("#desp").val()
+          var body=$("#code").val()
+          // alert(body)
+          _post("/manager/addfunction/",{"description":description,"body":body},success)
+
+        },
+        btn2: function(index, layero){
+          //按钮【按钮二】的回调
+          //return false 开启该代码可禁止点击该按钮关闭
+          console.log('no')
+        },
+
+
+    });
+
+    layer.full(o);
+
+  });
+
+//tool事件
+  table.on("tool(target)",function(e){
+    // console.log(e.event);
+
+
+    // var checkStatus = table.checkStatus("table-func");
+    // data = checkStatus.data; //获取选中的数据
+
+    id=e.data['id']
+    
+    if(e.event=='edit'){
+
+      success=function(data){
+
+        console.log(data.data)
+        //设置addhtml
+       
+
+        description=data.data['description']
+        body=data.data['body']
+
+        $("[name='description']").val(description)
+        $("[name='code']").val(body)
+
+
+        //打开表单
+        var o=layer.open({
+          type:1,
+          title:'编辑自定义函数',
+          content:$('#addhtml'),
+          btn:['提交','取消'],
+          yes:function(index,layero){
+
+            layer.close(index)
+
+            success=function(e){
+
+            $('#addhtml')[0].reset()
+            layui.form.render()
+            
+              table.reload('table-func',{
+                page:{
+                  curr:1
+                },
+                where:{
+                  searchvalue:$("#search-value").val()
+
+                }
+
+              });
+
+              e=JSON.parse(e)
+              if(e.code==0)
+                layer.alert(e.msg,{icon:1,time:1500})
+              else
+                layer.alert(e.msg,{icon:2})
+
+            }
+            _post('/manager/editfunction/',{
+              'id':id,
+              'body':$("[name='code']").val(),
+              'description':$("[name='description']").val(),
+
+            },success)
+
+          }
+
+        });
+        layer.full(o);
+
+
+      }
+      _post('/manager/queryonefunc/',{id:id},success)
+
+    }else if(e.event=='detail'){
+
+    }
+
+  });
+
+
+
+
+  
+  
+});
+
+// $(document).ready(function(){
+
+// });
+</script>
+
+<script type="text/html" id="toolbar">
+  <i class="layui-icon layui-icon-form" lay-event="detail"></i>
+  <i class="layui-icon layui-icon-edit" lay-event="edit"></i>
+
+  
+</script>
+</html>

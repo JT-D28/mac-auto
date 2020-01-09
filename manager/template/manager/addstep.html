@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>addstep</title>
+<meta name="description" content="">
+<meta name="keywords" content="">
+<link href="https://cdn.bootcss.com/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+<link href="{% static 'manager/css/step.css' %}" rel="stylesheet">
+</head>
+<body>
+
+	<form action='/manager/addstep/' method="POST" class='form-step'>
+		{% csrf_token%}
+		{{ message }}
+
+	    {% for field in step_form %}
+
+        {{ field.errors }}
+        {{ field.label_tag }}: {{ field }}
+    	{% endfor %}
+
+
+		<!-- <div class='form-group'>
+			{{ step_form.run_order.label_tag}}{{step_form.run_order}}
+		</div>
+		<div class='form-group'>
+			{{ step_form.url.label_tag}}{{step_form.url}}
+		</div>
+		<div class='form-group'>
+			{{ step_form.method.label_tag}}{{step_form.method}}
+		</div>
+		<div class='form-group'>
+			{{ step_form.content_type.label_tag}}{{step_form.content_type}}
+		</div>
+		<div class='form-group'>
+			{{ step_form.version.label_tag}}{{step_form.version}}
+		</div>	
+		<div class='form-group'>
+			{{ step_form.body.label_tag}}{{step_form.body}}
+		</div>
+
+		<div class='form-group'>
+			{{ step_form.db_check.label_tag}}{{step_form.db_check}}
+		</div>
+		<div class='form-group'>
+			{{ step_form.itf_check.label_tag}}{{step_form.itf_check}}
+		</div>
+		<div class='form-group'>
+			{{ step_form.headers.label_tag}}{{step_form.headers}}
+		</div> -->
+
+		<div><button type='submit' class='btn btn-primary float-right'>添加</button></div>
+	</form>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>
+    <script src="https://cdn.bootcss.com/popper.js/1.15.0/umd/popper.js"></script>
+    <script src="https://cdn.bootcss.com/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+</body>
+</html>

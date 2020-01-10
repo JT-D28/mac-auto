@@ -151,7 +151,7 @@ def delplan(request):
 				'msg':'删除失败,[%s]含子数据'%plan.description
 				}
 
-			plan.delete()
+			# plan.delete()
 			##消除上层依赖
 			_regen_weight(request.session.get('username'), plan,trigger='del')
 			# delrelation('product_plan',None, None,i)
@@ -290,7 +290,7 @@ def delcase(request):
 				}
 
 			# delrelation('plan_case',None, None,i)
-			case.delete()
+			#case.delete()
 			_regen_weight(request.session.get('username'),case,trigger='del')
 		return{
 		'status':'success',
@@ -486,7 +486,7 @@ def delstep(request):
 				'msg':'删除失败,[%s]含子数据'%step.description
 				}
 			#delrelation('case_step',None, None,i)   
-			step.delete()
+			#step.delete()
 			_regen_weight(request.session.get('username'),step,trigger='del')				
 		return{
 		'status':'success',
@@ -639,7 +639,7 @@ def delbusiness(request):
 			i=int(i.split('_')[1])
 
 			business=BusinessData.objects.get(id=i)
-			business.delete()
+			#business.delete()
 			_regen_weight(request.session.get('username'),business,trigger='del')
 		return{
 		'status':'success',
@@ -659,20 +659,17 @@ def movenode(request):
 		srcid=request.POST.get('src_id')
 		targetid=request.POST.get('target_id')
 		user=User.objects.get(name=request.session.get('username'))
-		elementclass=srcid.split('_')[0]
-		elementid=srcid.split('_')[1]
-		if elementclass=='business':
-			elementclass='businessData'
-		elementclass=_first_word_up(elementclass)
-		element=eval("%s.objects.get(id=%s)"%(elementclass,elementid))
-
-		_regen_weight(user.name, element,trigger=movetype)
-		_build_all(srcid, targetid, movetype,user,is_copy)
+		# elementclass=srcid.split('_')[0]
+		# elementid=srcid.split('_')[1]
+		# if elementclass=='business':
+		# 	elementclass='businessData'
+		# elementclass=_first_word_up(elementclass)
+		# element=eval("%s.objects.get(id=%s)"%(elementclass,elementid))
+		_build_all(srcid, targetid, movetype,user,is_copy,user.name)
 
 		return{
 		'status':'success',
-		'msg':'操作成功'
-		}
+		'msg':'操作成功'}
 	except:
 		print(traceback.format_exc())
 		return{
@@ -701,23 +698,30 @@ def addrelation(kind,callername,main_id,follow_id):
 
 def delrelation(kind,callername,main_id,follow_id):
 
+	# print('==删除关联关系')
+	# print('kind=>',kind)
+	# print('main_id=>',main_id)
+	# print('follow_id=>',follow_id)
 	try:
-		ol=list(Order.objects.filter(kind=kind,follow_id=follow_id))
-		length=len(ol)
-		for o in ol:
-			o.delete()
+		ol=Order.objects.get(kind=kind,main_id=main_id,follow_id=follow_id)
+		print('==删除节点关联[%s]'%ol)
+		ol.delete()
+		# length=len(ol)
+		# print('找到[%s]条待删除'%length)
+		# for o in ol:
+		# 	o.delete()
 
-		if kind=='plan_case' and length==0:
-			Order.objects.get(kind='case_case',follow_id=follow_id).delete()
-
+		# if kind=='plan_case' and length==0:
+		# 	Order.objects.get(kind='case_case',follow_id=follow_id).delete()
+	
 
 	except:
-		print('【删除节点报错】')
+		print('==删除节点关联报错')
 		print(traceback.format_exc())
-
+	# print('删除完毕')
 def getchild(kind,main_id):
 	child=[]
-	orderlist=list(Order.objects.filter(kind=kind,main_id=main_id))		
+	orderlist=ordered(list(Order.objects.filter(kind=kind,main_id=main_id)))		
 	if kind=='product_plan':
 		for order in orderlist:
 			child.append(Plan.objects.get(id=order.follow_id))
@@ -750,7 +754,7 @@ def getchild(kind,main_id):
 	return child
 
 
-def ordered(iterator,key='value'):
+def ordered(iterator,key='value',time_asc=True):
 	"""
 	执行列表根据value从小到大排序
 	"""
@@ -772,63 +776,117 @@ def ordered(iterator,key='value'):
 						iterator[i]=iterator[j]
 						iterator[j]=tmp
 
+					elif indexb==indexa:
+						timea=getattr(iterator[i], 'updatetime')
+						timeb=getattr(iterator[j], 'updatetime')
+
+						if time_asc==True:
+							if timea>timeb:
+								iterator[i],iterator[j]=iterator[j],iterator[i]
+
+						elif time_asc==False:
+							if timea<timeb:
+								iterator[i],iterator[j]=iterator[j],iterator[i]
+
+
+
+
+
 
 	except:
 		print(traceback.format_exc())
 	finally:
 		return iterator
 
-
-def _regen_weight(callername,element,trigger='prev',flag=True):
+def _regen_weight(callername,element,trigger='prev',target_id=None):
 	'''
 	删除移动复制节点重新生成权重 事件节点的order除外 保持分组(flag)
 	'''
-	print('[%s]引发的序号重新生成'%trigger)
-
-	######
-	elementclass=element.__class__.__name__
-	text='_%s'%elementclass.lower()
-	order=Order.objects.get(Q(kind__contains=text)&Q(follow_id=element.id))
-	group=order.value.split('.')[0]
-	parentid=order.main_id
-	orderlist=ordered(list(Order.objects.filter(Q(kind__contains=text)&Q(main_id=parentid))))
-
 	##删除事件节点引用
-	delrelation(order.kind, callername, parentid, element.id)
-	##排除事件节点
-	for order0 in orderlist:
-		if order0.id==order.id:
-			orderlist.remove(order0)
+	if trigger=='del':
+		c=element.__class__.__name__.lower()
+		if c=='businessdata':
+			c='business'
+		order=Order.objects.get(Q(kind__contains='_%s'%c)&Q(follow_id=element.id))
+		parentid=order.main_id
+		group=order.value.split('.')[0]
+		parentkind=order.kind.split('_')[0]
+		text='%s_'%parentkind
 
-	if trigger=='prev':
-		orderlist=_resort_by_create_when_equal(orderlist)
-	elif trigger=='next':
-		orderlist=_resort_by_create_when_equal(orderlist,asc=False)
-	elif trigger=='inner':
-		pass
-	elif trigger=='del':
-		pass
+		delrelation(order.kind, callername, parentid,element.id)
+		element.delete()
+		print('==删除节点[%s]'%element)
+		print('==删除后重新生成权重')
+		orderlist=ordered(list(Order.objects.filter(Q(kind__contains=text)&Q(main_id=parentid))))
+		
+		index=0
+		for order in orderlist:
+			old=order
+			index=index+1
+			curgroup=order.kind.split('.')[0]
+			if curgroup!=group:
+				continue
 
-	##重新生成序号 只处理同组号的数据
-	index=0
-	for order in orderlist:
-		index=index+1
-		g=order.value.split('.')[0]
-		if g==group:
-			weight='%s.%s'%(g,index)
+			weight='%s.%s'%(group,index)
 			order.value=weight
 			order.save()
+			print('[%s]=>[%s]'%(old,order))
+
+		print('生成后=>',orderlist)
+
+	else:
+		c=element.__class__.__name__.lower()
+		if c=='businessdata':
+			c='business'
+		order=Order.objects.get(Q(kind__contains='_%s'%c)&Q(follow_id=element.id))
+		parentid=order.main_id
+		group=order.value.split('.')[0]
+		parentkind=order.kind.split('_')[0]
+		text='%s_'%parentkind
+		# print('text=%s main_id=%s'%(text,parentid))
+		orderlist=ordered(list(Order.objects.filter(Q(kind__contains=text)&Q(main_id=parentid))))
+		
+		if trigger=='prev':
+			orderlist=ordered(orderlist,time_asc=False)
+		elif trigger=='next':
+			orderlist=ordered(orderlist,time_asc=True)
+		elif trigger=='inner':
+			#最后一个不用在处理
+				pass
+
+		print('===[%s]操作 根据时间处理再排序=>%s'%(trigger,orderlist))
+
+	##重新生成序号 只处理同组号的数据
+		print('==兄弟节点重新生成权重')
+
+		index=0
+		for order in orderlist:
+			old=order
+			index=index+1
+			curgroup=order.value.split('.')[0]
+
+			print('==拖动组号=>%s 兄弟节点组号=>%s 相等=>%s'%(group,curgroup,group==curgroup))
+			if curgroup!=group:
+				continue
+				
+			weight='%s.%s'%(group,index)
+			order.value=weight
+			order.save()
+			print('[%s]=>[%s]'%(old,order))
+
+		print('生成后=>',orderlist)
+
 
 def _resort_by_create_when_equal(orderlist,asc=True):
 	for i in range(len(orderlist)-1):
 		for j in range(i+1, len(orderlist)):
 			if orderlist[j]==orderlist[i]:
 				if asc:
-					if getattr(orderlist[i],'creatime')>getattr(orderlist[j],'creatime'):
+					if getattr(orderlist[i],'updatetime')>getattr(orderlist[j],'updatetime'):
 						orderlist[i],orderlist[j]=orderlist[j],orderlist[i]
 
 				else:
-					if getattr(orderlist[i],'creatime')<getattr(orderlist[j],'creatime'):
+					if getattr(orderlist[i],'updatetime')<getattr(orderlist[j],'updatetime'):
 						orderlist[i],orderlist[j]=orderlist[j],orderlist[i]
 
 	return orderlist
@@ -852,14 +910,14 @@ def getnextvalue(kind,main_id,flag=0):
 		return newvalue
 
 def _get_delete_node(src_uid,src_type,iscopy,del_nodes):
-	print('==添加待删除源数据==')
 	# print('iscopy=>',iscopy)
 	if iscopy=='true':
-		print('复制操作 skip')
+		print('==复制操作 略过添加待删除源数据')
 	else:
+		print('==添加待删除源数据==')
 		del_nodes.append((src_type,str(src_uid)))
 		childs=getchild('', src_uid)
-		print(childs)
+		#print(childs)
 		for child in childs:
 			child_type=child.__class__.__name__.lower()
 			# # child.delete()
@@ -868,36 +926,36 @@ def _get_delete_node(src_uid,src_type,iscopy,del_nodes):
 			# del_nodes.append((order.kind.split('_')[1],nextid))
 			_get_delete_node(child.id, child_type,False, del_nodes)
 
-def _build_node(kind,src_uid,target_uid,move_type,user):
+def _build_node(kind,src_uid,target_uid,move_type,user,build_nodes):
 	target_type=kind.split('_')[0]
 	target_type_upper=target_type[0].upper()+target_type[1:]
 	if target_type_upper=='Business':
 		target_type_upper='BusinessData'
 
-	print('kiifd=>',kind)
 	src_type=kind.split('_')[1]
-	print('src_type=>',src_type)
+	# print('src_type=>',src_type)
 	src_type_upper=src_type[0].upper()+src_type[1:]
 	if src_type_upper=='Businessdata' or src_type_upper=='Business':
 		src_type_upper='BusinessData'
 
 	##构造target数据(重新生成)
-	print('==构建节点数据(重新生成)==')
+	print('==构建新节点实体数据')
 	if kind in ('step_businessdata'):
 		kind='step_business'
-	
 	print(src_type_upper,'=>',src_uid)
 	src=eval("%s.objects.get(id=%s)"%(src_type_upper,src_uid))
-	print('老id=>',src.id)
+	# print('老id=>',src.id)
 	src.id=None
 	src.save()
-	print('新id=>',src.id)
+	print('构建完成[%s]'%src)
+	build_nodes.append(src)
+	# print('新id=>',src.id)
 
 	##构造target关联
-	print('==构建节点关联==')
-	print(move_type)
-	print('kind=>',kind)
-	print('%s->%s'%(target_uid,src.id))
+	print('==构建新节点关联关联==')
+	# print(move_type)
+	# print('kind=>',kind)
+	# print('%s->%s'%(target_uid,src.id))
 
 	if move_type=='inner':
 		order=Order()
@@ -906,9 +964,8 @@ def _build_node(kind,src_uid,target_uid,move_type,user):
 		order.follow_id=src.id
 		order.value=getnextvalue(kind,target_uid)
 		order.author=user
+		print('inner 构建完成[%s]'%order)
 		order.save()
-
-		print(order.kind)
 	else:
 		parent_order=Order.objects.get(follow_id=target_uid)
 		parent_type=parent_order.kind.split('_')[0]
@@ -917,61 +974,115 @@ def _build_node(kind,src_uid,target_uid,move_type,user):
 		parent=eval("%s.objects.get(id=%s)"%(parent_type_upper,parent_order.main_id))
 
 		order=Order()
+		order.author=user
 		order.kind='%s_%s'%(parent_type,src_type)
 		order.main_id=parent.id
-		order.follow_id==src.id
-		order.value=getnextvalue(kind,target_uid)
-		order.author=user
+		order.follow_id=src.id
+
+		o=Order.objects.get(Q(kind__contains='%s_'%target_type)&Q(follow_id=target_uid))
+		if len(build_nodes)==1 and  move_type=='prev':
+			ogroup=o.value.split('.')[0]
+			oindex=int(o.value.split('.')[1])
+			order.value='%s.%s'%(ogroup,oindex)
+		elif len(build_nodes)==1 and  move_type=='next':
+			ogroup=o.value.split('.')[0]
+			oindex=int(o.value.split('.')[1])
+			order.value='%s.%s'%(ogroup,oindex)
+			
+		else:
+			order.value=getnextvalue(kind,target_uid)
+
+		print('%s 构建完成[%s]'%(move_type,order))
+
 		order.save()
-		print(order.kind)
-	##处理源数据
-	# print('==处理数据源==')
-	# if iscopy:
-	# 	pass
-	# else:
-	# 	pass
 
 	##子节点存在情况
 	childs=getchild('',src_uid)
+	if len(childs)>0:
+		print('==构建新节点下子节点数据')
 	for child in childs:
 		child_type=child.__class__.__name__.lower()###????
 		src_type=src.__class__.__name__.lower()
-		_build_node('%s_%s'%(src_type,child_type),child.id, src.id,'inner',user)
+		_build_node('%s_%s'%(src_type,child_type),child.id, src.id,'inner',user,build_nodes)
 
 
 
-def _build_all(src_id,target_id,move_type,user,is_copy):
+def _build_all(src_id,target_id,move_type,user,is_copy,callername):
 
-	print('==开始构建所有节点==')
+	print('==开始构建目标位置所有节点==')
 	src_uid=src_id.split('_')[1]
 	target_uid=target_id.split('_')[1]
 	src_type=src_id.split('_')[0]
 	target_type=target_id.split('_')[0]
 	kind='%s_%s'%(target_type,src_type)
+
+	###获取事件节点model对象
+	elementclass=src_id.split('_')[0]
+	elementid=src_id.split('_')[1]
+	if elementclass=='business':
+		elementclass='businessData'
+	elementclass=_first_word_up(elementclass)
+	element=eval("%s.objects.get(id=%s)"%(elementclass,elementid))
+	##
 	if move_type!='inner':
 		order=Order.objects.get(follow_id=target_uid)
 		parenttype=order.kind.split('_')[0]
 		kind='%s_%s'%(parenttype,src_type)
 
-	_build_node(kind,src_uid,target_uid,move_type,user)
+	build_nodes=[]
+	_build_node(kind,src_uid,target_uid,move_type,user,build_nodes)
+
+	print('--构建目标位置所有节点结束')
 	del_nodes=[]
 	_get_delete_node(src_uid,src_type,is_copy,del_nodes)
+	#移动目标区域兄弟节点需重新生成权重
+	print('==获取移动复制构造的第一个model对象=>',build_nodes[0])
 	##处理源数据
-	print('待删除节点=>',del_nodes)
+	print('==获取拖动源待处理节点列表=>',del_nodes)
 	for t in del_nodes:
 		tclass=_first_word_up(t[0])
 		if tclass in('Business','Businessdata'):
 			tclass='BusinessData'
+		el=eval("%s.objects.get(id=%s)"%(tclass,t[1]))
+		_regen_weight(callername,el,trigger='del',target_id=target_id)
+	print('--拖动源处理结束')
+	#
+	print('==处理拖动目标位置的排序显示')
+	_regen_weight(callername, build_nodes[0],trigger=move_type,target_id=target_id)
 
-		target=eval('%s.objects.get(id=%s)'%(tclass,t[1]))
-		target.delete()
-		#
-		try:
-			order=Order.objects.get(follow_id=t[1])
-			if order.kind.split('_')[1]==t[0]:
-				order.delete()
-		except:
-			pass
+
+
+def _resort(orderlist,movetype,src_uid,target_uid):
+	indexa=None
+	indexb=None
+	a=None
+	b=None
+	cindex=None
+
+	target_uid=target_id.split('.')[1]
+	i=0
+	for order in orderlist:
+		if order.follow_id==src_uid:
+			indexa=i
+
+		if order.follow_id==target_uid:
+			indexb=i
+		i=i+1
+
+	a=orderlist.pop(indexa)
+	l=abs(indexb-indexa)
+
+	if movetype=='prev':
+		orderlist.insert(indexb-1,a)
+	elif movetype=='next':
+		orderlist.insert(indexb+1,a)
+
+
+	return orderlist
+
+
+
+
 
 
 

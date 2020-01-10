@@ -22,4 +22,7 @@ from manager import views as mv
 urlpatterns = [
     # path('login/',views.login),
     path('', views.homepage),
+    path('queryproduct/', views.queryproduct),
+    path('queryplan/', views.queryplan),
+
 ]

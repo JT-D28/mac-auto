@@ -89,15 +89,17 @@ scratch. This page gets rid of all links and provides the needed markup only.
     <div class="layui-side-scroll" style="width:70px!important;">
       <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
       <ul class="layui-nav layui-nav-tree"  lay-filter="test" style="width:70px!important;" >
-          <li class="layui-nav-item layui-nav-itemed">
-              <a id="homepage-link" href="javascript:;" link='homepage/' class="fa fa-home" title="首页"></a>
-          </li>
+
+      <li class="layui-nav-item layui-nav-home">
+          <a id="homepage-link" href="javascript:;" link='homepage/' class="fa fa-home" title="首页"></a>
+        </li>
+
         {% if request.session.username == 'admin' %}
         <li class="layui-nav-item layui-nav-itemed">
-          <a id="register-link" href="javascript:;" link='account/user/'>账号注册</a>
+          <a id="register-link" href="javascript:;" link='account/user/'class="fa fa-user" title="账号管理"></a>
         </li>
         {%endif%}
-   
+
 
         <li class="layui-nav-item layui-nav-itemed">
           <a id="tree-link" href="javascript:;" link='manager/tree/' class="fa fa-list" title="用例管理"></a>
@@ -311,7 +313,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
   //默认到计划页面
 
-    $("[link='manager/plan/']").click();
+    $("[link='homepage/']").click();
 
 });
 

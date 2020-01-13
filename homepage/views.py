@@ -6,7 +6,7 @@ from manager import cm
 from manager.core import *
 
 # Create your views here.
-from manager.models import Product, Plan
+from manager.models import Product, Plan, ResultDetail
 
 
 @csrf_exempt
@@ -22,7 +22,7 @@ def queryproduct(request):
         list_ = list(Product.objects.all())
         for x in list_:
             o = dict()
-            o['id']=x.id
+            o['id'] = x.id
             o['description'] = x.description
             res.append(o)
         return JsonResponse(simplejson(code=0, msg='操作成功', data=res), safe=False)
@@ -33,18 +33,19 @@ def queryproduct(request):
         msg = '查询数据库列表信息异常'
         return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
+
 @csrf_exempt
 def queryplan(request):
     code, msg = 0, ''
     res = []
     datanode = []
     try:
-        plans=cm.getchild('product_plan',request.POST.get('id'))
+        plans = cm.getchild('product_plan', request.POST.get('id'))
         for plan in plans:
             datanode.append({
                 'id': 'plan_%s' % plan.id,
                 'name': '%s' % plan.description,
-                })
+            })
         return JsonResponse(simplejson(code=0, msg='操作成功', data=datanode), safe=False)
 
     except:
@@ -53,28 +54,22 @@ def queryplan(request):
         msg = '查询数据库列表信息异常'
         return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
-
 @csrf_exempt
 def querytaskid(request):
-    code, msg = 0, ''
-    res = []
+    code = 0
+    msg = ''
+    taskids = None
     try:
-        list_ = list(Product.objects.all())
-        for x in list_:
-            o = dict()
-            o['id']=x.id
-            o['description'] = x.description
-            res.append(o)
-        return JsonResponse(simplejson(code=0, msg='操作成功', data=res), safe=False)
+        planid = request.POST.get('planid')
+        plan = Plan.objects.get(id=planid)
+        detail = list(ResultDetail.objects.filter(plan=plan).order_by('-createtime'))
+        taskid = detail[0].taskid
+        print(taskid)
+    except Exception as e:
+        code = 1
+        msg = str(e)
 
-    except:
-        print(traceback.format_exc())
-        code = 4
-        msg = '查询数据库列表信息异常'
-        return JsonResponse(simplejson(code=code, msg=msg), safe=False)
-
-
-
+    return JsonResponse(simplejson(code=code, msg=msg, data=taskid), safe=False)
 
 
 @csrf_exempt

@@ -213,11 +213,11 @@
             if(planid == ''){
                 layer.msg("请选择项目和计划！")
             }else {
-                common.ajax('/manager/queryplantaskid/', 'post', 'json', {
+                common.ajax('/homepage/querytaskid/', 'post', 'json', {
                     'planid': id
                 }, function (data) {
                     data = JSON.parse(data)
-                    taskid = data.data[0]
+                    taskid = data.data
                     console.log(taskid)
                     if (taskid === undefined) {
                         layer.msg('任务还没有运行过!');
@@ -228,7 +228,7 @@
                             type: 2,
                             title: false,
                             shade: [0],
-                            area: ['880px', '480px'],
+                            area: ['1080px', '480px'],
                             anim: 2,
                              shadeClose: true,
                             content: [resulturl, 'yes'], //iframe的url，no代表不显示滚动条

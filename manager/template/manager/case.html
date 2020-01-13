@@ -1,0 +1,469 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+
+    <title>用例管理</title>
+    <style type="text/css">
+      .layui-icon:hover{
+        cursor: pointer;
+      }
+      .icon-tool{
+        float: right;
+
+      }
+      .icon-tool-item:hover{
+        cursor: pointer;
+      }
+      .icon-tool-item{
+        margin-left: 5px;
+      }
+
+      #step-selected p{
+        height: 30px;
+        padding: 0;
+      }
+
+      #can-select p:hover{
+        background-color: #009688;
+        color: white;
+
+      }
+      #is-selected p:hover{
+        background-color: #009688;
+        color:white;
+
+      }
+      .func_btn{
+
+        font-size: 10px;
+        margin:5px;
+      }
+      .func_btn:hover{
+
+        cursor: pointer;
+        color:#009688;
+        font-weight:10px;
+      }
+
+    </style>
+
+</head>
+<body>
+<div class="layui-inline"> 
+	<div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="名称|键|值" class="layui-input"></div>
+	<button class="layui-btn" id='querybtn'>查询</button>
+  <button class="layui-btn" id='addbtn'>新增</button>
+  <button class="layui-btn" id='addstepbtn'>添加步骤</button>
+  <button class="layui-btn" id='packagebtn'>打包</button>
+  <button class="layui-btn layui-btn-danger" id='delbtn'>删除</button>
+
+</div>
+
+<table id='table-case' class="layui-table" lay-data="{height:400, cellMinWidth: 80, page: true, limit:10, url:'{{BASE_URL}}/manager/querycase/'}" lay-filter='target'>
+  <thead>
+    <tr>
+      <th lay-data="{type:'checkbox'}"></th>
+      <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
+<!--       <th lay-data="{field: 'priority',width:160, sort: true}">优先级</th> -->
+      <th lay-data="{field: 'description', sort: true}">名称</th>
+      <th lay-data="{field: 'createtime',sort:true}">创建时间</th>
+      <th lay-data="{field: 'updatetime'}">更改时间</th>
+      <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:100}">操作</th>
+ 
+    </tr>
+  </thead>
+</table>
+
+<form id='addcase' hidden=true class="layui-form" style="padding: 10px;">
+  <div class="layui-form-item">
+    <label class="layui-form-label">DB选择</label>
+      <div class="layui-input-block">
+      <select name="db_id" lay-verify="">
+
+      </select></div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">用例名称</label>
+    <div class="layui-input-block">
+      <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+
+</form>
+
+<div id='addstep' class="layui-row layui-bg-gray" style="height:100%;padding:10px;" hidden>
+  <div class="layui-card layui-col-md5" id='can-select'>
+    <div class="layui-card-header">可选步骤
+      <div class="layui-inline"><input id='searchvalue' type="text"  class='layui-input' name="" placeholder="步骤名称"></div></div>
+      <div class="layui-inline">
+        <div class='func_btn_bar'>          
+<!--           <span id='addall' class='func_btn' disabled>全部添加</span>
+          <span id='addsome' class='func_btn' disabled>批量添加</span> -->
+      </div>
+      </div>
+
+      <div style="overflow:auto;height: 300px;width:95%;">
+      <div class="layui-card-body">
+<!--   
+          <p id=''>登陆操作</p>
+          <p id=''>休眠2s</p>
+ -->
+      </div>
+      </div>
+    
+
+  </div>
+
+
+  <div class="layui-card layui-col-md-offset1 layui-col-md6" id='is-selected'>
+    <div class="layui-card-header">已选
+      <div class="layui-inline"><input id="searchvalue1" type="text"  class='layui-input' name="" placeholder="步骤名称"></div>
+    </div>
+    <div class="layui-inline">
+      <div class="func_btn_bar">
+<!--         <span class='func_btn' id='delsome'>批量移除</span>
+        <span class='func_btn' id='delall'>全部移除</span>
+        <span class='func_btn' id='swap'>交换位置</span> -->
+      </div>
+    </div>
+
+    <div style="overflow:auto;height: 300px;width:95%;">
+      <div class="layui-card-body" id='step-selected'>
+
+
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!--   <table id='table-step' class="layui-table" lay-data="{height:400, cellMinWidth: 80, page: true, limit:10, url:'{{BASE_URL}}/manager/querystep/'}" lay-filter='target'>
+    <thead>
+      <tr>
+        <th lay-data="{type:'checkbox'}"></th>
+        <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
+        <th lay-data="{field: 'priority',width:120}">执行序号</th>
+        <th lay-data="{field: 'description',width:160, sort: true}">名称</th>
+        <th lay-data="{field: 'step_type',width:160, sort: true}">类型</th>
+        <th lay-data="{field: 'db_check', width:160}">数据校验</th>
+        <th lay-data="{field: 'itf_check', width:160}">接口校验</th>
+        <th lay-data="{field: 'createtime', width:160,sort:true}">创建时间</th>
+        <th lay-data="{field: 'updatetime', width:160}">更改时间</th>
+        <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar'}">操作</th>
+   
+      </tr>
+    </thead>
+  </table> -->
+</div>
+</body>
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+<script src="{% static 'manager/js/case.js' %}"></script>
+<script type="text/javascript">
+
+_load_db_dropdownlist()
+
+$('#leftallbtn').click(function(){
+
+
+  
+});
+
+$('#clearallbtn').click();
+
+layui.use(['table','layer'], function(){
+  var table = layui.table;
+  var $=layui.jquery
+  var layer=layui.layer;
+  // var transfer=layui.transfer;
+//
+
+//添加步骤
+$("#addstepbtn").click(function(){
+
+  var checkStatus = table.checkStatus("table-case");
+  data = checkStatus.data; //获取选中的数据
+  if(data.length!=1){
+    layer.alert('请选择一条数据!',{icon:2,time:1000});
+    return;
+  }
+  bindsearch();
+  bindselect(data[0]['id']);
+  bindselected(data[0]['id']);
+  var o=layer.open(
+    {
+      title:'添加步骤',
+      type:1,
+      content:$('#addstep'),
+      btn:['OK',],
+      area:["750px","450px"],
+
+      yes: function(index, layero){
+        //按钮【按钮一】的回调
+       // console.log('yes')
+       layer.close(index);
+      }
+
+
+  });
+  // layer.full(o);
+
+
+});
+
+
+
+//查询功能
+  $("#querybtn").click(function(e){
+
+    console.log('query case');
+    table.reload('table-case',{
+      page:{
+        curr:1
+      },
+      where:{
+        searchvalue:$("#search-value").val()
+
+      }
+
+    });
+
+    
+  });
+
+//删除功能
+  $("#delbtn").click(function(e){
+
+    var checkStatus = table.checkStatus("table-case");
+    data = checkStatus.data;
+    ids=[]
+    if(data.length<1)
+    {
+      layer.alert('你有选择case么',{icon:3,time:1500})
+      return
+    }
+    else{
+      for(var index=0;index<data.length;index++){
+        ids.splice(0,0,data[index]['id'])
+
+      }
+    }
+
+    layer.confirm('确认删除么?',function(index){
+
+      success=function(e){
+        table.reload('table-case',{
+          page:{
+            curr:1
+          },
+          where:{
+            searchvalue:$("#search-value").val()
+
+          }
+
+        });
+        e=JSON.parse(e)
+        if(e.code==0){
+          layer.alert(e.msg,{icon:1,time:1500})
+        }else{
+          layer.alert(e.msg,{icon:2})
+        }
+
+      }
+      layer.close(index);
+
+      _post('/manager/delcase/',{'ids':ids.join()},success)
+   
+
+    })
+
+  });
+
+
+//新增功能
+
+  $("#addbtn").click(function(e){
+    //
+    var o=layer.open(
+      {
+        title:'新增用例',
+        type:1,
+        content:$('#addcase'),
+        btn:['提交','取消','分配步骤'],
+        // area:["500px","500px"],
+
+
+        yes: function(index, layero){
+          //按钮【按钮一】的回调
+          layer.close(index)
+
+
+          success=function(e){
+          $('#addcase')[0].reset()
+          layui.form.render()
+ 
+            table.reload('table-case',{
+              page:{
+                curr:1
+              },
+              where:{
+                searchvalue:$("#search-value").val()
+
+              }
+
+            });
+
+            e=JSON.parse(e)
+            if(e.code==0)
+              layer.alert(e.msg,{icon:1})
+            else
+              layer.alert(e.msg,{icon:2})
+
+          }
+          data={
+            'description':$("[name='description']").val(),
+            'dbid':$("[name='db_id']").val()
+          }
+
+          _post('/manager/addcase/',data,success)
+        },
+        btn2: function(index, layero){
+          //按钮【按钮二】的回调
+          //return false 开启该代码可禁止点击该按钮关闭
+          layer.alert('取消')
+        },
+        btn3:function(index,layero){
+          layer.alert('分配步骤')
+
+        }
+
+
+    });
+    // layer.full(o);
+
+  });
+
+//tool事件
+  table.on("tool(target)",function(e){
+    console.log(e.event);
+    // var checkStatus = table.checkStatus("table-case");
+    // data = checkStatus.data; //获取选中的数据
+    id=e.data['id']
+    if(e.event=='edit'){
+      success=function(data){
+
+        console.log(data.data)
+
+        //设置addhtml
+        description=data.data['description']
+        //alert(description)
+        $("[name='description']").val(description)
+
+        $("[name='db_id']").val(data.data['db_id'])
+        layui.form.render('select')
+
+        //打开表单
+        layer.open({
+          type:1,
+          title:'编辑用例名称',
+          content:$('#addcase'),
+          btn:['提交','取消'],
+          yes:function(index,layero){
+
+            layer.close(index)
+
+            success=function(e){
+
+            $('#addcase')[0].reset()
+            layui.form.render()
+              
+            table.reload('table-case',{
+              page:{
+                curr:1
+              },
+              where:{
+                searchvalue:$("#search-value").val()
+
+              }
+
+            });
+              e=JSON.parse(e)
+              if(e.code==0)
+                layer.alert(e.msg,{icon:1,time:1500})
+              else
+                layer.alert(e.msg,{icon:2})
+
+            }
+            _post('/manager/editcase/',{
+              'id':id,
+              'description':$("[name='description']").val(),
+              'dbid':$("[name='db_id']").val()
+
+            },success)
+
+          }
+
+        });
+
+
+      }
+      _post('/manager/queryonecase/',{id:id},success)
+
+    }else if(e.event=='detail'){
+
+    }else if(e.event=='addstep'){
+      if(data.length!=1){
+        layer.alert('请选择一条数据!',{icon:2,time:1000});
+        return;
+      }
+
+      bindselect();
+      bindselected(data[0]['id']);
+
+
+      layer.open(
+        {
+          title:'添加步骤',
+          type:1,
+          content:$('#addstep'),
+          btn:['提交','取消'],
+          area:["900px","450px"],
+
+          yes: function(index, layero){
+            //按钮【按钮一】的回调
+            console.log('yes')
+          },
+          btn2: function(index, layero){
+            //按钮【按钮二】的回调
+            //return false 开启该代码可禁止点击该按钮关闭
+            console.log('no')
+          },
+
+
+      });
+    }
+
+  });
+
+
+
+
+  
+  
+});
+
+// $(document).ready(function(){
+
+// });
+</script>
+
+<script type="text/html" id="toolbar">
+  <i class="layui-icon layui-icon-form" lay-event="detail"></i>
+  <i class="layui-icon layui-icon-edit" lay-event="edit"></i>
+</script>
+</html>

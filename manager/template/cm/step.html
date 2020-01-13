@@ -1,0 +1,427 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+
+    <title></title>
+    <style type="text/css">
+
+      .layui-table-cell {
+      height: inherit;
+      }
+            
+      .layui-icon:hover{
+        cursor: pointer;
+      }
+
+      #adddata:hover{
+        cursor: pointer;
+        color:#009688;
+
+      }
+      #deldata:hover{
+        cursor: pointer;
+        color: #009688;
+
+      }
+      #copydata:hover{
+        cursor: pointer;
+        color:#009688;
+      }
+
+
+      .required::after{
+      content:'*';
+      position:absolute;
+      right: :2px;
+      top:0;
+      color:red;
+      }
+    </style>
+
+
+</head>
+<body>
+
+
+
+<form id='addhtml' class="layui-form" style="padding: 10px;">
+  <span>测试步骤</span>
+
+
+  <div class="layui-form-item">
+    <label class="layui-form-label ">权重</label>
+    <div class="layui-input-block">
+      <input id='weight' type="text" name="weight" placeholder="" autocomplete="off" class="layui-input" disabled>
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">节点类型</label>
+    <div class="layui-input-block">
+      <input type="radio" name="node_type" value="step" title="步骤"  lay-filter='node_type' checked>
+      <input type="radio" name="node_type" value='case' title="目录"  lay-filter='node_type'>
+
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">步骤类型</label>
+    <div class="layui-input-block">
+      <input type="radio" name="step_type" value="interface" title="接口"  lay-filter='kind' checked>
+      <input type="radio" name="step_type" value='function' title="函数"  lay-filter='kind'>
+
+    </div>
+  </div>
+
+  <div class="layui-form-item ">
+    <label class="layui-form-label required">描述</label>
+    <div class="layui-input-block">
+      <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input" lay-verify="required">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label required">url</label>
+    <div class="layui-input-block">
+      <input id='url' type="text" name="url" placeholder="" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">请求头</label>
+    <div class="layui-input-block">
+      <input type="text" id='header' name="header" placeholder="请输入" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+<!--   <div class="layui-form-item">
+    <label class="layui-form-label">body</label>
+    <div class="layui-input-block">
+      <textarea type="text" name="body" placeholder="请输入" autocomplete="off" class="layui-input"></textarea>
+    </div>
+  </div> -->
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">method</label>
+    <div class="layui-input-block">
+      <input type="radio" name="method" value="get" title="GET" >
+      <input type="radio" name="method" value='post' title="POST" checked>
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">content-type</label>
+    <div class="layui-input-block">
+      <input type="radio" name="content-type" value="urlencode" title="urlencode" checked>
+      <input type="radio" name="content-type" value='json' title="json">
+      <input type="radio" name="content-type" value='xml' title="xml">
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">属性</label>
+    <div class="layui-input-block">
+      <input type="text" id='property' name="property" placeholder="" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+
+  <div class="layui-form-item" hidden>
+    <label class="layui-form-label">标签</label>
+    <div class="layui-input-block">
+      <select name="tag" lay-verify="">
+        <option value="">请选择</option>
+<!--         <option value="mysql">mysql</option>
+        <option value="oracle">oracle</option> -->
+<!--         <option value="db2">db2</option> -->
+      </select> 
+    </div>
+  </div>
+  
+
+  <div class="layui-form-item" hidden>
+    <label class="layui-form-label required">调用函数</label>
+    <div class="layui-input-block">
+      <select name='body'></select>
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">DB选择</label>
+    <div class="layui-input-block">
+      <select name="db_id" lay-verify="">
+<!--         <option value="">请选择</option>
+        <option value="">mysql</option> -->
+      </select> 
+    </div>
+  </div>
+<!--   <div id='table-show' style="width:1200px;"></div> -->
+<button class="layui-btn" id='save' style="visibility:hidden;">保存</button>
+
+
+</form>
+</body>
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+<script src="{% static 'manager/js/step.js' %}"></script>
+
+
+<script type="text/javascript">
+
+
+function selectstep(){
+
+  $("[name='url']").parent().parent().show()
+  $("[name='header']").parent().parent().show()
+  $("[name='method']").parent().parent().show()
+  $("[name='content-type']").parent().parent().show()
+  $("[name='itf-check']").parent().parent().show()
+  $("[name='db-check']").parent().parent().show()
+  $("[name='body']").parent().parent().show()
+  $("[name='property']").parent().parent().show()
+  $("[name='db_id']").parent().parent().show()
+
+  //
+
+  $("[name='url']").parent().parent().show()
+  $("[name='body']").parent().parent().hide()
+  $("[name='header']").parent().parent().show()
+  $("[name='method']").parent().parent().show()
+  $("[name='content-type']").parent().parent().show()
+  $("[name='itf-check']").parent().parent().show()
+
+  $("[value='function']").removeAttr('checked')
+
+
+
+
+}
+function selectcase(){
+
+  $("[name='url']").parent().parent().hide()
+  $("[name='header']").parent().parent().hide()
+  $("[name='method']").parent().parent().hide()
+  $("[name='content-type']").parent().parent().hide()
+  $("[name='itf-check']").parent().parent().hide()
+  $("[name='db-check']").parent().parent().hide()
+  $("[name='body']").parent().parent().hide()
+  $("[name='property']").parent().parent().hide()
+  $("[name='db_id']").parent().parent().hide()
+
+
+
+}
+
+function selectinterface(){
+  $("[name='url']").parent().parent().show()
+  $("[name='body']").parent().parent().hide()
+  $("[name='header']").parent().parent().show()
+  $("[name='method']").parent().parent().show()
+  $("[name='content-type']").parent().parent().show()
+  $("[name='itf-check']").parent().parent().show()
+
+  $("[value='interface']").attr('checked','checked')
+  $("[value='function']").removeAttr('checked')
+
+}
+function selectfunction(){
+
+  $("[name='url']").parent().parent().hide()
+  $("[name='body']").parent().parent().show()
+  $("[name='header']").parent().parent().hide()
+  $("[name='method']").parent().parent().hide()
+  $("[name='content-type']").parent().parent().hide()
+  $("[name='itf-check']").parent().parent().hide()
+
+  $("[value='function']").attr('checked','checked')
+  $("[value='interface']").removeAttr('checked')
+
+
+
+}
+
+_load_db_dropdownlist()
+// 
+layui.use(['table','layer','element','form'], function(){
+  var table = layui.table;
+  var $=layui.jquery
+  var layer=layui.layer;
+  var form = layui.form;
+  var element = layui.element;
+  //
+  form.render('select')
+  //
+
+  //加载函数列表
+  success2=function(data){
+      console.log('函数列表信息=>'+data)
+      data=JSON.parse(data)
+      data=data.data
+
+      for(var index=0;index<data.length;index++){
+
+        $("[name='body']").append("<option value='"+data[index]['value']+"'>"+data[index]['description']+"</option>")
+      }
+
+      layui.form.render('select')
+
+    }
+   _post('/manager/queryfunclist/',{},success2)
+  form.on('radio(kind)', function (data) {
+    //v=$("[name='step_type']").val()
+    v=data.value
+    // console.log("选择"+v)
+    if(v=='interface')
+      selectinterface()
+    else
+      selectfunction()
+
+  });
+
+  form.on('radio(node_type)', function (data) {
+    //v=$("[name='step_type']").val()
+    v=data.value
+    // console.log("选择"+v)
+    if(v=='case')
+      selectcase()
+    else
+      selectstep()
+
+  });
+  //
+  //
+  uid=_get_query_param('uid')
+  pid=_get_query_param('pid')
+  // alert(pid)
+  // console.log('pid='+pid)
+  action=_get_query_param('action')
+
+  // alert(action)
+  detail='addstep'
+  // alert(detail)
+
+  if(action!='view')
+    $('#save').css('visibility','visible')
+  else
+    $('#save').css('visibility','hidden')  
+
+  
+  if(uid){
+    detail='editstep'
+    // alert(detail)
+    success=function(data){
+
+        weight=data.data[0]['weight']
+        step_type=data.data[0]['step_type']
+        // alert(step_type)
+        description=data.data[0]['description']
+        url=data.data[0]['url']
+        //alert(url)
+        method=data.data[0]['method']
+        headers=data.data[0]['headers']
+        body=data.data[0]['body']
+        content_type=data.data[0]['content_type']
+        itf_check=data.data[0]['itf_check']
+        db_check=data.data[0]['db_check']
+        tmp=data.data[0]['tmp']
+        if('interface'==step_type)
+          selectinterface()
+        else
+          selectfunction()
+
+        $("[name='weight']").val(weight)
+        $("[name='description']").val(description)
+        $("[name='url']").val(url)
+        $("[value='"+method+"']").attr('checked','checked')
+        // layui.form.render('radio')
+        $("[name='header']").val(headers)
+        $("[name='body']").val(body)
+        //alert(content_type)
+        ///console.log('content_type=>',content_type)
+
+        $("[value='urlencode']").removeAttr('checked')
+        $("[value='json']").removeAttr('checked')
+        $("[value='xml']").removeAttr('checked')
+        $("[value='"+content_type+"']").attr('checked','checked')
+        layui.form.render('radio')
+        $("[name='itf-check']").val(itf_check)
+        $("[name='db-check']").val(db_check)
+        $("[name='property']").val(tmp)
+
+        $("[name='db_id']").val(data.data[0]['db_id'])
+        layui.form.render('select')
+
+        // alert('FILL OVER')
+
+        //
+
+    }
+    _post('/manager/queryonestep/',{id:uid},success);
+  }
+
+//bind
+
+ //save
+    // alert('bind save1')
+    btn=$('#save')
+    // alert('bind save')
+
+    if(btn)btn.bind('click',function(e){
+
+      console.log('step click')
+      data={
+        'uid':uid,
+        'pid':pid,
+        'action':detail,
+        'step_type':$("[name='step_type']:checked").val(),
+        'description':$("[name='description']").val(),
+        'url':$("[name='url']").val(),
+        'method':$("[name='method']:checked").val(),
+        'headers':$("[name='header']").val(),
+        'body':$("[name='body']").val(),
+        'content_type':$("[name='content-type']:checked").val(),
+        'tmp':$("[name='property']").val(),
+        'dbid':$("[name='db_id']").val(),
+        'node_type':$("[name='node_type']:checked").val(),
+
+      }
+
+      // alert(data)
+      _post('/manager/treecontrol/',data,function(e){
+
+        if(e.code==0){
+            var treeObj = parent.$.fn.zTree.getZTreeObj('case-manager');
+
+            if(detail=='addstep'){
+              var node = treeObj.getNodeByParam('id',pid); 
+              console.log('addstep=>'+JSON.stringify(e.data)) 
+              treeObj.addNodes(node,e.data);
+              treeObj.expandNode(node,true)
+
+            }else{
+              var node = treeObj.getNodeByParam('id',uid);
+              // console.log('search tid '+utid+'=>'+node)
+              node.name=e.data['name']
+              treeObj.updateNode(node)
+
+            }
+          layer.alert(e.msg,{icon:1,time:2000})
+        }
+        else
+          layer.alert(e.msg,{icon:2})
+      });
+
+      return false
+
+    });
+
+
+
+});
+
+
+
+</script>
+
+
+
+</html>

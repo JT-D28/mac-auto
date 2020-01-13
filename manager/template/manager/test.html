@@ -1,0 +1,26 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+
+
+    <title>Title</title>
+
+</head>
+<body>
+	
+
+</body>
+<!-- 加载jquery-->
+<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+
+<script>
+
+    $(document).ready(function(){
+        $('body').load('http://localhost:8000/manager/var/')
+    });
+
+</script>
+</html>

@@ -15,7 +15,7 @@ from random import randrange
 
 from django.http import HttpResponse
 
-from pyecharts.faker import Faker
+#from pyecharts.faker import Faker
 # from pyecharts import options as opts
 # from pyecharts.charts import Pie, Bar, TreeMap, Line
 

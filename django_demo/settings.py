@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'login',
     'manager',
+    'homepage',
     'captcha',
     'channels',
     'corsheaders',
@@ -74,7 +75,7 @@ ROOT_URLCONF = 'django_demo.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR,'login/template'),os.path.join(BASE_DIR,'manager/template')],
+        'DIRS': [os.path.join(BASE_DIR,'login/template'),os.path.join(BASE_DIR,'manager/template'),os.path.join(BASE_DIR,'homepage/template')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -215,7 +216,8 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR,"login/static"),
-    os.path.join(BASE_DIR,'manager/static')
+    os.path.join(BASE_DIR,'manager/static'),
+    os.path.join(BASE_DIR, 'homepage/static')
 
 ]
 

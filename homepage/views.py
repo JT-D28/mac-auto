@@ -75,14 +75,14 @@ def querytaskid(request):
     try:
         planid = request.POST.get('planid')
         plan = Plan.objects.get(id=planid)
-        detail = list(ResultDetail.objects.values('taskid').distinct())
-
+        detail = list(ResultDetail.objects.filter(plan=plan).order_by('-createtime'))
+        taskid = detail[0].taskid
         print(detail)
     except Exception as e:
         code = 1
         msg = str(e)
 
-    return JsonResponse(simplejson(code=code, msg=msg, data=taskids), safe=False)
+    return JsonResponse(simplejson(code=code, msg=msg, data=taskid), safe=False)
 
 
 @csrf_exempt

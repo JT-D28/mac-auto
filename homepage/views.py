@@ -1,6 +1,9 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from pyecharts.faker import Faker
+
+from manager.invoker import gettaskresult
 from . import rpechart
 from manager import cm
 from manager.core import *
@@ -13,9 +16,9 @@ from random import randrange
 from django.http import HttpResponse
 from rest_framework.views import APIView
 
-from pyecharts.charts import Bar
+from pyecharts.faker import Faker
 from pyecharts import options as opts
-
+from pyecharts.charts import Pie, Bar, TreeMap, Line
 
 
 @csrf_exempt
@@ -63,38 +66,38 @@ def queryplan(request):
         msg = '查询数据库列表信息异常'
         return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
+
 @csrf_exempt
 def querytaskid(request):
     code = 0
     msg = ''
-    taskids = None
+    taskids = []
     try:
         planid = request.POST.get('planid')
         plan = Plan.objects.get(id=planid)
-        detail = list(ResultDetail.objects.filter(plan=plan).order_by('-createtime'))
-        taskid = detail[0].taskid
-        print(taskid)
+        detail = list(ResultDetail.objects.values('taskid').distinct())
+
+        print(detail)
     except Exception as e:
         code = 1
         msg = str(e)
 
-    return JsonResponse(simplejson(code=code, msg=msg, data=taskid), safe=False)
+    return JsonResponse(simplejson(code=code, msg=msg, data=taskids), safe=False)
 
 
 @csrf_exempt
 def reportone(request):
-    c = (
-        Bar()
-            .add_xaxis(["衬衫", "羊毛衫", "雪纺衫", "裤子", "高跟鞋", "袜子"])
-            .add_yaxis("商家A", [randrange(0, 100) for _ in range(6)])
-            .add_yaxis("商家B", [randrange(0, 100) for _ in range(6)])
-            .set_global_opts(title_opts=opts.TitleOpts(title="Bar-基本示例", subtitle="我是副标题"))
+    gettaskresult
+
+    pie = (
+        Pie()
+            .add("", [(1, 3)])
+            .set_colors(["green", "yellow"])
+            .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))
             .dump_options_with_quotes()
     )
-    return rpechart.json_response(json.loads(c))
 
-
-
+    return rpechart.json_response(json.loads(pie))
 
 
 @csrf_exempt

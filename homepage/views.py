@@ -1,17 +1,26 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
+from . import rpechart
 from manager import cm
 from manager.core import *
 
 # Create your views here.
 from manager.models import Product, Plan, ResultDetail
+import json
+from random import randrange
+
+from django.http import HttpResponse
+from rest_framework.views import APIView
+
+from pyecharts.charts import Bar
+from pyecharts import options as opts
+
 
 
 @csrf_exempt
 def homepage(request):
-    return render(request, 'homepage.html')
+    return render(request, 'home1page.html')
 
 
 @csrf_exempt
@@ -70,6 +79,22 @@ def querytaskid(request):
         msg = str(e)
 
     return JsonResponse(simplejson(code=code, msg=msg, data=taskid), safe=False)
+
+
+@csrf_exempt
+def reportone(request):
+    c = (
+        Bar()
+            .add_xaxis(["衬衫", "羊毛衫", "雪纺衫", "裤子", "高跟鞋", "袜子"])
+            .add_yaxis("商家A", [randrange(0, 100) for _ in range(6)])
+            .add_yaxis("商家B", [randrange(0, 100) for _ in range(6)])
+            .set_global_opts(title_opts=opts.TitleOpts(title="Bar-基本示例", subtitle="我是副标题"))
+            .dump_options_with_quotes()
+    )
+    return rpechart.json_response(json.loads(c))
+
+
+
 
 
 @csrf_exempt

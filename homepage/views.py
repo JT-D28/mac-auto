@@ -14,7 +14,6 @@ import json
 from random import randrange
 
 from django.http import HttpResponse
-from rest_framework.views import APIView
 
 from pyecharts.faker import Faker
 # from pyecharts import options as opts

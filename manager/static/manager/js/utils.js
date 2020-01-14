@@ -8,7 +8,7 @@
 
 // var usercache='unexpected'
 
-var host='127.0.0.1'
+var host='10.60.44.59'
 var http_base='http://'+host
 
 function connect_on(){

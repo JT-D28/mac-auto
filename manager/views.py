@@ -2324,7 +2324,7 @@ def querytreelist(request):
 				datanode.append({
 					'id':'business_%s'%business.id,
 					'pId':'step_%s'%step.id,
-					'name':step.description,
+					'name':business.businessname,
 					'type':'business',
 					'textIcon':'fa fa-leaf',
 					# 'open':True

@@ -5,4 +5,4 @@
 /homepage/__pycache__/
 /tools/__pycache__/
 /manager/__pycache__/
-/logs/
+/logs/*

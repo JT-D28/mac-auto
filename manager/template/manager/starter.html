@@ -90,14 +90,9 @@ scratch. This page gets rid of all links and provides the needed markup only.
       <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
       <ul class="layui-nav layui-nav-tree"  lay-filter="test" style="width:70px!important;" >
 
-
-          <li class="layui-nav-item layui-nav-itemed">
-          <a id="homepage-link" href="javascript:;" link='homepage/' class="fa fa-home" title="首页"></a>
-        </li>
-
         {% if request.session.username == 'admin' %}
         <li class="layui-nav-item layui-nav-itemed">
-          <a id="register-link" href="javascript:;" link='account/user/' class="fa fa-user" title="账户管理"></a>
+          <a id="register-link" href="javascript:;" link='account/user/'>账号注册</a>
         </li>
         {%endif%}
    
@@ -136,6 +131,15 @@ scratch. This page gets rid of all links and provides the needed markup only.
         </li>
 <!--         <li class="layui-nav-item layui-nav-itemed">
           <a id="var-link" href="javascript:;" link='manager/itf/'>接口管理</a>
+        </li> -->
+<!--         <li class="layui-nav-item layui-nav-itemed">
+          <a id="step-link" href="javascript:;" link='manager/step/' class="fa fa-paper-plane" title='测试步骤'></a>
+        </li>
+        <li class="layui-nav-item layui-nav-itemed">
+          <a id="case-link" href="javascript:;" link='manager/case/' class="fa fa-paper-plane" title='测试用例'></a>
+        </li>
+        <li class="layui-nav-item layui-nav-itemed">
+          <a id="plan-link" href="javascript:;" link='manager/plan/' class="fa fa-paper-plane" title='测试计划'></a>
         </li> -->
 <!--         <li class="layui-nav-item layui-nav-itemed">
           <a id="var-link" href="javascript:;" link='manager/result/'>结果查看</a>
@@ -305,7 +309,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
   //默认到计划页面
 
-    $("[link='homepage/']").click();
+    $("[link='manager/plan/']").click();
 
 });
 

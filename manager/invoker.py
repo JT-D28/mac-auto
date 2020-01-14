@@ -1029,6 +1029,9 @@ def _call_extra(user,call_strs,taskid=None,kind='前置操作'):
 		if not s.strip():
 			continue
 
+		if s=='None' or s is None:
+			continue;
+
 		status,call_str=_replace_variable(user, s)
 		if status is not 'success':
 			return (status,res)

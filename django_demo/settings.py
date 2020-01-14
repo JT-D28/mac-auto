@@ -11,9 +11,9 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
-BASE_URL='http://10.60.44.59:18005'
+BASE_URL='http://10.60.50.155:8000'
 ##Redis配置
-REDIS_HOST='10.60.44.59'
+REDIS_HOST='127.0.0.1'
 REDIS_PORT=6379
 #环境
 env_id=''
@@ -74,7 +74,7 @@ ROOT_URLCONF = 'django_demo.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR,'login/template'),os.path.join(BASE_DIR,'manager/template'),os.path.join(BASE_DIR,'homepage/template')],
+        'DIRS': [os.path.join(BASE_DIR,'login/template'),os.path.join(BASE_DIR,'manager/template')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -174,7 +174,7 @@ LOGGING = {
 
    'class': 'logging.FileHandler',
 
-   'filename': '../monitor.log',
+   'filename': 'D:/monitor.log',
 
    'formatter': 'verbose'
 
@@ -215,8 +215,8 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR,"login/static"),
-    os.path.join(BASE_DIR,'manager/static'),
-    os.path.join(BASE_DIR,'homepage/static')
+    os.path.join(BASE_DIR,'manager/static')
+
 ]
 
 #配置解决跨域问题

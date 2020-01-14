@@ -1128,7 +1128,7 @@ def queryfunc(request):
 		res=list(Function.objects.all())
 
 	##
-	res=res+getbuiltin(searchvalue)
+	res=res+getbuiltin()
 	limit=request.GET.get('limit')
 	page=request.GET.get('page')
 	res,total=getpagedata(res, page, limit)
@@ -2253,7 +2253,7 @@ def querybusinessdatalist(request):
 
 @csrf_exempt
 def querytreelist(request):
-	from .cm import getchild
+	from .cm import getchild,get_search_match
 	datanode=[]
 	def _get_pid_data(idx,type,data):
 

@@ -129,7 +129,7 @@
         var $=layui.jquery;
         var form=layui.form;
         var layer=layui.layer;
-
+    var username=$("#username").text()
         common.ajax('/homepage/queryproduct/','post','json',{},
             function (data) {
                 console.log('项目名称=>'+data)
@@ -256,13 +256,12 @@
 
 
     $('#repoetplan').click(function () {
-        var id = $("[name='plan']").val().substr(5)
         var planid = $("[name='plan']").val().substr(5)
             if(planid == ''){
                 layer.msg("请选择项目和计划！")
             }else {
                 common.ajax('/homepage/querytaskid/', 'post', 'json', {
-                    'planid': id
+                    'planid': planid
                 }, function (data) {
                     data = JSON.parse(data)
                     taskid = data.data
@@ -286,6 +285,39 @@
             }
     })
 
+
+        $("#process").click(function () {
+            var planid = $("[name='plan']").val().substr(5)
+            if(planid == ''){
+                layer.msg("请选择项目和计划！")
+            }else {
+                common.ajax('/homepage/querytaskid/', 'post', 'json', {
+                        'planid': planid
+                    }, function (data) {
+                        data = JSON.parse(data)
+                        taskid = data.data
+                        if (taskid === undefined) {
+                            layer.msg('任务还没有运行过!');
+                        } else {
+                            common.ajax('/homepage/process/','post','json',{
+                                'taskid':taskid
+                            },function (res) {
+                                res = JSON.parse(res)
+                                console.log(res.data)
+                            layer.open({
+                                type: 1,
+                                title: false,
+                                shade: [0],
+                                area: ['1080px', '480px'],
+                                anim: 2,
+                                shadeClose: true,
+                                content: res.data,
+                            });
+                            })
+                        }
+                })
+            }
+        })
 
 
 

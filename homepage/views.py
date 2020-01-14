@@ -15,7 +15,8 @@ from random import randrange
 
 from django.http import HttpResponse
 
-#from pyecharts.faker import Faker
+
+# from pyecharts.faker import Faker
 # from pyecharts import options as opts
 # from pyecharts.charts import Pie, Bar, TreeMap, Line
 
@@ -85,6 +86,21 @@ def querytaskid(request):
 
     return JsonResponse(simplejson(code=code, msg=msg, data=taskids), safe=False)
 
+@csrf_exempt
+def process(request):
+    code = 0
+    msg = ''
+    str=''
+    try:
+        taskid = request.POST.get('taskid')
+        f = open("./logs/" + taskid + ".log", 'r')
+        for line in f:
+            str +=line
+        f.close()
+    except:
+        code = 1
+        msg = "出错了！"
+    return JsonResponse(simplejson(code=code, msg=msg, data=str), safe=False)
 
 # @csrf_exempt
 # def reportone(request):

@@ -261,7 +261,7 @@
                     data = JSON.parse(data)
                     taskid = data.data
                     console.log(taskid)
-                    if (taskid === undefined) {
+                    if (taskid === undefined | taskid =='') {
                         layer.msg('任务还没有运行过!');
                     } else {
                         var resulturl = '/manager/querytaskdetail/?taskid=' + taskid

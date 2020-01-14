@@ -75,13 +75,15 @@ def querytaskid(request):
         planid = request.POST.get('planid')
         plan = Plan.objects.get(id=planid)
         detail = list(ResultDetail.objects.filter(plan=plan).order_by('-createtime'))
-        taskid = detail[0].taskid
-        print(detail)
-    except Exception as e:
+        if detail is None:
+            msg = "任务还没有运行过！"
+        else:
+            taskids = detail[0].taskid
+    except:
         code = 1
-        msg = str(e)
+        msg = "出错了！"
 
-    return JsonResponse(simplejson(code=code, msg=msg, data=taskid), safe=False)
+    return JsonResponse(simplejson(code=code, msg=msg, data=taskids), safe=False)
 
 
 # @csrf_exempt

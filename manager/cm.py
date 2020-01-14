@@ -307,7 +307,6 @@ def delcase(request):
 def addstep(request):
 	from .core import getbuiltin
 	try:
-
 		pid=request.POST.get('pid').split('_')[1]
 		step_type=request.POST.get('step_type')
 		description=request.POST.get('description')

@@ -2901,6 +2901,10 @@ class DataMove:
 			stepd['db_id']=step.db_id
 
 			self._data['entity']['steps'].append(stepd)
+
+
+
+			
 			c=self._data['relation']['case_step'].get(str(case.id),[])
 			ordervalue=Order.objects.get(kind='case_step',main_id=case.id,follow_id=step.id).value
 			c.append((str(step.id),ordervalue))
@@ -3011,7 +3015,6 @@ class DataMove:
 				a.append((str(case.id),ordervalue))
 				self._data['relation']['plan_case'][str(planid)]=list(set(a))
 				self._add_case_relation_data(case)
-
 				
 			#统一导出变量
 			for key in self._varkeys:

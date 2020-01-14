@@ -2320,11 +2320,15 @@ def querytreelist(request):
 		elif type=='step':
 			step=Step.objects.get(id=idx)
 			businesslist=cm.getchild('step_business',idx)
+
 			for business in businesslist:
+				bname=business.businessname
+				if business.count==0:
+					bname='<s>%s</s>'%bname
 				datanode.append({
 					'id':'business_%s'%business.id,
 					'pId':'step_%s'%step.id,
-					'name':business.businessname,
+					'name':bname,
 					'type':'business',
 					'textIcon':'fa fa-leaf',
 					# 'open':True

@@ -103,16 +103,16 @@ var tree={
 
 	},
 	_addDiyDom:function(treeId, treeNode) {
-    // var spaceWidth = 5;
-    // var switchObj = $("#" + treeNode.tId + "_switch"),
-    // icoObj = $("#" + treeNode.tId + "_ico");
-    // switchObj.remove();
-    // icoObj.parent().before(switchObj);
-    // var spantxt = $("#" + treeNode.tId + "_span").html();
-    // if (spantxt.length> 10) {
-    //     spantxt = spantxt.substring(0, 10) + "...";
-    //     $("#" + treeNode.tId + "_span").html(spantxt);
-    // }
+    var spaceWidth = 5;
+    var switchObj = $("#" + treeNode.tId + "_switch"),
+    icoObj = $("#" + treeNode.tId + "_ico");
+    switchObj.remove();
+    icoObj.parent().before(switchObj);
+    var spantxt = $("#" + treeNode.tId + "_span").html();
+    if (spantxt.length> 10) {
+        spantxt = spantxt.substring(0, 10) + "...";
+        $("#" + treeNode.tId + "_span").html(spantxt);
+    }
 	},
 	_addHoverDom:function(treeId, treeNode){
 		//console.log(treeNode)

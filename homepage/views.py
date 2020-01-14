@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from pyecharts.faker import Faker
+# from pyecharts.faker import Faker
 
 from manager.invoker import gettaskresult
 from . import rpechart
@@ -17,8 +17,8 @@ from django.http import HttpResponse
 from rest_framework.views import APIView
 
 from pyecharts.faker import Faker
-from pyecharts import options as opts
-from pyecharts.charts import Pie, Bar, TreeMap, Line
+# from pyecharts import options as opts
+# from pyecharts.charts import Pie, Bar, TreeMap, Line
 
 
 @csrf_exempt
@@ -85,19 +85,19 @@ def querytaskid(request):
     return JsonResponse(simplejson(code=code, msg=msg, data=taskid), safe=False)
 
 
-@csrf_exempt
-def reportone(request):
-    gettaskresult
-
-    pie = (
-        Pie()
-            .add("", [(1, 3)])
-            .set_colors(["green", "yellow"])
-            .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))
-            .dump_options_with_quotes()
-    )
-
-    return rpechart.json_response(json.loads(pie))
+# @csrf_exempt
+# def reportone(request):
+#     gettaskresult
+#
+#     pie = (
+#         Pie()
+#             .add("", [(1, 3)])
+#             .set_colors(["green", "yellow"])
+#             .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))
+#             .dump_options_with_quotes()
+#     )
+#
+#     return rpechart.json_response(json.loads(pie))
 
 
 @csrf_exempt

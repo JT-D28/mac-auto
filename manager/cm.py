@@ -308,9 +308,25 @@ def addstep(request):
 	from .core import getbuiltin
 	try:
 
-		##
-		node_type=request.POST.get('node_type')
-		if node_type=='case':
+		pid=request.POST.get('pid').split('_')[1]
+		step_type=request.POST.get('step_type')
+		description=request.POST.get('description')
+		headers=request.POST.get('headers')
+		body=request.POST.get("body")
+		url=request.POST.get('url')
+		method=request.POST.get('method')
+		content_type=request.POST.get('content_type')
+		db_check=request.POST.get('db_check')
+		itf_check=request.POST.get('itf_check')
+		print('itf_check=>',itf_check)
+		tmp=request.POST.get('tmp')
+		author=request.session.get('username')
+		print("author=>",author)
+		businessdata=request.POST.get('business_data')
+		print('businessdata=>',type(businessdata),businessdata)
+		dbid=request.POST.get('dbid')
+##
+		if step_type=='dir':
 			case=Case()
 			case.description=request.POST.get('description')
 			case.author=md.User.objects.get(name=request.session.get('username'))
@@ -333,25 +349,7 @@ def addstep(request):
 			}
 
 
-		##
 
-		pid=request.POST.get('pid').split('_')[1]
-		step_type=request.POST.get('step_type')
-		description=request.POST.get('description')
-		headers=request.POST.get('headers')
-		body=request.POST.get("body")
-		url=request.POST.get('url')
-		method=request.POST.get('method')
-		content_type=request.POST.get('content_type')
-		db_check=request.POST.get('db_check')
-		itf_check=request.POST.get('itf_check')
-		print('itf_check=>',itf_check)
-		tmp=request.POST.get('tmp')
-		author=request.session.get('username')
-		print("author=>",author)
-		businessdata=request.POST.get('business_data')
-		print('businessdata=>',type(businessdata),businessdata)
-		dbid=request.POST.get('dbid')
 		step=Step()
 		step.step_type=step_type
 		step.description=description

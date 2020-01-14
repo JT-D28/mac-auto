@@ -45,7 +45,7 @@
 </head>
 <form id='addbusiness' class='layui-form' style="padding:10px;">
   <span>业务数据</span>
-  <div class="layui-form-item ">
+  <div class="layui-form-item " id='weight_item' hidden>
     <label class="layui-form-label required">权重</label>
     <div class="layui-input-block">
       <input type="text" name="weight" placeholder="请输入" autocomplete="off" class="layui-input"   id='weight' disabled>
@@ -115,10 +115,13 @@ layui.use(['table','element','form'],function(){
   pid=_get_query_param('pid')
   action=_get_query_param('action')
   detail='addbusiness'
+
   if(action!='view')
     $('#save').css('visibility','visible')
-  else
+  else{
     $('#save').css('visibility','hidden')
+    $('#weight_item').removeAttr('hidden')
+  }
 
   // alert(uid)
 

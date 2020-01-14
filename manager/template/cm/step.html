@@ -51,27 +51,28 @@
   <span>测试步骤</span>
 
 
-  <div class="layui-form-item">
+  <div class="layui-form-item" id='weight_item' hidden>
     <label class="layui-form-label ">权重</label>
     <div class="layui-input-block">
       <input id='weight' type="text" name="weight" placeholder="" autocomplete="off" class="layui-input" disabled>
     </div>
   </div>
 
-  <div class="layui-form-item">
+<!--   <div class="layui-form-item">
     <label class="layui-form-label">节点类型</label>
     <div class="layui-input-block">
       <input type="radio" name="node_type" value="step" title="步骤"  lay-filter='node_type' checked>
       <input type="radio" name="node_type" value='case' title="目录"  lay-filter='node_type'>
 
     </div>
-  </div>
+  </div> -->
 
   <div class="layui-form-item">
     <label class="layui-form-label">步骤类型</label>
     <div class="layui-input-block">
       <input type="radio" name="step_type" value="interface" title="接口"  lay-filter='kind' checked>
       <input type="radio" name="step_type" value='function' title="函数"  lay-filter='kind'>
+      <input type="radio" name="step_type" value='dir' title="文件夹"  lay-filter='kind'>
 
     </div>
   </div>
@@ -168,48 +169,48 @@
 <script type="text/javascript">
 
 
-function selectstep(){
+// function selectstep(){
 
-  $("[name='url']").parent().parent().show()
-  $("[name='header']").parent().parent().show()
-  $("[name='method']").parent().parent().show()
-  $("[name='content-type']").parent().parent().show()
-  $("[name='itf-check']").parent().parent().show()
-  $("[name='db-check']").parent().parent().show()
-  $("[name='body']").parent().parent().show()
-  $("[name='property']").parent().parent().show()
-  $("[name='db_id']").parent().parent().show()
+//   $("[name='url']").parent().parent().show()
+//   $("[name='header']").parent().parent().show()
+//   $("[name='method']").parent().parent().show()
+//   $("[name='content-type']").parent().parent().show()
+//   $("[name='itf-check']").parent().parent().show()
+//   $("[name='db-check']").parent().parent().show()
+//   $("[name='body']").parent().parent().show()
+//   $("[name='property']").parent().parent().show()
+//   $("[name='db_id']").parent().parent().show()
 
-  //
+//   //
 
-  $("[name='url']").parent().parent().show()
-  $("[name='body']").parent().parent().hide()
-  $("[name='header']").parent().parent().show()
-  $("[name='method']").parent().parent().show()
-  $("[name='content-type']").parent().parent().show()
-  $("[name='itf-check']").parent().parent().show()
+//   $("[name='url']").parent().parent().show()
+//   $("[name='body']").parent().parent().hide()
+//   $("[name='header']").parent().parent().show()
+//   $("[name='method']").parent().parent().show()
+//   $("[name='content-type']").parent().parent().show()
+//   $("[name='itf-check']").parent().parent().show()
 
-  $("[value='function']").removeAttr('checked')
-
-
-
-
-}
-function selectcase(){
-
-  $("[name='url']").parent().parent().hide()
-  $("[name='header']").parent().parent().hide()
-  $("[name='method']").parent().parent().hide()
-  $("[name='content-type']").parent().parent().hide()
-  $("[name='itf-check']").parent().parent().hide()
-  $("[name='db-check']").parent().parent().hide()
-  $("[name='body']").parent().parent().hide()
-  $("[name='property']").parent().parent().hide()
-  $("[name='db_id']").parent().parent().hide()
+//   $("[value='function']").removeAttr('checked')
 
 
 
-}
+
+// }
+// function selectcase(){
+
+//   $("[name='url']").parent().parent().hide()
+//   $("[name='header']").parent().parent().hide()
+//   $("[name='method']").parent().parent().hide()
+//   $("[name='content-type']").parent().parent().hide()
+//   $("[name='itf-check']").parent().parent().hide()
+//   $("[name='db-check']").parent().parent().hide()
+//   $("[name='body']").parent().parent().hide()
+//   $("[name='property']").parent().parent().hide()
+//   $("[name='db_id']").parent().parent().hide()
+
+
+
+// }
 
 function selectinterface(){
   $("[name='url']").parent().parent().show()
@@ -235,6 +236,21 @@ function selectfunction(){
   $("[value='function']").attr('checked','checked')
   $("[value='interface']").removeAttr('checked')
 
+
+
+}
+
+function selectdir(){
+
+  $("[name='url']").parent().parent().hide()
+  $("[name='header']").parent().parent().hide()
+  $("[name='method']").parent().parent().hide()
+  $("[name='content-type']").parent().parent().hide()
+  $("[name='itf-check']").parent().parent().hide()
+  $("[name='db-check']").parent().parent().hide()
+  $("[name='body']").parent().parent().hide()
+  $("[name='property']").parent().parent().hide()
+  $("[name='db_id']").parent().parent().hide()
 
 
 }
@@ -272,21 +288,23 @@ layui.use(['table','layer','element','form'], function(){
     // console.log("选择"+v)
     if(v=='interface')
       selectinterface()
-    else
+    else if(v=='function')
       selectfunction()
-
-  });
-
-  form.on('radio(node_type)', function (data) {
-    //v=$("[name='step_type']").val()
-    v=data.value
-    // console.log("选择"+v)
-    if(v=='case')
-      selectcase()
     else
-      selectstep()
+      selectdir()
 
   });
+
+  // form.on('radio(node_type)', function (data) {
+  //   //v=$("[name='step_type']").val()
+  //   v=data.value
+  //   // console.log("选择"+v)
+  //   if(v=='case')
+  //     selectcase()
+  //   else
+  //     selectstep()
+
+  // });
   //
   //
   uid=_get_query_param('uid')
@@ -301,8 +319,10 @@ layui.use(['table','layer','element','form'], function(){
 
   if(action!='view')
     $('#save').css('visibility','visible')
-  else
-    $('#save').css('visibility','hidden')  
+  else{
+    $('#save').css('visibility','hidden') 
+    $('#weight_item').removeAttr('hidden')
+  }
 
   
   if(uid){
@@ -325,8 +345,10 @@ layui.use(['table','layer','element','form'], function(){
         tmp=data.data[0]['tmp']
         if('interface'==step_type)
           selectinterface()
-        else
+        else if('function'==step_type)
           selectfunction()
+        else
+          selectdir()
 
         $("[name='weight']").val(weight)
         $("[name='description']").val(description)
@@ -381,7 +403,7 @@ layui.use(['table','layer','element','form'], function(){
         'content_type':$("[name='content-type']:checked").val(),
         'tmp':$("[name='property']").val(),
         'dbid':$("[name='db_id']").val(),
-        'node_type':$("[name='node_type']:checked").val(),
+        // 'node_type':$("[name='node_type']:checked").val(),
 
       }
 

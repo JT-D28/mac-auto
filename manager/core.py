@@ -587,8 +587,8 @@ class StepEncoder(XJsonEncoder):
 			uid=x.get('id')
 			try:
 
-				# print('weight=>',uid)
-				x['weight']=models.Order.objects.get(kind='case_step',follow_id=int(uid)).value
+				print('weight=>',uid)
+				x['weight']=list(models.Order.objects.filter(kind='case_step',follow_id=int(uid)))[0].value
 
 			except:
 				print(traceback.format_exc())
@@ -627,7 +627,7 @@ class BusinessDataEncoder(XJsonEncoder):
 		for x in L:
 			try:
 
-				x['weight']=models.Order.objects.get(kind='step_business',follow_id=int(x.get('id'))).value
+				x['weight']=list(models.Order.objects.filter(kind='step_business',follow_id=int(x.get('id'))))[0].value
 
 			except:
 				print('weight=>',traceback.format_exc())
@@ -637,8 +637,11 @@ class BusinessDataEncoder(XJsonEncoder):
 
 
 			if x.get('count')=='None':
-				# print('yes')
 				x['count']= 1
+			if x.get('postposition')=='None':
+				x['postposition']=''
+			if x.get('preposition')=='None':
+				x['preposition']=''
 			# print('count=>',x['count'])
 
 			try:
@@ -794,35 +797,27 @@ def gettaskid():
 
 
 
-def getbuiltin(searchvalue=None, filename='builtin.py'):
-    """
-    获取内置函数列表 model.Function形式组装
+def getbuiltin(filename='builtin.py'):
+	"""获取内置函数列表 model.Function形式组装
 	"""
 
-    path = os.path.join(os.path.dirname(__file__), filename)
-    list_ = []
-    with open(path, encoding='utf-8') as f:
-        content = f.read()
-        # print(content)
-        methodnames = re.findall("def\s+(.*?)\(", content)
-        if searchvalue is None:
-            for methodname in methodnames:
-                f = Function()
-                f.name = methodname
-                f.description = eval(methodname).__doc__.strip()
-                f.kind = '内置函数'
-                f.createtime = f.updatetime = '*'
-                list_.append(f)
-        else:
-            for methodname in methodnames:
-                if (searchvalue in methodname) or (searchvalue in eval(methodname).__doc__.strip()):
-                    f = Function()
-                    f.name = methodname
-                    f.description = eval(methodname).__doc__.strip()
-                    f.kind = '内置函数'
-                    f.createtime = f.updatetime = '*'
-                    list_.append(f)
-    return list_
+	path=os.path.join(os.path.dirname(__file__),filename)
+
+	list_=[]
+	with open(path,encoding='utf-8') as f:
+		content=f.read()
+		#print(content)
+		methodnames=re.findall("def\s+(.*?)\(", content)
+
+		for methodname in methodnames:
+			f=Function() 
+			f.name=methodname
+			f.description=eval(methodname).__doc__.strip()
+			f.kind='内置函数'
+			f.createtime=f.updatetime='*'
+			list_.append(f)
+
+	return list_
 """
 自定义函数管理
 """

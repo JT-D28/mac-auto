@@ -1128,7 +1128,7 @@ def queryfunc(request):
 		res=list(Function.objects.all())
 
 	##
-	res=res+getbuiltin(searchvalue)
+	res=res+getbuiltin()
 	limit=request.GET.get('limit')
 	page=request.GET.get('page')
 	res,total=getpagedata(res, page, limit)
@@ -2253,7 +2253,7 @@ def querybusinessdatalist(request):
 
 @csrf_exempt
 def querytreelist(request):
-	from .cm import getchild
+	from .cm import getchild,get_search_match
 	datanode=[]
 	def _get_pid_data(idx,type,data):
 
@@ -2320,11 +2320,15 @@ def querytreelist(request):
 		elif type=='step':
 			step=Step.objects.get(id=idx)
 			businesslist=cm.getchild('step_business',idx)
+
 			for business in businesslist:
+				bname=business.businessname
+				if business.count==0:
+					bname='<s>%s</s>'%bname
 				datanode.append({
 					'id':'business_%s'%business.id,
 					'pId':'step_%s'%step.id,
-					'name':step.description,
+					'name':bname,
 					'type':'business',
 					'textIcon':'fa fa-leaf',
 					# 'open':True

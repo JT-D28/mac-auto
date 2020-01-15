@@ -120,6 +120,28 @@
         </div>
     </div>
 </div>
+
+
+
+
+            <div id="addhtml" hidden>
+                <form role="form" method='POST' action="/homepage/process/">
+                    <div class="form-group" style="display: none">
+                        <label for="id">id</label>
+                        <input id="task_id_show" type="text" class=" form-control" name="task_id">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="log_text" rows="18" cols="50" type="text" class="form-control" name="log_text"
+                                  placeholder="" spellcheck="false" >
+                        </textarea>
+                    </div>
+                </form>
+            </div>
+
+
+
+
+
 <script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
 <script src="{% static 'homepage/layui/lay-config.js' %}" charset="utf-8"></script>
 <script>
@@ -299,11 +321,6 @@
                         if (taskid === undefined) {
                             layer.msg('任务还没有运行过!');
                         } else {
-                            common.ajax('/homepage/process/','post','json',{
-                                'taskid':taskid
-                            },function (res) {
-                                res = JSON.parse(res)
-                                console.log(res.data)
                             layer.open({
                                 type: 1,
                                 title: false,
@@ -311,13 +328,44 @@
                                 area: ['1080px', '480px'],
                                 anim: 2,
                                 shadeClose: true,
-                                content: res.data,
+                                content: "123",
+                                success:function(taskid){
+                                    if(taskid){
+                                        common.ajax('/homepage/process/','post','json',{'taskid':taskid},function (res) {
+                                             console.log("ok wolaile!");
+                                        })
+                                    }
+                                }
                             });
-                            })
                         }
                 })
             }
         })
+
+
+
+        function showLogModel(taskid) {
+               if (task_id) {
+                   $.ajax({
+                       url: '/homepage/process/',
+                       type: 'POST',
+                       data: {'id': task_id},
+                       success: function (data) {
+                           var parseJson = jQuery.parseJSON(data)
+                           var log_text = parseJson.log_text
+                           var is_done = parseJson.is_done
+                         //  if (is_done != 1) {
+                          //     window.setTimeout(showLog, 1000);
+                         //  }
+                           $("#log_text").val(log_text);
+                           var ta = document.getElementById('log_text');
+                           ta.scrollTop = ta.scrollHeight;//定位到最后
+                           return false;
+                        },
+                    });
+                }
+        }
+
 
 
 

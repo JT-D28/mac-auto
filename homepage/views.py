@@ -88,19 +88,26 @@ def querytaskid(request):
 
 @csrf_exempt
 def process(request):
+    taskid = request.POST.get('taskid')
     code = 0
-    msg = ''
-    str=''
+    log_text = ''
+    is_done = 'no'
+    logname = "./logs/" + taskid + ".log"
     try:
-        taskid = request.POST.get('taskid')
-        f = open("./logs/" + taskid + ".log", 'r')
-        for line in f:
-            str +=line
-        f.close()
+        if os.path.exists(logname):
+            with open(logname, 'r', encoding='UTF-8') as f:
+                log_text = f.read()
+        done_msg = '结束计划'
+        if done_msg in log_text:
+            is_done = 'yes'
+        print('日志执行状态', is_done)
+        # for line in f:
+        #     str +=line
+        # f.close()
     except:
         code = 1
         msg = "出错了！"
-    return JsonResponse(simplejson(code=code, msg=msg, data=str), safe=False)
+    return JsonResponse(simplejson(code=code, msg=is_done, data=log_text), safe=False)
 
 # @csrf_exempt
 # def reportone(request):

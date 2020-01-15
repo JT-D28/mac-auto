@@ -98,7 +98,6 @@ def process(request):
         if os.path.exists(logname):
             with open(logname, 'r') as f:
                 log_text = f.read()
-                f.close()
         if done_msg in log_text:
             is_done = 'yes'
             print('日志执行结束', is_done)

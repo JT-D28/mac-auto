@@ -127,7 +127,8 @@ class Interceptor(MiddlewareMixin):
 
 
 	def _field_common_handle(self,request):
-		'''字段格式处理
+		'''
+		字段格式处理
 		'''
 		pass
 

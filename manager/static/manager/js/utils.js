@@ -8,7 +8,7 @@
 
 // var usercache='unexpected'
 
-var host=window.location.host+":"+window.location.port
+var host=window.location.host
 console.log(host)
 var http_base='http://'+host
 

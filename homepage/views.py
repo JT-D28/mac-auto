@@ -95,12 +95,12 @@ def process(request):
     logname = "./logs/" + taskid + ".log"
     try:
         if os.path.exists(logname):
-            with open(logname, 'r', encoding='UTF-8') as f:
+            with open(logname, 'r') as f:
                 log_text = f.read()
         done_msg = '结束计划'
         if done_msg in log_text:
             is_done = 'yes'
-        print('日志执行状态', is_done)
+        print('日志执行结束', is_done)
         # for line in f:
         #     str +=line
         # f.close()

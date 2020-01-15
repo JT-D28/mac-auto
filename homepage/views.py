@@ -119,7 +119,8 @@ def globalsetting(request):
         if p.match(me2url) and p.match(redisurl):
             data = {
                 'me2url': me2url,
-                'redisurl': redisurl
+                'redisip': redisurl.split(':')[0],
+                'redisport': redisurl.split(':')[1]
             }
             try:
                 config = open("config", "w")
@@ -146,7 +147,25 @@ def globalsetting(request):
 
 
 
-
+def restart(request):
+    taskid = request.POST.get('taskid')
+    code = 0
+    log_text = ''
+    is_done = 'no'
+    done_msg = '结束计划'
+    logname = "./logs/" + taskid + ".log"
+    try:
+        if os.path.exists(logname):
+            with open(logname, 'r') as f:
+                log_text = f.read()
+                f.close()
+        if done_msg in log_text:
+            is_done = 'yes'
+            print('日志执行结束', is_done)
+    except:
+        code = 1
+        msg = "出错了！"
+    return JsonResponse(simplejson(code=code, msg=is_done, data=log_text), safe=False)
 
 
 

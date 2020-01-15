@@ -332,7 +332,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 offset: 'auto',
                 shade: [0.1, '#393D49'],
                 shadeClose: true,
-                btn: ['确认', '取消'],
+                btn: ['确认并重启服务', '取消'],
                 success:function () {
                     $.ajax({
                         url: '/homepage/globalsetting/',
@@ -341,7 +341,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         success: function (res) {
                             res = JSON.parse(res)
                             $("[name='me2url']").val(res.data['me2url']),
-                            $("[name='redisurl']").val(res.data['redisurl'])
+                            $("[name='redisurl']").val(res.data['redisip']+":"+res.data['redisport'])
                         }
                     })
                 },
@@ -358,7 +358,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                             res = JSON.parse(res)
                             if (res.code == 0) {
                                 layer.close(index)
-                                layer.alert(res.msg, {icon: 1, time: 3000})
+                                layer.alert("重启中，请手动刷新页面！", {icon: 1, time: 3000})
                             } else {
                                 layer.alert(res.msg, {icon: 5, time: 3000})
                             }

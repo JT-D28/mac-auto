@@ -11,10 +11,15 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
-BASE_URL='http://10.60.44.59:18005'
+import json
+
+
+config = json.load(open('config','r',encoding='utf-8'))
+
+BASE_URL='http://'+config["me2url"]
 ##Redis配置
-REDIS_HOST='10.60.44.59'
-REDIS_PORT=6379
+REDIS_HOST= config["redisip"]
+REDIS_PORT=config["redisport"]
 #环境
 env_id=''
 
@@ -98,7 +103,7 @@ WSGI_APPLICATION = 'django_demo.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, 'db1.sqlite3'),
         'OPTIONS':{
           'timeout':20
         }

@@ -27,7 +27,7 @@ def page_error(rquest):
 def index(request):
 	if request.session.get('is_login',None):
 		username=request.session.get("username",None)
-		return render(request, 'manager/index.html',locals())
+		return redirect('/manager/index/')
 
 	else:
 		return redirect("/account/login/")
@@ -65,6 +65,9 @@ def login(request):
 		# 	return render(request, 'login/login.html',locals())
 
 	login_form=forms.UserForm(request.POST)
+	if request.session.get('is_login',None):
+		username=request.session.get("username",None)
+		return redirect('/manager/index/')
 	return render(request, 'login/login.html',locals())
 
 

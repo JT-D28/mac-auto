@@ -69,15 +69,12 @@ scratch. This page gets rid of all links and provides the needed markup only.
    
     <ul class="layui-nav layui-layout-right">
       <li class="layui-nav-item">
-        <a href="javascript:;">
           <img src="{%static 'manager/image/me.jpg'%}" class="layui-nav-img">
           <i id='username'>{{request.session.username}}</i>
-        </a>
-        <dl class="layui-nav-child">
-          <dd><a href="">基本资料</a></dd>
-          <dd><a href="">安全设置</a></dd>
-        </dl>
       </li>
+        {% if request.session.username == 'admin' %}
+            <li class="layui-nav-item"><a href="#" id='globalsetting'>全局设置</a></li>
+        {%endif%}
       <li class="layui-nav-item"><a href="#" id='console'>控制台</a></li>
       <li class="layui-nav-item"><a href="#" id='console'>远程日志</a></li>
       <li class="layui-nav-item"><a href="{{BASE_URL}}/account/logout/">退出</a></li>
@@ -178,7 +175,20 @@ scratch. This page gets rid of all links and provides the needed markup only.
   </div>
 </div>
 
-
+    <form id='addsetting' hidden style="padding:10px;">
+        <div class="layui-form-item">
+            <label class="layui-form-label">me2地址</label>
+            <div class="layui-input-block">
+                <input type="text" name="jenkinsurl" placeholder="请输入me2的地址，类似：http://10.60.44.54:9999" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">redis地址</label>
+            <div class="layui-input-block">
+                <input type="text" name="jobname" placeholder="请输入redis的地址和端口，类似：http://10.60.44.54:6379" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+    </form>
 
 <!-- REQUIRED JS SCRIPTS -->
 
@@ -309,6 +319,48 @@ scratch. This page gets rid of all links and provides the needed markup only.
       });
 
     });
+
+
+
+    $('#globalsetting').click(
+        function () {
+            layer.open({
+                type: 1,
+                title: "全局设置",
+                content: $('#addsetting'),
+                area: ['600px', '260px'],
+                offset: 'auto',
+                closeBtn: 2,
+                shade: [0.1, '#393D49'],
+                shadeClose: true,
+                btn: ['我还没做好', '取消'],
+                yes: function (index, layero) {
+                    common.ajax('/homepage/jenkinsadd/', 'post', 'json', {
+                        'product': $("[name='product']").val(),
+                        'jenkinsurl': $("[name='jenkinsurl']").val(),
+                        'jobname': $("[name='jobname']").val(),
+                        'servicename': $("[name='servicename']").val()
+                    }, function (res) {
+                        res = JSON.parse(res)
+                        if (res.code == 0) {
+                            layer.alert(e.msg, {icon: 1, time: 3000})
+                        } else {
+                            layer.alert(e.msg, {icon: 5, time: 3000})
+                        }
+                    })
+                },
+                btn2: function (index, layero) {
+                    layer.close(index)
+                },
+                cancel: function (index, layero) {
+                    layer.close(index)
+                }
+            })
+        }
+    );
+
+
+
 
   //默认到计划页面
 

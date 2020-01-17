@@ -17,7 +17,6 @@ import json
 config = json.load(open('config','r',encoding='utf-8'))
 
 BASE_URL='http://'+config["me2url"]
->>>>>>> aed2eee732f726106205d23a02f9ebd4bd23b6f9
 ##Redis配置
 REDIS_HOST= config["redisip"]
 REDIS_PORT=config["redisport"]

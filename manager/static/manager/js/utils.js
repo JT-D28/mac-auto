@@ -8,7 +8,12 @@
 
 // var usercache='unexpected'
 
+<<<<<<< HEAD
 var host='10.60.45.63:8000'
+=======
+var host=window.location.host
+console.log(host)
+>>>>>>> aed2eee732f726106205d23a02f9ebd4bd23b6f9
 var http_base='http://'+host
 
 function connect_on(){

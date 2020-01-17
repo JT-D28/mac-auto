@@ -638,10 +638,6 @@ class BusinessDataEncoder(XJsonEncoder):
 
 			if x.get('count')=='None':
 				x['count']= 1
-			if x.get('postposition')=='None':
-				x['postposition']=''
-			if x.get('preposition')=='None':
-				x['preposition']=''
 			# print('count=>',x['count'])
 
 			try:

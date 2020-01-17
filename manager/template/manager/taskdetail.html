@@ -60,7 +60,7 @@ td{
 {% for case in detail.cases %}
 <p style="text-indent:2em;" >用例名[{{case.caseorder}}-{{case.casename}}]</p>
 <table>
-<tr><th>执行序号</th><th>结果</th><th>耗时(ms)</th><th>步骤名称</th><th>业务名称</th><th>api</th><th>接口验证</th><th>数据验证</th><th>消息</th></tr>
+<tr><th>执行序号</th><th>结果</th><th>耗时(ms)</th><th>步骤名称</th><th>测试点</th><th>api</th><th>接口验证</th><th>数据验证</th><th>消息</th></tr>
  {% for step in case.steps %}
  <tr>
  	<td style="width:100px;">{{step.num}}</td>

@@ -11,10 +11,19 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+<<<<<<< HEAD
 BASE_URL='http://10.60.45.63:8000'
+=======
+import json
+
+
+config = json.load(open('config','r',encoding='utf-8'))
+
+BASE_URL='http://'+config["me2url"]
+>>>>>>> aed2eee732f726106205d23a02f9ebd4bd23b6f9
 ##Redis配置
-REDIS_HOST='127.0.0.1'
-REDIS_PORT=6379
+REDIS_HOST= config["redisip"]
+REDIS_PORT=config["redisport"]
 #环境
 env_id=''
 
@@ -45,6 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'login',
     'manager',
+    'homepage',
     'captcha',
     'channels',
     'corsheaders',
@@ -74,7 +84,7 @@ ROOT_URLCONF = 'django_demo.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR,'login/template'),os.path.join(BASE_DIR,'manager/template')],
+        'DIRS': [os.path.join(BASE_DIR,'login/template'),os.path.join(BASE_DIR,'manager/template'),os.path.join(BASE_DIR,'homepage/template')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -174,7 +184,7 @@ LOGGING = {
 
    'class': 'logging.FileHandler',
 
-   'filename': 'D:/monitor.log',
+   'filename': '../monitor.log',
 
    'formatter': 'verbose'
 
@@ -215,7 +225,8 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR,"login/static"),
-    os.path.join(BASE_DIR,'manager/static')
+    os.path.join(BASE_DIR,'manager/static'),
+    os.path.join(BASE_DIR, 'homepage/static')
 
 ]
 

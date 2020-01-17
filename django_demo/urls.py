@@ -21,8 +21,10 @@ from login import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('captcha/',include('captcha.urls')),
+    path('',views.index),
     path('account/',include('login.urls')),
     path('manager/',include('manager.urls')),
+    path('homepage/',include('homepage.urls')),
     path('test_expression/',views.testexpress)
     # path('',views.index),
 

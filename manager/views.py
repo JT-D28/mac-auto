@@ -18,7 +18,7 @@ import json,threading,operator,xlrd,base64,traceback
 @csrf_exempt
 def index(request):
 	if request.session.get('is_login',None):
-		return render(request, 'manager/starter.html',locals())
+		return render(request, 'manager/start.html', locals())
 
 	else:
 		return redirect("/account/login/")

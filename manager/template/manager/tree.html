@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html style="height: 100%">
 <head>
   <meta charset="utf-8">
   <title>树组件</title>
@@ -18,6 +18,7 @@
 
 
   <style type="text/css">
+
   .ztree li span.button.add {margin-left:2px; margin-right: -1px; background-position:-144px 0; vertical-align:top; *vertical-align:middle}
 
   .ztree li span.button.diy01_ico_open, .ztree li span.button.diy01_ico_close{margin-right:2px; background: url(../../static/manager/ztree/img/diy/1_open.png) no-repeat scroll 0 0 transparent; vertical-align:top; *vertical-align:middle}
@@ -41,7 +42,6 @@
   color:#CCCCCC;
 
 }*/
-
   .fa.fa-folder{
     color:#FFCC66;
   
@@ -93,17 +93,17 @@
 
   </style>
 </head>
-<body>
+<body style="height: 100%">
 
 
-<div class="layui-container">  
-  <div class="layui-row">
-    <div class="layui-col-md4" style="border: 0px solid red;">
+<div style="margin-left: 30px;margin-right: 100px;height: 100%" >
+  <div class="layui-row" style="height: 98%" >
+    <div id='treelist' class="layui-col-md4" style="border: 0px solid red;max-height:100%;overflow-y:auto;">
       <div class="layui-inline">
         <input type="input" name="" placeholder="search" style='padding:5px;' id='search' >
         <button id='searchbtn' class="layui-btn">搜索</button>
       </div>
-      <ul id="case-manager" class="ztree"></ul>
+      <ul id="case-manager" class="ztree" style="margin-bottom: 20px"></ul>
 
     </div>
   <div class="layui-col-md1">
@@ -113,9 +113,10 @@
      
       <!-- <div id='fuzu'></div> -->
       <span class="layui-breadcrumb" lay-separator="-"><a href="">首页</a></span>
-      <iframe id='tree-content' name='tree-content' title="test" scrolling="yes" frameborder="0" src="" style="width:100%;height:500px;"></iframe>
+      <iframe id='tree-content' name='tree-content' title="test" scrolling="no" frameborder="0" src="" style="width:100%;min-height: 700px"></iframe>
     </div>
   </div>
+</div>
 
 <div id='import-div' style="padding:5px;" hidden>
   <input id="file-explorer" type="file" multiple>
@@ -218,6 +219,11 @@ $('#file-explorer').on('filebatchuploadsuccess', function(event, data, previewId
   layer.alert(response.msg,{icon:2})
  }
 });
+
+window.onload =function() {
+    document.documentElement.style.overflow='hidden';
+}
+
 </script>
 </body>
 </html>

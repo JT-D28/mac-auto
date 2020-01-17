@@ -25,5 +25,9 @@ urlpatterns = [
     path('queryproduct/', views.queryproduct),
     path('queryplan/', views.queryplan),
     path('querytaskid/', views.querytaskid),
+    path('process/',views.process),
+    path('globalsetting/', views.globalsetting),
+    path('restart/', views.restart)
+    #path('reportone/', views.reportone),
 
 ]

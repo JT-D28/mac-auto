@@ -69,15 +69,12 @@ scratch. This page gets rid of all links and provides the needed markup only.
    
     <ul class="layui-nav layui-layout-right">
       <li class="layui-nav-item">
-        <a href="javascript:;">
           <img src="{%static 'manager/image/me.jpg'%}" class="layui-nav-img">
           <i id='username'>{{request.session.username}}</i>
-        </a>
-        <dl class="layui-nav-child">
-          <dd><a href="">基本资料</a></dd>
-          <dd><a href="">安全设置</a></dd>
-        </dl>
       </li>
+        {% if request.session.username == 'admin' %}
+            <li class="layui-nav-item"><a href="#" id='globalsetting'>全局设置</a></li>
+        {%endif%}
       <li class="layui-nav-item"><a href="#" id='console'>控制台</a></li>
       <li class="layui-nav-item"><a href="#" id='console'>远程日志</a></li>
       <li class="layui-nav-item"><a href="{{BASE_URL}}/account/logout/">退出</a></li>
@@ -90,6 +87,9 @@ scratch. This page gets rid of all links and provides the needed markup only.
       <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
       <ul class="layui-nav layui-nav-tree"  lay-filter="test" style="width:70px!important;" >
 
+          <li class="layui-nav-item layui-nav-itemed">
+          <a id="home-link" href="javascript:;" link='homepage/' class="fa fa-home" title="首页"></a>
+        </li>
         {% if request.session.username == 'admin' %}
         <li class="layui-nav-item layui-nav-itemed">
           <a id="register-link" href="javascript:;" link='account/user/' class='fa fa-user' title="用户管理"></a>
@@ -103,16 +103,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
  
 
 
-        <li class="layui-nav-item layui-nav-itemed">
-          <a id="help-link" href="javascript:;" link='manager/help/' class="fa fa-question-circle"  title="帮助文档"></a>
-        </li>
+
 <!--         <li class="layui-nav-item layui-nav-itemed">
           <a id="var-link" href="javascript:;" link='manager/testtable/'>业务数据构造</a>
         </li> -->
        
-        <li class="layui-nav-item layui-nav-itemed">
-          <a id="move-link" href="javascript:;" link='manager/datamove/' class="fa fa-paper-plane-o" title="数据迁移"></a>
-        </li>
 
 
         <li class="layui-nav-item layui-nav-itemed">
@@ -128,6 +123,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
         
         <li class="layui-nav-item layui-nav-itemed">
           <a id="func-link" href="javascript:;" link='manager/function/' class="fa fa-facebook" title='函数定义'></a>
+        </li>
+              <li class="layui-nav-item layui-nav-itemed">
+          <a id="move-link" href="javascript:;" link='manager/datamove/' class="fa fa-paper-plane-o" title="数据迁移"></a>
+        </li>
+
+
+          <li class="layui-nav-item layui-nav-itemed">
+          <a id="help-link" href="javascript:;" link='manager/help/' class="fa fa-question-circle"  title="帮助文档"></a>
         </li>
 <!--         <li class="layui-nav-item layui-nav-itemed">
           <a id="var-link" href="javascript:;" link='manager/itf/'>接口管理</a>
@@ -160,22 +163,30 @@ scratch. This page gets rid of all links and provides the needed markup only.
     <div class="layui-tab" lay-allowclose='true' lay-filter='tab'>
 
       <ul class="layui-tab-title"></ul>
-      <div class="layui-tab-content" style="height:500px;">
-        
+      <div class="layui-tab-content" style="height:100%;">
+
       </div>
 
     </div>
-  
+
   </div>
   <div id='consoleview'><div id="msgview" style="padding:10px;"></div></div>
-  <div id='taskids' hidden></div>
-  <div class="layui-footer">
-    <!-- 底部固定区域 -->
-    © 2019-09 version 1.0 by blackstone
-  </div>
 </div>
 
-
+    <form id='addsetting' hidden style="padding:10px;">
+        <div class="layui-form-item">
+            <label class="layui-form-label">me2地址：</label>
+            <div class="layui-input-block">
+                <input type="text" name="me2url" placeholder="请输入工具当前地址，类似：10.60.44.54:9999" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">redis地址：</label>
+            <div class="layui-input-block">
+                <input type="text" name="redisurl" placeholder="请输入redis的地址和端口，类似：10.60.44.54:6379" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+    </form>
 
 <!-- REQUIRED JS SCRIPTS -->
 
@@ -290,8 +301,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
           element.tabAdd('tab', {
           title:title
-          ,content: '<iframe data-frameid="'+id+'" scrolling="yes" frameborder="0" src="'+url+'" style="width:100%;height:500px;"></iframe>'
-          ,id: id}); 
+          ,content: '<iframe data-frameid="'+id+'" scrolling="yes" frameborder="0" src="'+url+'" style="width:100%;height:680px;"></iframe>'
+          ,id: id});
 
           element.tabChange("tab",(tab_id)+'');
           // console.log('tabChange=>'+id)
@@ -307,16 +318,73 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
     });
 
+
+
+    $('#globalsetting').click(
+        function () {
+            layer.open({
+                type: 1,
+                title: "全局设置",
+                content: $('#addsetting'),
+                area: ['600px', '260px'],
+                offset: 'auto',
+                shade: [0.1, '#393D49'],
+                shadeClose: true,
+                btn: ['确认并重启服务', '取消'],
+                success:function () {
+                    $.ajax({
+                        url: '/homepage/globalsetting/',
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function (res) {
+                            res = JSON.parse(res)
+                            $("[name='me2url']").val(res.data['me2url']),
+                            $("[name='redisurl']").val(res.data['redisip']+":"+res.data['redisport'])
+                        }
+                    })
+                },
+                yes: function (index, layero) {
+                    $.ajax({
+                        url: '/homepage/globalsetting/',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: {
+                            'me2url': $("[name='me2url']").val(),
+                            'redisurl': $("[name='redisurl']").val()
+                        },
+                        success: function (res) {
+                            res = JSON.parse(res)
+                            if (res.code == 0) {
+                                layer.close(index)
+                                layer.alert("重启中，请手动刷新页面！", {icon: 1, time: 3000})
+                            } else {
+                                layer.alert(res.msg, {icon: 5, time: 3000})
+                            }
+                        }
+                    })
+                },
+                btn2: function (index, layero) {
+                    layer.close(index)
+                },
+                cancel: function (index, layero) {
+                    layer.close(index)
+                }
+            })
+        }
+    );
+
+
+
+
   //默认到计划页面
 
-    $("[link='manager/plan/']").click();
+    $("[link='homepage/']").click();
 
 });
 
   $(document).ready(function(){
     connect_on();
         //bind_interface_click();
-
   });
 
 

@@ -11,9 +11,6 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
-<<<<<<< HEAD
-BASE_URL='http://10.60.45.63:8000'
-=======
 import json
 
 

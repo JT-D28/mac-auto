@@ -31,6 +31,11 @@
   .skip{
     color:#000000;
   }
+  .icon{
+    margin-right: 10px;
+      margin-left: 10px;
+      width: 14px;
+  }
   </style>
 </head>
 <body class="main_body">
@@ -62,30 +67,30 @@
 			<div class="navBar layui-side-scroll" id="navBar">
 				<ul class="layui-nav layui-nav-tree">
 					<li class="layui-nav-item layui-this">
-						<a href="javascript:;" data-url="/homepage/"><i class="fa fa-home" data-icon=""></i><cite>首页</cite></a>
+						<a href="javascript:;" data-url="/homepage/"><i class="fa fa-home icon"  data-icon=""></i><cite>首页</cite></a>
 					</li>
                             {% if request.session.username == 'admin' %}
                     <li class="layui-nav-item">
-						<a href="javascript:;" data-url="/account/user/"><i class="fa fa-user" data-icon=""></i><cite>用户管理</cite></a>
+						<a href="javascript:;" data-url="/account/user/"><i class="fa fa-user icon"  data-icon=""></i><cite>用户管理</cite></a>
 					</li>
                             {%endif%}
                     <li class="layui-nav-item">
-						<a href="javascript:;" data-url="/manager/tree/"><i class="fa fa-list" data-icon=""></i><cite>用例管理</cite></a>
+						<a href="javascript:;" data-url="/manager/tree/"><i class="fa fa-list icon" data-icon=""></i><cite>用例管理</cite></a>
 					</li>
                     <li class="layui-nav-item">
-						<a href="javascript:;" data-url="/manager/dbcon/"><i class="fa fa-database" data-icon=""></i><cite>数据连接</cite></a>
+						<a href="javascript:;" data-url="/manager/dbcon/"><i class="fa fa-database icon" data-icon=""></i><cite>数据连接</cite></a>
 					</li>
                     <li class="layui-nav-item">
-						<a href="javascript:;" data-url="/manager/var/"><i class="fa fa-btc" data-icon=""></i><cite>变量管理</cite></a>
+						<a href="javascript:;" data-url="/manager/var/"><i class="fa fa-btc icon" data-icon=""></i><cite>变量管理</cite></a>
 					</li>
                     <li class="layui-nav-item">
-						<a href="javascript:;" data-url="/manager/function/"><i class="fa fa-facebook" data-icon=""></i><cite>函数定义</cite></a>
+						<a href="javascript:;" data-url="/manager/function/"><i class="fa fa-facebook icon" data-icon=""></i><cite>函数定义</cite></a>
 					</li>
                     <li class="layui-nav-item">
-						<a href="javascript:;" data-url="/manager/datamove/"><i class="fa fa-paper-plane-o" data-icon=""></i><cite>数据迁移</cite></a>
+						<a href="javascript:;" data-url="/manager/datamove/"><i class="fa fa-paper-plane-o icon" data-icon=""></i><cite>数据迁移</cite></a>
 					</li>
                     <li class="layui-nav-item">
-						<a href="javascript:;" data-url="/manager/help/"><i class="fa fa-question-circle" data-icon=""></i><cite>帮助文档</cite></a>
+						<a href="javascript:;" data-url="/manager/help/"><i class="fa fa-question-circle icon" data-icon=""></i><cite>帮助文档</cite></a>
 					</li>
 				</ul>
 			</div>
@@ -108,7 +113,7 @@
 				</ul>
 				<div class="layui-tab-content clildFrame" style="padding-top: 10px">
 					<div class="layui-tab-item layui-show">
-						<iframe src="/homepage/" ></iframe>
+						<iframe id='iframe' src="/homepage/" ></iframe>
 					</div>
 				</div>
 			</div>
@@ -252,12 +257,28 @@
     );
 
 
+ /**   function setIframeHeight(iframe) {
+        if (iframe) {
+            var iframeWin = iframe.contentWindow || iframe.contentDocument.parentWindow;
+            if (iframeWin.document.body) {
+                iframe.height = iframeWin.document.documentElement.scrollHeight || iframeWin.document.body.scrollHeight;
+                console.log(iframe.height)
+            }
+        }
+    };
+    window.onload = function () {
+        setIframeHeight(document.getElementById('iframe'));
+    };
+
+**/
 });
 
   $(document).ready(function(){
     connect_on();
         //bind_interface_click();
   });
+
+
 
 
 </script>

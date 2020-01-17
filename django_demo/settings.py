@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
-BASE_URL='http://10.60.50.155:8000'
+BASE_URL='http://10.60.45.63:8000'
 ##Redis配置
 REDIS_HOST='127.0.0.1'
 REDIS_PORT=6379

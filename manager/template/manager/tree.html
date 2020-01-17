@@ -100,8 +100,8 @@
   <div class="layui-row">
     <div class="layui-col-md4" style="border: 0px solid red;">
       <div class="layui-inline">
-        <input type="input" name="" placeholder="search" class="layui-input" id='search' >
-        <!-- <span class="fa fa-plus-circle" id='add_product'></span> -->
+        <input type="input" name="" placeholder="search" style='padding:5px;' id='search' >
+        <button id='searchbtn' class="layui-btn">搜索</button>
       </div>
       <ul id="case-manager" class="ztree"></ul>
 
@@ -146,10 +146,15 @@ tree.init()
 
 
 //search
- $('#search').on('input propertychange', function() {
-  console.log($('#search').val())
+//  $('#search').on('input propertychange', function() {
+//   console.log($('#search').val())
+//   tree.init($('#search').val())
+// });
+
+$('#searchbtn').click(function(argument) {
+  
   tree.init($('#search').val())
-});
+})
 
 //add
 

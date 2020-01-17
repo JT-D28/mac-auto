@@ -30,7 +30,8 @@ class Mysqloper:
 
         print('===查询和使用数据库[%s]的配置信息'%(configname))
 
-        c=Mysqloper._pool.get(str(conname),None)
+       # c=Mysqloper._pool.get(str(conname),None)
+        c=None
         if c is not None:
 
             print("=>从连接池获取到一个可用配置 =>")
@@ -68,6 +69,7 @@ class Mysqloper:
                                                 user=self.user,
                                                 password=self.pwd,
                                                 charset='utf8mb4')
+                    conn.a
 
                 elif self.dbtype.lower()=='oracle_servicename':
                     import cx_Oracle
@@ -167,7 +169,6 @@ class Mysqloper:
             sql=sql.replace(chr(13),'').replace(chr(10),'').strip()
             self.sqlcount+=1
             # print('sqlfda=>',sql,len(sql),len(sql.strip()))
-            print('fdjalfdjadafdafdafd=>',str(sql))
             cur.execute(str(sql))
 
             ##查询sql时候

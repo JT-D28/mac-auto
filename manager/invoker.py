@@ -941,6 +941,7 @@ def _callinterface(taskid,user,url,body=None,method=None,headers=None,content_ty
 		#body=body.encode('utf-8')
 		#body=json.loads(body)
 		try:
+			print('urlencode=>',body)
 			body=eval(body)
 
 		except :
@@ -1593,7 +1594,7 @@ def _find_and_save_property(user,dict_str,reponsetext):
 				return ('fail','通过[%s]获取属性值失败,请检查'%v)
 
 			save_data(user.name, _tempinfo, k, v1)
-			return ('success','')
+		return ('success','')
 
 	except Exception as e:
 		print(traceback.format_exc())

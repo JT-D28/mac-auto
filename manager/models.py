@@ -71,7 +71,7 @@ class BusinessData(models.Model):
 	preposition=models.TextField(blank=True)
 	postposition=models.TextField(blank=True)
 	def __str__(self):
-		return 'description=%s'%self.businessname
+		return '[%s]%s'%(self.id,self.businessname)
 
 
 class BusinessTitle(models.Model):
@@ -108,13 +108,13 @@ class Step(models.Model):
 
 
 	def __str__(self):
-		return "%s[%s]"%(self.description,self.step_type)
+		return "[%s]%s"%(self.id,self.description)
 
 class Case(models.Model):
 	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
 	# priority=models.CharField(max_length=32)
 	description=models.CharField(max_length=128)
-	# businessdatainfo=models.ManyToManyField(BusinessData,blank=True)
+	businessdatainfo=models.ManyToManyField(BusinessData,blank=True)
 	# steps=models.ManyToManyField(Step,blank=True)
 	db_id=models.CharField(max_length=20,blank=True)
 	createtime=models.DateTimeField(auto_now_add=True)
@@ -122,13 +122,13 @@ class Case(models.Model):
 
 
 	def __str__(self):
-		return self.description
+		return '[%s]%s'%(self.id,self.description)
 
 
 class Plan(models.Model):
 	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
 	description=models.CharField(max_length=128)
-	# cases=models.ManyToManyField(Case,blank=True)
+	cases=models.ManyToManyField(Case,blank=True)
 	db_id=models.CharField(max_length=20,blank=True)
 	createtime=models.DateTimeField(auto_now_add=True)
 	updatetime=models.DateTimeField(auto_now=True)
@@ -143,7 +143,7 @@ class Plan(models.Model):
 	mail_config_id=models.CharField(max_length=125,blank=True)
 
 	def __str__(self):
-		return self.description
+		return '[%s]%s'%(self.id,self.description)
 
 # class Result(models.Model):
 

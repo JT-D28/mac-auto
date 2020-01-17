@@ -2308,7 +2308,7 @@ def querytreelist(request):
 				data.append({
 					'id':'case_%s'%case0.id,
 					'pId':'case_%s'%idx,
-					'name':case.description,
+					'name':case0.description,
 					'type':'case',
 					'textIcon':'fa fa-folder',
 					})
@@ -2404,106 +2404,319 @@ def addsteprelation(request):
 	return JsonResponse(simplejson(code=0,msg='关联case&step ok.'),safe=False)
 
 
+# def update(request):
+# 	from .cm import getnextvalue
+# 	##
+# 	product=Product()
+# 	product.description='默认产品'
+# 	product.author=User.objects.get(name='admin')
+# 	product.save()
+
+# 	product_plan=[]
+# 	plan_case=[]
+# 	case_step=[]
+# 	step_business=[]
+# 	##
+# 	print('==开始记录数据并删除老数据')
+# 	lista=list(Order.objects.filter(kind='case'))
+# 	listb=list(Order.objects.filter(kind='step'))
+# 	for order in lista:
+# 		plan_case.append((order.main_id,order.follow_id,order.value))
+# 		product_plan.append((product.id,order.main_id,''))
+# 		order.delete()
+
+# 	for order in listb:
+# 		steps=list(Step.objects.all())
+# 		step=None
+# 		for step0 in steps:
+# 			bs=list(step0.businessdatainfo.all())
+# 			for b in bs:
+# 				if b.id==order.follow_id:
+# 					step=step0
+# 		if step is None:
+# 			print('bussines->step异常 略过')
+# 			continue;
+
+# 		stepid=step.id
+# 		case_step.append((order.main_id,stepid,''))
+# 		step_business.append((stepid,order.follow_id,''))
+
+# 		order.delete()
+
+# 	print('==记录数据结束')
+
+# 	###
+# 	print('==开始构造新关联')
+# 	for o in list(set(product_plan)):
+# 		order=Order()
+# 		order.main_id=o[0]
+# 		order.follow_id=o[1]
+# 		order.kind='product_plan'
+# 		if o[2]=='':
+# 			order.value=getnextvalue('product_plan', o[0])
+# 		else:
+# 			order.value=o[2]
+
+# 		order.author=User.objects.get(name='admin')
+# 		order.save()
+
+# 	for o in list(set(plan_case)):
+# 		order=Order()
+# 		order.main_id=o[0]
+# 		order.follow_id=o[1]
+# 		order.kind='plan_case'
+# 		if o[2]=='':
+# 			order.value=getnextvalue('plan_case', o[0])
+# 		else:
+# 			order.value=o[2]
+
+# 		order.author=User.objects.get(name='admin')
+# 		order.save()
+
+
+# 	for o in list(set(case_step)):
+# 		order=Order()
+# 		order.main_id=o[0]
+# 		order.follow_id=o[1]
+# 		order.kind='case_step'
+# 		if o[2]=='':
+# 			order.value=getnextvalue('case_step', o[0])
+# 		else:
+# 			order.value=o[2]
+
+# 		order.author=User.objects.get(name='admin')
+# 		order.save()
+
+
+# 	for o in list(set(step_business)):
+# 		order=Order()
+# 		order.main_id=o[0]
+# 		order.follow_id=o[1]
+# 		order.kind='step_business'
+# 		if o[2]=='':
+# 			order.value=getnextvalue('step_business', o[0])
+# 		else:
+# 			order.value=o[2]
+
+# 		order.author=User.objects.get(name='admin')
+# 		order.save()
+
+
+# 	print('==order表修改完成.')
+# 	return JsonResponse(pkg(code=0))
+
 def update(request):
 	from .cm import getnextvalue
+	import copy
+	print('==开始更新==')
+	planids=[]
+	delete=[]
+	cache={}
+
+	product_plan={}
+	plan_case={}
+	case_step={}
+	step_business={}
+	business_step={}
+	author=User.objects.get(name='admin')
 	##
 	product=Product()
 	product.description='默认产品'
 	product.author=User.objects.get(name='admin')
 	product.save()
-
-	product_plan=[]
-	plan_case=[]
-	case_step=[]
-	step_business=[]
+	productid=product.id
 	##
-	print('==开始记录数据并删除老数据')
 	lista=list(Order.objects.filter(kind='case'))
 	listb=list(Order.objects.filter(kind='step'))
 	for order in lista:
-		plan_case.append((order.main_id,order.follow_id,order.value))
-		product_plan.append((product.id,order.main_id,''))
-		order.delete()
+		##
+		plist=list(Plan.objects.filter(id=order.main_id))
+		alist=list(Case.objects.filter(id=order.follow_id))
 
-	for order in listb:
-		steps=list(Step.objects.all())
-		step=None
-		for step0 in steps:
-			bs=list(step0.businessdatainfo.all())
-			for b in bs:
-				if b.id==order.follow_id:
-					step=step0
-		if step is None:
-			print('bussines->step异常 略过')
+		if len(plist)==0 or len(alist)==0:
+			print('计划和用例检查失败 略过.[%s-%s]'%(order.main_id,order.follow_id))
 			continue;
 
-		stepid=step.id
-		case_step.append((order.main_id,stepid,''))
-		step_business.append((stepid,order.follow_id,''))
+		##
+		planid=order.main_id
+		caseid=order.follow_id
 
+		##复制实体数据
+		plan=None
+		try:
+			plan=product_plan.get('%s_%s'%(productid,planid),None)
+			if plan is None:
+				plan=Plan.objects.get(id=planid)
+				delete.append(copy.deepcopy(plan))
+
+				plan.id=None
+				plan.save()
+				product_plan['%s_%s'%(productid,planid)]=plan
+
+				order1=Order()
+				order1.kind='product_plan'
+				order1.main_id=productid
+				order1.follow_id=plan.id
+				order1.author=author
+				order1.value=getnextvalue('product_plan',order1.main_id)
+				order1.save()
+				# print('新建产品计划关联=>',order1)
+		except:
+			print('查询失败 略过 planid=>',order.main_id)
+			continue;
+
+		case=None
+		case=plan_case.get('%s_%s'%(planid,caseid),None)
+
+		if case is None:
+			case=Case.objects.get(id=caseid)
+			delete.append(copy.deepcopy(case))
+			case.id=None
+			case.save()
+			plan_case['%s_%s'%(planid,caseid)]=case
+
+			#新建新的order关系
+			order2=Order()
+			order2.main_id=plan.id
+			order2.follow_id=case.id
+			order2.kind='plan_case'
+			order2.author=author
+			order2.value=getnextvalue('plan_case',order2.main_id)
+			order2.save()
+			# print('建立计划用例关联=>',order2)
+		###
+
+	for order in listb:
+		flag1=0
+		flag2=0
+
+		caseid=order.main_id
+		businessid=order.follow_id
+		stepid=None
+
+		steps=list(Step.objects.all())
+		for step0 in steps:
+			buslist=list(step0.businessdatainfo.all())
+			for business0 in buslist:
+				if business0.id==businessid:
+					stepid=step0.id
+					break;
+		##
+		if stepid is None:
+			print('不正确的order关系step[%s_%s] 略过'%(caseid,businessid))
+			continue;
+
+		# step=case_step.get('%s_%s'%(caseid,stepid),None)
+		# if step is None:
+		step=Step.objects.get(id=stepid)
+		# print('获得老的step=>',step)
+		delete.append(copy.deepcopy(step))
+		step.id=None
+		step.save()
+		# print('获得新的step=>',step)
+		print("新建步骤%s 来源=>[%s,%s]"%(step,order.main_id,order.follow_id))
+		# case_step['%s_%s'%(case.id,stepid)]=step
+
+		case_new_id=None
+
+		for key in plan_case:
+			if '_%s'%caseid in key:
+				case_new_id=plan_case[key].id
+
+
+		if case_new_id is None:
+
+			print('case_new_id不合理 略过[%s->%s]'%(order.main_id,order.follow_id))
+			continue;
+
+		order3=Order()
+		order3.kind='case_step'
+		order3.main_id=case_new_id
+		order3.follow_id=step.id
+		order3.author=author
+		order3.value=getnextvalue('case_step',order3.main_id)
+		order3.save()
+		#print('建立用例步骤关联=>',order3)
+
+		step_new_id=step.id
+		# business=step_business.get('%s_%s'%(stepid,businessid), None)
+		# if business is None:
+		business=BusinessData.objects.get(id=businessid)
+
+		business.id=None
+		business.save()
+		# print('新建测试点=>',business)
+		step_business['%s_%s'%(stepid,businessid)]=business
+
+		order4=Order()
+		order4.kind='step_business'
+		order4.main_id=step_new_id
+		order4.follow_id=business.id
+		order4.author=author
+		order4.value=getnextvalue('step_business',order4.main_id)
+		order4.save()
+
+		# print('建立步骤测试点关联=>',order4)
+
+
+	##删除老的order关系
+	print('==清除老的order关系')
+	orderlist=list(Order.objects.filter(Q(kind='case')|Q(kind='step')))
+	print('待删除数据=>',orderlist)
+	for order in orderlist:
 		order.delete()
 
-	print('==记录数据结束')
+	print('==清除完成.')
 
-	###
-	print('==开始构造新关联')
-	for o in list(set(product_plan)):
-		order=Order()
-		order.main_id=o[0]
-		order.follow_id=o[1]
-		order.kind='product_plan'
-		if o[2]=='':
-			order.value=getnextvalue('product_plan', o[0])
-		else:
-			order.value=o[2]
+	##删除报告表
+	reportlist=list(ResultDetail.objects.all())
+	for report in reportlist:
+		report.delete()
+	print('==清除报告表')
 
-		order.author=User.objects.get(name='admin')
-		order.save()
+	##删除包含关系
+	print('==删除包含关系')
+	planlist=list(Plan.objects.all())
+	for plan in list(set(planlist)):
+		plan.cases.clear()
+				
+	caselist=list(Case.objects.all())
+	for case in list(set(caselist)):
+		case.businessdatainfo.clear()
 
-	for o in list(set(plan_case)):
-		order=Order()
-		order.main_id=o[0]
-		order.follow_id=o[1]
-		order.kind='plan_case'
-		if o[2]=='':
-			order.value=getnextvalue('plan_case', o[0])
-		else:
-			order.value=o[2]
-
-		order.author=User.objects.get(name='admin')
-		order.save()
+	steplist=list(Step.objects.all())
+	for step in list(set(steplist)):
+		step.businessdatainfo.clear()
 
 
-	for o in list(set(case_step)):
-		order=Order()
-		order.main_id=o[0]
-		order.follow_id=o[1]
-		order.kind='case_step'
-		if o[2]=='':
-			order.value=getnextvalue('case_step', o[0])
-		else:
-			order.value=o[2]
 
-		order.author=User.objects.get(name='admin')
-		order.save()
+	#删除老的实体数据
+	print('==清除老的实体数据')
+	print('待删除数据=>',delete)
+	for i in delete:
+		try:
+			i.delete()
+		except:
+			# print(traceback.format_exc())
+			print('删除异常=>',i)
 
+	print('==清除完成')
 
-	for o in list(set(step_business)):
-		order=Order()
-		order.main_id=o[0]
-		order.follow_id=o[1]
-		order.kind='step_business'
-		if o[2]=='':
-			order.value=getnextvalue('step_business', o[0])
-		else:
-			order.value=o[2]
-
-		order.author=User.objects.get(name='admin')
-		order.save()
+	print('==结束更新==')
 
 
-	print('==order表修改完成.')
+
+		
+
+
+		
+
+
+
 	return JsonResponse(pkg(code=0))
+
+
+
 
 def getfulltree(request):
 	data=cm.get_full_tree()

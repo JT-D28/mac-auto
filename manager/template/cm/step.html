@@ -89,7 +89,19 @@
       <input id='url' type="text" name="url" placeholder="" autocomplete="off" class="layui-input">
     </div>
   </div>
+
   <div class="layui-form-item">
+    <label class="layui-form-label">content-type</label>
+    <div class="layui-input-block">
+      <input type="radio" name="content-type" value="formdata" title="form-data" checked lay-filter='content_type'>
+      <input type="radio" name="content-type" value="urlencode" title="urlencode" lay-filter='content_type'>
+      <input type="radio" name="content-type" value='json' title="json" lay-filter='content_type'>
+      <input type="radio" name="content-type" value='xml' title="xml" lay-filter='content_type'>
+    </div>
+  </div>
+
+
+  <div class="layui-form-item" id='header-div'>
     <label class="layui-form-label">请求头</label>
     <div class="layui-input-block">
       <input type="text" id='header' name="header" placeholder="请输入" autocomplete="off" class="layui-input">
@@ -102,26 +114,18 @@
     </div>
   </div> -->
 
-  <div class="layui-form-item">
+  <div class="layui-form-item" id='method-div'>
     <label class="layui-form-label">method</label>
     <div class="layui-input-block">
       <input type="radio" name="method" value="get" title="GET" >
       <input type="radio" name="method" value='post' title="POST" checked>
     </div>
   </div>
-  <div class="layui-form-item">
-    <label class="layui-form-label">content-type</label>
-    <div class="layui-input-block">
-      <input type="radio" name="content-type" value="urlencode" title="urlencode" checked>
-      <input type="radio" name="content-type" value='json' title="json">
-      <input type="radio" name="content-type" value='xml' title="xml">
-    </div>
-  </div>
 
   <div class="layui-form-item">
     <label class="layui-form-label">属性</label>
     <div class="layui-input-block">
-      <input type="text" id='property' name="property" placeholder="" autocomplete="off" class="layui-input">
+      <input type="text" id='property' name="property" placeholder="这里定义如{'token':'data.value.token'} 使用时用${token}" autocomplete="off" class="layui-input">
     </div>
   </div>
 
@@ -295,6 +299,22 @@ layui.use(['table','layer','element','form'], function(){
 
   });
 
+  form.on('radio(content_type)',function (data) {
+    
+    if(data.value=='xml'){
+      $('#header-div').hide()
+      $('#method-div').hide()
+
+
+    }
+    else{
+
+      $('#header-div').show()
+      $('#method-div').show()
+
+    }
+  })
+
   // form.on('radio(node_type)', function (data) {
   //   //v=$("[name='step_type']").val()
   //   v=data.value
@@ -364,6 +384,11 @@ layui.use(['table','layer','element','form'], function(){
         $("[value='json']").removeAttr('checked')
         $("[value='xml']").removeAttr('checked')
         $("[value='"+content_type+"']").attr('checked','checked')
+        if(content_type=='xml'){
+          $('#header-div').hide()
+          $('#method-div').hide()
+
+        }
         layui.form.render('radio')
         $("[name='itf-check']").val(itf_check)
         $("[name='db-check']").val(db_check)

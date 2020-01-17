@@ -523,7 +523,7 @@ def addbusiness(request):
 		if status is not 'success':
 			return{
 			'status':'fail',
-			'msg':'添加业务数据异常[%s]'%step
+			'msg':'添加测试数据异常[%s]'%step
 			}
 
 
@@ -572,7 +572,7 @@ def addbusiness(request):
 	except:
 		return{
 		'status':'error',
-		'msg':'添加业务数据异常[%s]'%traceback.format_exc()
+		'msg':'添加测试数据异常[%s]'%traceback.format_exc()
 		}
 def editbusiness(request):
 	from .core import getbuiltin,Fu
@@ -743,7 +743,8 @@ def getchild(kind,main_id):
 			child.append(Case.objects.get(id=order.follow_id))
 	elif kind=='case_step':
 		for order in orderlist:
-			print('jj=',order.follow_id)
+			print('main=>',order.main_id)
+			print('folow=',order.follow_id)
 			child.append(Step.objects.get(id=order.follow_id))
 	elif kind=='step_business':
 		for order in orderlist:
@@ -911,7 +912,7 @@ def getnextvalue(kind,main_id,flag=0):
 		orderlist=list(Order.objects.filter(kind='case_case',main_id=main_id))+list(Order.objects.filter(kind='case_step',main_id=main_id))
 	else:
 		orderlist=list(Order.objects.filter(kind=kind,main_id=main_id))
-	print('list=>',orderlist)
+	# print('list=>',orderlist)
 	
 	if len(orderlist)==0:
 		return '1.1'
@@ -1179,6 +1180,7 @@ def _add_next_case_node(parent,case,nodes):
 	##处理所属单节点
 	step_order_list=ordered(list(Order.objects.filter(kind='case_step',main_id=case.id)))
 	for order in step_order_list:
+		print('stepid=>',order.follow_id)
 		step=Step.objects.get(id=order.follow_id)
 		nodes.append({
 			'id':'step_%s'%step.id,

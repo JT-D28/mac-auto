@@ -101,7 +101,7 @@
                                         <div class="layui-col-xs4 layuimini-qiuck-module">
                                             <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表" data-icon="fa fa-dot-circle-o">
                                                  <i id='repoetmail' class="layui-icon layui-icon-picture"></i>
-                                                <cite>发送邮件</cite>
+                                                <cite>邮箱配置</cite>
                                             </a>
                                         </div>
                                         <div class="layui-col-xs4 layuimini-qiuck-module">
@@ -121,45 +121,44 @@
     </div>
 </div>
 
-
-
-
-            <div id="seeprocess" hidden>
-                    <div class="layui-table">
-                        <div class="layui-card-body">
-                            <div id="log_text"></div>
-                        </div>
-                    </div>
-            </div>
-
-
-<form id='mailconfig' hidden enctype=multipart/form-data  method=POST class="layui-form" style="padding: 10px;">
-  <div class="layui-form-item">
-    <label class="layui-form-label">收件人</label>
-    <div class="layui-input-block">
-      <input type="text" class="layui-input" name="to_receive" value="" title="" checked lay-filter=''>
-
+<div class="layui-collapse " lay-accordion hidden id="settings">
+  <div class="layui-colla-item">
+    <h2 class="layui-colla-title " >邮箱配置</h2>
+    <div class="layui-colla-content">
+        <form id='mailconfig' enctype=multipart/form-data  method=POST class="layui-form" style="padding: 10px;">
+    <div class="layui-form-item">
+        <label class="layui-form-label">配色方案</label>
+        <div class="layui-input-block">
+            <select name="color_scheme" lay-verify="">
+                <option value="">请选择</option>
+                <option value="blue">blue</option>
+                <option value="red">red</option>
+            </select>
+        </div>
     </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">收件人</label>
+        <div class="layui-input-block">
+            <input type="text" class="layui-input" name="to_receive" value="" title="" checked lay-filter=''>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">抄送</label>
+        <div class="layui-input-block">
+            <input type="text" class="layui-input" name="cc_receive" value="" title="" checked lay-filter='e'>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">标题</label>
+        <div class="layui-input-block">
+            <input type="text" class="layui-input" name="description" value='' title="" checked lay-filter=''>
+        </div>
   </div>
-      <div class="layui-form-item">
-    <label class="layui-form-label">抄送</label>
-    <div class="layui-input-block">
-      <input type="text" class="layui-input" name="cc_receive" value="" title="" checked lay-filter='e'>
-
-    </div>
-  </div>
   <div class="layui-form-item">
-    <label class="layui-form-label">标题</label>
-    <div class="layui-input-block">
-      <input type="text" class="layui-input" name="description" value='' title="" checked lay-filter=''>
-    </div>
-  </div>
-  <div class="layui-form-item">
-    <label class="layui-form-label">富文本</label>
-    <div class="layui-input-block">
-      <textarea type="text" class="layui-textarea" id='rich_text' name="rich_text" value="" title="" checked lay-filter=''>
-      </textarea>
-    </div>
+      <label class="layui-form-label">富文本</label>
+      <div class="layui-input-block">
+          <textarea type="text" class="layui-textarea" id='rich_text' name="rich_text" value="" title="" checked lay-filter=''></textarea>
+      </div>
   </div>
      <div class="layui-form-item">
     <label class="layui-form-label">smtp主机</label>
@@ -191,9 +190,35 @@
       <input type="text" class="layui-input" name="sender_pass" value='' title="" checked lay-filter=''>
     </div>
   </div>
+</form></div>
+  </div>
+  <div class="layui-colla-item">
+    <h2 class="layui-colla-title">钉钉群token</h2>
+    <div class="layui-colla-content">
+        <div class="layui-form-item">
+            <label class="layui-form-label">token</label>
+            <div class="layui-input-block">
+            <input type="text" name="title" required  lay-verify="required" placeholder="请输入token" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+    </div>
+  </div>
+  <div class="layui-colla-item">
+    <h2 class="layui-colla-title">jenkins-jacoco配置</h2>
+    <div class="layui-colla-content">tode</div>
+  </div>
+</div>
 
-  <button class="layui-btn" id='mailsave' style="float: right">保存</button>
-</form>
+
+            <div id="seeprocess" hidden>
+                    <div class="layui-table">
+                        <div class="layui-card-body">
+                            <div id="log_text"></div>
+                        </div>
+                    </div>
+            </div>
+
+
 
 
 
@@ -203,11 +228,13 @@
 <script src="{% static 'manager/js/utils.js' %}" charset="utf-8"></script>
 <script src="{% static 'homepage/layui/lay-config.js' %}" charset="utf-8"></script>
 <script>
-    layui.use(['common','form','jquery','layer','element'], function () {
+    layui.use(['common','form','jquery','layer','element','layedit'], function () {
         var common = layui.common;
         var element = layui.element;
         var $=layui.jquery;
         var form=layui.form;
+          var layedit = layui.layedit;
+  var le=layedit.build('rich_text'); //建立编辑器
         var layer=layui.layer;
     var username=$("#username").text()
         common.ajax('/homepage/queryproduct/','post','json',{},
@@ -291,7 +318,7 @@
 
 
 
-    $('#setplan').click(
+    $('#setplan1').click(
         function () {
             var planid = $("[name='plan']").val().substr(5)
             if(planid == ''){
@@ -300,14 +327,14 @@
                 layui.form.render()
                 layer.open({
                     type: 1,
-                    title: "jenkins配置",
-                    content: $('#addhtml'),
-                    area: ['600px', '300px'],
+                    title: "计划配置",
+                    content: $('#settings'),
+                    area: ['900px', '500px'],
                     offset: 'auto',
                     closeBtn: 2,
                     shade: [0.1, '#393D49'],
                     shadeClose: true,
-                    btn: ['我还没做好', '取消'],
+                    btn: ['确认', '取消'],
                     yes: function (index, layero) {
                         common.ajax('/homepage/jenkinsadd/', 'post', 'json', {
                             'product': $("[name='product']").val(),
@@ -419,74 +446,78 @@
         }
 
 
-        $("#repoetmail").click(function () {
-         $("#mailconfig")[0].reset()
-              layui.form.render()
-              success=function(ee){
-                //e=JSON.parse(e)
-                op=''
-                if(typeof(ee)!='string'){
-                  if(ee.code==0){
-                    //赋值form
-                    op='编辑'
-                    console.log(ee.data)
-                    $("[name='color_scheme']").val(ee.data['color_scheme'])
-                    layui.form.render('select');
-                    $("[name='description']").val(ee.data['description'])
-                    $("[name='rich_text']").val(ee.data['rich_text'])
-                    $("[name='to_receive']").val(ee.data['to_receive'])
-                    $("[name='cc_receive']").val(ee.data['cc_receive'])
-                    $("[name='sender_name']").val(ee.data['sender_name'])
-                    $("[name='sender_nick']").val(ee.data['sender_nick'])
-                    $("[name='sender_pass']").val(ee.data['sender_pass'])
-                    $("[name='smtp_host']").val(ee.data['smtp_host'])
-                    $("[name='smtp_port']").val(ee.data['smtp_port'])
+        $("#setplan").click(function () {
+            var planid = $("[name='plan']").val().substr(5)
+            if(planid == ''){
+                layer.msg("请选择项目和计划！")
+            }else {
+                layer.open({
+                      title:'报告通知配置',
+                      type:1,
+                      area: ['800px', '450px'],
+                      content:$('#settings'),
+                      btn:['确定','取消'],
+                      success:function(){
+                          $("#mailconfig")[0].reset()
+                          layui.form.render()
+                          common.ajax('/manager/queryonemailconfig/','post','json',{id:planid},function(ee){
+                                op=''
+                                if(typeof(ee)!='string'){
+                                  if(ee.code==0){
+                                    //赋值form
+                                    op='编辑'
+                                    console.log(ee.data)
+                                    $("[name='color_scheme']").val(ee.data['color_scheme'])
+                                    layui.form.render('select');
+                                    $("[name='description']").val(ee.data['description'])
+                                    $("[name='rich_text']").val(ee.data['rich_text'])
+                                    $("[name='to_receive']").val(ee.data['to_receive'])
+                                    $("[name='cc_receive']").val(ee.data['cc_receive'])
+                                    $("[name='sender_name']").val(ee.data['sender_name'])
+                                    $("[name='sender_nick']").val(ee.data['sender_nick'])
+                                    $("[name='sender_pass']").val(ee.data['sender_pass'])
+                                    $("[name='smtp_host']").val(ee.data['smtp_host'])
+                                    $("[name='smtp_port']").val(ee.data['smtp_port'])
+                                  }
+                                }else{
+                                  ee=JSON.parse(ee)
+                                  if(ee.code==1){
+                                    op='新建'
+                                    console.log('还未关联邮件 新建一个')
+                                  }
+                                }})
+                        },
+                      yes:function(index,layero){
+                        success=function(data){
+                          data=JSON.parse(data)
+                          if(data.code==0){
+                              layer.close(index)
+                              layer.alert(data.msg,{icon:1,time:1500})
+                          }
+                          else{
+                              layer.alert(data.msg,{icon:2,time:2000})
+                          }
+                        }
+                        _post("/manager/editmailconfig/",{
+                          id:planid,
+                          color_scheme:$("[name='color_scheme']").val(),
+                          description:$("[name='description']").val(),
+                         // rich_text:$("[name='rich_text']").val(),
+                          rich_text:layedit.getContent(le),
+                          to_receive:$("[name='to_receive']").val(),
+                          cc_receive:$("[name='cc_receive']").val(),
+                          sender_name:$("[name='sender_name']").val(),
+                          sender_nick:$("[name='sender_nick']").val(),
+                          sender_pass:$("[name='sender_pass']").val(),
+                          smtp_port:$("[name='smtp_port']").val(),
+                          smtp_host:$("[name='smtp_host']").val(),
+                          // is_send_mail:$("[name=apply]").attr('checked')==false?'close':'open',
+                        },success)
+                      }
+                    });
                   }
-                }else{
-                  ee=JSON.parse(ee)
-                  if(ee.code==1){
-                    op='新建'
-                    console.log('还未关联邮件 新建一个')
-                  }
-                }
-                var o=layer.open({
-                  title:op+'邮件配置',
-                  type:1,
-                  area: ['700px', '500px'],
-                  content:$('#mailconfig'),
-                  btn:['确定','取消'],
-                  yes:function(index,layero){
-
-                    layer.close(index)
-                    success=function(data){
-                      data=JSON.parse(data)
-                      if(data.code==0)
-                        layer.alert(data.msg,{icon:1,time:1500})
-                      else
-                        layer.alert(data.msg,{icon:2})
-
-                    }
-                    _post("/manager/editmailconfig/",{
-                      id:id,
-                      color_scheme:$("[name='color_scheme']").val(),
-                      description:$("[name='description']").val(),
-                     // rich_text:$("[name='rich_text']").val(),
-                      rich_text:layedit.getContent(le),
-                      to_receive:$("[name='to_receive']").val(),
-                      cc_receive:$("[name='cc_receive']").val(),
-                      sender_name:$("[name='sender_name']").val(),
-                      sender_nick:$("[name='sender_nick']").val(),
-                      sender_pass:$("[name='sender_pass']").val(),
-                      smtp_port:$("[name='smtp_port']").val(),
-                      smtp_host:$("[name='smtp_host']").val(),
-                      // is_send_mail:$("[name=apply]").attr('checked')==false?'close':'open',
-                    },success)
-                  }
-                });
-                layer.full(o);
-              }
-              _post('/manager/queryonemailconfig/',{id:$("[name='plan']").val().substr(5)},success)
         })
+
     });
 </script>
 

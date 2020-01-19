@@ -488,9 +488,12 @@ def runplan(callername,taskid,planid,kind=None):
 		if config_id:
 			mail_config=MailConfig.objects.get(id=config_id)
 			user=User.objects.get(name=username)
-			mail_res=MainSender.send(taskid,user,mail_config)
-			print("发送邮件 结果[%s]"%mail_res)
+			mail_res = MainSender.send(taskid,user,mail_config)
+			dingding_res = MainSender.dingding(taskid, user, mail_config)
+			print("发送邮件 结果[%s]" % mail_res)
 			viewcache(taskid,username,kind,mail_res)
+			print("发送钉钉通知 结果[%s]" % dingding_res)
+			viewcache(taskid, username, kind, dingding_res)
 
 	except Exception as e:
 		#traceback.print_exc()
@@ -1939,6 +1942,50 @@ class MainSender:
 			res='发送失败[%s]'%error
 
 		return '========================发送邮件 收件人:%s 结果：%s'%(to_receive,res)
+
+
+
+	@classmethod
+	def dingding(cls, taskid, user, mail_config):
+		try:
+			is_send_dingding = mail_config.is_send_dingding
+			if is_send_dingding == 'close':
+				return '=========发送钉钉功能没开启 跳过发送================='
+			dingdingtoken = mail_config.dingdingtoken
+			if dingdingtoken=='' or dingdingtoken is None:
+				return '=========钉钉token为空 跳过发送================='
+			else:
+				url = 'https://oapi.dingtalk.com/robot/send?access_token='+ dingdingtoken
+				print(url)
+				pagrem = {
+					"msgtype": "markdown",
+					"markdown": {
+						"title": "自动化测试报告",
+						"text": "#### 你的自动化测试报告已生成\n" +
+								"> 9度，西北风1级，空气良89，相对温度73%\n\n" +
+								"> ###### 10点20分发布 [天气](http://www.thinkpage.cn/) \n"
+					},
+					"at": {
+						"isAtAll": True
+					}
+				}
+				headers = {
+					'Content-Type': 'application/json'
+				}
+				r=requests.post(url, data=json.dumps(pagrem),headers=headers)
+
+				send_result = 0
+		except:
+			send_result = 1
+		return cls._getdingding(mail_config.dingdingtoken, send_result)
+
+	@classmethod
+	def _getdingding(cls,dingdingtoken,send_result):
+		if send_result == 0:
+			res = '发送钉钉消息成功'
+		elif send_result == 1:
+			res = '发送钉钉消息失败'
+		return '=========发送钉钉通知 结果：%s================='%(res)
 
 class Transformer:
 

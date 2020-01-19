@@ -304,8 +304,8 @@ class MailConfig(models.Model):
 	smtp_host=models.CharField(max_length=32)
 	smtp_port=models.CharField(max_length=32)
 	is_send_mail=models.CharField(max_length=125,default='close')
-
-
+	is_send_dingding=models.CharField(max_length=125,default='close')
+	dingdingtoken=models.CharField(max_length=64)
 	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
 	createtime=models.DateTimeField(auto_now_add=True)
 	updatetime=models.DateTimeField(auto_now=True)

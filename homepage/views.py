@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 # from pyecharts.faker import Faker
 
-from manager.invoker import gettaskresult
+from manager.invoker import gettaskresult, MainSender
 from . import rpechart
 from manager import cm
 from manager.core import *
@@ -86,6 +86,7 @@ def querytaskid(request):
 
     return JsonResponse(simplejson(code=code, msg=msg, data=taskids), safe=False)
 
+
 @csrf_exempt
 def process(request):
     taskid = request.POST.get('taskid')
@@ -114,7 +115,8 @@ def globalsetting(request):
     if request.method == 'POST':
         me2url = request.POST.get('me2url')
         redisurl = request.POST.get('redisurl')
-        p = re.compile('^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)\:([0-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{4}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$')
+        p = re.compile(
+            '^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)\:([0-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{4}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$')
         if p.match(me2url) and p.match(redisurl):
             data = {
                 'me2url': me2url,
@@ -142,8 +144,7 @@ def globalsetting(request):
             code = 1
             msg = '出错了！'
         print(type(configtext))
-        return JsonResponse(simplejson(code=code, msg=msg,data=json.loads(configtext)), safe=False)
-
+        return JsonResponse(simplejson(code=code, msg=msg, data=json.loads(configtext)), safe=False)
 
 
 def restart(request):
@@ -167,6 +168,40 @@ def restart(request):
     return JsonResponse(simplejson(code=code, msg=is_done, data=log_text), safe=False)
 
 
+@csrf_exempt
+def sendreport(request):
+    code = 0
+    msg = ''
+    planid = request.POST.get('planid')
+    plan = Plan.objects.get(id=planid)
+    user=request.session.get("username",None)
+    detail = list(ResultDetail.objects.filter(plan=plan).order_by('-createtime'))
+    if detail is None:
+        msg = "任务还没有运行过！"
+    else:
+        taskids = detail[0].taskid
+
+    mail_res = MainSender.dingding(taskids, user, mail_config)
+
+
+    url = 'https://oapi.dingtalk.com/robot/send?access_token=a39ed3fdf3d48d674afc5addb602ffe35330ee94bb736d447fcd6511cac70c25'
+    pagrem = {
+        "msgtype": "markdown",
+        "markdown": {
+            "title": "你的自动化测试报告已生成",
+            "text": "#### 你的自动化测试报告已生成\n" +
+                    "> 9度，西北风1级，空气良89，相对温度73%\n\n" +
+                    "> ###### 10点20分发布 [天气](http://www.thinkpage.cn/) \n"
+        },
+        "at": {
+            "isAtAll": True
+        }
+    }
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    requests.post(url, data=json.dumps(pagrem), headers=headers)
+    return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
 # @csrf_exempt

@@ -100,8 +100,8 @@
                                         </div>
                                         <div class="layui-col-xs4 layuimini-qiuck-module">
                                             <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表" data-icon="fa fa-dot-circle-o">
-                                                 <i id='repoetmail' class="layui-icon layui-icon-picture"></i>
-                                                <cite>邮箱配置</cite>
+                                                 <i id='sendrepoet' class="layui-icon layui-icon-picture"></i>
+                                                <cite>发送报告</cite>
                                             </a>
                                         </div>
                                         <div class="layui-col-xs4 layuimini-qiuck-module">
@@ -198,7 +198,7 @@
         <div class="layui-form-item">
             <label class="layui-form-label">token</label>
             <div class="layui-input-block">
-            <input type="text" name="title" required  lay-verify="required" placeholder="请输入token" autocomplete="off" class="layui-input">
+            <input type="text" name="token" required  lay-verify="required" placeholder="请输入token" autocomplete="off" class="layui-input">
             </div>
         </div>
     </div>
@@ -435,6 +435,7 @@
                                     $("[name='sender_pass']").val(ee.data['sender_pass'])
                                     $("[name='smtp_host']").val(ee.data['smtp_host'])
                                     $("[name='smtp_port']").val(ee.data['smtp_port'])
+                                    $("[name='token']").val(ee.data['dingdingtoken'])
                                   }
                                 }else{
                                   ee=JSON.parse(ee)
@@ -468,12 +469,34 @@
                           sender_pass:$("[name='sender_pass']").val(),
                           smtp_port:$("[name='smtp_port']").val(),
                           smtp_host:$("[name='smtp_host']").val(),
+                          dingdingtoken:$("[name='token']").val(),
                           // is_send_mail:$("[name=apply]").attr('checked')==false?'close':'open',
                         },success)
                       }
                     });
                   }
         })
+
+
+
+
+        $("#sendrepoet").click(function () {
+            common.ajax('/homepage/sendreport/','post','json',{'planid':$("[name='plan']").val().substr(5)},function (date) {
+                date=JSON.parse(data)
+                if (data.code==0){
+                    layer.alert("发送成功！",{icon:1,time:1500})
+                }else
+                {
+                    layer.alert(data.msg,{icon:2,time:2000})
+                }
+            })
+        })
+
+
+
+
+
+
 
     });
 </script>

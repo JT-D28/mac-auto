@@ -1638,6 +1638,7 @@ def editmailconfig(request):
 		sender_name = request.POST.get('sender_name')
 		sender_nick = request.POST.get('sender_nick')
 		sender_pass = request.POST.get('sender_pass')
+		dingdingtoken = request.POST.get('dingdingtoken')
 		if to_receive=='' or rich_text=='' or description==''or smtp_host==''or smtp_port==''or sender_name=='' or sender_nick=='' or sender_pass=='' :
 			code=1
 			msg='请检查输入项是否填写！'
@@ -1655,6 +1656,7 @@ def editmailconfig(request):
 				config.sender_name=sender_name
 				config.sender_nick=sender_nick
 				config.sender_pass=sender_pass
+				config.dingdingtoken=dingdingtoken
 				# config.is_send_mail=request.POST.get('is_send_mail')
 				config.save()
 				msg='编辑成功'
@@ -1670,6 +1672,7 @@ def editmailconfig(request):
 				config.sender_name=sender_name
 				config.sender_nick=sender_nick
 				config.sender_pass=sender_pass
+				config.dingdingtoken=dingdingtoken
 				author=md.User.objects.get(name=request.session.get('username'))
 				config.author=author
 				# config.is_send_mail=request.POST.get('is_send_mail')

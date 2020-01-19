@@ -110,10 +110,30 @@
      
       <!-- <div id='fuzu'></div> -->
       <span class="layui-breadcrumb" lay-separator="-"><a href="">首页</a></span>
-      <iframe id='tree-content' name='tree-content' title="test" scrolling="no" frameborder="0" src="" style="width:100%;" onload="this.height=this.contentWindow.document.body.scrollHeight-10"></iframe>
+      <iframe id='tree-content' name='tree-content' title="test" scrolling="no" frameborder="0" src="" style="min-height:490px;width:100%"></iframe>
     </div>
   </div>
 </div>
+
+    <script>
+        function calcPageHeight(doc) {
+          var cHeight = Math.max(doc.body.clientHeight, doc.documentElement.clientHeight)
+          var sHeight = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight)
+          var height  = Math.max(cHeight, sHeight)
+          return height
+      }
+      var ifr = document.getElementById('tree-content')
+      ifr.onload = function() {
+      	  //解决打开高度太高的页面后再打开高度较小页面滚动条不收缩
+      	  ifr.style.height='0px';
+          var iDoc = ifr.contentDocument || ifr.document
+          var height = calcPageHeight(iDoc)
+          if(height < 490){
+          	height = 490;
+          }
+          ifr.style.height = height + 'px'
+      }
+    </script>
 
 <div id='import-div' style="padding:5px;" hidden>
   <input id="file-explorer" type="file" multiple>

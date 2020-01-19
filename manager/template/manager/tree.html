@@ -97,8 +97,8 @@
 
 
 <div style="margin-left: 30px;margin-right: 100px;height: 100%" >
-  <div class="layui-row" style="height: 98%" >
-    <div id='treelist' class="layui-col-md4" style="border: 0px solid red;max-height:100%;overflow-y:auto;">
+  <div class="layui-row layui-col-space10" style="height: 100%;" >
+    <div id='treelist' class="layui-col-md5" style="max-height:100%;overflow-y:auto;">
       <div class="layui-inline">
         <input type="input" name="" placeholder="search" style='padding:5px;' id='search' >
         <button id='searchbtn' class="layui-btn">搜索</button>
@@ -106,14 +106,11 @@
       <ul id="case-manager" class="ztree" style="margin-bottom: 20px"></ul>
 
     </div>
-  <div class="layui-col-md1">
-     <hr  style="height:1000px;width:1px;margin-top:2px;margin-bottom:10px;margin-right: 2px;">
-  </div>
-    <div class="layui-col-md7">
+    <div class="layui-col-md7" style="max-height:100%;overflow-y:auto;">
      
       <!-- <div id='fuzu'></div> -->
       <span class="layui-breadcrumb" lay-separator="-"><a href="">首页</a></span>
-      <iframe id='tree-content' name='tree-content' title="test" scrolling="no" frameborder="0" src="" style="width:100%;min-height: 600px"></iframe>
+      <iframe id='tree-content' name='tree-content' title="test" scrolling="no" frameborder="0" src="" style="width:100%;" onload="this.height=this.contentWindow.document.body.scrollHeight-10"></iframe>
     </div>
   </div>
 </div>

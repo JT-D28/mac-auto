@@ -312,54 +312,11 @@
         if(planid == ''){
             layer.msg("请选择项目和计划！")
         }else {
-            window.top.document.getElementById("tree-link").click()
+            window.top.document.getElementById("tree").click()
         }
     });//没啥用
 
 
-
-    $('#setplan1').click(
-        function () {
-            var planid = $("[name='plan']").val().substr(5)
-            if(planid == ''){
-                layer.msg("请选择项目和计划！")
-            }else {
-                layui.form.render()
-                layer.open({
-                    type: 1,
-                    title: "计划配置",
-                    content: $('#settings'),
-                    area: ['900px', '500px'],
-                    offset: 'auto',
-                    closeBtn: 2,
-                    shade: [0.1, '#393D49'],
-                    shadeClose: true,
-                    btn: ['确认', '取消'],
-                    yes: function (index, layero) {
-                        common.ajax('/homepage/jenkinsadd/', 'post', 'json', {
-                            'product': $("[name='product']").val(),
-                            'jenkinsurl': $("[name='jenkinsurl']").val(),
-                            'jobname': $("[name='jobname']").val(),
-                            'servicename': $("[name='servicename']").val()
-                        }, function (res) {
-                            res = JSON.parse(res)
-                            if (res.code == 0) {
-                                layer.alert(e.msg, {icon: 1, time: 3000})
-                            } else {
-                                layer.alert(e.msg, {icon: 5, time: 3000})
-                            }
-                        })
-                    },
-                    btn2: function (index, layero) {
-                        layer.close(index)
-                    },
-                    cancel: function (index, layero) {
-                        layer.close(index)
-                    }
-                })
-            }
-        }
-    );
 
 
     $('#repoetplan').click(function () {

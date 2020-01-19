@@ -55,10 +55,12 @@
         font-weight:10px;
       }
       .func_btn_bar{
-        
+
 /*        background-color: red;*/
       }
-
+    .mailpadding{
+        padding: 9px 1px;
+    }
     </style>
 
 </head>
@@ -81,15 +83,23 @@
 <form id='addhtml'class="layui-form" style="padding:10px;">
 
   <div class="layui-form-item">
-    <label class="layui-form-label">类型</label>
+    <label class="layui-form-label" style="padding: 9px 0px">类型</label>
     <div class="layui-input-block">
       <input type="radio" name="method" value="手动运行" title="手动" checked lay-filter='run_type'>
       <input type="radio" name="method" value='定时运行' title="定时" lay-filter='run_type'>
     </div>
   </div>
 
+      <div class="layui-form-item">
+    <label class="layui-form-label" style="padding: 10px 0px">发送至邮箱</label>
+    <div class="layui-input-block ">
+        <input type="checkbox" name="yyy" lay-skin="switch" lay-text="ON|OFF" unchecked  lay-filter='switchmail' >
+  <i id='editmail'class="layui-icon layui-icon-edit" lay-event='editmail' style="font-size:25px;" hidden></i>
+    </div>
+  </div>
+
   <div class="layui-form-item">
-    <label class="layui-form-label">计划名称</label>
+    <label class="layui-form-label" style="padding: 9px 0px">计划名称</label>
     <div class="layui-input-block">
       <input type="text" name="description_1" placeholder="请输入" autocomplete="off" class="layui-input">
     </div>
@@ -98,12 +108,12 @@
   <div class="layui-form-item" id='config-set' hidden>
     <label class="layui-form-label">定时配置</label>
     <div class="layui-input-block">
-      <textarea type="text" name="config" placeholder="{'year':'','month':'','day':'','hour':'','minute':'','second':''}" autocomplete="off" class="layui-textarea"></textarea> 
+      <textarea type="text" name="config" placeholder="{'year':'','month':'','day':'','hour':'','minute':'','second':''}" autocomplete="off" class="layui-textarea"></textarea>
     </div>
   </div>
 
   <div class="layui-form-item">
-    <label class="layui-form-label">DB选择</label>
+    <label class="layui-form-label" style="padding: 9px 0px">DB选择</label>
       <div class="layui-input-block">
       <select name="db_id" lay-verify="">
 <!--         <option>11</option>
@@ -179,6 +189,44 @@
       }
       _post('/manager/queryoneplan/',{id:uid},success)
     };
+
+
+    form.on('switch(switchmail)', function(data){
+        data.elem.checked?$('#editmail').show():$('#editmail').hide()
+    });
+
+      $('#editmail').click(function () {
+          data={
+              'action':'loadpage',
+              'page':'mail'
+          }
+             _post('/manager/treecontrol/',data,function(e) {
+                 if (e.code == 0) {
+                     layer.alert(e.msg, {icon: 1, time: 1000})
+                 } else
+                     layer.alert(e.msg, {icon: 2})
+             })
+      })
+
+$('#add_product').click(function(e){
+  layer.prompt({
+    formType: 0,
+    value: '',
+    title: '新建产品'
+  }, function(value, index, elem){
+
+    layer.close(index);
+    _post('/manager/treecontrol/',{'description':value,'action':'addproduct'},function(data){
+      if(data.code==0)
+        layer.alert(data.msg,{icon:1,time:2000})
+      else
+        layer.alert(data.msg,{icon:2})
+
+    })
+  })
+
+
+})
 
     //save
     btn=$('#save')

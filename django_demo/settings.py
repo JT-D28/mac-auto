@@ -11,7 +11,13 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
-BASE_URL='http://10.60.45.63:8000'
+import json
+
+
+config = json.load(open('config','r',encoding='utf-8'))
+
+BASE_URL='http://'+config["me2url"]
+
 ##Redis配置
 REDIS_HOST='127.0.0.1'
 REDIS_PORT=6379

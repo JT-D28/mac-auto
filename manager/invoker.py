@@ -1048,12 +1048,13 @@ def _call_extra(user,call_strs,taskid=None,kind='前置操作'):
 			return('error','解析前置操作[%s]失败[%s]'%(s,traceback.format_exc()))
 
 		isbuiltin=(methodname in builtinmethods)
-		flag=Fu.tzm_compute(s,'(.*?)\((.*?)\)')
+		if isbuiltin == False:
+			flag=Fu.tzm_compute(s,'(.*?)\((.*?)\)')
 
-		try:
-			f=Function.objects.get(flag=flag)
-		except:
-			return ('fail','库中发现多个可用函数[%s]'%methodname)
+			try:
+				f=Function.objects.get(flag=flag)
+			except:
+				return ('fail','库中发现多个可用函数[%s]'%methodname)
 		status,res=Fu.call(f,call_str,builtin=isbuiltin)
 		# print('vvvvvvvvvvvvvvvvvv=>',(status,res))
 		if status is not 'success':

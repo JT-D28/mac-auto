@@ -677,7 +677,7 @@ def _step_process_check(callername,taskid,order,kind):
 				text,statuscode,itf_msg=_callinterface(taskid,user,step.url,str(paraminfo),step.method,step.headers,step.content_type,step.temp,kind)			
 			
 
-
+			viewcache(taskid,username,kind,"<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>"%text)
 
 			if len(str(statuscode))==0:
 				return ('fail',itf_msg)
@@ -892,6 +892,9 @@ def _callinterface(taskid,user,url,body=None,method=None,headers=None,content_ty
 	返回(rps.text,rps.status_code,msg)
 	"""
 	##url data headers过滤
+
+	if content_type=='formdata':
+		return ('','','form-data方式暂不支持..')
 	url_rp=_replace_property(user,url)
 	if url_rp[0] is not 'success':
 		return ('','',url_rp[1])
@@ -1091,7 +1094,7 @@ def _compute(taskid,user,checkexpression,type=None,target=None,kind=None,parse_t
 				resultlist.append(ress)
 
 		elif type=="itf_check":
-			viewcache(taskid,user.name,kind,"<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>"%target)
+			# 
 
 			for item in checklist:
 				old=item

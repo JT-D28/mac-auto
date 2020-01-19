@@ -69,7 +69,7 @@ class Mysqloper:
                                                 user=self.user,
                                                 password=self.pwd,
                                                 charset='utf8mb4')
-                    conn.a
+
 
                 elif self.dbtype.lower()=='oracle_servicename':
                     import cx_Oracle
@@ -97,8 +97,9 @@ class Mysqloper:
                 return ('success',conn)
             except Exception as e:
                 print("数据库配置名=>",conname)
-                print(traceback.format_exc())
-                return ('error',("数据库连接失败 请检查数据库[%s]是否正确配置"%configname))
+                error=traceback.format_exc()
+                print(error)
+                return ('error',("数据库连接失败 请检查数据库[%s]是否正确配置"%(configname,error)))
 
     def db_commit(self):
         try:

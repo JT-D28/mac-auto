@@ -154,8 +154,8 @@
           dbid=data['db_id']
 
           form.val("addplan", {
-              "mail": data['is_send_mail']==="close"?false:true,
-              "dingding":data['is_send_dingding']==="close"?false:true
+              "mail": data['is_send_mail']==="open"?true:false,
+              "dingding":data['is_send_dingding']==="open"?true:false
             });
 
 

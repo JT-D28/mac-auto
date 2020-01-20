@@ -5,9 +5,11 @@
 # @to      :
 from django.conf import settings
 from django.db.models import Q
+from django.http import JsonResponse
+
 from login.models import *
 from manager.models import *
-from .core import ordered,Fu,getbuiltin,EncryptUtils,genorder
+from .core import ordered, Fu, getbuiltin, EncryptUtils, genorder, simplejson
 from .db import Mysqloper
 from .context import set_top_common_config,viewcache,gettestdatastep,gettestdataparams,get_task_session,clear_task_session
 import re,traceback,redis,time,threading,smtplib, requests,json,warnings,datetime,socket
@@ -1955,15 +1957,19 @@ class MainSender:
 			if dingdingtoken=='' or dingdingtoken is None:
 				return '=========钉钉token为空 跳过发送================='
 			else:
-				url = 'https://oapi.dingtalk.com/robot/send?access_token='+ dingdingtoken
-				print(url)
+				url = 'https://oapi.dingtalk.com/robot/send?access_token=' + dingdingtoken
+				res = gettaskresult(taskid)
 				pagrem = {
 					"msgtype": "markdown",
 					"markdown": {
 						"title": "自动化测试报告",
-						"text": "#### 你的自动化测试报告已生成\n" +
-								"> 9度，西北风1级，空气良89，相对温度73%\n\n" +
-								"> ###### 10点20分发布 [天气](http://www.thinkpage.cn/) \n"
+						"text": "计划【%s】的测试报告已生成：\n\n" % (res["planname"]) +
+								"> ***测试结果*** :\n\n" +
+								">          用例总数：%s\n\n" % (res["total"]) +
+								">          成功率：%s\n\n" % (res["success_rate"]) +
+								">          平均响应时间：%s\n\n" % (res["average"]) +
+								"> ###### %s [详情](%s) \n" % (time.strftime('%m-%d %H:%M', time.localtime(time.time())),
+															 settings.BASE_URL + "/manager/querytaskdetail/?taskid=" + taskid)
 					},
 					"at": {
 						"isAtAll": True
@@ -1972,7 +1978,7 @@ class MainSender:
 				headers = {
 					'Content-Type': 'application/json'
 				}
-				r=requests.post(url, data=json.dumps(pagrem),headers=headers)
+				requests.post(url, data=json.dumps(pagrem), headers=headers)
 
 				send_result = 0
 		except:

@@ -217,7 +217,7 @@
                 offset: 'auto',
                 shade: [0.1, '#393D49'],
                 shadeClose: true,
-                btn: ['确认并重启服务', '取消'],
+                btn: ['确认后请手动重启服务', '取消'],
                 success:function () {
                     $.ajax({
                         url: '/homepage/globalsetting/',
@@ -243,7 +243,7 @@
                             res = JSON.parse(res)
                             if (res.code == 0) {
                                 layer.close(index)
-                                layer.alert("重启中，请手动刷新页面！", {icon: 1, time: 3000})
+                                layer.alert("重启后，请重新加载页面！", {icon: 1, time: 3000})
                             } else {
                                 layer.alert(res.msg, {icon: 5, time: 3000})
                             }

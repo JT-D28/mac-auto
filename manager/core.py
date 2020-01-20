@@ -514,7 +514,7 @@ class CaseEncoder(XJsonEncoder):
 
 class PlanEncoder(XJsonEncoder):
 	def __init__(self,**args):
-		super(PlanEncoder,self).__init__(['id','author','last','description','cases','createtime','updatetime','run_type','run_value','mail_config_id','db_id'],**args)
+		super(PlanEncoder,self).__init__(['id','author','last','description','cases','createtime','updatetime','run_type','run_value','mail_config_id','db_id','is_send_dingding','is_send_mail'],**args)
 	def encode(self,obj):
 		#print('hhhh'*100)
 		L=eval(super(XJsonEncoder,self).encode(obj))
@@ -533,9 +533,9 @@ class PlanEncoder(XJsonEncoder):
 				
 				config_id=x.get('mail_config_id')
 				is_send_mail=models.MailConfig.objects.get(id=config_id).is_send_mail
-
+				is_send_dingding = models.MailConfig.objects.get(id=config_id).is_send_dingding
 				x['is_send_mail']=is_send_mail
-
+				x['is_send_dingding'] = is_send_dingding
 				# print("uuuuuuuuuu=>",x)
 
 			except:

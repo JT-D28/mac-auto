@@ -179,7 +179,22 @@ def editplan(request):
 		plan.db_id=request.POST.get('dbid')
 		print('description=>',plan.description)
 		plan.run_type=request.POST.get('run_type')
+		mail_config_id=plan.mail_config_id
 		plan.save()
+
+		mail_config=MailConfig.objects.get(id=mail_config_id)
+		print(mail_config)
+		is_send_mail=request.POST.get("is_send_mail")
+		is_send_dingding=request.POST.get("is_send_dingding")
+		if is_send_mail=='true':
+			mail_config.is_send_mail='open'
+		else:
+			mail_config.is_send_mail='close'
+		if is_send_dingding == 'true':
+			mail_config.is_send_dingding = 'open'
+		else:
+			mail_config.is_send_dingding = 'close'
+		mail_config.save()
 		msg='编辑成功'
 		return{
 		'status':'success',

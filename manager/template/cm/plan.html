@@ -80,7 +80,7 @@
 
   </span>
 
-<form id='addhtml'class="layui-form" style="padding:10px;">
+<form id='addhtml'class="layui-form" lay-filter="addplan" style="padding:10px;">
 
   <div class="layui-form-item">
     <label class="layui-form-label" style="padding: 9px 0px">类型</label>
@@ -90,12 +90,14 @@
     </div>
   </div>
 
-      <div class="layui-form-item">
-    <label class="layui-form-label" style="padding: 10px 0px">发送至邮箱</label>
-    <div class="layui-input-block ">
-        <input type="checkbox" name="yyy" lay-skin="switch" lay-text="ON|OFF" unchecked  lay-filter='switchmail' >
+  <div class="layui-form-item">
+    <label class="layui-form-label">报告通知</label>
+    <div class="layui-input-block">
+      <input type="checkbox" name="dingding" title="钉钉">
+      <input type="checkbox" name="mail" title="邮件">
     </div>
   </div>
+
 
   <div class="layui-form-item">
     <label class="layui-form-label" style="padding: 9px 0px">计划名称</label>
@@ -165,6 +167,12 @@
           description=data['description']
           dbid=data['db_id']
 
+          form.val("addplan", {
+              "mail": data['is_send_mail']==="close"?false:true,
+              "dingding":data['is_send_dingding']==="close"?false:true
+            });
+
+
           $("[name='db_id']").val(dbid)
           layui.form.render('select')
           //alert(description)
@@ -218,8 +226,6 @@ $('#add_product').click(function(e){
     //save
     btn=$('#save')
     if(btn)btn.bind('click',function(){
-
-   
       url='/manager/treecontrol/'
       // alert(detail)
       data={
@@ -229,8 +235,9 @@ $('#add_product').click(function(e){
         'description':$("[name='description_1']").val(),
         'run_type':$("[name='method']:checked").val(),
         'config':$("[name='config']").val(),
-        'dbid':$("[name='db_id']").val()
-
+        'dbid':$("[name='db_id']").val(),
+        'is_send_dingding':$("[name='dingding']").is(':checked'),
+          'is_send_mail':$("[name='mail']").is(':checked')
       }
 
       _post(url,data,function(e){

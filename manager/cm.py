@@ -102,10 +102,23 @@ def addplan(request):
 		plan.db_id=request.POST.get('dbid')
 		plan.author=md.User.objects.get(name=request.session.get('username',None))
 		plan.run_type=request.POST.get('run_type')
-
 		plan.save()
 
 		addrelation('product_plan', request.session.get('username'), pid, plan.id)
+
+		mail_config = MailConfig()
+		if request.POST.get('is_send_mail') == 'true':
+			mail_config.is_send_mail = 'open'
+		else:
+			mail_config.is_send_mail = 'close'
+		if request.POST.get('is_send_dingding') == 'true':
+			mail_config.is_send_dingding = 'open'
+		else:
+			mail_config.is_send_dingding = 'close'
+		mail_config.save()
+
+		plan.mail_config_id = mail_config.id
+		plan.save()
 
 		if plan.run_type=='定时运行':
 			config=request.POST.get('config')

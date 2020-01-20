@@ -1,15 +1,11 @@
-
 {%load static%}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="height: 100%">
 <head>
     <meta charset="UTF-8">
-
     <title>计划管理</title>
     <link rel="stylesheet" type="text/css" href="{% static 'manager/bootstrap/bootstrap.min.css' %}">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" crossorigin="anonymous">
-    <link href="{% static 'manager/bootstrap-fileinput-master/css/fileinput.css'%}" media="all" rel="stylesheet" type="text/css"/>
-    <link href="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.css'%}" media="all" rel="stylesheet" type="text/css"/>
     <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
     <style type="text/css">
       .layui-icon:hover{
@@ -64,69 +60,59 @@
     </style>
 
 </head>
-<body>
 
-<div id='selecttaskid' class="layui-form" style="padding-top: 10px;padding-bottom:50px;padding-right:20px;" hidden>
-  <label class="layui-form-label">任务</label>
-  <div id='taskids' class="layui-input-block" style="max-height:100px;">
-    <p><input type="radio" name="taskid" value="taskid_1" title="taskid_1"  lay-filter='' checked ></p>
-    <p><input type="radio" name="taskid" value="taskid_2" title="taskid_2"  lay-filter=''></p>
-  </div>
 
-</div>
-  <span class="layui-breadcrumb">
-    <a href="">用例管理</a>
-    <a href="">计划</a>
-
-  </span>
-
-<form id='addhtml'class="layui-form" lay-filter="addplan" style="padding:10px;">
-
-  <div class="layui-form-item">
-    <label class="layui-form-label" style="padding: 9px 0px">类型</label>
-    <div class="layui-input-block">
-      <input type="radio" name="method" value="手动运行" title="手动" checked lay-filter='run_type'>
-      <input type="radio" name="method" value='定时运行' title="定时" lay-filter='run_type'>
+<body style="height: 100%">
+<div class="layui-row" style="height: 100%">
+    <div class="layui-col-md12" style="height: 100%;padding:0 15px" >
+        <fieldset style="height:95%">
+            <legend style="font-size: 20px;border-top-width:0px !important;">
+                <span class="layui-breadcrumb">
+                    <a href="">用例管理</a>
+                    <a href="">计划</a>
+                </span>
+            </legend>
+            <form id='addhtml' class="layui-form layui-form-pane" lay-filter="addplan" action="">
+                <div class="layui-form-item" pane="">
+                    <label class="layui-form-label">类型</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="method" value="手动运行" title="手动" checked lay-filter='run_type'>
+                        <input type="radio" name="method" value='定时运行' title="定时" lay-filter='run_type'>
+                    </div>
+                </div>
+                <div class="layui-form-item" pane="">
+                    <label class="layui-form-label">报告通知</label>
+                    <div class="layui-input-block">
+                        <input type="checkbox" name="dingding" title="钉钉">
+                        <input type="checkbox" name="mail" title="邮件">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">计划名称</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="description_1" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item" id='config-set' hidden>
+                    <label class="layui-form-label">定时配置</label>
+                    <div class="layui-input-block">
+                        <textarea type="text" name="config" placeholder="{'year':'','month':'','day':'','hour':'','minute':'','second':''}" autocomplete="off" class="layui-textarea"></textarea>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">DB选择</label>
+                    <div class="layui-input-block">
+                        <select name="db_id" lay-verify=""></select>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <button class="layui-btn" id='save' style="visibility:hidden;">保存</button>
+                </div>
+            </form>
+        </fieldset>
     </div>
   </div>
-
-  <div class="layui-form-item">
-    <label class="layui-form-label">报告通知</label>
-    <div class="layui-input-block">
-      <input type="checkbox" name="dingding" title="钉钉">
-      <input type="checkbox" name="mail" title="邮件">
-    </div>
-  </div>
-
-
-  <div class="layui-form-item">
-    <label class="layui-form-label" style="padding: 9px 0px">计划名称</label>
-    <div class="layui-input-block">
-      <input type="text" name="description_1" placeholder="请输入" autocomplete="off" class="layui-input">
-    </div>
-  </div>
-
-  <div class="layui-form-item" id='config-set' hidden>
-    <label class="layui-form-label">定时配置</label>
-    <div class="layui-input-block">
-      <textarea type="text" name="config" placeholder="{'year':'','month':'','day':'','hour':'','minute':'','second':''}" autocomplete="off" class="layui-textarea"></textarea>
-    </div>
-  </div>
-
-  <div class="layui-form-item">
-    <label class="layui-form-label" style="padding: 9px 0px">DB选择</label>
-      <div class="layui-input-block">
-      <select name="db_id" lay-verify="">
-<!--         <option>11</option>
-        <option>22</option> -->
-      </select></div>
-  </div>
-  <button class="layui-btn" id='save' style="visibility:hidden;">保存</button>
-</form>
-
-
-
-</body>
+ </body>
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>

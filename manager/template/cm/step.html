@@ -1,168 +1,170 @@
 {%load static%}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"  style="height: 100%">
 <head>
     <meta charset="UTF-8">
+    <title>测试步骤</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/bootstrap/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
-
-    <title></title>
     <style type="text/css">
-
-      .layui-table-cell {
-      height: inherit;
-      }
-            
       .layui-icon:hover{
         cursor: pointer;
+
+      }
+      .icon-tool{
+        float: right;
+
+      }
+      .icon-tool-item:hover{
+        cursor: pointer;
+      }
+      .icon-tool-item{
+        margin-left: 5px;
       }
 
-      #adddata:hover{
+      #case-selected p{
+        height: 30px;
+        padding: 0;
+       /* text-overflow: ellipsis;*/
+   /*     max-width:200px;*/
+      }
+      #can-select p:hover{
+        background-color: #009688;
+        color: white;
+
+      }
+      #is-selected p:hover{
+        background-color: #009688;
+        color:white;
+
+      }
+      .func_btn{
+
+        font-size: 10px;
+        margin:5px;
+      }
+      .func_btn:hover{
+
         cursor: pointer;
         color:#009688;
-
+        font-weight:10px;
       }
-      #deldata:hover{
-        cursor: pointer;
-        color: #009688;
+      .func_btn_bar{
 
+/*        background-color: red;*/
       }
-      #copydata:hover{
-        cursor: pointer;
-        color:#009688;
-      }
-
-
-      .required::after{
-      content:'*';
-      position:absolute;
-      right: :2px;
-      top:0;
-      color:red;
-      }
+    .mailpadding{
+        padding: 9px 1px;
+    }
     </style>
-
 
 </head>
 <body>
 
+<div class="layui-row" style="height: 100%">
+      <div class="layui-col-md12" style="height: 100%;padding:0 15px" >
+          <fieldset style="height:95%">
+              <legend style="font-size: 20px;border-top-width:0px !important;">
+                  <span class="layui-breadcrumb">
+                      <a href="">用例管理</a>
+                      <a href="">测试步骤</a>
+                  </span>
+              </legend>
+              <form id='addproduct' class="layui-form layui-form-pane" action="">
+                  <div class="layui-form-item" id='weight_item' hidden>
+                      <label class="layui-form-label ">权重</label>
+                      <div class="layui-input-block">
+                          <input id='weight' type="text" name="weight" placeholder="" autocomplete="off" class="layui-input" disabled>
+                      </div>
+                  </div>
+                  <div class="layui-form-item" pane="">
+                      <label class="layui-form-label">步骤类型</label>
+                      <div class="layui-input-block">
+                          <input type="radio" name="step_type" value="interface" title="接口"  lay-filter='kind' checked>
+                          <input type="radio" name="step_type" value='function' title="函数"  lay-filter='kind'>
+                          <input type="radio" name="step_type" value='dir' title="文件夹"  lay-filter='kind'>
+                      </div>
+                  </div>
+                  <div class="layui-form-item ">
+                      <label class="layui-form-label required">描述</label>
+                      <div class="layui-input-block">
+                          <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input" lay-verify="required">
+                      </div>
+                  </div>
+                  <div class="layui-form-item">
+                      <label class="layui-form-label required">url</label>
+                      <div class="layui-input-block">
+                          <input id='url' type="text" name="url" placeholder="" autocomplete="off" class="layui-input">
+                      </div>
+                  </div>
+                  <div class="layui-form-item" pane="">
+                      <label class="layui-form-label">content-type</label>
+                      <div class="layui-input-block">
+                          <input type="radio" name="content-type" value="formdata" title="form-data" checked lay-filter='content_type'>
+                          <input type="radio" name="content-type" value="urlencode" title="urlencode" lay-filter='content_type'>
+                          <input type="radio" name="content-type" value='json' title="json" lay-filter='content_type'>
+                          <input type="radio" name="content-type" value='xml' title="xml" lay-filter='content_type'>
+                      </div>
+                  </div>
+                  <div class="layui-form-item" id='header-div'>
+                      <label class="layui-form-label">请求头</label>
+                      <div class="layui-input-block">
+                          <input type="text" id='header' name="header" placeholder="请输入" autocomplete="off" class="layui-input">
+                      </div>
+                  </div>
+                  <div class="layui-form-item" pane="" id='method-div'>
+                    <label class="layui-form-label">method</label>
+                    <div class="layui-input-block">
+                      <input type="radio" name="method" value="get" title="GET" >
+                      <input type="radio" name="method" value='post' title="POST" checked>
+                    </div>
+                  </div>
+
+                  <div class="layui-form-item">
+                    <label class="layui-form-label">属性</label>
+                    <div class="layui-input-block">
+                      <input type="text" id='property' name="property" placeholder="这里定义如{'token':'data.value.token'} 使用时用${token}" autocomplete="off" class="layui-input">
+                    </div>
+                  </div>
+
+                  <div class="layui-form-item" hidden>
+                    <label class="layui-form-label">标签</label>
+                    <div class="layui-input-block">
+                      <select name="tag" lay-verify="">
+                        <option value="">请选择</option>
+                <!--         <option value="mysql">mysql</option>
+                        <option value="oracle">oracle</option> -->
+                <!--         <option value="db2">db2</option> -->
+                      </select>
+                    </div>
+                  </div>
 
 
-<form id='addhtml' class="layui-form" style="padding: 10px;">
-  <span>测试步骤</span>
+                  <div class="layui-form-item" hidden>
+                    <label class="layui-form-label required">调用函数</label>
+                    <div class="layui-input-block">
+                      <select name='body'></select>
+                    </div>
+                  </div>
 
-
-  <div class="layui-form-item" id='weight_item' hidden>
-    <label class="layui-form-label ">权重</label>
-    <div class="layui-input-block">
-      <input id='weight' type="text" name="weight" placeholder="" autocomplete="off" class="layui-input" disabled>
+                  <div class="layui-form-item">
+                    <label class="layui-form-label">DB选择</label>
+                    <div class="layui-input-block">
+                      <select name="db_id" lay-verify="">
+                <!--         <option value="">请选择</option>
+                        <option value="">mysql</option> -->
+                      </select>
+                    </div>
+                  </div>
+                  <div class="layui-form-item">
+                      <button class="layui-btn" id='save' style="visibility:hidden;position: center">保存</button>
+                  </div>
+              </form>
+        </fieldset>
     </div>
   </div>
 
-<!--   <div class="layui-form-item">
-    <label class="layui-form-label">节点类型</label>
-    <div class="layui-input-block">
-      <input type="radio" name="node_type" value="step" title="步骤"  lay-filter='node_type' checked>
-      <input type="radio" name="node_type" value='case' title="目录"  lay-filter='node_type'>
-
-    </div>
-  </div> -->
-
-  <div class="layui-form-item">
-    <label class="layui-form-label">步骤类型</label>
-    <div class="layui-input-block">
-      <input type="radio" name="step_type" value="interface" title="接口"  lay-filter='kind' checked>
-      <input type="radio" name="step_type" value='function' title="函数"  lay-filter='kind'>
-      <input type="radio" name="step_type" value='dir' title="文件夹"  lay-filter='kind'>
-
-    </div>
-  </div>
-
-  <div class="layui-form-item ">
-    <label class="layui-form-label required">描述</label>
-    <div class="layui-input-block">
-      <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input" lay-verify="required">
-    </div>
-  </div>
-  <div class="layui-form-item">
-    <label class="layui-form-label required">url</label>
-    <div class="layui-input-block">
-      <input id='url' type="text" name="url" placeholder="" autocomplete="off" class="layui-input">
-    </div>
-  </div>
-
-  <div class="layui-form-item">
-    <label class="layui-form-label">content-type</label>
-    <div class="layui-input-block">
-      <input type="radio" name="content-type" value="formdata" title="form-data" checked lay-filter='content_type'>
-      <input type="radio" name="content-type" value="urlencode" title="urlencode" lay-filter='content_type'>
-      <input type="radio" name="content-type" value='json' title="json" lay-filter='content_type'>
-      <input type="radio" name="content-type" value='xml' title="xml" lay-filter='content_type'>
-    </div>
-  </div>
-
-
-  <div class="layui-form-item" id='header-div'>
-    <label class="layui-form-label">请求头</label>
-    <div class="layui-input-block">
-      <input type="text" id='header' name="header" placeholder="请输入" autocomplete="off" class="layui-input">
-    </div>
-  </div>
-<!--   <div class="layui-form-item">
-    <label class="layui-form-label">body</label>
-    <div class="layui-input-block">
-      <textarea type="text" name="body" placeholder="请输入" autocomplete="off" class="layui-input"></textarea>
-    </div>
-  </div> -->
-
-  <div class="layui-form-item" id='method-div'>
-    <label class="layui-form-label">method</label>
-    <div class="layui-input-block">
-      <input type="radio" name="method" value="get" title="GET" >
-      <input type="radio" name="method" value='post' title="POST" checked>
-    </div>
-  </div>
-
-  <div class="layui-form-item">
-    <label class="layui-form-label">属性</label>
-    <div class="layui-input-block">
-      <input type="text" id='property' name="property" placeholder="这里定义如{'token':'data.value.token'} 使用时用${token}" autocomplete="off" class="layui-input">
-    </div>
-  </div>
-
-  <div class="layui-form-item" hidden>
-    <label class="layui-form-label">标签</label>
-    <div class="layui-input-block">
-      <select name="tag" lay-verify="">
-        <option value="">请选择</option>
-<!--         <option value="mysql">mysql</option>
-        <option value="oracle">oracle</option> -->
-<!--         <option value="db2">db2</option> -->
-      </select> 
-    </div>
-  </div>
-  
-
-  <div class="layui-form-item" hidden>
-    <label class="layui-form-label required">调用函数</label>
-    <div class="layui-input-block">
-      <select name='body'></select>
-    </div>
-  </div>
-
-  <div class="layui-form-item">
-    <label class="layui-form-label">DB选择</label>
-    <div class="layui-input-block">
-      <select name="db_id" lay-verify="">
-<!--         <option value="">请选择</option>
-        <option value="">mysql</option> -->
-      </select> 
-    </div>
-  </div>
-<!--   <div id='table-show' style="width:1200px;"></div> -->
-<button class="layui-btn" id='save' style="visibility:hidden;">保存</button>
-
-
-</form>
 </body>
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/layui/layui.js' %}"></script>

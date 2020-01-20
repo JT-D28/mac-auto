@@ -198,7 +198,7 @@
         <div class="layui-form-item">
             <label class="layui-form-label">token</label>
             <div class="layui-input-block">
-            <input type="text" name="token" required  lay-verify="required" placeholder="请输入token" autocomplete="off" class="layui-input">
+            <input type="text" name="dingdingtoken" required  lay-verify="required" placeholder="请输入token" autocomplete="off" class="layui-input">
             </div>
         </div>
     </div>
@@ -435,7 +435,7 @@
                                     $("[name='sender_pass']").val(ee.data['sender_pass'])
                                     $("[name='smtp_host']").val(ee.data['smtp_host'])
                                     $("[name='smtp_port']").val(ee.data['smtp_port'])
-                                    $("[name='token']").val(ee.data['dingdingtoken'])
+                                    $("[name='dingdingtoken']").val(ee.data['dingdingtoken'])
                                   }
                                 }else{
                                   ee=JSON.parse(ee)
@@ -469,7 +469,7 @@
                           sender_pass:$("[name='sender_pass']").val(),
                           smtp_port:$("[name='smtp_port']").val(),
                           smtp_host:$("[name='smtp_host']").val(),
-                          dingdingtoken:$("[name='token']").val(),
+                          dingdingtoken:$("[name='dingdingtoken']").val(),
                           // is_send_mail:$("[name=apply]").attr('checked')==false?'close':'open',
                         },success)
                       }

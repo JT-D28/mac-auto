@@ -1966,8 +1966,8 @@ class MainSender:
 						"text": "计划【%s】的测试报告已生成：\n\n" % (res["planname"]) +
 								"> ***测试结果*** :\n\n" +
 								">          用例总数：%s\n\n" % (res["total"]) +
+								">          失败数量：%s\n\n" % (res["fail"]) +
 								">          成功率：%s\n\n" % (res["success_rate"]) +
-								">          平均响应时间：%s\n\n" % (res["average"]) +
 								"> ###### %s [详情](%s) \n" % (time.strftime('%m-%d %H:%M', time.localtime(time.time())),
 															 settings.BASE_URL + "/manager/querytaskdetail/?taskid=" + taskid)
 					},

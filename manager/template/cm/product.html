@@ -1,14 +1,16 @@
 {%load static%}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"  style="height: 100%">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
-
     <title>产品</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/bootstrap/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
     <style type="text/css">
       .layui-icon:hover{
         cursor: pointer;
+
       }
       .icon-tool{
         float: right;
@@ -21,11 +23,12 @@
         margin-left: 5px;
       }
 
-      #step-selected p{
+      #case-selected p{
         height: 30px;
         padding: 0;
+       /* text-overflow: ellipsis;*/
+   /*     max-width:200px;*/
       }
-
       #can-select p:hover{
         background-color: #009688;
         color: white;
@@ -47,31 +50,43 @@
         color:#009688;
         font-weight:10px;
       }
+      .func_btn_bar{
 
+/*        background-color: red;*/
+      }
+    .mailpadding{
+        padding: 9px 1px;
+    }
     </style>
 
 </head>
-<body>
-
-
-
-<form id='addproduct'  class="layui-form" style="padding: 10px;">
-  <span>产品</span>
-
-  <div class="layui-form-item">
-    <label class="layui-form-label">产品名称</label>
-    <div class="layui-input-block">
-      <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input">
+<body style="height: 100%">
+  <div class="layui-row" style="height: 100%">
+      <div class="layui-col-md12" style="height: 100%;padding:0 15px" >
+          <fieldset style="height:95%">
+              <legend style="font-size: 20px;border-top-width:0px !important;">
+                  <span class="layui-breadcrumb">
+                      <a href="">用例管理</a>
+                      <a href="">产品名称</a>
+                  </span>
+              </legend>
+              <form id='addproduct' class="layui-form layui-form-pane" action="">
+                  <div class="layui-form-item">
+                      <label class="layui-form-label">产品名称</label>
+                      <div class="layui-input-block">
+                          <input type="text" name="description" autocomplete="off" placeholder="请输入" class="layui-input">
+                      </div>
+                  </div>
+                  <div class="layui-form-item">
+                      <button class="layui-btn" id='save' style="visibility:hidden;position: center">保存</button>
+                  </div>
+              </form>
+        </fieldset>
     </div>
   </div>
-  <button class="layui-btn" id='save' style="visibility:hidden;">保存</button>
-
-</form>
-
-
-
-</div>
 </body>
+
+
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
@@ -79,7 +94,7 @@
 <script type="text/javascript">
 
 
-layui.use(['table','layer','form'], function(){
+layui.use(['table','layer','form','element'], function(){
   var table = layui.table;
   var $=layui.jquery
   var layer=layui.layer;
@@ -122,8 +137,8 @@ layui.use(['table','layer','form'], function(){
       if(data.code==0){
         var treeObj = parent.$.fn.zTree.getZTreeObj('case-manager');
         if(detail=='addproduct'){
-          var node = treeObj.getNodeByParam('id',pid); 
-          console.log('addproduct=>'+JSON.stringify(data.data)) 
+          var node = treeObj.getNodeByParam('id',pid);
+          console.log('addproduct=>'+JSON.stringify(data.data))
           treeObj.addNodes(node,data.data);
           treeObj.expandNode(node,true)
 
@@ -152,8 +167,8 @@ layui.use(['table','layer','form'], function(){
 
 
 
-  
-  
+
+
 });
 
 </script>

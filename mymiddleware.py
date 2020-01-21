@@ -28,7 +28,6 @@ class Interceptor(MiddlewareMixin):
 		'Tag':'name',
 		'Variable':'key',
 		'DBCon':'description',
-		'MailConfig':'description',
 		'Step':'description',
 		'Case':'description',
 		'Plan':'description',

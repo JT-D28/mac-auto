@@ -173,7 +173,7 @@ class Mysqloper:
             cur.execute(str(sql))
 
             ##查询sql时候
-            if re.match(r'(select).*(from).+(where){0,1}.*', sql.lower()):
+            if re.match(r'(select).*(from).+(where){0,1}.*', sql.lower()) or re.match(r'(select).*(curdate).*',sql.lower()):
                 # for cs in range(15):
                 data = cur.fetchall()
                 data=list(data)

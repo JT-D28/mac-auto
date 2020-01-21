@@ -514,7 +514,7 @@ class CaseEncoder(XJsonEncoder):
 
 class PlanEncoder(XJsonEncoder):
 	def __init__(self,**args):
-		super(PlanEncoder,self).__init__(['id','author','last','description','cases','createtime','updatetime','run_type','run_value','mail_config_id','db_id'],**args)
+		super(PlanEncoder,self).__init__(['id','author','last','description','cases','createtime','updatetime','run_type','run_value','mail_config_id','db_id','is_send_dingding','is_send_mail'],**args)
 	def encode(self,obj):
 		#print('hhhh'*100)
 		L=eval(super(XJsonEncoder,self).encode(obj))
@@ -533,9 +533,9 @@ class PlanEncoder(XJsonEncoder):
 				
 				config_id=x.get('mail_config_id')
 				is_send_mail=models.MailConfig.objects.get(id=config_id).is_send_mail
-
+				is_send_dingding = models.MailConfig.objects.get(id=config_id).is_send_dingding
 				x['is_send_mail']=is_send_mail
-
+				x['is_send_dingding'] = is_send_dingding
 				# print("uuuuuuuuuu=>",x)
 
 			except:
@@ -689,7 +689,7 @@ class TagEncoder(XJsonEncoder):
 		super(TagEncoder,self).__init__(['id','author','name','createtime','updatetime'],**args)
 class MailConfigEncoder(XJsonEncoder):
 	def __init__(self,**args):
-		super(MailConfigEncoder,self).__init__(['id','author','smtp_host','smtp_port','sender_name','sender_nick','sender_pass','is_send_mail','createtime','updatetime','description','to_receive','cc_receive','color_scheme','rich_text'],**args)
+		super(MailConfigEncoder,self).__init__(['id','author','smtp_host','smtp_port','sender_name','sender_nick','sender_pass','is_send_mail','createtime','updatetime','description','to_receive','cc_receive','color_scheme','rich_text','dingdingtoken'],**args)
 
 
 
@@ -793,27 +793,35 @@ def gettaskid():
 
 
 
-def getbuiltin(filename='builtin.py'):
-	"""获取内置函数列表 model.Function形式组装
+def getbuiltin(searchvalue=None, filename='builtin.py'):
+    """
+    获取内置函数列表 model.Function形式组装
 	"""
 
-	path=os.path.join(os.path.dirname(__file__),filename)
-
-	list_=[]
-	with open(path,encoding='utf-8') as f:
-		content=f.read()
-		#print(content)
-		methodnames=re.findall("def\s+(.*?)\(", content)
-
-		for methodname in methodnames:
-			f=Function() 
-			f.name=methodname
-			f.description=eval(methodname).__doc__.strip()
-			f.kind='内置函数'
-			f.createtime=f.updatetime='*'
-			list_.append(f)
-
-	return list_
+    path = os.path.join(os.path.dirname(__file__), filename)
+    list_ = []
+    with open(path, encoding='utf-8') as f:
+        content = f.read()
+        # print(content)
+        methodnames = re.findall("def\s+(.*?)\(", content)
+        if searchvalue is None:
+            for methodname in methodnames:
+                f = Function()
+                f.name = methodname
+                f.description = eval(methodname).__doc__.strip()
+                f.kind = '内置函数'
+                f.createtime = f.updatetime = '*'
+                list_.append(f)
+        else:
+            for methodname in methodnames:
+                if (searchvalue in methodname) or (searchvalue in eval(methodname).__doc__.strip()):
+                    f = Function()
+                    f.name = methodname
+                    f.description = eval(methodname).__doc__.strip()
+                    f.kind = '内置函数'
+                    f.createtime = f.updatetime = '*'
+                    list_.append(f)
+    return list_
 """
 自定义函数管理
 """

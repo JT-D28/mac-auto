@@ -5,9 +5,11 @@
 # @to      :
 from django.conf import settings
 from django.db.models import Q
+from django.http import JsonResponse
+
 from login.models import *
 from manager.models import *
-from .core import ordered,Fu,getbuiltin,EncryptUtils,genorder
+from .core import ordered, Fu, getbuiltin, EncryptUtils, genorder, simplejson
 from .db import Mysqloper
 from .context import set_top_common_config,viewcache,gettestdatastep,gettestdataparams,get_task_session,clear_task_session
 import re,traceback,redis,time,threading,smtplib, requests,json,warnings,datetime,socket
@@ -488,9 +490,12 @@ def runplan(callername,taskid,planid,kind=None):
 		if config_id:
 			mail_config=MailConfig.objects.get(id=config_id)
 			user=User.objects.get(name=username)
-			mail_res=MainSender.send(taskid,user,mail_config)
-			print("发送邮件 结果[%s]"%mail_res)
+			mail_res = MainSender.send(taskid,user,mail_config)
+			dingding_res = MainSender.dingding(taskid, user, mail_config)
+			print("发送邮件 结果[%s]" % mail_res)
 			viewcache(taskid,username,kind,mail_res)
+			print("发送钉钉通知 结果[%s]" % dingding_res)
+			viewcache(taskid, username, kind, dingding_res)
 
 	except Exception as e:
 		#traceback.print_exc()
@@ -1979,6 +1984,54 @@ class MainSender:
 			res='发送失败[%s]'%error
 
 		return '========================发送邮件 收件人:%s 结果：%s'%(to_receive,res)
+
+
+
+	@classmethod
+	def dingding(cls, taskid, user, mail_config):
+		try:
+			is_send_dingding = mail_config.is_send_dingding
+			if is_send_dingding == 'close':
+				return '=========发送钉钉功能没开启 跳过发送================='
+			dingdingtoken = mail_config.dingdingtoken
+			if dingdingtoken=='' or dingdingtoken is None:
+				return '=========钉钉token为空 跳过发送================='
+			else:
+				url = 'https://oapi.dingtalk.com/robot/send?access_token=' + dingdingtoken
+				res = gettaskresult(taskid)
+				pagrem = {
+					"msgtype": "markdown",
+					"markdown": {
+						"title": "自动化测试报告",
+						"text": "计划【%s】的测试报告已生成：\n\n" % (res["planname"]) +
+								"> ***测试结果*** :\n\n" +
+								">          用例总数：%s\n\n" % (res["total"]) +
+								">          失败数量：%s\n\n" % (res["fail"]) +
+								">          成功率：%s\n\n" % (res["success_rate"]) +
+								"> ###### %s [详情](%s) \n" % (time.strftime('%m-%d %H:%M', time.localtime(time.time())),
+															 settings.BASE_URL + "/manager/querytaskdetail/?taskid=" + taskid)
+					},
+					"at": {
+						"isAtAll": True
+					}
+				}
+				headers = {
+					'Content-Type': 'application/json'
+				}
+				requests.post(url, data=json.dumps(pagrem), headers=headers)
+
+				send_result = 0
+		except:
+			send_result = 1
+		return cls._getdingding(mail_config.dingdingtoken, send_result)
+
+	@classmethod
+	def _getdingding(cls,dingdingtoken,send_result):
+		if send_result == 0:
+			res = '发送钉钉消息成功'
+		elif send_result == 1:
+			res = '发送钉钉消息失败'
+		return '=========发送钉钉通知 结果：%s================='%(res)
 
 class Transformer:
 

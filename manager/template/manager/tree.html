@@ -96,9 +96,9 @@
 <body style="height: 100%">
 
 
-<div style="margin-left: 30px;margin-right: 100px;height: 100%" >
-  <div class="layui-row" style="height: 98%" >
-    <div id='treelist' class="layui-col-md4" style="border: 0px solid red;max-height:100%;overflow-y:auto;">
+<div style="margin-left: 50px;margin-right: 100px;height: 100%" >
+  <div class="layui-row layui-col-space10" style="height: 100%;" >
+    <div id='treelist' class="layui-col-md5 " style="max-height:100%;overflow-y:auto;">
       <div class="layui-inline">
         <input type="input" name="" placeholder="search" style='padding:5px;' id='search' autocomplete="off">
         <button id='searchbtn' class="layui-btn  layui-btn-sm fa fa-search" style="color:#eee"></button>
@@ -106,17 +106,45 @@
       <ul id="case-manager" class="ztree" style="margin-bottom: 20px"></ul>
 
     </div>
-  <div class="layui-col-md1">
-     <hr  style="height:1000px;width:1px;margin-top:2px;margin-bottom:10px;margin-right: 2px;">
-  </div>
-    <div class="layui-col-md7">
-     
-      <!-- <div id='fuzu'></div> -->
-      <span class="layui-breadcrumb" lay-separator="-"><a href="">首页</a></span>
-      <iframe id='tree-content' name='tree-content' title="test" scrolling="no" frameborder="0" src="" style="width:85%;min-height: 600px"></iframe>
+
+    <div class="layui-col-md7" style="min-height:100%;max-height: 100%;overflow-y:auto;">
+      <iframe id='tree-content' name='tree-content' title="test" scrolling="yes" frameborder="0" src="" style="overflow-y:auto;width:100%;" onload="changeFrameHeight()" ></iframe>
+
     </div>
   </div>
 </div>
+
+    <script>
+
+
+
+    function changeFrameHeight(){
+        var ifm= document.getElementById("tree-content");
+        ifm.maxHeight=ifm.height=document.documentElement.clientHeight-10;
+    }
+
+    window.onresize=function(){
+         changeFrameHeight();
+    }
+
+        function calcPageHeight(doc) {
+          var cHeight = Math.max(doc.body.clientHeight, doc.documentElement.clientHeight)
+          var sHeight = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight)
+          var height  = Math.max(cHeight, sHeight)
+          return height
+      }
+      var ifr = document.getElementById('tree-content1')
+      ifr.onload = function() {
+      	  //解决打开高度太高的页面后再打开高度较小页面滚动条不收缩
+      	  ifr.style.height='0px';
+          var iDoc = ifr.contentDocument || ifr.document
+          var height = calcPageHeight(iDoc)
+          if(height < 490){
+          	height = 490;
+          }
+          ifr.style.height = height + 'px'
+      }
+    </script>
 
 <div id='import-div' style="padding:5px;" hidden>
   <input id="file-explorer" type="file" multiple>

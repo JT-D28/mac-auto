@@ -293,19 +293,19 @@ class Crontab(models.Model):
 
 class MailConfig(models.Model):
 	description=models.CharField(max_length=64,blank=True)
-	to_receive=models.CharField(max_length=125)
+	to_receive=models.CharField(max_length=125,blank=True)
 	cc_receive=models.CharField(max_length=125,blank=True)
 	rich_text=models.CharField(max_length=500,blank=True)
 	color_scheme=models.CharField(max_length=32,default='blue')
 
-	sender_name=models.CharField(max_length=32)
-	sender_nick=models.CharField(max_length=32)
-	sender_pass=models.CharField(max_length=32)
-	smtp_host=models.CharField(max_length=32)
-	smtp_port=models.CharField(max_length=32)
+	sender_name=models.CharField(max_length=32,blank=True)
+	sender_nick=models.CharField(max_length=32,blank=True)
+	sender_pass=models.CharField(max_length=32,blank=True)
+	smtp_host=models.CharField(max_length=32,blank=True)
+	smtp_port=models.CharField(max_length=32,blank=True)
 	is_send_mail=models.CharField(max_length=125,default='close')
-
-
+	is_send_dingding=models.CharField(max_length=125,default='close')
+	dingdingtoken=models.CharField(max_length=64,blank=True)
 	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
 	createtime=models.DateTimeField(auto_now_add=True)
 	updatetime=models.DateTimeField(auto_now=True)

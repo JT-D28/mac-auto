@@ -102,10 +102,23 @@ def addplan(request):
 		plan.db_id=request.POST.get('dbid')
 		plan.author=md.User.objects.get(name=request.session.get('username',None))
 		plan.run_type=request.POST.get('run_type')
-
 		plan.save()
 
 		addrelation('product_plan', request.session.get('username'), pid, plan.id)
+
+		mail_config = MailConfig()
+		if request.POST.get('is_send_mail') == 'true':
+			mail_config.is_send_mail = 'open'
+		else:
+			mail_config.is_send_mail = 'close'
+		if request.POST.get('is_send_dingding') == 'true':
+			mail_config.is_send_dingding = 'open'
+		else:
+			mail_config.is_send_dingding = 'close'
+		mail_config.save()
+
+		plan.mail_config_id = mail_config.id
+		plan.save()
 
 		if plan.run_type=='定时运行':
 			config=request.POST.get('config')
@@ -174,12 +187,39 @@ def editplan(request):
 	id_=request.POST.get('uid').split('_')[1]
 	msg=''
 	try:
+		is_send_mail=request.POST.get("is_send_mail")
+		is_send_dingding=request.POST.get("is_send_dingding")
 		plan=Plan.objects.get(id=id_)
 		plan.description=request.POST.get('description')
 		plan.db_id=request.POST.get('dbid')
 		print('description=>',plan.description)
 		plan.run_type=request.POST.get('run_type')
 		plan.save()
+		print(plan.mail_config_id)
+		if plan.mail_config_id =='' or plan.mail_config_id is None :         #针对老任务，没有邮箱配置
+			mail_config = MailConfig()
+			if is_send_mail == 'true':
+				mail_config.is_send_mail = 'open'
+			else:
+				mail_config.is_send_mail = 'close'
+			if is_send_dingding == 'true':
+				mail_config.is_send_dingding = 'open'
+			else:
+				mail_config.is_send_dingding = 'close'
+			mail_config.save()
+			plan.mail_config_id=mail_config.id
+			plan.save()
+		else:
+			mail_config=MailConfig.objects.get(id=plan.mail_config_id)
+			if is_send_mail=='true':
+				mail_config.is_send_mail='open'
+			else:
+				mail_config.is_send_mail='close'
+			if is_send_dingding == 'true':
+				mail_config.is_send_dingding = 'open'
+			else:
+				mail_config.is_send_dingding = 'close'
+			mail_config.save()
 		msg='编辑成功'
 		return{
 		'status':'success',

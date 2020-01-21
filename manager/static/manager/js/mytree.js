@@ -38,6 +38,8 @@ var tree={
 	            beforeDrag: this._beforeDrag,
 	            beforeDrop: this._beforeDrop,
 	            onDrop:this._onDrop,
+	            onExpand:this._onExpand,
+	            onCollapse:this._onCollapse,
 				// beforeEditName: this._beforeEditName,
 		  //   	beforeRemove: this._beforeRemove,
 				// beforeRename: this._beforeRename,
@@ -328,6 +330,17 @@ var tree={
 	_showRenameBtn:function(treeId, treeNode) {
 		return !treeNode.isLastNode;
 	},
+	_onExpand:function(event,treeId,treeNode){
+
+		console.log('expand.')
+
+
+	},
+	_onCollapse:function(event,treeId,treeNodes){
+		console.log('onCollapse')
+
+	}
+	,
 	_onClick:function(event,treeId,treeNode){
 		// alert(treeNode.html())
 		console.log('onClick')

@@ -58,6 +58,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
   </style>
 </head>
 
+alert(1)
 <body style="">
 <div class="layui-layout-body " id=''>
 
@@ -88,7 +89,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
       <ul class="layui-nav layui-nav-tree"  lay-filter="test" style="width:70px!important;" >
 
           <li class="layui-nav-item layui-nav-itemed">
-          <a id="home-link" href="javascript:;" link='homepage/' class="fa fa-home" title="首页"></a>
+          <a id="home-link" href="javascript:;" link='homepage/' class="fa fa-home" title="首页1"></a>
         </li>
         {% if request.session.username == 'admin' %}
         <li class="layui-nav-item layui-nav-itemed">
@@ -284,20 +285,23 @@ scratch. This page gets rid of all links and provides the needed markup only.
     //绑定各菜单点击选项卡事件
 
     $('a[link]').each(function(){
+      // console.log('link start')
 
       $(this).click(function(){
 
-        url=http_base+'/'+$(this).attr('link');
-        // console.log(url)
+      _mesgNotice()
+
+        url=http_base+'/'+$(this).attr('link')+'?new='+Math.random();
+        // alert(2)
+
+        // console.log('frame url=>'+url)
         title=$(this).attr('title')
         // console.log(title);
         id=$(this).attr('id');
         var count=$("iframe[data-frameid='"+id+"']").length
 
-        // console.log('存在')
-        // console.log(count)
-
         if(count==0){
+          alert(0)
 
           element.tabAdd('tab', {
           title:title
@@ -309,7 +313,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
           element.tabChange("tab",id);
           // tab_id=tab_id+1;
         }else{
-          element.tabChange("tab",id);
+         //element.tabChange("tab",id);
           
         }
 

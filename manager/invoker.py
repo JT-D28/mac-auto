@@ -24,7 +24,7 @@ except ImportError:
 
 
 ##支持的运算
-_op=('==','>=','<=','!=')
+_op=('>=','<=','!=','==','>','<','$')
 #用户变量缓存 key=user.varname
 __varcache=dict()
 
@@ -1056,13 +1056,11 @@ def _call_extra(user,call_strs,taskid=None,kind='前置操作'):
 			except:
 				return ('fail','库中发现多个可用函数[%s]'%methodname)
 		status,res=Fu.call(f,call_str,builtin=isbuiltin)
-		# print('vvvvvvvvvvvvvvvvvv=>',(status,res))
+		viewcache(taskid,user.name,None,"执行[<span style='color:#009999;'>%s</span>]%s"%(kind,s))
 		if status is not 'success':
-			viewcache(taskid,user.name,kind,"执行%s=>%s=>fail"%(kind,s))
 			return (status,res)
-		else:
-			print('oooooooooooooooooooooooooooo')
-			viewcache(taskid,user.name,kind,"执行%s=>%s=>success"%(kind,s))
+
+			
 			#viewcache(taskid,username,kind,"数据校验配置=>%s"%db_check)
 
 	return ('success','操作[%s]全部执行完毕'%call_strs)
@@ -1165,19 +1163,30 @@ def _legal(ourexpression):
 
 def _replace(expressionsep):
 	try:
+		print('==replace=>%s'%expressionsep)
 		eval(expressionsep)
 	except Exception as e:
-		list_=re.findall("=", expressionsep)
-		if len(list_)==1:
+		print('==_replace异常')
+
+		# if 	'true' in expressionsep:
+		# 	expressionsep=expressionsep.replace('true','True')
+		# elif 'false' in expressionsep:
+		# 	expressionsep=expressionsep.replace('false','False')
+
+		list_0=re.findall("!=",expressionsep)
+		list_1=re.findall(">=",expressionsep)
+		list_2=re.findall("<=",expressionsep)
+		list_3=re.findall("=", expressionsep)
+
+		if len(list_0)>0 or len(list_1)>0 or len(list_2)>0:
+			pass
+
+		elif len(list_3)==1:
 			expressionsep=expressionsep.replace("=","==")
-		elif 'true' in expressionsep:
-			expressionsep=expressionsep.replace('true','True')
-		elif 'false' in expressionsep:
-			expressionsep=expressionsep.replace('false','False')
-		else:
-			msg="不能合法化的表达式!=>%s"%expressionsep
-			#viewcache(msg)
-			raise RuntimeError(msg)
+		# else:
+		# 	msg="不能合法化的表达式!=>%s"%expressionsep
+		# 	#viewcache(msg)
+		# 	raise RuntimeError(msg)
 	finally:
 		return expressionsep
 
@@ -1202,6 +1211,8 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 
 		#print("ourexpression=>",ourexpression)
 		exp_rp=_replace_property(user, ourexpression)
+		print('qqqqq=>',exp_rp)
+
 		# print('exp-pr=>',exp_rp)
 		if exp_rp[0] is not 'success':
 			return exp_rp
@@ -1218,7 +1229,7 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 		if need_chain_handle is True:
 			
 			k,v,op=_separate_expression(exp)
-			# print(k,v,op)
+			print('获取的项=>',k,v,op)
 			data=data.replace('null',"'None'").replace('true',"'True'").replace("false","'False'")
 			# print('data=>',data)
 			
@@ -1234,6 +1245,8 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 				data='\n'.join(data.split('\n')[1:])
 				p=XMLParser(data)
 
+			oldk=k
+
 			k=p.getValue(k)
 			# try:
 			# 	if eval(str(k)) in(None,True,False):
@@ -1241,6 +1254,12 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 			# 		v=str(v)
 			# except:
 			# 	pass
+
+			##处理左边普通字符串的情况
+
+			if k is None:
+				k=oldk
+
 
 			if v == 'true':
 				v='True'
@@ -1279,13 +1298,25 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 					value=exp.split(op)[1]
 					print('key=>',key)
 					print('value=>',value)
-	
-					res= eval("'%s'%s'%s'"%(str(key),op,str(value)))
+					res=None
+					if op=='$':
+						res= eval("'%s'.__contains__('%s')"%(str(key),str(value)))
+
+					elif op=='>=':
+						res= eval("'%s'%s'%s'"%(str(key),'>=',str(value)))
+					elif op=='<=':
+						res= eval("'%s'%s'%s'"%(str(key),'<=',str(value)))
+					else:
+						res= eval("'%s'%s'%s'"%(str(key),op,str(value)))
+					
 					print('判断结果=>',res)
 					if res is True:
 						return ('success',res)
 					else:
 						return('fail',res)
+
+
+			return('fail','')
 
 		except:
 			print('表达式计算异常.')
@@ -1326,13 +1357,13 @@ def _replace_variable(user,str_,src=1,taskid=None):
 			if len(gain)==0 and len(value)==0:
 				warnings.warn("变量%s的获取方式和默认值至少填一项"%varname)
 			elif len(gain)>0 and len(value)>0:
-				old=old.replace('{{%s}}'%varname,value)
+				old=old.replace('{{%s}}'%varname,str(value))
 				#__replace_route["%s.%s"%(user.name,varname)]=value
 				warnings.warn('变量%s获取方式和值都设定将被当做常量，获取方式和缓存失效'%varname)
 
 
 			elif len(gain)==0 and len(value)>0:
-				old=old.replace('{{%s}}'%varname,value)
+				old=old.replace('{{%s}}'%varname,str(value))
 				#__replace_route["%s.%s"%(user.name,varname)]=value
 
 			elif len(gain)>0 and len(value)==0:
@@ -1356,7 +1387,7 @@ def _replace_variable(user,str_,src=1,taskid=None):
 	
 					# if v is None:
 					# 	return ('error','')
-					old=old.replace('{{%s}}'%varname,v)
+					old=old.replace('{{%s}}'%varname,str(v))
 
 		return ('success',old)
 	except Exception as e:
@@ -1595,7 +1626,8 @@ def _find_and_save_property(user,dict_str,reponsetext):
 			v1=p.getValue(v)
 
 			if not v1:
-				return ('fail','通过[%s]获取属性值失败,请检查'%v)
+				#return ('fail','通过[%s]获取属性值失败,请检查'%v)
+				v1=v
 
 			save_data(user.name, _tempinfo, k, v1)
 		return ('success','')
@@ -1709,16 +1741,17 @@ class XMLParser(Struct):
 class JSONParser(Struct):
 
 	def __init__(self,data):
-		#print("88"*200)
-		#print(data)
-		# data=data.replace("\'","\"").replace("None","null").replace("True","true")
-		#print(data)
-		
-		#self.obj=json.loads(data)
+
 		#print("传入=>",data)
-
-
 		self.obj=eval(self._apply_filter(data))
+
+		#兼容不同的系统 有些系统喜欢返回JSON字符串 有些json
+		for i in range(5):
+			if isinstance(self.obj,(str,)):
+				self.obj=eval(self.obj)
+
+
+		#print('==JSONParser 数据转字典=>',self.obj,type(self.obj))
 
 		#print("待匹配数据=>",self.obj)
 	
@@ -1750,8 +1783,15 @@ class JSONParser(Struct):
 		errms='解析数据链[%s]失败 数据链作为值返回'%chainstr
 		xpath=self.translate(chainstr)
 		if xpath:
-			#print("查询=>"+xpath)
+			print('==当前数据=>%s'%type(self.obj))
 			try:
+
+				print('flag=>',self.obj.get('data','None'))
+			except:
+				pass
+			print("==xpath查询=>%s"%xpath)
+			try:
+
 				r=eval(xpath)
 				# if r is None:
 				# 	r=''
@@ -1944,7 +1984,7 @@ class Transformer:
 
 	_businessid_cache=dict()
 
-	def __init__(self,callername,byte_list,content_type):
+	def __init__(self,callername,byte_list,content_type,taskid):
 
 		print('【Transformer工具初始化】')
 		self._set_content_type_flag(content_type)
@@ -1955,7 +1995,7 @@ class Transformer:
 
 		self._difference_config_file(byte_list)
 
-		self.transform_id=EncryptUtils.md5_encrypt(str(datetime.datetime.now()))
+		self.transform_id=taskid
 		self.callername=callername
 		# self.transform_id=EncryptUtils.md5_encrypt(str(datetime.datetime.now()))
 		# self.callername=callername
@@ -2066,7 +2106,7 @@ class Transformer:
 		init_cache=self._get_workbook_sheet_cache(self.config_workbook,'Init')
 
 		for rowdata in init_cache:
-			print('basic_config=>',rowdata)
+			#print('basic_config=>',rowdata)
 			if rowdata['默认对象'].lower().strip()=='y' and rowdata['对象类型'].lower().strip()=='interface':
 				# print('fadfljadfljadajf')
 				pv=rowdata['参数']
@@ -2183,19 +2223,14 @@ class Transformer:
 			return (status,msg)
 		#workbookflag->actdata
 		self.act_data_map={}
-		
 		self.act_data=[]
-
 		self.var_data=[]
 		resultlist=[]
 
 		workbook_flag=0
-
 		for dwb in self.data_workbook:
 			result=[]
-			
 			self.act_data_map[workbook_flag]=self._get_workbook_sheet_cache(dwb,'执行数据')
-
 			workbook_flag=workbook_flag+1
 			self.act_data=self._get_workbook_sheet_cache(dwb,'执行数据')+self.act_data
 			self.var_data=self._get_workbook_sheet_cache(dwb,'变量定义')+self.var_data
@@ -2206,6 +2241,9 @@ class Transformer:
 			f5=self.add_plan()
 			f1=self.add_var()
 			f2=self.addbusinessdata()
+
+			time.sleep(5)
+
 			f3=self.add_step_data()
 			f6=self.add_db_con()
 
@@ -2259,6 +2297,7 @@ class Transformer:
 						if fieldname  in _m:
 							if fieldname =='测试点':
 								business.businessname="%s_%s"%(value.strip(),self.transform_id)
+								#business.businessname="%s"%(value.strip())
 								continue
 							elif fieldname=='DB检查数据':
 								business.db_check=self._replace_var(value)
@@ -2272,6 +2311,7 @@ class Transformer:
 					##没测试点列 业务名称取值
 					if not  business.businessname:
 						business.businessname='%s%s_%s'%(sheetname.strip(),rowindex+1,self.transform_id)
+						#business.businessname='%s%s'%(sheetname.strip(),rowindex+1)
 
 					if  params.get('json',None):
 						params=params.get('json')
@@ -2279,23 +2319,29 @@ class Transformer:
 					params=(str(params)).replace('"',"'")
 					business.params=self._replace_var(params)
 					business.save()
+					print('==添加接口业务数据[%s]'%business)
 					self._businessid_cache['%s:%s'%(sheetname,rowindex+1)]=business.id
 					rowindex=rowindex+1
 
 			##函数业务数据
 			for rowdata in self.act_data:
+				# print('--尝试添加函数业务数据')
 				paramfield=rowdata['参数值']
+				# print('paramfield=>',paramfield)
 				if  not paramfield.__contains__('：'):
 					#businessname重复校验
 					name="%s_%s"%(rowdata['测试要点概要'].strip(),self.transform_id)
+					#name="%s"%(rowdata['测试要点概要'].strip())
 					size=len(list(BusinessData.objects.filter(businessname=name)))
-					print('size=>',size)
+					# print('size=>',size)
 					if size>0:
+						print('测试点已存在[%s] next'%name)
 						continue
 					business=BusinessData()
 					business.businessname=name
 					business.params=self._replace_var(paramfield)
 					business.save()
+					print('==添加函数业务数据[%s]'%business)
 
 			return('success','')
 		except:
@@ -2392,7 +2438,7 @@ class Transformer:
 			case=None
 
 			for k,v in self.act_data_map.items():
-				case=list(Case.objects.filter(description='用例_%s_%s_%s'%(self.callername,self.transform_id,k)))[0]
+				case=list(Case.objects.filter(description='迁移用例_%s_%s'%(self.transform_id,k)))[0]
 				for rowdata in v:
 					step=Step()
 					step.author=User.objects.get(name=self.callername)
@@ -2405,9 +2451,10 @@ class Transformer:
 
 						#print('基础配置=>',basic_config)
 						#
-						print('详细配置=>',detail_config)
+						#print('详细配置=>',detail_config)
 						step.step_type='interface'
 						step.description='%s_%s'%(rowdata['参数值'].split(':')[0].strip(),self.transform_id)
+						#step.description='%s'%(rowdata['参数值'].split(':')[0].strip())
 						
 						funcname=rowdata['函数名称']
 						try:
@@ -2429,8 +2476,9 @@ class Transformer:
 
 						step.save()
 						##step关联业务数据
+						self.add_case_step_relation(case.id, step.id)
 						self.add_step_bussiness_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
-						self.add_case_business_relation2(case.id, self.data_workbook[k],rowdata['参数值'])
+						#self.add_case_business_relation2(case.id, self.data_workbook[k],rowdata['参数值'])
 					
 					else:
 						#函数
@@ -2438,7 +2486,7 @@ class Transformer:
 						step.body=func_field_value
 						# print('functionname=>',step.body)
 						step.description="%s_%s"%(rowdata['测试要点概要'].strip(),self.transform_id)
-
+						#step.description="%s"%(rowdata['测试要点概要'].strip())
 						try:
 							step.related_id=Function.objects.get(name=step.body.strip()).id
 						except:
@@ -2447,66 +2495,27 @@ class Transformer:
 						step.save()
 						#step关联业务数据
 						try:
-							businessId=BusinessData.objects.get(businessname="%s_%s"%(rowdata['测试要点概要'].strip(),self.transform_id)).id
+							name="%s_%s"%(rowdata['测试要点概要'].strip(),self.transform_id)
+							
+							# l=list(BusinessData.objects.filter(businessname=name))
+							# print('size=>',len(l))
+							businessId=BusinessData.objects.get(businessname=name).id
+							#businessId=BusinessData.objects.get(businessname="%s"%rowdata['测试要点概要'].strip()).id
+							self.add_case_step_relation(case.id, step.id)
 							self.add_step_business_relation(step.id, businessId)
-							self.add_case_businss_relation(case.id, businessId)
+							#self.add_case_businss_relation(case.id, businessId)
 
 						except:
-							print('没找到关联业务数据[%s]'%rowdata['测试要点概要'])
+							print(traceback.format_exc())
+							print('没找到关联业务数据[%s]'%name)
 
 			time.sleep(1)
 
-			genorder(kind='step',parentid=case.id)
+			# genorder(kind='step',parentid=case.id)
 
 			return ('success','')
 		except:
 			return ('error','添加步骤异常[%s]'%traceback.format_exc())
-
-	def add_step_business_relation(self,step_id,business_id):
-		'''
-		步骤关联业务数据
-		'''
-		print('【步骤关联业务数据】')
-		step=Step.objects.get(id=step_id)
-		business=BusinessData.objects.get(id=business_id)
-		step.businessdatainfo.add(business)
-
-	def add_step_bussiness_relation2(self,step_id,workbook,paramfieldvalue):
-		'''
-		通过参数列定位业务数据
-		'''
-		print('【步骤关联业务数据】')
-		step=Step.objects.get(id=step_id)
-		sheetname=paramfieldvalue.split('：')[0]
-		cache=self._get_workbook_sheet_cache(workbook,sheetname)#?????
-		# is_contain_test_point_col=cache[0].__contains__('测试点'
-		#根据参数列数字筛选合适的业务数据
-		rangestr=paramfieldvalue.split('：')[1]
-		fit=[]
-		start=''
-		end=''
-		if rangestr.__contains__('-'):
-			start=rangestr.split('-')[0]
-			end=rangestr.split('-')[1]
-
-			fit=[x for x in cache if int(x['数据编号'])>=int(start) and int(x['数据编号'])<=int(end)]
-		else:
-			start=rangestr
-			fit=[x for x in cache if x['数据编号']==int(start)]
-
-
-		for x in fit:
-			testpoint=x.get('测试点',None)
-			if testpoint:
-				try:
-					business=BusinessData.objects.get(businessname='%s_%s'%(testpoint,self.transform_id))
-				except:
-					print('业务名称[%s_%s]查找返回的业务数据有多条'%(testpoint,self.transform_id))
-					business=list(BusinessData.objects.filter(businessname='%s_%s'%(testpoint,self.transform_id)))[0]
-			else:
-				business=BusinessData.objects.get(businessname="%s%s_%s"%(sheetname,x.get('数据编号'),self.transform_id))
-
-			step.businessdatainfo.add(business)
 
 
 
@@ -2514,19 +2523,39 @@ class Transformer:
 		plan=None
 		try:
 			print('【添加计划】')
-			dsp='计划_%s_%s'%(self.callername,self.transform_id)
+			dsp='迁移计划_%s'%self.transform_id
 			length=len(list(Plan.objects.filter(description=dsp)))
 			if length==0:
 				plan=Plan()
 				plan.description=dsp
 				plan.author=User.objects.get(name=self.callername)
 				plan.save()
+
+				#
+				product=None
+				L=list(Product.objects.filter(description='数据迁移'))
+				exist=len(L)
+				if exist==0:
+					product=Product()
+					product.description='数据迁移'
+					product.author=User.objects.get(name=self.callername)
+					product.save()
+				else:
+					product=L[0]
+
+				order=Order()
+				order.kind='product_plan'
+				order.main_id=product.id
+				order.follow_id=plan.id
+				order.value='1.1'
+				order.author=User.objects.get(name=self.callername)
+				order.save()
 			else:
 				plan=list(Plan.objects.filter(description=dsp))[0]
 
 			self.add_plan_case_relation()
 
-			genorder(kind='case',parentid=plan.id)
+			# genorder(kind='case',parentid=plan.id)
 			return ('success','')
 
 		except:
@@ -2537,7 +2566,9 @@ class Transformer:
 
 		try:
 			for k,v in self.act_data_map.items():
-				dsp='用例_%s_%s_%s'%(self.callername,self.transform_id,k)
+				dsp='迁移用例_%s_%s'%(self.transform_id,k)
+				#dsp='迁移用例_%s'%k
+
 				length=len(list(Case.objects.filter(description=dsp)))
 				if length==0:
 					case=Case()			
@@ -2551,38 +2582,67 @@ class Transformer:
 		except:
 			return ('error','添加用例异常=>%s'%traceback.format_exc())
 
+
+
+
 	def add_plan_case_relation(self):
-		print('【关联计划和用例】')
+		# print('【关联计划和用例】')
 		for k in self.act_data_map:
 
-			plan=list(Plan.objects.filter(description='计划_%s_%s'%(self.callername,self.transform_id)))[0]
-			case=list(Case.objects.filter(description='用例_%s_%s_%s'%(self.callername,self.transform_id,k)))[0]
-			plan.cases.add(case)
-
+			plan=list(Plan.objects.filter(description='迁移计划_%s'%(self.transform_id)))[0]
+			#plan=list(Plan.objects.filter(description='迁移计划_%s'%self.transform_id))[0]
+			case=list(Case.objects.filter(description='迁移用例_%s_%s'%(self.transform_id,k)))[0]
+			# plan.cases.add(case)
 			order=Order()
-			order.kind='case'
+			order.kind='plan_case'
 			order.main_id=plan.id
 			order.follow_id=case.id
 			order.author=User.objects.get(name=self.callername)
+			order.value='1.1'
 			order.save()
 
-	def add_case_businss_relation(self,case_id,business_id):
-		print('【关联用例和业务数据】')
-		case=Case.objects.get(id=case_id)
-		business=BusinessData.objects.get(id=business_id)
-		case.businessdatainfo.add(business)
 
-		length=len(list(Order.objects.filter(kind='step',main_id=case_id,follow_id=business_id)))
+	# def add_case_step(self,caseid,stepid):
+	# 	from .cm import getnextvalue
+	# 	order=Order()
+	# 	order.kind='case_step'
+	# 	order.main_id=caseid
+	# 	order.follow_id=stepid
+	# 	order.author=User.objects.get(name=self.callername)
+	# 	order.value=getnextvalue('case_step', order.main_id)
+	# 	order.save()
+
+
+	# def add_step_business(self,stepid,businessid):
+	# 	from .cm import getnextvalue
+	# 	order=Order()
+	# 	order.kind='step_business'
+	# 	order.main_id=stepid
+	# 	order.follow_id=businessid
+	# 	order.author=User.objects.get(name=self.callername)
+	# 	order.value=getnextvalue('step_business', order.main_id)
+	# 	order.save()
+
+
+	def add_case_step_relation(self,case_id,step_id):
+		from .cm import getnextvalue
+		#print('【关联用例和业务数据】')
+		# step=Step.objects.get(id=step_id)
+		# case=Case.objects.get(id=case_id)
+		# case.businessdatainfo.add(business)
+
+		length=len(list(Order.objects.filter(kind='case_step',main_id=case_id,follow_id=step_id)))
 		if length==0:
 			order=Order()
-			order.kind='step'
+			order.kind='case_step'
 			order.main_id=case_id
-			order.follow_id=business_id
+			order.follow_id=step_id
 			order.author=User.objects.get(name=self.callername)
+			order.value=getnextvalue(order.kind,order.main_id)
 			order.save()
 
 
-	def add_case_business_relation2(self,case_id,workbook,paramfieldvalue):
+	def add_case_step_relation2(self,case_id,workbook,paramfieldvalue):
 
 		print('【步骤关联业务数据】')
 		case=Case.objects.get(id=case_id)
@@ -2609,11 +2669,14 @@ class Transformer:
 			if testpoint:
 				try:
 					business=BusinessData.objects.get(businessname="%s_%s"%(testpoint,self.transform_id))
+					#business=BusinessData.objects.get(businessname="%s"%testpoint)
 				except:
 					print('业务名称[%s_%s]查找返回的业务数据有多条'%(testpoint,self.transform_id))
 					business=list(BusinessData.objects.filter(businessname="%s_%s"%(testpoint,self.transform_id)))[0]
+					#business=list(BusinessData.objects.filter(businessname="%s"%testpoint))[0]
 			else:
 				business=BusinessData.objects.get(businessname="%s%s_%s"%(sheetname,x.get('数据编号'),self.transform_id))
+				#business=BusinessData.objects.get(businessname="%s%s"%(sheetname,x.get('数据编号')))
 
 			case.businessdatainfo.add(business)
 
@@ -2627,11 +2690,80 @@ class Transformer:
 				order.author=User.objects.get(name=self.callername)
 				order.save()
 
+
+
+	def add_step_business_relation(self,step_id,business_id):
+		'''
+		步骤关联业务数据
+		'''
+		# step=Step.objects.get(id=step_id)
+		# business=BusinessData.objects.get(id=business_id)
+		from .cm import getnextvalue
+
+		order=Order()
+		order.kind='step_business'
+		order.main_id=step_id
+		order.follow_id=business_id
+		order.author=User.objects.get(name=self.callername)
+		order.value=getnextvalue(order.kind,order.main_id)
+		order.save()
+		print('==关联函数步骤和测试点[%s]'%order)
+
+
+		# step.businessdatainfo.add(business)
+
+	def add_step_bussiness_relation2(self,step_id,workbook,paramfieldvalue):
+		'''
+		通过参数列定位业务数据
+		'''
+		
+		step=Step.objects.get(id=step_id)
+		sheetname=paramfieldvalue.split('：')[0]
+		cache=self._get_workbook_sheet_cache(workbook,sheetname)#?????
+		# is_contain_test_point_col=cache[0].__contains__('测试点'
+		#根据参数列数字筛选合适的业务数据
+		rangestr=paramfieldvalue.split('：')[1]
+		fit=[]
+		start=''
+		end=''
+		if rangestr.__contains__('-'):
+			start=rangestr.split('-')[0]
+			end=rangestr.split('-')[1]
+
+			fit=[x for x in cache if int(x['数据编号'])>=int(start) and int(x['数据编号'])<=int(end)]
+		else:
+			start=rangestr
+			fit=[x for x in cache if x['数据编号']==int(start)]
+
+
+		for x in fit:
+			testpoint=x.get('测试点',None)
+			if testpoint:
+				try:
+					business=BusinessData.objects.get(businessname='%s_%s'%(testpoint,self.transform_id))
+					#business=BusinessData.objects.get(businessname='%s'%testpoint)
+				except:
+					print('业务名称[%s_%s]查找返回的业务数据有多条'%(testpoint,self.transform_id))
+					business=list(BusinessData.objects.filter(businessname='%s_%s'%(testpoint,self.transform_id)))[0]
+					#business=list(BusinessData.objects.filter(businessname='%s'%testpoint))[0]
+			else:
+				business=BusinessData.objects.get(businessname="%s%s_%s"%(sheetname,x.get('数据编号'),self.transform_id))
+				#business=BusinessData.objects.get(businessname="%s%s"%(sheetname,x.get('数据编号')))
+
+			order=Order()
+			order.kind='step_business'
+			order.main_id=step.id
+			order.follow_id=business.id
+			order.author=User.objects.get(name=self.callername)
+			order.save()
+
+			print('==步骤关联测试点[%s]'%order)
+			#step.businessdatainfo.add(business)
+
 		
 	def add_var(self):
 		try:
 			for dwb in self.data_workbook:
-				print('【开始添加变量】')
 				var_cache=self._get_workbook_sheet_cache(dwb, '变量定义')
 				for var in var_cache:
 					description=var['变量说明'].strip()
@@ -2647,6 +2779,7 @@ class Transformer:
 					var.value=self._get_may_sql_field_value(value)
 					var.author=User.objects.get(name=self.callername)
 					var.save()
+					print('==添加变量[%s]'%var)
 			return ('success','')
 		except:
 			return ('error','添加变量异常=>%s'%traceback.format_exc())
@@ -2688,61 +2821,55 @@ class Transformer:
 		else:
 			return old
 
+	def _delcaserelation(self,caseid):
+		try:
+			Case.objects.get(id=caseid).delete()
+
+		except:
+			pass
+
+		L1=list(Order.objects.filter(kind='case_case',main_id=caseid))
+		L2=list(Order.objects.filter(kind='case_step',main_id=caseid))
+		for o1 in L1:
+			self._delcaserelation(o1.follow_id)
+			o1.delete()
+
+		for o2 in L2:
+			businesslist=list(Order.objects.filter(kind='step_business',main_id=o2.follow_id))
+			for business in businesslist:
+				business.delete()
+				try:
+					Step.objects.get(id=order.main_id).delete()
+				except:
+					pass
+
+				try:
+					BusinessData.objects.get(id=order.follow_id).delete()
+				except:
+					pass
+
+			o2.delete()
+
+			
+
+
+
 	def _rollback(self):
 		"""
 		转换失败回滚操作
 		"""
-
-		print('【转换失败,开始回滚操作】')
+		print('==转换失败,开始回滚操作')
 		#order表删除
-		orderlist=list(Order.objects.all())
-		for order in orderlist:
-			kind=order.kind
-			if kind=='step':
-				case=Case.objects.get(id=order.main_id)
-				if case.description.__contains__(self.transform_id):
-					order.delete()
+		plan=Plan.objects.get(description= '迁移计划_%s'%self.transform_id)
+		planid=plan.id
 
-			elif kind=='plan':
-				plan=Plan.objects.get(id=order.main_id)
-				if plan.description.__contains__(self.transform_id):
-					order.delete()
+		L1=list(Order.objects.filter(kind='plan_case',main_id=planid))
+		for o1 in L1:
+			self._delcaserelation(o1.follow_id)
 
-		###清除依赖关系表
-		planlist=list(Plan.objects.all())
-		for plan in planlist:
-			if plan.description.__contains__(self.transform_id):
-				plan.cases.clear()
-
-		caselist=list(Case.objects.all())
-		for case in caselist:
-			if case.description.__contains__(self.transform_id):
-				case.businessdatainfo.clear()
-
-		steplist=list(Step.objects.all())
-		for step in steplist:
-			if step.description.__contains__(self.transform_id):
-				step.businessdatainfo.clear()
-
+		plan.delete()
 
 		#清除实体表
-		for plan in planlist:
-			if plan.description.__contains__(self.transform_id):
-				plan.delete()
-
-		for case in caselist:
-			if case.description.__contains__(self.transform_id):
-				case.delete()
-
-		for step in steplist:
-			if step.description.__contains__(self.transform_id):
-				step.delete()
-
-		businesslist=list(BusinessData.objects.all())
-		for business in businesslist:
-			if business.businessname.__contains__(self.transform_id):
-				business.delete()
-
 		varlist=list(Variable.objects.all())
 		for var in varlist:
 			if var.description.__contains__(self.transform_id):
@@ -2752,6 +2879,13 @@ class Transformer:
 		for db in dblist:
 			if db.description.__contains__(self.transform_id):
 				db.delete()
+
+
+
+		print('=结束回滚操作】')
+
+
+
 
 
 
@@ -2907,9 +3041,6 @@ class DataMove:
 
 			self._data['entity']['steps'].append(stepd)
 
-
-
-			
 			c=self._data['relation']['case_step'].get(str(case.id),[])
 			ordervalue=Order.objects.get(kind='case_step',main_id=case.id,follow_id=step.id).value
 			c.append((str(step.id),ordervalue))
@@ -2981,10 +3112,17 @@ class DataMove:
 		##2.用例嵌套场景
 		caselist0=getchild('case_case',case.id)
 		for case0 in caselist0:
+			cased={}
+			cased['id']=case0.id
+			cased['description']=case0.description
+			cased['authorname']=case0.author.name
+			cased['db_id']=case0.db_id
+
+			self._data['entity']['cases'].append(cased)
 			d=self._data['relation']['case_case'].get(str(case.id),[])
 			ordervalue=Order.objects.get(kind='case_case',main_id=case.id,follow_id=case0.id).value
-			d.append((str(business.id),ordervalue))
-			self._data['relation']['case_case'][str(case.id)]=list(set(b))
+			d.append((str(case0.id),ordervalue))
+			self._data['relation']['case_case'][str(case.id)]=list(set(d))
 			self._add_case_relation_data(case0)
 
 
@@ -3177,14 +3315,15 @@ class DataMove:
 				#print('yes=>',classstr)
 				return ('success',oldvalue)
 			else:
-				final='%s#%s'%(oldvalue,flag)
+				# final='%s#%s'%(oldvalue,flag)
+				final=oldvalue
 				print('%s重复处理=>%s'%(_M.get(classstr),final))
 				return ('success',final)
 		else:
 			return ('success',oldvalue)
 
 
-	def import_plan(self,content_byte_list,callername):
+	def import_plan(self,product_id,content_byte_list,callername):
 		_cache={}
 		_msg=[]
 		b=b''
@@ -3192,7 +3331,7 @@ class DataMove:
 			b=b+byte
 		bs=b.decode()
 		bl=eval(bs)
-		print('【导入数据完成】 ')
+		print('【开始导入数据】 ')
 		#导入实体类
 		plan=bl['entity']['plan']
 		cases=bl['entity']['cases']
@@ -3215,6 +3354,29 @@ class DataMove:
 			author=User.objects.get(name=plan.get('authorname'))
 			plano.author=author
 			plano.save()
+
+			##
+			order=Order()
+			order.kind='product_plan'
+			order.main_id=product_id
+			order.follow_id=plano.id
+			order.value='1.1'
+			try:
+				author=User.objects.get(name=callername)
+				order.author=author
+				order.save()
+			except:
+				author=[author for author in authors if author.get('name')==callername][0]
+				authoro=User()
+				authoro.name=author.get('name')
+				authoro.password=author.get('password')
+				authoro.email=author.get('email')
+				authoro.sex=author.get('sex')
+				authoro.save()
+				order.author=authoro
+				order.save()
+
+
 		except:
 			author=[author for author in authors if author.get('name')==plan.get('authorname')][0]
 			authoro=User()
@@ -3365,8 +3527,8 @@ class DataMove:
 
 			try:
 				author=User.objects.get(name=f.get('authorname'))
-				vo.author=author
-				vo.save()
+				fo.author=author
+				fo.save()
 			except:
 				author=[author for author in authors if author.get('name')==f.get('authorname')][0]
 				authoro=User()
@@ -3379,16 +3541,16 @@ class DataMove:
 				fo.save()
 		#建立依赖关系
 		plan_cases=bl['relation']['plan_case']
-		case_businesss=bl['relation']['case_business']
+		case_step=bl['relation']['case_step']
+		case_case=bl['relation']['case_case']
 		step_businesss=bl['relation']['step_business']
 		##
 		for k,vs in plan_cases.items():
 			plan=_cache.get('plan_%s'%k)
 			for v,ordervalue in vs:
 				case=_cache.get('case_%s'%v)
-				plan.cases.add(case)
 				order=Order()
-				order.kind='case'
+				order.kind='plan_case'
 				order.main_id=plan.id
 				order.follow_id=case.id
 				order.value=ordervalue
@@ -3406,17 +3568,16 @@ class DataMove:
 					authoro.save()
 					order.author=authoro
 					order.save()
-			# genorder(kind='case',parentid=plan.id)
+
 		##
-		for k,vs in case_businesss.items():
+		for k,vs in case_step.items():
 			case=_cache.get('case_%s'%k)
 			for v,ordervalue in vs:
-				business=_cache.get('business_%s'%v)
-				case.businessdatainfo.add(business)
+				step=_cache.get('step_%s'%v)
 				order=Order()
-				order.kind='step'
+				order.kind='case_step'
 				order.main_id=case.id
-				order.follow_id=business.id
+				order.follow_id=step.id
 				order.value=ordervalue
 				try:
 					author=User.objects.get(name=callername)
@@ -3432,15 +3593,58 @@ class DataMove:
 					authoro.save()
 					order.author=authoro
 					order.save()
-			# genorder(kind='step',parentid=case.id)
+			##
+		for k,vs in case_case.items():
+			case=_cache.get('case_%s'%k)
+			for v,ordervalue in vs:
+				# 
+
+				case0=_cache.get('case_%s'%v)
+				order=Order()
+				order.kind='case_case'
+				order.main_id=case.id
+				order.follow_id=case0.id
+				order.value=ordervalue
+				try:
+					author=User.objects.get(name=callername)
+					order.author=author
+					order.save()
+				except:
+					author=[author for author in authors if author.get('name')==callername][0]
+					authoro=User()
+					authoro.name=author.get('name')
+					authoro.password=author.get('password')
+					authoro.email=author.get('email')
+					authoro.sex=author.get('sex')
+					authoro.save()
+					order.author=authoro
+					order.save()
+
 			##
 			for k,vs in step_businesss.items():
 				step=_cache.get('step_%s'%k)
-				#print(list(_cache.keys()))
-				
-				for v in vs:
+				for v,ordervalue in vs:
 					business=_cache.get('business_%s'%v)
-					step.businessdatainfo.add(business)
+					order=Order()
+					order.kind='step_business'
+					order.main_id=step.id
+					order.follow_id=business.id
+					order.value=ordervalue
+					try:
+						author=User.objects.get(name=callername)
+						order.author=author
+						order.save()
+					except:
+						author=[author for author in authors if author.get('name')==callername][0]
+						authoro=User()
+						authoro.name=author.get('name')
+						authoro.password=author.get('password')
+						authoro.email=author.get('email')
+						authoro.sex=author.get('sex')
+						authoro.save()
+						order.author=authoro
+						order.save()					
+
 
 		#处理回调信息
 		callbackmsg=''

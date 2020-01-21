@@ -4,8 +4,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'manager/bootstrap/bootstrap.min.css' %}">
+<!--     <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/bootstrap/bootstrap.min.css' %}"> -->
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" crossorigin="anonymous">
+
     <link href="{% static 'manager/bootstrap-fileinput-master/css/fileinput.css'%}" media="all" rel="stylesheet" type="text/css"/>
     <link href="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.css'%}" media="all" rel="stylesheet" type="text/css"/>
     <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
@@ -63,8 +67,6 @@
 
 </head>
 <body>
-
-
 
 <div id='import-div'>
   <input id="file-explorer" type="file" multiple>
@@ -133,7 +135,7 @@ $("#file-explorer").fileinput({
 
         };
         obj.kind='dataimport'
-        // obj.content_type='json'
+        obj.productid=_get_query_param('pid')
 
         return obj;
     }
@@ -148,7 +150,7 @@ $('#file-explorer').on('filebatchuploaderror', function(event, data, msg) {
  
 });
 
-$('#file-explorer').on('filebatchuploadsuccess', function(event, data, previewId, index) { 
+$('#file-explorer').on('filebatchuploadsuccess', function(event, data, previewId, index){ 
  // alert(JSON.stringify(data))
  // alert('success')
 // console.log(data)
@@ -161,6 +163,8 @@ $('#file-explorer').on('filebatchuploadsuccess', function(event, data, previewId
  }
 });
 
+
+});
 
 
 //

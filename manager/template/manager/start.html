@@ -15,6 +15,7 @@
 	<link rel="icon" href="favicon.ico">
     <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'manager/css/index.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/css/toast.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
   <style type="text/css">
 
@@ -150,7 +151,7 @@
     <script src="{% static 'manager/js/utils.js' %}"></script>
     <script src="{% static 'manager/layui/layui.js' %}"></script>
 	<script src="{% static 'manager/js/index.js' %}"></script>
-
+    <script src="{% static 'manager/js/toast.js' %}"></script>
 
 
 
@@ -283,7 +284,13 @@
   });
 
 
+  //alert(toast.getcontent('1','2','3'))
 
+  // layui.use('layer',function(){
+  //   toast.msg('测试结果','报告地址:http://www.baidu.com','3')
+
+  // })
+  
 
 </script>
 

@@ -42,14 +42,13 @@
 	<script src="https://cdn.bootcss.com/popper.js/1.15.0/umd/popper.js"></script>
 	<script src="https://cdn.bootcss.com/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script type="text/javascript">
-        
-<<<<<<< HEAD
-       //parent.location.href=location.href
-=======
-        //parent.location.href=location.href
->>>>>>> 494b354d6d42fe43b5aa5855d474ad3b8c17a892
 
+        var flag=(top.location==window.location)
+        if(!flag)
+            top.location.href=window.location.href
+       
         
+
     </script>
 </body>
 </html>

@@ -117,41 +117,21 @@ class Interceptor(MiddlewareMixin):
 		b=dict(request.POST)
 		print({**a,**b})
 
-	def _field_common_check(self,request):
-		_rules={
-		'User.name':[],
-		'User.password':[]
-		}
-		
-		return ('success','')
-
-
-	def _field_common_handle(self,request):
-		'''
-		字段格式处理
-		'''
-		pass
-
 		
 	def process_request(self, request):
 
 		self._print_call_msg(request)
 
 		session_check_result=self._session_check(request)
-		repeat_check_result=self._repeat_check(request)
-		field_common_check_result=self._field_common_check(request)
+		# repeat_check_result=self._repeat_check(request)
+		# field_common_check_result=self._field_common_check(request)
 
 		if session_check_result==False:
 			return HttpResponseRedirect('/account/login/')
 
-		if repeat_check_result[0] is not 'success':
-			return JsonResponse(simplejson(code=101,msg=repeat_check_result[1]),safe=False)
+		# if repeat_check_result[0] is not 'success':
+		# 	return JsonResponse(simplejson(code=101,msg=repeat_check_result[1]),safe=False)
 
-		if field_common_check_result[0] is not 'success':
-			return JsonResponse(simplejson(code=102,msg=field_common_check_result[1]),safe=False)
-
-
-		self._field_common_handle(request)
 
 		
 

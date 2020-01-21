@@ -66,21 +66,26 @@ def upload(request):
 	content_type=request.POST.get('content_type')
 
 	if kind=='datamovein':
-		t=Transformer(callername, content_list, content_type)
+
+		taskid=EncryptUtils.md5_encrypt(str(datetime.datetime.now()))
+
+		t=Transformer(callername, content_list, content_type,taskid)
 
 		res=t.transform()
 		# print('res=>',res)
 
 		if res[0]=='success':
 			# print('flag1_1')
-			return JsonResponse(simplejson(code=0,msg='excel数据迁移完成'),safe=False)
+			return JsonResponse(simplejson(code=0,msg='excel数据迁移完成 迁移ID=%s'%taskid),safe=False)
 		else:
 			# print('flag1_2')
-			return JsonResponse(simplejson(code=2,msg='excel数据迁移失败[%s]'%res[1]),safe=False)
+			return JsonResponse(simplejson(code=2,msg='excel数据迁移失败[%s] 迁移ID=%s'%(res[1],taskid)),safe=False)
 
 	elif kind=='dataimport':
 		d=DataMove()
-		res=d.import_plan(content_list,request.session.get('username'))
+		productid=request.POST.get('productid').split('_')[1]
+	
+		res=d.import_plan(productid,content_list,request.session.get('username'))
 		if res[0]=='success':
 			return JsonResponse(simplejson(code=0,msg='数据导入完成'),safe=False)
 		else:
@@ -1120,15 +1125,14 @@ def queryfunc(request):
 
 	searchvalue=request.GET.get('searchvalue')
 	print("searchvalue=>",searchvalue)
-	res=None
-	if searchvalue:
-		print("变量查询条件=>")
-		res=list(Function.objects.filter(Q(description__icontains=searchvalue)|Q(name__icontains=searchvalue)))
-	else:
-		res=list(Function.objects.all())
+	res=list(Function.objects.all())
+	res=res+getbuiltin()
+	print('rs=>',res)
+	print(type(res[0]))
 
 	##
-	res=res+getbuiltin()
+	if searchvalue:
+		res=[x for x in res if str(searchvalue) in x.description or str(searchvalue) in x.name]
 	limit=request.GET.get('limit')
 	page=request.GET.get('page')
 	res,total=getpagedata(res, page, limit)
@@ -2288,7 +2292,7 @@ def querytreelist(request):
 			return data
 				#return get_pid_data(case.id,'case',data)
 			
-		elif type=='case':
+		elif type=='case':###这里会有个乱序的问题
 			case=Case.objects.get(id=idx)
 
 			steps=cm.getchild('case_step',idx)

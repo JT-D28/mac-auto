@@ -1496,7 +1496,7 @@
           var tmp_switchObj = $$(node, consts.id.SWITCH, setting),
             tmp_icoObj = $$(node, consts.id.ICON, setting);
           view.replaceSwitchClass(node, tmp_switchObj, consts.folder.DOCU);
-          view.replaceIcoClass(node, tmp_icoObj, consts.folder.DOCU);
+          //view.replaceIcoClass(node, tmp_icoObj, consts.folder.DOCU);
           $$(node, consts.id.UL, setting).remove();
         } else {
           $$(node, consts.id.UL, setting).empty();

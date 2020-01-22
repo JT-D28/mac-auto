@@ -140,10 +140,13 @@ def gettaskresult(taskid):
 		for x in step_query:
 			businessobj={}
 			business=x.businessdata
-			step=gettestdatastep(business.id)
+			status,step=gettestdatastep(business.id)
 
 
-			businessobj['num']=Order.objects.get(main_id=step[1].id,follow_id=business.id,kind='step_business').value
+			step_weight=Order.objects.get(main_id=case.id,follow_id=step.id,kind='case_step').value
+
+			business_index=Order.objects.get(main_id=step.id,follow_id=business.id,kind='step_business').value.split('.')[1]
+			businessobj['num']='%s_%s'%(step_weight,business_index)
 			stepname=business.businessname
 			result=x.result
 			if 'success'==result:
@@ -165,14 +168,14 @@ def gettaskresult(taskid):
 				error,stepinst=gettestdatastep(business.id)
 				print('%s=>%s,%s'%(business.id,error,stepinst))
 				businessobj['stepname']=stepinst.description
-
-				businessobj['api']=re.findall('\/(.*?)[?]',stepinst.url)[0]
+				businessobj['api']='/'+'/'.join(re.findall('http://(.*)',stepinst.url)[0].split('/')[1:])
 			except:
+				print('获取步骤api和名称异常=>',traceback.format_exc())
 				businessobj['api']=stepinst.body
 
 			businessobj['itf_check']=business.itf_check
 			businessobj['db_check']=business.db_check
-			businessobj['spend']=ResultDetail.objects.get(taskid=taskid,plan=plan,case=case,step=step[1],businessdata=business).spend
+			businessobj['spend']=ResultDetail.objects.get(taskid=taskid,plan=plan,case=case,step=stepinst,businessdata=business).spend
 			spend_total+=int(businessobj['spend'])
 			if int(businessobj['spend'])<=int(detail['min']):
 				detail['min']=businessobj['spend']

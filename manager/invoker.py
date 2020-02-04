@@ -205,7 +205,7 @@ def gettaskresult(taskid):
 		detail['success_rate']=str("%.2f"%(detail['success']/detail['total']))
 	except:
 		detail['success_rate']='-1'
-
+	detail["reporttime"]=time.strftime("%m-%d %H:%M", time.localtime())
 	return detail
 
 

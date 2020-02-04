@@ -209,7 +209,8 @@ def reportchart(request):
         result = gettaskresult(taskids[0]["taskid"])
         c = (
             Pie()
-                .add("", [("成功数", result["success"]), ("失败数", result["fail"]), ("跳过数", result["skip"]),("错误数",result["error"])],
+                .add("", [("成功数", result["success"]), ("失败数", result["fail"]), ("跳过数", result["skip"]),
+                          ("错误数", result["error"])],
                      radius=["40%", "55%"],
                      label_opts=opts.LabelOpts(
                          position="outside",
@@ -228,7 +229,9 @@ def reportchart(request):
                              },
                          },
                      ),
-                     ).set_global_opts(title_opts=opts.TitleOpts(title="任务【%s】单次报告"%(result["planname"]))).dump_options_with_quotes()
+                     ).set_global_opts(legend_opts=opts.LegendOpts(orient="vertical",pos_right="right",pos_top="20%"),
+                                       title_opts=opts.TitleOpts(subtitle=result["reporttime"],pos_left="center",title="任务【%s】单次报告" % (result["planname"]))
+                                       ).dump_options_with_quotes()
         )
         return rpechart.json_response(json.loads(c))
     else:

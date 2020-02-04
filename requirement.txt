@@ -57,3 +57,4 @@ zope.interface==4.6.0
 service_identity
 pymysql
 mysqlclient
+pyecharts

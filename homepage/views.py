@@ -1,7 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-# from pyecharts.faker import Faker
 
 from manager.invoker import gettaskresult, MainSender
 from . import rpechart
@@ -13,12 +12,8 @@ from manager.models import Product, Plan, ResultDetail
 import json
 from random import randrange
 
-from django.http import HttpResponse
-
-
-# from pyecharts.faker import Faker
-# from pyecharts import options as opts
-# from pyecharts.charts import Pie, Bar, TreeMap, Line
+from pyecharts import options as opts
+from pyecharts.charts import Pie, Bar, TreeMap, Line
 
 
 @csrf_exempt
@@ -75,11 +70,12 @@ def querytaskid(request):
     try:
         planid = request.POST.get('planid')
         plan = Plan.objects.get(id=planid)
-        detail = list(ResultDetail.objects.filter(plan=plan).order_by('-createtime'))
-        if detail is None:
-            msg = "任务还没有运行过！"
+        taskids = list(ResultDetail.objects.values('taskid').filter(plan=plan).order_by('-createtime'))
+        if taskids:
+            taskids = taskids[0]["taskid"]
         else:
-            taskids = detail[0].taskid
+            code = 2
+            msg = "任务还没有运行过！"
     except:
         code = 1
         msg = "出错了！"
@@ -174,7 +170,7 @@ def sendreport(request):
     msg = ''
     planid = request.POST.get('planid')
     plan = Plan.objects.get(id=planid)
-    user=request.session.get("username",None)
+    user = request.session.get("username", None)
     detail = list(ResultDetail.objects.filter(plan=plan).order_by('-createtime'))
     if detail is None:
         msg = "任务还没有运行过！"
@@ -182,7 +178,6 @@ def sendreport(request):
         taskids = detail[0].taskid
 
     mail_res = MainSender.dingding(taskids, user, mail_config)
-
 
     url = 'https://oapi.dingtalk.com/robot/send?access_token=a39ed3fdf3d48d674afc5addb602ffe35330ee94bb736d447fcd6511cac70c25'
     pagrem = {
@@ -204,19 +199,42 @@ def sendreport(request):
     return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
-# @csrf_exempt
-# def reportone(request):
-#     gettaskresult
-#
-#     pie = (
-#         Pie()
-#             .add("", [(1, 3)])
-#             .set_colors(["green", "yellow"])
-#             .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))
-#             .dump_options_with_quotes()
-#     )
-#
-#     return rpechart.json_response(json.loads(pie))
+@csrf_exempt
+def reportchart(request):
+    code = 0
+    planid = request.POST.get('planid')
+    taskids = list(
+        ResultDetail.objects.values('taskid').filter(plan=Plan.objects.get(id=planid)).order_by('-createtime'))
+    if taskids:
+        result = gettaskresult(taskids[0]["taskid"])
+        c = (
+            Pie()
+                .add("", [("成功数", result["success"]), ("失败数", result["fail"]), ("跳过数", result["skip"]),("错误数",result["error"])],
+                     radius=["40%", "55%"],
+                     label_opts=opts.LabelOpts(
+                         position="outside",
+                         formatter=" {b|{b}: }{c}  {per|{d}%}  ",
+                         background_color="#eee",
+                         border_color="#aaa",
+                         border_width=1,
+                         border_radius=4,
+                         rich={
+                             "b": {"fontSize": 16, "lineHeight": 33},
+                             "per": {
+                                 "color": "#eee",
+                                 "backgroundColor": "#334455",
+                                 "padding": [2, 4],
+                                 "borderRadius": 2,
+                             },
+                         },
+                     ),
+                     ).set_global_opts(title_opts=opts.TitleOpts(title="任务【%s】单次报告"%(result["planname"]))).dump_options_with_quotes()
+        )
+        return rpechart.json_response(json.loads(c))
+    else:
+        code = 1
+        msg = '任务还没有运行过！'
+        return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
 @csrf_exempt

@@ -11,3 +11,5 @@
 /manager/__pycache__/
 /logs/*
 config
+/login/__pycache__/
+/login/migrations/__pycache__/

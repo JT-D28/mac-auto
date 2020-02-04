@@ -29,6 +29,6 @@ urlpatterns = [
     path('globalsetting/', views.globalsetting),
     path('restart/', views.restart),
     path('sendreport/',views.sendreport),
-    #path('reportone/', views.reportone),
+    path('reportchart/', views.reportchart),
 
 ]

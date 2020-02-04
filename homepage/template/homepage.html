@@ -20,31 +20,144 @@
 </head>
 
 
+<style>
+    .layui-card {
+        border: 1px solid #f2f2f2;
+        border-radius: 5px;
+    }
 
-    <style>
-        .layui-card {border:1px solid #f2f2f2;border-radius:5px;}
-        .icon {margin-right:10px;color:#1aa094;}
-        .icon-cray {color:#ffb800!important;}
-        .icon-blue {color:#1e9fff!important;}
-        .icon-tip {color:#ff5722!important;}
-        .layuimini-qiuck-module {text-align:center;margin-top: 10px}
-        .layuimini-qiuck-module a i {display:inline-block;width:100%;height:60px;line-height:60px;text-align:center;border-radius:2px;font-size:30px;background-color:#F8F8F8;color:#333;transition:all .3s;-webkit-transition:all .3s;}
-        .layuimini-qiuck-module a cite {position:relative;top:2px;display:block;color:#666;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;font-size:14px;}
-        .welcome-module {width:100%;height:210px;}
-        .panel {background-color:#fff;border:1px solid transparent;border-radius:3px;-webkit-box-shadow:0 1px 1px rgba(0,0,0,.05);box-shadow:0 1px 1px rgba(0,0,0,.05)}
-        .panel-body {padding:10px}
-        .panel-title {margin-top:0;margin-bottom:0;font-size:12px;color:inherit}
-        .label {display:inline;padding:.2em .6em .3em;font-size:75%;font-weight:700;line-height:1;color:#fff;text-align:center;white-space:nowrap;vertical-align:baseline;border-radius:.25em;margin-top: .3em;}
-        .layui-red {color:red}
-        .main_btn > p {height:40px;}
-        .layui-bg-number {background-color:#F8F8F8;}
-        .layuimini-notice:hover {background:#f6f6f6;}
-        .layuimini-notice {padding:7px 16px;clear:both;font-size:12px !important;cursor:pointer;position:relative;transition:background 0.2s ease-in-out;}
-        .layuimini-notice-title,.layuimini-notice-label {
-            padding-right: 70px !important;text-overflow:ellipsis!important;overflow:hidden!important;white-space:nowrap!important;}
-        .layuimini-notice-title {line-height:28px;font-size:14px;}
-        .layuimini-notice-extra {position:absolute;top:50%;margin-top:-8px;right:16px;display:inline-block;height:16px;color:#999;}
-    </style>
+    .icon {
+        margin-right: 10px;
+        color: #1aa094;
+    }
+
+    .icon-cray {
+        color: #ffb800 !important;
+    }
+
+    .icon-blue {
+        color: #1e9fff !important;
+    }
+
+    .icon-tip {
+        color: #ff5722 !important;
+    }
+
+    .layuimini-qiuck-module {
+        text-align: center;
+        margin-top: 10px
+    }
+
+    .layuimini-qiuck-module a i {
+        display: inline-block;
+        width: 100%;
+        height: 60px;
+        line-height: 60px;
+        text-align: center;
+        border-radius: 2px;
+        font-size: 30px;
+        background-color: #F8F8F8;
+        color: #333;
+        transition: all .3s;
+        -webkit-transition: all .3s;
+    }
+
+    .layuimini-qiuck-module a cite {
+        position: relative;
+        top: 2px;
+        display: block;
+        color: #666;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        font-size: 14px;
+    }
+
+    .welcome-module {
+        width: 100%;
+        height: 210px;
+    }
+
+    .panel {
+        background-color: #fff;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+        box-shadow: 0 1px 1px rgba(0, 0, 0, .05)
+    }
+
+    .panel-body {
+        padding: 10px
+    }
+
+    .panel-title {
+        margin-top: 0;
+        margin-bottom: 0;
+        font-size: 12px;
+        color: inherit
+    }
+
+    .label {
+        display: inline;
+        padding: .2em .6em .3em;
+        font-size: 75%;
+        font-weight: 700;
+        line-height: 1;
+        color: #fff;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: .25em;
+        margin-top: .3em;
+    }
+
+    .layui-red {
+        color: red
+    }
+
+    .main_btn > p {
+        height: 40px;
+    }
+
+    .layui-bg-number {
+        background-color: #F8F8F8;
+    }
+
+    .layuimini-notice:hover {
+        background: #f6f6f6;
+    }
+
+    .layuimini-notice {
+        padding: 7px 16px;
+        clear: both;
+        font-size: 12px !important;
+        cursor: pointer;
+        position: relative;
+        transition: background 0.2s ease-in-out;
+    }
+
+    .layuimini-notice-title, .layuimini-notice-label {
+        padding-right: 70px !important;
+        text-overflow: ellipsis !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+    }
+
+    .layuimini-notice-title {
+        line-height: 28px;
+        font-size: 14px;
+    }
+
+    .layuimini-notice-extra {
+        position: absolute;
+        top: 50%;
+        margin-top: -8px;
+        right: 16px;
+        display: inline-block;
+        height: 16px;
+        color: #999;
+    }
+</style>
 
 
 <body>
@@ -59,7 +172,8 @@
                                 <form class="layui-form" action="">
                                     <div class="layui-form-item">
                                         <div class="layui-input-inline" style="width: 40%;margin-right: 10px">
-                                            <select id='product' name="product" lay-filter="product" lay-verify="required" lay-search>
+                                            <select id='product' name="product" lay-filter="product"
+                                                    lay-verify="required" lay-search>
                                                 <option value=''>选择项目</option>
                                             </select>
                                         </div>
@@ -75,38 +189,44 @@
                                 <div class="welcome-module">
                                     <div class="layui-row layui-col-space10 layuimini-qiuck">
                                         <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/menu.html" data-title="菜单管理" data-icon="fa fa-window-maximize">
-                                                   <i id='runplan' class="layui-icon layui-icon-play"  ></i>
+                                            <a href="javascript:;" data-iframe-tab="page/menu.html" data-title="菜单管理"
+                                               data-icon="fa fa-window-maximize">
+                                                <i id='runplan' class="layui-icon layui-icon-play"></i>
                                                 <cite>运行计划</cite>
                                             </a>
                                         </div>
                                         <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/setting.html" data-title="系统设置" data-icon="fa fa-gears">
-                                                 <i id='setplan' class="layui-icon layui-icon-set" ></i>
+                                            <a href="javascript:;" data-iframe-tab="page/setting.html" data-title="系统设置"
+                                               data-icon="fa fa-gears">
+                                                <i id='setplan' class="layui-icon layui-icon-set"></i>
                                                 <cite>项目设置</cite>
                                             </a>
                                         </div>
                                         <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/table.html" data-title="表格示例" data-icon="fa fa-file-text">
-                                               <i id='editplan' class="layui-icon layui-icon-code-circle"></i>
+                                            <a href="javascript:;" data-iframe-tab="page/table.html" data-title="表格示例"
+                                               data-icon="fa fa-file-text">
+                                                <i id='editplan' class="layui-icon layui-icon-code-circle"></i>
                                                 <cite>跳转编辑</cite>
                                             </a>
                                         </div>
                                         <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表" data-icon="fa fa-dot-circle-o">
-                                                 <i id='repoetplan' class="layui-icon layui-icon-chart-screen"></i>
+                                            <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
+                                               data-icon="fa fa-dot-circle-o">
+                                                <i id='repoetplan' class="layui-icon layui-icon-chart-screen"></i>
                                                 <cite>最新报告</cite>
                                             </a>
                                         </div>
                                         <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表" data-icon="fa fa-dot-circle-o">
-                                                 <i id='repoetmail' class="layui-icon layui-icon-picture"></i>
+                                            <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
+                                               data-icon="fa fa-dot-circle-o">
+                                                <i id='repoetmail' class="layui-icon layui-icon-picture"></i>
                                                 <cite>发送邮件</cite>
                                             </a>
                                         </div>
                                         <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表" data-icon="fa fa-dot-circle-o">
-                                                 <i id='process' class="layui-icon layui-icon-log"></i>
+                                            <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
+                                               data-icon="fa fa-dot-circle-o">
+                                                <i id='process' class="layui-icon layui-icon-log"></i>
                                                 <cite>运行日志</cite>
                                             </a>
                                         </div>
@@ -117,21 +237,19 @@
                     </div>
 
 
-
-
                     <div class="layui-col-md7">
                         <div class="layui-card">
                             <div class="layui-tab">
                                 <ul class="layui-tab-title">
-                                        <li class="layui-this">最新一次</li>
-                                        <li>过去五次</li>
-                                        <li>累计</li>
+                                    <li class="layui-this">最新一次</li>
+                                    <li>过去五次</li>
+                                    <li>累计</li>
                                 </ul>
                                 <div class="layui-tab-content">
                                     <div class="layui-tab-item layui-show">
 
 
-   <div id="bar" style="width:300px; height:200px;"></div>
+                                        <div id="bar" style="width:300px; height:200px;"></div>
 
                                     </div>
                                     <div class="layui-tab-item">内容2</div>
@@ -142,31 +260,51 @@
                     </div>
 
 
-<script>
-        var chart = echarts.init(document.getElementById('bar'), 'white', {renderer: 'canvas'});
-        $(
-            function () {
-                fetchData(chart);
-            }
-        );
+                    <script>
+                        var chart = echarts.init(document.getElementById('bar'), 'white', {renderer: 'canvas'});
+                        $(
+                            function () {
+                                fetchData(chart);
+                            }
+                        );
 
-        function fetchData() {
-            $.ajax({
-                type: "GET",
-                url: "/homepage/reportone/",
-                dataType: 'json',
-                success: function (result) {
-                    chart.setOption(result.data);
-                }
-            });
-        }
-</script>
+                        function fetchData() {
+                            $.ajax({
+                                type: "GET",
+                                url: "/homepage/reportone/",
+                                dataType: 'json',
+                                success: function (result) {
+                                    chart.setOption(result.data);
+                                }
+                            });
+                        }
+                    </script>
 
                     <div class="layui-col-md12">
                         <div class="layui-card">
                             <div class="layui-card-header"><i class="fa fa-line-chart icon"></i>报表统计</div>
                             <div class="layui-card-body">
-                                <div id="echarts-records" style="width: 100%; min-height: 500px; user-select: none; position: relative;" _echarts_instance_="ec_1578961940206"><div style="position: relative; overflow: hidden; width: 100px; height: 0px; padding: 0px; margin: 0px; border-width: 0px; cursor: default;"><canvas style="position: absolute; left: 0px; top: 0px; width: 100px; height: 0px; user-select: none; padding: 0px; margin: 0px; border-width: 0px;" data-zr-dom-id="zr_0" width="100" height="0"></canvas></div><div style="position: absolute; display: none; border-style: solid; white-space: nowrap; z-index: 9999999; transition: left 0.4s cubic-bezier(0.23, 1, 0.32, 1) 0s, top 0.4s cubic-bezier(0.23, 1, 0.32, 1) 0s; background-color: rgba(50, 50, 50, 0.7); border-width: 0px; border-color: rgb(51, 51, 51); border-radius: 4px; color: rgb(255, 255, 255); font: 14px / 21px Microsoft YaHei; padding: 5px; left: 203px; top: 145px; pointer-events: none;">周二<br><span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:#3fb1e3;"></span>邮件营销: 132<br><span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:#6be6c1;"></span>联盟广告: 182<br><span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:#626c91;"></span>视频广告: 232<br><span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:#a0a7e6;"></span>直接访问: 332<br><span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:#c4ebad;"></span>搜索引擎: 932</div></div>
+                                <div id="echarts-records"
+                                     style="width: 100%; min-height: 500px; user-select: none; position: relative;"
+                                     _echarts_instance_="ec_1578961940206">
+                                    <div style="position: relative; overflow: hidden; width: 100px; height: 0px; padding: 0px; margin: 0px; border-width: 0px; cursor: default;">
+                                        <canvas style="position: absolute; left: 0px; top: 0px; width: 100px; height: 0px; user-select: none; padding: 0px; margin: 0px; border-width: 0px;"
+                                                data-zr-dom-id="zr_0" width="100" height="0"></canvas>
+                                    </div>
+                                    <div style="position: absolute; display: none; border-style: solid; white-space: nowrap; z-index: 9999999; transition: left 0.4s cubic-bezier(0.23, 1, 0.32, 1) 0s, top 0.4s cubic-bezier(0.23, 1, 0.32, 1) 0s; background-color: rgba(50, 50, 50, 0.7); border-width: 0px; border-color: rgb(51, 51, 51); border-radius: 4px; color: rgb(255, 255, 255); font: 14px / 21px Microsoft YaHei; padding: 5px; left: 203px; top: 145px; pointer-events: none;">
+                                        周二<br><span
+                                            style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:#3fb1e3;"></span>邮件营销:
+                                        132<br><span
+                                            style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:#6be6c1;"></span>联盟广告:
+                                        182<br><span
+                                            style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:#626c91;"></span>视频广告:
+                                        232<br><span
+                                            style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:#a0a7e6;"></span>直接访问:
+                                        332<br><span
+                                            style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:#c4ebad;"></span>搜索引擎:
+                                        932
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -208,144 +346,139 @@
 <script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
 <script src="{% static 'homepage/layui/lay-config.js' %}" charset="utf-8"></script>
 <script>
-    layui.use(['common','form','jquery','layer','element'], function () {
+    layui.use(['common', 'form', 'jquery', 'layer', 'element'], function () {
         var common = layui.common;
         var element = layui.element;
-        var $=layui.jquery;
-        var form=layui.form;
-        var layer=layui.layer;
+        var $ = layui.jquery;
+        var form = layui.form;
+        var layer = layui.layer;
 
-        common.ajax('/homepage/queryproduct/','post','json',{},
+        common.ajax('/homepage/queryproduct/', 'post', 'json', {},
             function (data) {
-                console.log('项目名称=>'+data)
-                data=JSON.parse(data)
-                data=data.data
+                console.log('项目名称=>' + data)
+                data = JSON.parse(data)
+                data = data.data
                 console.log(data)
-                for(var index=0;index<data.length;index++){
-                    $("[name='product']").append("<option value='"+data[index]['id']+"'>"+data[index]['description']+"</option>")
+                for (var index = 0; index < data.length; index++) {
+                    $("[name='product']").append("<option value='" + data[index]['id'] + "'>" + data[index]['description'] + "</option>")
                 }
                 layui.form.render('select')
             }
         );
 
 
-    form.on('select(product)', function(data){
-        var id= $("[name='product']").val()
-            common.ajax('/homepage/queryplan/','post','json',{
-            'id':id
-            },function (data) {
-                data=JSON.parse(data)
-                if(data.code!='0'){
-                    $("[name='plan']").empty()
-                    $("[name='plan']").append("<option value=''>选择计划</option>")
-                    layui.form.render('select')
-                }else{
-                    data=data.data
-                    $("[name='plan']").empty()
-                    for(var index=0;index<data.length;index++){
-                        $("[name='plan']").append("<option value='"+data[index]['id']+"'>"+data[index]['name']+"</option>")
+        form.on('select(product)', function (data) {
+            var id = $("[name='product']").val()
+            common.ajax('/homepage/queryplan/', 'post', 'json', {
+                    'id': id
+                }, function (data) {
+                    data = JSON.parse(data)
+                    if (data.code != '0') {
+                        $("[name='plan']").empty()
+                        $("[name='plan']").append("<option value=''>选择计划</option>")
+                        layui.form.render('select')
+                    } else {
+                        data = data.data
+                        $("[name='plan']").empty()
+                        for (var index = 0; index < data.length; index++) {
+                            $("[name='plan']").append("<option value='" + data[index]['id'] + "'>" + data[index]['name'] + "</option>")
+                        }
+                        if (data.length == '0') {
+                            $("[name='plan']").append("<option value=''>该项目下没有计划</option>")
+                        }
+                        layui.form.render('select')
                     }
-                    if(data.length=='0'){
-                        $("[name='plan']").append("<option value=''>该项目下没有计划</option>")
-                    }
-                layui.form.render('select')
                 }
-            }
             )
-    });
+        });
 
 
+        $('#runplan').click(function () {
+            var planid = $("[name='plan']").val().substr(5)
+            if (planid == '') {
+                layer.msg("请选择项目和计划！")
+            } else {
+                common.ajax('/manager/runplan', 'post', 'json', {ids: planid},
+                    function (data) {
+                        data = JSON.parse(data)
+                        if (data.code == 0) {
+                            var mes = "你的任务正在运行中..."
+                            layer.msg(mes, {
+                                time: 30000, //20s后自动关闭
+                                shade: 0.2,
+                                shadeClose: true,
+                                btn: ['火速围观', '残忍拒绝'],
+                                yes: function (index, layero) {
+                                    window.top.document.getElementById("console").click()
+                                    layer.close(index)
+                                }
+                            });
+                        }
+                    })
+            }
+        })
 
 
+        $('#editplan').click(function () {
+            var planid = $("[name='plan']").val().substr(5)
+            if (planid == '') {
+                layer.msg("请选择项目和计划！")
+            } else {
+                window.top.document.getElementById("tree-link").click()
+            }
+        });//没啥用
 
 
-    $('#runplan').click(function () {
-        var planid = $("[name='plan']").val().substr(5)
-        if(planid == ''){
-            layer.msg("请选择项目和计划！")
-        }else{
-            common.ajax('/manager/runplan','post','json',{ids:planid},
-            function (data) {
-                data=JSON.parse(data)
-                if(data.code==0){
-                    var mes ="你的任务正在运行中..."
-                    layer.msg(mes, {
-                        time: 30000, //20s后自动关闭
-                        shade: 0.2,
-                        shadeClose  :true,
-                        btn: ['火速围观', '残忍拒绝'],
-                        yes: function(index, layero){
-                            window.top.document.getElementById("console").click()
+        $('#setplan').click(
+            function () {
+                var planid = $("[name='plan']").val().substr(5)
+                if (planid == '') {
+                    layer.msg("请选择项目和计划！")
+                } else {
+                    layui.form.render()
+                    layer.open({
+                        type: 1,
+                        title: "jenkins配置",
+                        content: $('#addhtml'),
+                        area: ['600px', '300px'],
+                        offset: 'auto',
+                        closeBtn: 2,
+                        shade: [0.1, '#393D49'],
+                        shadeClose: true,
+                        btn: ['我还没做好', '取消'],
+                        yes: function (index, layero) {
+                            common.ajax('/homepage/jenkinsadd/', 'post', 'json', {
+                                'product': $("[name='product']").val(),
+                                'jenkinsurl': $("[name='jenkinsurl']").val(),
+                                'jobname': $("[name='jobname']").val(),
+                                'servicename': $("[name='servicename']").val()
+                            }, function (res) {
+                                res = JSON.parse(res)
+                                if (res.code == 0) {
+                                    layer.alert(e.msg, {icon: 1, time: 3000})
+                                } else {
+                                    layer.alert(e.msg, {icon: 5, time: 3000})
+                                }
+                            })
+                        },
+                        btn2: function (index, layero) {
+                            layer.close(index)
+                        },
+                        cancel: function (index, layero) {
                             layer.close(index)
                         }
-                    });
+                    })
                 }
-            })
-        }
-    })
-
-
-    $('#editplan').click(function () {
-        var planid = $("[name='plan']").val().substr(5)
-        if(planid == ''){
-            layer.msg("请选择项目和计划！")
-        }else {
-            window.top.document.getElementById("tree-link").click()
-        }
-    });//没啥用
-
-
-
-    $('#setplan').click(
-        function () {
-            var planid = $("[name='plan']").val().substr(5)
-            if(planid == ''){
-                layer.msg("请选择项目和计划！")
-            }else {
-                layui.form.render()
-                layer.open({
-                    type: 1,
-                    title: "jenkins配置",
-                    content: $('#addhtml'),
-                    area: ['600px', '300px'],
-                    offset: 'auto',
-                    closeBtn: 2,
-                    shade: [0.1, '#393D49'],
-                    shadeClose: true,
-                    btn: ['我还没做好', '取消'],
-                    yes: function (index, layero) {
-                        common.ajax('/homepage/jenkinsadd/', 'post', 'json', {
-                            'product': $("[name='product']").val(),
-                            'jenkinsurl': $("[name='jenkinsurl']").val(),
-                            'jobname': $("[name='jobname']").val(),
-                            'servicename': $("[name='servicename']").val()
-                        }, function (res) {
-                            res = JSON.parse(res)
-                            if (res.code == 0) {
-                                layer.alert(e.msg, {icon: 1, time: 3000})
-                            } else {
-                                layer.alert(e.msg, {icon: 5, time: 3000})
-                            }
-                        })
-                    },
-                    btn2: function (index, layero) {
-                        layer.close(index)
-                    },
-                    cancel: function (index, layero) {
-                        layer.close(index)
-                    }
-                })
             }
-        }
-    );
+        );
 
 
-    $('#repoetplan').click(function () {
-        var id = $("[name='plan']").val().substr(5)
-        var planid = $("[name='plan']").val().substr(5)
-            if(planid == ''){
+        $('#repoetplan').click(function () {
+            var id = $("[name='plan']").val().substr(5)
+            var planid = $("[name='plan']").val().substr(5)
+            if (planid == '') {
                 layer.msg("请选择项目和计划！")
-            }else {
+            } else {
                 common.ajax('/homepage/querytaskid/', 'post', 'json', {
                     'planid': id
                 }, function (data) {
@@ -356,22 +489,20 @@
                         layer.msg('任务还没有运行过!');
                     } else {
                         var resulturl = '/manager/querytaskdetail/?taskid=' + taskid
-                       //window.open(resulturl)
+                        //window.open(resulturl)
                         layer.open({
                             type: 2,
                             title: false,
                             shade: [0],
                             area: ['1080px', '480px'],
                             anim: 2,
-                             shadeClose: true,
+                            shadeClose: true,
                             content: [resulturl, 'yes'], //iframe的url，no代表不显示滚动条
-                            });
+                        });
                     }
                 })
             }
-    })
-
-
+        })
 
 
     });

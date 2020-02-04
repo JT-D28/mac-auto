@@ -121,7 +121,7 @@ def gettaskresult(taskid):
 	detail['success']=0
 	detail['fail']=0
 	detail['skip']=0
-
+	detail['error']=0
 	detail['min']=99999
 	detail['max']=0
 	detail['average']=0
@@ -156,8 +156,10 @@ def gettaskresult(taskid):
 				detail['fail']=detail['fail']+1	
 
 			elif 'skip'==result:	
-				detail['skip']=detail['skip']+1	
+				detail['skip']=detail['skip']+1
 
+			elif 'error'==result:
+				detail['error']=detail['error']+1
 			error=x.error
 			businessobj['businessname']=x.businessdata.businessname
 			businessobj['result']=result

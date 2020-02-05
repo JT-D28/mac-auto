@@ -1,3 +1,4 @@
+from django.db import connection
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -18,7 +19,7 @@ from pyecharts.charts import Pie, Bar, TreeMap, Line
 
 @csrf_exempt
 def homepage(request):
-    return render(request, 'home1page.html')
+    return render(request, 'homepage.html')
 
 
 @csrf_exempt
@@ -202,42 +203,86 @@ def sendreport(request):
 @csrf_exempt
 def reportchart(request):
     code = 0
-    planid = request.POST.get('planid')
-    taskids = list(
-        ResultDetail.objects.values('taskid').filter(plan=Plan.objects.get(id=planid)).order_by('-createtime'))
-    if taskids:
-        result = gettaskresult(taskids[0]["taskid"])
-        c = (
-            Pie()
-                .add("", [("成功数", result["success"]), ("失败数", result["fail"]), ("跳过数", result["skip"]),
-                          ("错误数", result["error"])],
-                     radius=["40%", "55%"],
-                     label_opts=opts.LabelOpts(
-                         position="outside",
-                         formatter=" {b|{b}: }{c}  {per|{d}%}  ",
-                         background_color="#eee",
-                         border_color="#aaa",
-                         border_width=1,
-                         border_radius=4,
-                         rich={
-                             "b": {"fontSize": 16, "lineHeight": 33},
-                             "per": {
-                                 "color": "#eee",
-                                 "backgroundColor": "#334455",
-                                 "padding": [2, 4],
-                                 "borderRadius": 2,
-                             },
-                         },
-                     ),
-                     ).set_global_opts(legend_opts=opts.LegendOpts(orient="vertical",pos_right="right",pos_top="20%"),
-                                       title_opts=opts.TitleOpts(subtitle=result["reporttime"],pos_left="center",title="任务【%s】单次报告" % (result["planname"]))
-                                       ).dump_options_with_quotes()
-        )
-        return rpechart.json_response(json.loads(c))
-    else:
-        code = 1
-        msg = '任务还没有运行过！'
-        return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+    # task_ids = []
+    # task_ids1 = []
+    # li = []
+    # taskids = list(
+    #     ResultDetail.objects.values('taskid').filter(plan_id=request.POST.get('planid')).order_by('-createtime'))
+    # for i in taskids:  # takdid转化成list
+    #     task_ids.append(i['taskid'])
+    # for j in task_ids:  # 去重复
+    #     if j not in task_ids1:
+    #         task_ids1.append(j)
+    sql = ('''
+    SELECT
+        *,
+        ( success * 100 / total ) rate,
+        ( total - success - FAIL - skip ) error 
+    FROM
+        (
+    SELECT
+        plan_id,
+        manager_plan.description,
+        sum( CASE WHEN result = "success" THEN 1 ELSE 0 END ) AS success,
+        sum( CASE WHEN result = "fail" THEN 1 ELSE 0 END ) AS FAIL,
+        sum( CASE WHEN result = "skip" THEN 1 ELSE 0 END ) AS skip,
+        count( result ) AS total,
+        taskid,
+        strftime('%%m-%%d %%H:%%M',manager_resultdetail.createtime) as time
+    FROM
+        manager_resultdetail
+        LEFT JOIN manager_plan ON manager_resultdetail.plan_id = manager_plan.id 
+        WHERE plan_id = %s 
+    GROUP BY
+        taskid 
+        ) AS m  ORDER BY time DESC  LIMIT 10 
+        ''')
+    with connection.cursor() as cursor:
+        cursor.execute(sql, [request.POST.get('planid')])
+        row = cursor.fetchall()
+        print(row)
+
+    # for num in task_ids1:
+    #     t = MyThread(add, args=(num,))
+    #     li.append(t)
+    # for i in li:
+    #     i.start()
+    # et = time.time()
+    # # for t in li:
+    # #     t.join()
+    return JsonResponse(simplejson(code=code, data=row), safe=False)
+
+
+def add(num):
+    _report = {}
+    result = gettaskresult(num)
+    _report[num] = {
+        "planname": result["planname"],
+        "success": result["success"],
+        "fail": result["fail"],
+        "skip": result["skip"],
+        "total": result["total"],
+        "error": result["error"],
+        "success_rate": result["success_rate"],
+        "reporttime": result["reporttime"],
+    }
+    return _report
+
+
+class MyThread(Thread):
+    def __init__(self, func, args):
+        super(MyThread, self).__init__()
+        self.func = func
+        self.args = args
+
+    def run(self):
+        self.result = self.func(*self.args)
+
+    def get_result(self):
+        try:
+            return self.result
+        except Exception:
+            return None
 
 
 @csrf_exempt

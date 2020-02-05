@@ -8,507 +8,664 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta http-equiv="Access-Control-Allow-Origin" content="*">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="format-detection" content="telephone=no">
-    <link rel="icon" href="images/favicon.ico">
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layui.css' %}" media="all">
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layuimini.css' %}" media="all">
     <script src="https://cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
     <script type="text/javascript" src="https://assets.pyecharts.org/assets/echarts.min.js"></script>
     <link rel="stylesheet" href="{% static 'homepage/layui/css/public.css' %}" media="all">
+    <style>
+        .layui-card {
+            border: 1px solid #f2f2f2;
+            border-radius: 5px;
+        }
+
+        .layuimini-qiuck-module {
+            text-align: center;
+            margin-top: 10px
+        }
+
+        .layuimini-qiuck-module a i {
+            display: inline-block;
+            width: 100%;
+            height: 60px;
+            line-height: 60px;
+            text-align: center;
+            border-radius: 2px;
+            font-size: 30px;
+            background-color: #F8F8F8;
+            color: #333;
+            transition: all .3s;
+            -webkit-transition: all .3s;
+        }
+
+        .layuimini-qiuck-module a cite {
+            position: relative;
+            top: 2px;
+            display: block;
+            color: #666;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .welcome-module {
+            width: 100%;
+            height: 210px;
+        }
+
+    </style>
 </head>
-
-
-<style>
-    .layui-card {
-        border: 1px solid #f2f2f2;
-        border-radius: 5px;
-    }
-
-    .icon {
-        margin-right: 10px;
-        color: #1aa094;
-    }
-
-    .icon-cray {
-        color: #ffb800 !important;
-    }
-
-    .icon-blue {
-        color: #1e9fff !important;
-    }
-
-    .icon-tip {
-        color: #ff5722 !important;
-    }
-
-    .layuimini-qiuck-module {
-        text-align: center;
-        margin-top: 10px
-    }
-
-    .layuimini-qiuck-module a i {
-        display: inline-block;
-        width: 100%;
-        height: 60px;
-        line-height: 60px;
-        text-align: center;
-        border-radius: 2px;
-        font-size: 30px;
-        background-color: #F8F8F8;
-        color: #333;
-        transition: all .3s;
-        -webkit-transition: all .3s;
-    }
-
-    .layuimini-qiuck-module a cite {
-        position: relative;
-        top: 2px;
-        display: block;
-        color: #666;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        white-space: nowrap;
-        font-size: 14px;
-    }
-
-    .welcome-module {
-        width: 100%;
-        height: 210px;
-    }
-
-    .panel {
-        background-color: #fff;
-        border: 1px solid transparent;
-        border-radius: 3px;
-        -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
-        box-shadow: 0 1px 1px rgba(0, 0, 0, .05)
-    }
-
-    .panel-body {
-        padding: 10px
-    }
-
-    .panel-title {
-        margin-top: 0;
-        margin-bottom: 0;
-        font-size: 12px;
-        color: inherit
-    }
-
-    .label {
-        display: inline;
-        padding: .2em .6em .3em;
-        font-size: 75%;
-        font-weight: 700;
-        line-height: 1;
-        color: #fff;
-        text-align: center;
-        white-space: nowrap;
-        vertical-align: baseline;
-        border-radius: .25em;
-        margin-top: .3em;
-    }
-
-    .layui-red {
-        color: red
-    }
-
-    .main_btn > p {
-        height: 40px;
-    }
-
-    .layui-bg-number {
-        background-color: #F8F8F8;
-    }
-
-    .layuimini-notice:hover {
-        background: #f6f6f6;
-    }
-
-    .layuimini-notice {
-        padding: 7px 16px;
-        clear: both;
-        font-size: 12px !important;
-        cursor: pointer;
-        position: relative;
-        transition: background 0.2s ease-in-out;
-    }
-
-    .layuimini-notice-title, .layuimini-notice-label {
-        padding-right: 70px !important;
-        text-overflow: ellipsis !important;
-        overflow: hidden !important;
-        white-space: nowrap !important;
-    }
-
-    .layuimini-notice-title {
-        line-height: 28px;
-        font-size: 14px;
-    }
-
-    .layuimini-notice-extra {
-        position: absolute;
-        top: 50%;
-        margin-top: -8px;
-        right: 16px;
-        display: inline-block;
-        height: 16px;
-        color: #999;
-    }
-</style>
-
-
 <body>
-<div class="layuimini-container">
-    <div class="layuimini-main">
-        <div class="layui-row layui-col-space15">
-            <div class="layui-col-md8">
-                <div class="layui-row layui-col-space15">
-                    <div class="layui-col-md5">
-                        <div class="layui-card">
-                            <div class="layui-card-header">
-                                <form class="layui-form" action="">
-                                    <div class="layui-form-item">
-                                        <div class="layui-input-inline" style="width: 40%;margin-right: 10px">
-                                            <select id='product' name="product" lay-filter="product"
-                                                    lay-verify="required" lay-search>
-                                                <option value=''>选择项目</option>
-                                            </select>
-                                        </div>
-                                        <div class="layui-input-inline" style="width: 52%;margin-right: 0px">
-                                            <select name="plan" lay-filter="plan" lay-verify="required" lay-search>
-                                                <option value=''>选择计划</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </form>
+<!--<div class="layuimini-container">-->
+<div class="layuimini-main">
+
+
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-xs12 layui-col-md3">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    <form class="layui-form" action="">
+                        <div class="layui-form-item">
+                            <div class="layui-input-inline" style="width: 40%;margin-right: 10px">
+                                <select id='product' name="product" lay-filter="product"
+                                        lay-verify="required" lay-search>
+                                    <option value=''>选择项目</option>
+                                </select>
                             </div>
-                            <div class="layui-card-body">
-                                <div class="welcome-module">
-                                    <div class="layui-row layui-col-space10 layuimini-qiuck">
-                                        <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/menu.html" data-title="菜单管理"
-                                               data-icon="fa fa-window-maximize">
-                                                <i id='runplan' class="layui-icon layui-icon-play"></i>
-                                                <cite>运行计划</cite>
-                                            </a>
-                                        </div>
-                                        <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/setting.html" data-title="系统设置"
-                                               data-icon="fa fa-gears">
-                                                <i id='setplan' class="layui-icon layui-icon-set"></i>
-                                                <cite>项目设置</cite>
-                                            </a>
-                                        </div>
-                                        <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/table.html" data-title="表格示例"
-                                               data-icon="fa fa-file-text">
-                                                <i id='editplan' class="layui-icon layui-icon-code-circle"></i>
-                                                <cite>跳转编辑</cite>
-                                            </a>
-                                        </div>
-                                        <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
-                                               data-icon="fa fa-dot-circle-o">
-                                                <i id='repoetplan' class="layui-icon layui-icon-chart-screen"></i>
-                                                <cite>最新报告</cite>
-                                            </a>
-                                        </div>
-                                        <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
-                                               data-icon="fa fa-dot-circle-o">
-                                                <i id='repoetmail' class="layui-icon layui-icon-picture"></i>
-                                                <cite>发送邮件</cite>
-                                            </a>
-                                        </div>
-                                        <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
-                                               data-icon="fa fa-dot-circle-o">
-                                                <i id='process' class="layui-icon layui-icon-log"></i>
-                                                <cite>运行日志</cite>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="layui-input-inline" style="width: 52%;margin-right: 0px">
+                                <select name="plan" lay-filter="plan" lay-verify="required" lay-search>
+                                    <option value=''>选择计划</option>
+                                </select>
                             </div>
                         </div>
-                    </div>
-
-
-                    <div class="layui-col-md7">
-                        <div class="layui-card">
-                            <div class="layui-tab">
-                                <ul class="layui-tab-title">
-                                    <li class="layui-this">最新一次</li>
-                                    <li>过去五次</li>
-                                    <li>累计</li>
-                                </ul>
-                                <div class="layui-tab-content">
-                                    <div class="layui-tab-item layui-show">
-
-
-                                        <div id="bar" style="width:300px; height:200px;"></div>
-
-                                    </div>
-                                    <div class="layui-tab-item">内容2</div>
-                                    <div class="layui-tab-item">内容3</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    <script>
-                        var chart = echarts.init(document.getElementById('bar'), 'white', {renderer: 'canvas'});
-                        $(
-                            function () {
-                                fetchData(chart);
-                            }
-                        );
-
-                        function fetchData() {
-                            $.ajax({
-                                type: "GET",
-                                url: "/homepage/reportone/",
-                                dataType: 'json',
-                                success: function (result) {
-                                    chart.setOption(result.data);
-                                }
-                            });
-                        }
-                    </script>
-
-                    <div class="layui-col-md12">
-                        <div class="layui-card">
-                            <div class="layui-card-header"><i class="fa fa-line-chart icon"></i>报表统计</div>
-                            <div class="layui-card-body">
-                                <div id="echarts-records"
-                                     style="width: 100%; min-height: 500px; user-select: none; position: relative;"
-                                     _echarts_instance_="ec_1578961940206">
-                                    <div style="position: relative; overflow: hidden; width: 100px; height: 0px; padding: 0px; margin: 0px; border-width: 0px; cursor: default;">
-                                        <canvas style="position: absolute; left: 0px; top: 0px; width: 100px; height: 0px; user-select: none; padding: 0px; margin: 0px; border-width: 0px;"
-                                                data-zr-dom-id="zr_0" width="100" height="0"></canvas>
-                                    </div>
-                                    <div style="position: absolute; display: none; border-style: solid; white-space: nowrap; z-index: 9999999; transition: left 0.4s cubic-bezier(0.23, 1, 0.32, 1) 0s, top 0.4s cubic-bezier(0.23, 1, 0.32, 1) 0s; background-color: rgba(50, 50, 50, 0.7); border-width: 0px; border-color: rgb(51, 51, 51); border-radius: 4px; color: rgb(255, 255, 255); font: 14px / 21px Microsoft YaHei; padding: 5px; left: 203px; top: 145px; pointer-events: none;">
-                                        周二<br><span
-                                            style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:#3fb1e3;"></span>邮件营销:
-                                        132<br><span
-                                            style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:#6be6c1;"></span>联盟广告:
-                                        182<br><span
-                                            style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:#626c91;"></span>视频广告:
-                                        232<br><span
-                                            style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:#a0a7e6;"></span>直接访问:
-                                        332<br><span
-                                            style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:#c4ebad;"></span>搜索引擎:
-                                        932
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    </form>
                 </div>
-            </div>
-
-            <div class="layui-col-md4">
-
-                <div class="layui-card">
-                    <div class="layui-card-header"><i class="fa fa-bullhorn icon icon-tip"></i>系统公告</div>
-                    <div class="layui-card-body layui-text">
-                        <div class="layuimini-notice">
-                            <div class="layuimini-notice-title">修改选项卡样式</div>
-                            <div class="layuimini-notice-extra">2019-07-11 23:06</div>
-                            <div class="layuimini-notice-content layui-hide">
-                                界面足够简洁清爽。<br>
-                                一个接口几行代码而已直接初始化整个框架，无需复杂操作。<br>
-                                支持多tab，可以打开多窗口。<br>
-                                支持无限级菜单和对font-awesome图标库的完美支持。<br>
-                                失效以及报错菜单无法直接打开，并给出弹出层提示完美的线上用户体验。<br>
-                                url地址hash定位，可以清楚看到当前tab的地址信息。<br>
-                                刷新页面会保留当前的窗口，并且会定位当前窗口对应左侧菜单栏。<br>
-                                移动端的友好支持。<br>
+                <div class="layui-card-body">
+                    <div class="welcome-module">
+                        <div class="layui-row layui-col-space10 layuimini-qiuck">
+                            <div class="layui-col-xs4 layuimini-qiuck-module">
+                                <a href="javascript:;" data-iframe-tab="page/menu.html" data-title="菜单管理"
+                                   data-icon="fa fa-window-maximize">
+                                    <i id='runplan' class="layui-icon layui-icon-play"></i>
+                                    <cite>运行计划</cite>
+                                </a>
+                            </div>
+                            <div class="layui-col-xs4 layuimini-qiuck-module">
+                                <a href="javascript:;" data-iframe-tab="page/setting.html" data-title="系统设置"
+                                   data-icon="fa fa-gears">
+                                    <i id='setplan' class="layui-icon layui-icon-set"></i>
+                                    <cite>项目设置</cite>
+                                </a>
+                            </div>
+                            <div class="layui-col-xs4 layuimini-qiuck-module">
+                                <a href="javascript:;" data-iframe-tab="page/table.html" data-title="表格示例"
+                                   data-icon="fa fa-file-text">
+                                    <i id='editplan' class="layui-icon layui-icon-code-circle"></i>
+                                    <cite>跳转编辑</cite>
+                                </a>
+                            </div>
+                            <div class="layui-col-xs4 layuimini-qiuck-module">
+                                <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
+                                   data-icon="fa fa-dot-circle-o">
+                                    <i id='repoetplan' class="layui-icon layui-icon-chart-screen"></i>
+                                    <cite>最新报告</cite>
+                                </a>
+                            </div>
+                            <div class="layui-col-xs4 layuimini-qiuck-module">
+                                <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
+                                   data-icon="fa fa-dot-circle-o">
+                                    <i id='sendrepoet' class="layui-icon layui-icon-picture"></i>
+                                    <cite>发送报告</cite>
+                                </a>
+                            </div>
+                            <div class="layui-col-xs4 layuimini-qiuck-module">
+                                <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
+                                   data-icon="fa fa-dot-circle-o">
+                                    <i id='process' class="layui-icon layui-icon-log"></i>
+                                    <cite>运行日志</cite>
+                                </a>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="layui-card">
-                    <div class="layui-card-header"><i class="fa fa-fire icon"></i>版本信息</div>
-                    <div class="layui-card-body layui-text">
-
                     </div>
                 </div>
             </div>
         </div>
+        <div class="layui-col-xs12 layui-col-md9">
+            <div id="echarts-records" style="background-color:#ffffff;min-height:400px;padding: 10px"></div>
+        </div>
     </div>
-</div>
-<script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
-<script src="{% static 'homepage/layui/lay-config.js' %}" charset="utf-8"></script>
-<script>
-    layui.use(['common', 'form', 'jquery', 'layer', 'element'], function () {
-        var common = layui.common;
-        var element = layui.element;
-        var $ = layui.jquery;
-        var form = layui.form;
-        var layer = layui.layer;
 
-        common.ajax('/homepage/queryproduct/', 'post', 'json', {},
-            function (data) {
-                console.log('项目名称=>' + data)
-                data = JSON.parse(data)
-                data = data.data
-                console.log(data)
-                for (var index = 0; index < data.length; index++) {
-                    $("[name='product']").append("<option value='" + data[index]['id'] + "'>" + data[index]['description'] + "</option>")
-                }
-                layui.form.render('select')
-            }
-        );
+    <div class="layui-collapse " lay-accordion hidden id="settings">
+        <div class="layui-colla-item">
+            <h2 class="layui-colla-title ">邮箱配置</h2>
+            <div class="layui-colla-content">
+                <form id='mailconfig' enctype=multipart/form-data method=POST class="layui-form" style="padding: 10px;">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">配色方案</label>
+                        <div class="layui-input-block">
+                            <select name="color_scheme" lay-verify="">
+                                <option value="">请选择</option>
+                                <option value="blue">blue</option>
+                                <option value="red">red</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">收件人</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" name="to_receive" value="" title="" checked
+                                   lay-filter=''>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">抄送</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" name="cc_receive" value="" title="" checked
+                                   lay-filter='e'>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">标题</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" name="description" value='' title="" checked
+                                   lay-filter=''>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">富文本</label>
+                        <div class="layui-input-block">
+                        <textarea type="text" class="layui-textarea" id='rich_text' name="rich_text" value="" title=""
+                                  checked lay-filter=''></textarea>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">smtp主机</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" name="smtp_host" value='' title="" checked
+                                   lay-filter=''>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">smtp端口</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" name="smtp_port" value='' title="" checked
+                                   lay-filter=''>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">发送账号</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" name="sender_name" value='' title="" checked
+                                   lay-filter=''>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">发送昵称</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" name="sender_nick" value='' title="" checked
+                                   lay-filter=''>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">发送密码</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" name="sender_pass" value='' title="" checked
+                                   lay-filter=''>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="layui-colla-item">
+            <h2 class="layui-colla-title">钉钉群token</h2>
+            <div class="layui-colla-content">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">token</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="dingdingtoken" required lay-verify="required" placeholder="请输入token"
+                               autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-colla-item">
+            <h2 class="layui-colla-title">jenkins-jacoco配置</h2>
+            <div class="layui-colla-content">tode</div>
+        </div>
+    </div>
 
+    <div id="seeprocess" hidden>
+        <div class="layui-table">
+            <div class="layui-card-body">
+                <div id="log_text"></div>
+            </div>
+        </div>
+    </div>
 
-        form.on('select(product)', function (data) {
-            var id = $("[name='product']").val()
-            common.ajax('/homepage/queryplan/', 'post', 'json', {
-                    'id': id
-                }, function (data) {
+    <!--</div>-->
+    <script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
+    <script src="{% static 'manager/js/utils.js' %}" charset="utf-8"></script>
+    <script src="{% static 'homepage/layui/lay-config.js' %}" charset="utf-8"></script>
+    <script>
+        layui.use(['layer', 'echarts', 'common', 'form', 'jquery', 'element', 'layedit'], function () {
+            var $ = layui.jquery,
+                layer = layui.layer,
+                echarts = layui.echarts;
+            var common = layui.common;
+            var element = layui.element;
+            var form = layui.form;
+            var layedit = layui.layedit;
+            var le = layedit.build('rich_text'); //建立编辑器
+            var username = $("#username").text()
+
+            common.ajax('/homepage/queryproduct/', 'post', 'json', {},
+                function (data) {
+                    console.log('项目名称=>' + data)
                     data = JSON.parse(data)
-                    if (data.code != '0') {
-                        $("[name='plan']").empty()
-                        $("[name='plan']").append("<option value=''>选择计划</option>")
-                        layui.form.render('select')
-                    } else {
-                        data = data.data
-                        $("[name='plan']").empty()
-                        for (var index = 0; index < data.length; index++) {
-                            $("[name='plan']").append("<option value='" + data[index]['id'] + "'>" + data[index]['name'] + "</option>")
-                        }
-                        if (data.length == '0') {
-                            $("[name='plan']").append("<option value=''>该项目下没有计划</option>")
-                        }
-                        layui.form.render('select')
+                    data = data.data
+                    for (var index = 0; index < data.length; index++) {
+                        $("[name='product']").append("<option value='" + data[index]['id'] + "'>" + data[index]['description'] + "</option>")
                     }
+                    layui.form.render('select')
                 }
-            )
-        });
+            );
 
 
-        $('#runplan').click(function () {
-            var planid = $("[name='plan']").val().substr(5)
-            if (planid == '') {
-                layer.msg("请选择项目和计划！")
-            } else {
-                common.ajax('/manager/runplan', 'post', 'json', {ids: planid},
-                    function (data) {
+            form.on('select(product)', function (data) {
+                var id = $("[name='product']").val()
+                common.ajax('/homepage/queryplan/', 'post', 'json', {
+                        'id': id
+                    }, function (data) {
                         data = JSON.parse(data)
-                        if (data.code == 0) {
-                            var mes = "你的任务正在运行中..."
-                            layer.msg(mes, {
-                                time: 30000, //20s后自动关闭
-                                shade: 0.2,
-                                shadeClose: true,
-                                btn: ['火速围观', '残忍拒绝'],
-                                yes: function (index, layero) {
-                                    window.top.document.getElementById("console").click()
-                                    layer.close(index)
+                        if (data.code != '0') {
+                            $("[name='plan']").empty()
+                            $("[name='plan']").append("<option value=''>选择计划</option>")
+                            layui.form.render('select')
+                        } else {
+                            data = data.data
+                            $("[name='plan']").empty()
+                            if (data.length != 0) {
+                                for (var index = 0; index < data.length; index++) {
+                                    $("[name='plan']").append("<option value='" + data[index]['id'] + "'>" + data[index]['name'] + "</option>")
                                 }
-                            });
+                            } else {
+                                $("[name='plan']").append("<option value=''>该项目下没有计划</option>")
+                            }
+                            //  chart = echarts.init(document.getElementById('bar'), 'white', {renderer: 'canvas'});
+                            //   fetchData(chart)
+                            layui.form.render('select')
                         }
+                    }
+                )
+            });
+            /**
+             form.on('select(plan)', function (data) {
+                planid = $("[name='plan']").val().substr(5);
+                fetchData(chart)
+            });
+
+             function fetchData() {  //获取图表
+                planid = $("[name='plan']").val().substr(5)
+                if (planid != '') {
+                    common.ajax('/homepage/reportchart/', 'post', 'json', {
+                        planid: $("[name='plan']").val().substr(5)
+                    }, function (result) {
+                        chart.setOption(result.data);
                     })
+                }
             }
-        })
-
-
-        $('#editplan').click(function () {
-            var planid = $("[name='plan']").val().substr(5)
-            if (planid == '') {
-                layer.msg("请选择项目和计划！")
-            } else {
-                window.top.document.getElementById("tree-link").click()
-            }
-        });//没啥用
-
-
-        $('#setplan').click(
-            function () {
+             **/
+            $('#runplan').click(function () {
                 var planid = $("[name='plan']").val().substr(5)
                 if (planid == '') {
                     layer.msg("请选择项目和计划！")
                 } else {
-                    layui.form.render()
-                    layer.open({
-                        type: 1,
-                        title: "jenkins配置",
-                        content: $('#addhtml'),
-                        area: ['600px', '300px'],
-                        offset: 'auto',
-                        closeBtn: 2,
-                        shade: [0.1, '#393D49'],
-                        shadeClose: true,
-                        btn: ['我还没做好', '取消'],
-                        yes: function (index, layero) {
-                            common.ajax('/homepage/jenkinsadd/', 'post', 'json', {
-                                'product': $("[name='product']").val(),
-                                'jenkinsurl': $("[name='jenkinsurl']").val(),
-                                'jobname': $("[name='jobname']").val(),
-                                'servicename': $("[name='servicename']").val()
-                            }, function (res) {
-                                res = JSON.parse(res)
-                                if (res.code == 0) {
-                                    layer.alert(e.msg, {icon: 1, time: 3000})
-                                } else {
-                                    layer.alert(e.msg, {icon: 5, time: 3000})
-                                }
-                            })
-                        },
-                        btn2: function (index, layero) {
-                            layer.close(index)
-                        },
-                        cancel: function (index, layero) {
-                            layer.close(index)
+                    common.ajax('/manager/runplan', 'post', 'json', {ids: planid},
+                        function (data) {
+                            data = JSON.parse(data)
+                            if (data.code == 0) {
+                                var mes = "你的任务正在运行中..."
+                                layer.msg(mes, {
+                                    time: 30000, //20s后自动关闭
+                                    shade: 0.2,
+                                    shadeClose: true,
+                                    btn: ['火速围观', '残忍拒绝'],
+                                    yes: function (index, layero) {
+                                        window.top.document.getElementById("console").click()
+                                        layer.close(index)
+                                    }
+                                });
+                            }
+                        })
+                }
+            })
+            $('#editplan').click(function () {
+                var planid = $("[name='plan']").val().substr(5)
+                if (planid == '') {
+                    layer.msg("请选择项目和计划！")
+                } else {
+                    window.top.document.getElementById("tree").click()
+                }
+            });//没啥用
+            $('#repoetplan').click(function () {
+                var planid = $("[name='plan']").val().substr(5)
+                if (planid == '') {
+                    layer.msg("请选择项目和计划！")
+                } else {
+                    common.ajax('/homepage/querytaskid/', 'post', 'json', {
+                        'planid': planid
+                    }, function (data) {
+                        data = JSON.parse(data)
+                        taskid = data.data
+                        if (data.code != 0) {
+                            layer.msg(data.msg);
+                        } else {
+                            var resulturl = '/manager/querytaskdetail/?taskid=' + taskid
+                            //window.open(resulturl)
+                            layer.open({
+                                type: 2,
+                                title: false,
+                                shade: [0],
+                                area: ['90%', '90%'],
+                                anim: 2,
+                                shadeClose: true,
+                                content: [resulturl, 'yes'], //iframe的url，no代表不显示滚动条
+                            });
                         }
                     })
                 }
+            })
+            $("#process").click(function () {
+                var planid = $("[name='plan']").val().substr(5)
+                if (planid == '') {
+                    layer.msg("请选择项目和计划！")
+                } else {
+                    common.ajax('/homepage/querytaskid/', 'post', 'json', {
+                        'planid': planid
+                    }, function (data) {
+                        data = JSON.parse(data)
+                        taskid = data.data
+                        if (data.code != 0) {
+                            layer.msg(data.msg);
+                        } else {
+                            layer.open({
+                                type: 1,
+                                id: "log-process",
+                                title: false,
+                                shade: [0],
+                                area: ['90%', '90%'],
+                                anim: 2,
+                                shadeClose: true,
+                                content: $("#seeprocess"),
+                                success: function () {
+                                    showlog(taskid)
+                                }
+                            });
+                        }
+                    })
+                }
+            })
+
+            function showlog(taskid) {
+                $.ajax({
+                    url: '/homepage/process/',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {'taskid': taskid},
+                    success: function (res) {
+                        res = JSON.parse(res)
+                        var log_text = res.data
+                        var is_done = res.msg
+                        $("#log_text").html(log_text);
+                        var ta = document.getElementById('log-process');
+                        ta.scrollTop = ta.scrollHeight;//定位到最后
+                        if (is_done != 'yes') {
+                            window.setTimeout(showlog(taskid), 500);
+                        }
+                        return false;
+                    }
+                });
             }
-        );
 
-
-        $('#repoetplan').click(function () {
-            var id = $("[name='plan']").val().substr(5)
-            var planid = $("[name='plan']").val().substr(5)
-            if (planid == '') {
-                layer.msg("请选择项目和计划！")
-            } else {
-                common.ajax('/homepage/querytaskid/', 'post', 'json', {
-                    'planid': id
-                }, function (data) {
-                    data = JSON.parse(data)
-                    taskid = data.data
-                    console.log(taskid)
-                    if (taskid === undefined) {
-                        layer.msg('任务还没有运行过!');
+            $("#setplan").click(function () {
+                var planid = $("[name='plan']").val().substr(5)
+                if (planid == '') {
+                    layer.msg("请选择项目和计划！")
+                } else {
+                    layer.open({
+                        title: '报告通知配置',
+                        type: 1,
+                        area: ['800px', '450px'],
+                        content: $('#settings'),
+                        btn: ['确定', '取消'],
+                        success: function () {
+                            $("#mailconfig")[0].reset()
+                            layui.form.render()
+                            common.ajax('/manager/queryonemailconfig/', 'post', 'json', {id: planid}, function (ee) {
+                                op = ''
+                                if (typeof (ee) != 'string') {
+                                    if (ee.code == 0) {
+                                        //赋值form
+                                        op = '编辑'
+                                        console.log(ee.data)
+                                        $("[name='color_scheme']").val(ee.data['color_scheme'])
+                                        layui.form.render('select');
+                                        $("[name='description']").val(ee.data['description'])
+                                        $("[name='rich_text']").val(ee.data['rich_text'])
+                                        $("[name='to_receive']").val(ee.data['to_receive'])
+                                        $("[name='cc_receive']").val(ee.data['cc_receive'])
+                                        $("[name='sender_name']").val(ee.data['sender_name'])
+                                        $("[name='sender_nick']").val(ee.data['sender_nick'])
+                                        $("[name='sender_pass']").val(ee.data['sender_pass'])
+                                        $("[name='smtp_host']").val(ee.data['smtp_host'])
+                                        $("[name='smtp_port']").val(ee.data['smtp_port'])
+                                        $("[name='dingdingtoken']").val(ee.data['dingdingtoken'])
+                                    }
+                                } else {
+                                    ee = JSON.parse(ee)
+                                    if (ee.code == 1) {
+                                        op = '新建'
+                                        console.log('还未关联邮件 新建一个')
+                                    }
+                                }
+                            })
+                        },
+                        yes: function (index, layero) {
+                            success = function (data) {
+                                data = JSON.parse(data)
+                                if (data.code == 0) {
+                                    layer.close(index)
+                                    layer.alert(data.msg, {icon: 1, time: 1500})
+                                } else {
+                                    layer.alert(data.msg, {icon: 2, time: 2000})
+                                }
+                            }
+                            _post("/manager/editmailconfig/", {
+                                id: planid,
+                                color_scheme: $("[name='color_scheme']").val(),
+                                description: $("[name='description']").val(),
+                                // rich_text:$("[name='rich_text']").val(),
+                                rich_text: layedit.getContent(le),
+                                to_receive: $("[name='to_receive']").val(),
+                                cc_receive: $("[name='cc_receive']").val(),
+                                sender_name: $("[name='sender_name']").val(),
+                                sender_nick: $("[name='sender_nick']").val(),
+                                sender_pass: $("[name='sender_pass']").val(),
+                                smtp_port: $("[name='smtp_port']").val(),
+                                smtp_host: $("[name='smtp_host']").val(),
+                                dingdingtoken: $("[name='dingdingtoken']").val(),
+                                // is_send_mail:$("[name=apply]").attr('checked')==false?'close':'open',
+                            }, success)
+                        }
+                    });
+                }
+            })
+            $("#sendrepoet").click(function () {
+                common.ajax('/homepage/sendreport/', 'post', 'json', {'planid': $("[name='plan']").val().substr(5)}, function (date) {
+                    date = JSON.parse(data)
+                    if (data.code == 0) {
+                        layer.alert("发送成功！", {icon: 1, time: 1500})
                     } else {
-                        var resulturl = '/manager/querytaskdetail/?taskid=' + taskid
-                        //window.open(resulturl)
-                        layer.open({
-                            type: 2,
-                            title: false,
-                            shade: [0],
-                            area: ['1080px', '480px'],
-                            anim: 2,
-                            shadeClose: true,
-                            content: [resulturl, 'yes'], //iframe的url，no代表不显示滚动条
-                        });
+                        layer.alert(data.msg, {icon: 2, time: 2000})
                     }
                 })
+            })
+
+
+            form.on('select(plan)', function (data) {
+                common.ajax('/homepage/reportchart/', 'post', 'json', {
+                    planid: $("[name='plan']").val().substr(5)
+                }, function (result) {
+                    result = JSON.parse(result)
+                    console.log(result.data[0])
+
+                    title = result.data[0][1]
+                    x = [result.data[0][7]]
+                    success = [result.data[0][2]]
+                    fail = [result.data[0][3]]
+                    skip = [result.data[0][4]]
+                    error=[result.data[0][9]]
+                    success_rate=[result.data[0][8]]
+
+
+                    echartsRecords = echarts.init(document.getElementById('echarts-records'), 'walden');
+                    var optionRecords = {
+                        title: {
+                            text: title
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'cross',
+                                label: {
+                                    backgroundColor: '#6a7985'
+                                }
+                            },
+                        },
+                        legend: {
+                            data: ['成功数', '失败数', '错误数', '跳过数', '成功率']
+                        },
+                        toolbox: {
+                            feature: {
+                                saveAsImage: {}
+                            }
+                        },
+                        grid: {
+                            left: '3%',
+                            right: '4%',
+                            bottom: '3%',
+                            containLabel: true
+                        },
+                        xAxis: [
+                            {
+                                type: 'category',
+                                boundaryGap: false,
+                                data: x
+                            }
+                        ],
+                        yAxis: [
+                            {
+                                type: 'value',
+                                name: '用例数',
+                                position: 'left',
+                            },
+                            {
+                                type: 'value',
+                                name: '成功率',
+                                min: 0,
+                                max: 100,
+                                position: 'right',
+                                axisLabel: {
+                                    formatter: '{value}%'
+                                }
+                            },
+
+                        ],
+                        series: [
+                            {
+                                name: '成功数',
+                                type: 'line',
+                                stack: '总量',
+                                areaStyle: {},
+                                label: {
+                                    normal: {
+                                        show: true,
+                                        position: 'top'
+                                    }
+                                },
+                                data: success
+                            },
+                            {
+                                name: '失败数',
+                                type: 'line',
+                                stack: '总量',
+                                areaStyle: {},
+                                label: {
+                                    normal: {
+                                        show: true,
+                                        position: 'top'
+                                    }
+                                },
+                                data: fail
+                            },
+                            {
+                                name: '错误数',
+                                type: 'line',
+                                stack: '总量',
+                                areaStyle: {},
+                                label: {
+                                    normal: {
+                                        show: true,
+                                        position: 'top'
+                                    }
+                                },
+                                data: error
+                            },
+                            {
+                                name: '跳过数',
+                                type: 'line',
+                                stack: '总量',
+                                areaStyle: {},
+                                label: {
+                                    normal: {
+                                        show: true,
+                                        position: 'top'
+                                    }
+                                },
+                                data: skip
+                            },
+                            {
+                                name: '成功率',
+                                type: 'bar',
+                                stack: '总量',
+                                areaStyle: {},
+                                label: {
+                                    normal: {
+                                        show: true,
+                                        position: 'top'
+                                    }
+                                },
+                                data: success_rate
+                            },
+                        ]
+                    };
+                    echartsRecords.setOption(optionRecords);
+                })
+            });
+
+
+            /**
+             * 报表功能
+             */
+
+
+            // echarts 窗口缩放自适应
+            window.onresize = function () {
+                echartsRecords.resize();
             }
-        })
 
-
-    });
-</script>
-
-
+        });
+    </script>
 </body>
 </html>
-

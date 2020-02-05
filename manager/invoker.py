@@ -189,7 +189,7 @@ def gettaskresult(taskid):
 
 		detail.get("cases").append(caseobj)
 
-	detail['total']=detail['success']+detail['fail']+detail['skip']
+	detail['total']=detail['success']+detail['fail']+detail['skip']+detail['error']
 	if detail['success']==detail['total']:
 		detail['result']='pass'
 	else:

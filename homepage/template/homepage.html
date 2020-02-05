@@ -518,17 +518,21 @@
                     planid: $("[name='plan']").val().substr(5)
                 }, function (result) {
                     result = JSON.parse(result)
-                    console.log(result.data[0])
-
                     title = result.data[0][1]
-                    x = [result.data[0][7]]
-                    success = [result.data[0][2]]
-                    fail = [result.data[0][3]]
-                    skip = [result.data[0][4]]
-                    error=[result.data[0][9]]
-                    success_rate=[result.data[0][8]]
-
-
+                    var x = [];
+                    var success = [];
+                    var fail = [];
+                    var skip = [];
+                    var error = [];
+                    var success_rate = []
+                    for (let i = result.data.length-1; i >= 0; i--) {
+                        x.push(result.data[i][7])
+                        success.push(result.data[i][2])
+                        fail.push(result.data[i][3])
+                        skip.push(result.data[i][4])
+                        error.push(result.data[i][9])
+                        success_rate.push(result.data[i][8])
+                    }
                     echartsRecords = echarts.init(document.getElementById('echarts-records'), 'walden');
                     var optionRecords = {
                         title: {
@@ -599,12 +603,11 @@
                             {
                                 name: '失败数',
                                 type: 'line',
-                                stack: '总量',
                                 areaStyle: {},
                                 label: {
                                     normal: {
-                                        show: true,
-                                        position: 'top'
+                                        //  show: true,
+                                        //   position: 'top'
                                     }
                                 },
                                 data: fail
@@ -612,33 +615,30 @@
                             {
                                 name: '错误数',
                                 type: 'line',
-                                stack: '总量',
                                 areaStyle: {},
                                 label: {
                                     normal: {
-                                        show: true,
-                                        position: 'top'
+                                        // show: true,
+                                        // position: 'top'
                                     }
                                 },
-                                data: error
+                                data: [error]
                             },
                             {
                                 name: '跳过数',
                                 type: 'line',
-                                stack: '总量',
                                 areaStyle: {},
                                 label: {
                                     normal: {
-                                        show: true,
-                                        position: 'top'
+                                        // show: true,
+                                        // position: 'top'
                                     }
                                 },
-                                data: skip
+                                data: [skip]
                             },
                             {
                                 name: '成功率',
-                                type: 'bar',
-                                stack: '总量',
+                                type: 'line',
                                 areaStyle: {},
                                 label: {
                                     normal: {

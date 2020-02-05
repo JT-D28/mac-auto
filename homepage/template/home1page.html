@@ -236,7 +236,7 @@
                         </div>
                     </div>
                     <div class="layui-col-md7">
-                        <div id="bar" hidden style="width:600px; height:400px;"></div>
+                        <div id="bar" style="width:600px; height:400px;"></div>
                     </div>
                 </div>
             </div>
@@ -391,12 +391,14 @@
                     } else {
                         data = data.data
                         $("[name='plan']").empty()
-                        for (var index = 0; index < data.length; index++) {
-                            $("[name='plan']").append("<option value='" + data[index]['id'] + "'>" + data[index]['name'] + "</option>")
-                        }
-                        if (data.length == '0') {
+                        if (data.length != 0) {
+                            for (var index = 0; index < data.length; index++) {
+                                $("[name='plan']").append("<option value='" + data[index]['id'] + "'>" + data[index]['name'] + "</option>")
+                            }
+                        } else {
                             $("[name='plan']").append("<option value=''>该项目下没有计划</option>")
                         }
+                        chart = echarts.init(document.getElementById('bar'), 'white', {renderer: 'canvas'});
                         fetchData(chart)
                         layui.form.render('select')
                     }
@@ -404,29 +406,20 @@
             )
         });
 
-        var chart = echarts.init(document.getElementById('bar'), 'white', {renderer: 'canvas'});
         form.on('select(plan)', function (data) {
             planid = $("[name='plan']").val().substr(5);
             fetchData(chart)
         });
 
         function fetchData() {  //获取图表
-            $.ajax({
-                type: "post",
-                url: "/homepage/reportchart/",
-                data: {
+            planid = $("[name='plan']").val().substr(5)
+            if (planid != '') {
+                common.ajax('/homepage/reportchart/', 'post', 'json', {
                     planid: $("[name='plan']").val().substr(5)
-                },
-                dataType: 'json',
-                success: function (result) {
-                    if (result.code == 1) {
-                        pass
-                    } else {
-                        $("#bar").show()
-                        chart.setOption(result.data);
-                    }
-                }
-            });
+                }, function (result) {
+                    chart.setOption(result.data);
+                })
+            }
         }
 
 

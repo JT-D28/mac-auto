@@ -514,146 +514,162 @@
 
 
             form.on('select(plan)', function (data) {
-                common.ajax('/homepage/reportchart/', 'post', 'json', {
-                    planid: $("[name='plan']").val().substr(5)
-                }, function (result) {
-                    result = JSON.parse(result)
-                    title = result.data[0][1]
-                    var x = [];
-                    var success = [];
-                    var fail = [];
-                    var skip = [];
-                    var error = [];
-                    var success_rate = []
-                    for (let i = result.data.length-1; i >= 0; i--) {
-                        x.push(result.data[i][7])
-                        success.push(result.data[i][2])
-                        fail.push(result.data[i][3])
-                        skip.push(result.data[i][4])
-                        error.push(result.data[i][9])
-                        success_rate.push(result.data[i][8])
+                    var planid = $("[name='plan']").val().substr(5)
+                    if (planid == '') {
+                        layer.msg("请选择项目和计划！")
+                    } else {
+                        common.ajax('/homepage/reportchart/', 'post', 'json', {
+                            planid: $("[name='plan']").val().substr(5)
+                        }, function (result) {
+                            result = JSON.parse(result)
+                            report(result.data, result.code)
+                        })
                     }
-                    echartsRecords = echarts.init(document.getElementById('echarts-records'), 'walden');
-                    var optionRecords = {
-                        title: {
-                            text: title
-                        },
-                        tooltip: {
-                            trigger: 'axis',
-                            axisPointer: {
-                                type: 'cross',
-                                label: {
-                                    backgroundColor: '#6a7985'
-                                }
-                            },
-                        },
-                        legend: {
-                            data: ['成功数', '失败数', '错误数', '跳过数', '成功率']
-                        },
-                        toolbox: {
-                            feature: {
-                                saveAsImage: {}
-                            }
-                        },
-                        grid: {
-                            left: '3%',
-                            right: '4%',
-                            bottom: '3%',
-                            containLabel: true
-                        },
-                        xAxis: [
-                            {
-                                type: 'category',
-                                boundaryGap: false,
-                                data: x
-                            }
-                        ],
-                        yAxis: [
-                            {
-                                type: 'value',
-                                name: '用例数',
-                                position: 'left',
-                            },
-                            {
-                                type: 'value',
-                                name: '成功率',
-                                min: 0,
-                                max: 100,
-                                position: 'right',
-                                axisLabel: {
-                                    formatter: '{value}%'
-                                }
-                            },
+                }
+            );
 
-                        ],
-                        series: [
-                            {
-                                name: '成功数',
-                                type: 'line',
-                                stack: '总量',
-                                areaStyle: {},
-                                label: {
-                                    normal: {
-                                        show: true,
-                                        position: 'top'
-                                    }
-                                },
-                                data: success
+            function report(data, code) {
+                var x = [];
+                var success = [];
+                var fail = [];
+                var skip = [];
+                var error = [];
+                var success_rate = []
+                if (code == 0) {
+                    title = data[0][1]
+                    for (let i = data.length - 1; i >= 0; i--) {
+                        x.push(data[i][7])
+                        success.push(data[i][2])
+                        fail.push(data[i][3])
+                        skip.push(data[i][4])
+                        error.push(data[i][9])
+                        success_rate.push(data[i][8])
+                    }
+                } else {
+                    console.log(data)
+                    title = data
+                }
+                echartsRecords = echarts.init(document.getElementById('echarts-records'), 'walden');
+                var optionRecords = {
+                    title: {
+                        text: title
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross',
+                            label: {
+                                backgroundColor: '#6a7985'
+                            }
+                        },
+                    },
+                    legend: {
+                        data: ['成功数', '失败数', '错误数', '跳过数', '成功率']
+                    },
+                    toolbox: {
+                        feature: {
+                            saveAsImage: {}
+                        }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: [
+                        {
+                            type: 'category',
+                            boundaryGap: false,
+                            data: x
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: 'value',
+                            name: '用例数',
+                            position: 'left',
+                        },
+                        {
+                            type: 'value',
+                            name: '成功率',
+                            min: 0,
+                            max: 100,
+                            position: 'right',
+                            axisLabel: {
+                                formatter: '{value}%'
+                            }
+                        },
+
+                    ],
+                    series: [
+                        {
+                            name: '成功数',
+                            type: 'line',
+                            stack: '总量',
+                            areaStyle: {},
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'top'
+                                }
                             },
-                            {
-                                name: '失败数',
-                                type: 'line',
-                                areaStyle: {},
-                                label: {
-                                    normal: {
-                                        //  show: true,
-                                        //   position: 'top'
-                                    }
-                                },
-                                data: fail
+                            data: success
+                        },
+                        {
+                            name: '失败数',
+                            type: 'line',
+                            areaStyle: {},
+                            label: {
+                                normal: {
+                                    //  show: true,
+                                    //   position: 'top'
+                                }
                             },
-                            {
-                                name: '错误数',
-                                type: 'line',
-                                areaStyle: {},
-                                label: {
-                                    normal: {
-                                        // show: true,
-                                        // position: 'top'
-                                    }
-                                },
-                                data: [error]
+                            data: fail
+                        },
+                        {
+                            name: '错误数',
+                            type: 'line',
+                            areaStyle: {},
+                            label: {
+                                normal: {
+                                    // show: true,
+                                    // position: 'top'
+                                }
                             },
-                            {
-                                name: '跳过数',
-                                type: 'line',
-                                areaStyle: {},
-                                label: {
-                                    normal: {
-                                        // show: true,
-                                        // position: 'top'
-                                    }
-                                },
-                                data: [skip]
+                            data: [error]
+                        },
+                        {
+                            name: '跳过数',
+                            type: 'line',
+                            areaStyle: {},
+                            label: {
+                                normal: {
+                                    // show: true,
+                                    // position: 'top'
+                                }
                             },
-                            {
-                                name: '成功率',
-                                type: 'line',
-                                areaStyle: {},
-                                label: {
-                                    normal: {
-                                        show: true,
-                                        position: 'top'
-                                    }
-                                },
-                                yAxisIndex: 1,
-                                data: success_rate
+                            data: [skip]
+                        },
+                        {
+                            name: '成功率',
+                            type: 'line',
+                            areaStyle: {},
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'top'
+                                }
                             },
-                        ]
-                    };
-                    echartsRecords.setOption(optionRecords);
-                })
-            });
+                            yAxisIndex: 1,
+                            data: success_rate
+                        },
+                    ]
+                };
+                echartsRecords.setOption(optionRecords);
+
+            }
 
 
             /**

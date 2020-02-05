@@ -202,55 +202,41 @@ def sendreport(request):
 
 @csrf_exempt
 def reportchart(request):
+    planid = request.POST.get("planid")
     code = 0
-    # task_ids = []
-    # task_ids1 = []
-    # li = []
-    # taskids = list(
-    #     ResultDetail.objects.values('taskid').filter(plan_id=request.POST.get('planid')).order_by('-createtime'))
-    # for i in taskids:  # takdid转化成list
-    #     task_ids.append(i['taskid'])
-    # for j in task_ids:  # 去重复
-    #     if j not in task_ids1:
-    #         task_ids1.append(j)
-    sql = ('''
-    SELECT
-        *,
-        ( success * 100 / total ) rate,
-        ( total - success - FAIL - skip ) error 
-    FROM
-        (
-    SELECT
-        plan_id,
-        manager_plan.description,
-        sum( CASE WHEN result = "success" THEN 1 ELSE 0 END ) AS success,
-        sum( CASE WHEN result = "fail" THEN 1 ELSE 0 END ) AS FAIL,
-        sum( CASE WHEN result = "skip" THEN 1 ELSE 0 END ) AS skip,
-        count( result ) AS total,
-        taskid,
-        strftime('%%m-%%d %%H:%%M',manager_resultdetail.createtime) as time
-    FROM
-        manager_resultdetail
-        LEFT JOIN manager_plan ON manager_resultdetail.plan_id = manager_plan.id 
-        WHERE plan_id = %s 
-    GROUP BY
-        taskid 
-        ) AS m  ORDER BY time DESC  LIMIT 10 
-        ''')
-    with connection.cursor() as cursor:
-        cursor.execute(sql, [request.POST.get('planid')])
-        row = cursor.fetchall()
-        print(row)
-
-    # for num in task_ids1:
-    #     t = MyThread(add, args=(num,))
-    #     li.append(t)
-    # for i in li:
-    #     i.start()
-    # et = time.time()
-    # # for t in li:
-    # #     t.join()
-    return JsonResponse(simplejson(code=code, data=row), safe=False)
+    taskids = list(ResultDetail.objects.values('taskid').filter(plan_id=planid))
+    if taskids:
+        sql = ('''
+        SELECT
+            *,
+            ( success * 100 / total ) rate,
+            ( total - success - FAIL - skip ) error 
+        FROM
+            (
+        SELECT
+            plan_id,
+            manager_plan.description,
+            sum( CASE WHEN result = "success" THEN 1 ELSE 0 END ) AS success,
+            sum( CASE WHEN result = "fail" THEN 1 ELSE 0 END ) AS FAIL,
+            sum( CASE WHEN result = "skip" THEN 1 ELSE 0 END ) AS skip,
+            count( result ) AS total,
+            taskid,
+            strftime('%%m-%%d %%H:%%M',manager_resultdetail.createtime) as time
+        FROM
+            manager_resultdetail
+            LEFT JOIN manager_plan ON manager_resultdetail.plan_id = manager_plan.id 
+            WHERE plan_id = %s 
+        GROUP BY
+            taskid 
+            ) AS m  ORDER BY time DESC  LIMIT 10 
+            ''')
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [planid])
+            row = cursor.fetchall()
+            print(row)
+        return JsonResponse(simplejson(code=code, data=row), safe=False)
+    else:
+        return JsonResponse(simplejson(code=1, data="任务还没有运行过！"), safe=False)
 
 
 def add(num):
@@ -267,8 +253,6 @@ def add(num):
         "reporttime": result["reporttime"],
     }
     return _report
-
-
 
 
 @csrf_exempt

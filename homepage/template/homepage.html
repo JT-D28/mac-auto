@@ -294,7 +294,14 @@
                             }
                             //  chart = echarts.init(document.getElementById('bar'), 'white', {renderer: 'canvas'});
                             //   fetchData(chart)
+                            common.ajax('/homepage/reportchart/', 'post', 'json', {
+                                planid: $("[name='plan']").val().substr(5)
+                            }, function (result) {
+                                result = JSON.parse(result)
+                                report(result.data, result.code)
+                            })
                             layui.form.render('select')
+
                         }
                     }
                 )
@@ -669,7 +676,7 @@
                             name: '成功率',
                             gridIndex: 1,
                             splitNumber: 2,
-                            axisLabel: {show: true,formatter: '{value}%'},
+                            axisLabel: {show: true, formatter: '{value}%'},
                             axisLine: {show: true},
                             axisTick: {show: false},
                             splitLine: {show: false},

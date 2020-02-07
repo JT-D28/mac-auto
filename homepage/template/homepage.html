@@ -64,16 +64,16 @@
     <div class="layui-row layui-col-space15">
         <div class="layui-col-xs12 layui-col-md3">
             <div class="layui-card">
-                <div class="layui-card-header">
+                <div class="layui-card-header" style="padding: 0 0">
                     <form class="layui-form" action="">
-                        <div class="layui-form-item">
-                            <div class="layui-input-inline" style="width: 40%;margin-right: 10px">
+                        <div class="layui-form-item" style="margin-bottom: 0">
+                            <div class="layui-input-inline" style="width: 40%;margin-right: 5%">
                                 <select id='product' name="product" lay-filter="product"
                                         lay-verify="required" lay-search>
                                     <option value=''>选择项目</option>
                                 </select>
                             </div>
-                            <div class="layui-input-inline" style="width: 52%;margin-right: 0px">
+                            <div class="layui-input-inline" style="width: 55%;margin-right: 0px">
                                 <select name="plan" lay-filter="plan" lay-verify="required" lay-search>
                                     <option value=''>选择计划</option>
                                 </select>
@@ -668,7 +668,6 @@
                     ]
                 };
                 echartsRecords.setOption(optionRecords);
-
             }
 
 

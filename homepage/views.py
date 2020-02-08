@@ -13,8 +13,7 @@ from manager.models import Product, Plan, ResultDetail
 import json
 from random import randrange
 
-from pyecharts import options as opts
-from pyecharts.charts import Pie, Bar, TreeMap, Line
+
 
 
 @csrf_exempt

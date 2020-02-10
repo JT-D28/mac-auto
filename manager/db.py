@@ -157,7 +157,7 @@ class Mysqloper:
             conname=ql[1]
 
             dbnamecache=get_top_common_config(taskid)
-            if dbnamecache:
+            if dbnamecache ==conname:
                 conname=dbnamecache
 
 
@@ -192,7 +192,9 @@ class Mysqloper:
                         r=[]
 
                         return('error',"sql[%s]查询结果返回存在多组数据或多个字段 不支持"%sql)
-
+                        
+                elif sqlresult==None:
+                    return ('success','')
 
                 else:
                     return ('fail','查询结果为空[%s]'%sql)

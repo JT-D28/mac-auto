@@ -149,43 +149,44 @@ def gettaskresult(taskid):
 			businessobj['num']='%s_%s'%(step_weight,business_index)
 			stepname=business.businessname
 			result=x.result
-			if 'success'==result:
-				detail['success']=detail['success']+1
+			if 'omit' != result:
+				if 'success'==result:
+					detail['success']=detail['success']+1
 
-			elif 'fail'==result:
-				detail['fail']=detail['fail']+1	
+				elif 'fail'==result:
+					detail['fail']=detail['fail']+1
 
-			elif 'skip'==result:	
-				detail['skip']=detail['skip']+1
+				elif 'skip'==result:
+					detail['skip']=detail['skip']+1
 
-			elif 'error'==result:
-				detail['error']=detail['error']+1
-			error=x.error
-			businessobj['businessname']=x.businessdata.businessname
-			businessobj['result']=result
-			businessobj['error']=error
-			#businessobj['api']=re.findall('\/(.*?)[?]',step.url)[0] or step.body
-			stepinst=None
-			try:
-				error,stepinst=gettestdatastep(business.id)
-				print('%s=>%s,%s'%(business.id,error,stepinst))
-				businessobj['stepname']=stepinst.description
-				businessobj['api']='/'+'/'.join(re.findall('http://(.*)',stepinst.url)[0].split('/')[1:])
-			except:
-				print('获取步骤api和名称异常=>',traceback.format_exc())
-				businessobj['api']=stepinst.body
+				elif 'error'==result:
+					detail['error']=detail['error']+1
+				error=x.error
+				businessobj['businessname']=x.businessdata.businessname
+				businessobj['result']=result
+				businessobj['error']=error
+				#businessobj['api']=re.findall('\/(.*?)[?]',step.url)[0] or step.body
+				stepinst=None
+				try:
+					error,stepinst=gettestdatastep(business.id)
+					print('%s=>%s,%s'%(business.id,error,stepinst))
+					businessobj['stepname']=stepinst.description
+					businessobj['api']='/'+'/'.join(re.findall('http://(.*)',stepinst.url)[0].split('/')[1:])
+				except:
+					print('获取步骤api和名称异常=>',traceback.format_exc())
+					businessobj['api']=stepinst.body
 
-			businessobj['itf_check']=business.itf_check
-			businessobj['db_check']=business.db_check
-			businessobj['spend']=ResultDetail.objects.get(taskid=taskid,plan=plan,case=case,step=stepinst,businessdata=business).spend
-			spend_total+=int(businessobj['spend'])
-			if int(businessobj['spend'])<=int(detail['min']):
-				detail['min']=businessobj['spend']
+				businessobj['itf_check']=business.itf_check
+				businessobj['db_check']=business.db_check
+				businessobj['spend']=ResultDetail.objects.get(taskid=taskid,plan=plan,case=case,step=stepinst,businessdata=business).spend
+				spend_total+=int(businessobj['spend'])
+				if int(businessobj['spend'])<=int(detail['min']):
+					detail['min']=businessobj['spend']
 
-			if int(businessobj['spend'])>int(detail['max']):
-				detail['max']=businessobj['spend']
+				if int(businessobj['spend'])>int(detail['max']):
+					detail['max']=businessobj['spend']
 
-			caseobj.get('steps').append(businessobj)
+				caseobj.get('steps').append(businessobj)
 
 		detail.get("cases").append(caseobj)
 
@@ -235,7 +236,7 @@ def runplans(username,taskid,planids,kind=None):
 	for planid in planids:
 		threading.Thread(target=runplan,args=(username,taskid,planid,kind,)).start()
 
-	
+
 # def runplan(callername,taskid,planid,kind=None):
 # 	'''
 
@@ -258,7 +259,7 @@ def runplans(username,taskid,planids,kind=None):
 # 		viewcache(taskid,username,kind,"开始执行计划[<span style='color:#FF3399'>%s</span>]"%plan.description)
 # 		#cases=list(plan.cases.all())
 # 		cases=[Case.objects.get(id=x.follow_id)  for x in ordered(list(Order.objects.filter(main_id=planid,kind='case')))]
-		
+
 # 		#print(cases)
 # 		result,error="",""
 # 		caseresult=[]
@@ -399,7 +400,7 @@ def _runcase(username,taskid,case,plan,planresult,kind):
 				result,error=_step_process_check(username,taskid,order,kind)
 				spend=int((time.time()-start)*1000)
 
-				if result is not 'success':
+				if result  not in ('success','omit'):
 					groupskip.append(groupid)
 			else:
 				result,error='skip','skip'
@@ -431,17 +432,21 @@ def _runcase(username,taskid,case,plan,planresult,kind):
 				result="<span class='layui-bg-red'>%s</span>"%result
 			elif "skip" in result:
 				result="<span class='layui-bg-orange'>%s</span>"%result
+			elif "omit" in result:
+				result="<span class='layui-bg-green'>%s</span>"%result
 			##
 			#print(len(result),len('success'),result=='success')
 			if 'success' in result:
 				viewcache(taskid,username,kind,"执行结果%s"%(result))
+			elif 'omit' in result:
+				continue
 			else:
 				if error is False:
 					error='表达式不成立'
 				viewcache(taskid,username,kind,"执行结果%s 原因=>%s"%(result,error))
 
 
-	casere=(len([x for x in caseresult if x=='success'])==len([x for x in caseresult]))
+	casere=(len([x for x in caseresult if x in ('success','omit')])==len([x for x in caseresult]))
 	planresult.append(casere)
 	if casere:
 		viewcache(taskid, username,kind,"结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-green'>success</span>"%case.description)
@@ -526,7 +531,7 @@ def runplan(callername,taskid,planid,kind=None):
 
 # 		viewcache(taskid,username,kind,"开始执行计划[<span style='color:#FF3399'>%s</span>]"%plan.description)
 # 		cases=[Case.objects.get(id=x.follow_id)  for x in ordered(list(Order.objects.filter(main_id=planid,kind='plan_case')))]
-		
+
 # 		result,error="",""
 # 		caseresult=[]
 # 		planresult=[]
@@ -634,7 +639,7 @@ def runplan(callername,taskid,planid,kind=None):
 # 	finally:
 # 		clear_data(username, _tempinfo)
 
-			
+
 def _step_process_check(callername,taskid,order,kind):
 	"""
 	return (resultflag,msg)
@@ -646,8 +651,8 @@ def _step_process_check(callername,taskid,order,kind):
 		businessdata=BusinessData.objects.get(id=order.follow_id)
 
 		if businessdata.count==0:
-			viewcache(taskid,callername,None,'[%s]执行次数=0 略过..'%businessdata.businessname)
-			return ('success',"测试点[%s]执行次数=0 略过."%businessdata.businessname)
+			#viewcache(taskid,callername,None,'[%s]执行次数=0 略过..'%businessdata.businessname)
+			return ('omit',"测试点[%s]执行次数=0 略过."%businessdata.businessname)
 		preplist=businessdata.preposition.split("|")
 		postplist=businessdata.postposition.split("|")
 		db_check=businessdata.db_check
@@ -680,12 +685,12 @@ def _step_process_check(callername,taskid,order,kind):
 			viewcache(taskid,username,kind,"接口校验配置=>%s"%itf_check)
 
 			text,statuscode,itf_msg='',-1,''
-	
+
 			if step.content_type=='xml':
 				text,statuscode,itf_msg=_callsocket(taskid, user, step.url,body=str(paraminfo))
 			else:
-				text,statuscode,itf_msg=_callinterface(taskid,user,step.url,str(paraminfo),step.method,step.headers,step.content_type,step.temp,kind)			
-			
+				text,statuscode,itf_msg=_callinterface(taskid,user,step.url,str(paraminfo),step.method,step.headers,step.content_type,step.temp,kind)
+
 
 			viewcache(taskid,username,kind,"<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>"%text)
 
@@ -713,9 +718,9 @@ def _step_process_check(callername,taskid,order,kind):
 						res,error=_compute(taskid,user,itf_check,type='itf_check',target=text,kind=kind,parse_type='xml')
 
 					if res is not 'success':
-						return ('fail',error)	
+						return ('fail',error)
 				# else:
-				# 	viewcache(taskid,username,kind,'接口校验没配置 跳过校验')	
+				# 	viewcache(taskid,username,kind,'接口校验没配置 跳过校验')
 
 				return ('success','')
 			else:
@@ -725,7 +730,7 @@ def _step_process_check(callername,taskid,order,kind):
 			if itf_msg:
 				print('################itf-msg###############'*20)
 				return ('fail',itf_msg)
-			
+
 		elif step.step_type=="function":
 			viewcache(taskid,username,kind,"数据校验配置=>%s"%db_check)
 			# viewcache("接口返回校验=>%s"%itf_check)
@@ -734,7 +739,7 @@ def _step_process_check(callername,taskid,order,kind):
 			# builtinmethods=[x.name for x in getbuiltin() ]
 			# builtin=(methodname in builtinmethods)
 
-			
+
 			res,msg=_callfunction(user,step.related_id,step.body,paraminfo,taskid=taskid)
 
 			# print('fjdajfd=>',res,msg)
@@ -762,7 +767,7 @@ def _step_process_check(callername,taskid,order,kind):
 # 	函数->数组
 # 	接口->字典
 # 	'''
-		
+
 # 	if businessdatainst is None:
 # 		return ('success',[])
 
@@ -834,11 +839,11 @@ def _callsocket(taskid,user,url,body=None,kind=None,timeout=1024):
 			recvdata += data
 		except:
 			print(traceback.format_exc())
-	
+
 		finally:
 			sock.close()
 			return recvdata
-	
+
 	try:
 
 		##
@@ -859,12 +864,12 @@ def _callsocket(taskid,user,url,body=None,kind=None,timeout=1024):
 		host=url.split(':')[0].strip()
 		port=url.split(':')[1].strip()
 		time.sleep(2)
-		cs.connect((str(host),int(port)))		
+		cs.connect((str(host),int(port)))
 		# ms=re.findall('\<\/.*?\>', body)
 		# for m in ms:
 		# 	body=body.replace(m, m+'\n')
 
-		
+
 		length=str(len(body.encode('GBK'))).rjust(8)
 		print('Content-Length=>',length)
 		sendmsg = 'Content-Length:' + str(length) + '\r\n' + body
@@ -874,7 +879,7 @@ def _callsocket(taskid,user,url,body=None,kind=None,timeout=1024):
 		viewcache(taskid, user.name,None,"<span style='color:#009999;'>请求端口=>%s</span>"%port)
 		viewcache(taskid, user.name,None,"<span style='color:#009999;'>发送报文=><xmp style='color:#009999;'>%s</xmp></span>"%sendmsg)
 		# viewcache(taskid, user.name,None,"<span style='color:#009999;'>body=>%s</span>"%sendmsg)
-		
+
 		cs.sendall(bytes(sendmsg,encoding='GBK'))
 
 		# recv_bytes=cs.recv(1024)
@@ -941,9 +946,9 @@ def _callinterface(taskid,user,url,body=None,method=None,headers=None,content_ty
 		return ('','','接口请求头格式不对 请检查')
 
 	##
-	
+
 	default={'User-Agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36"}
-	
+
 	if content_type=='json':
 		#body=body.encode('utf-8')
 		default["Content-Type"]='application/json;charset=UTF-8'
@@ -1025,7 +1030,7 @@ def _callfunction(user,functionid,call_method_name,call_method_params,taskid=Non
 
 	print('测试函数调用=>',call_str)
 	ok=_replace_variable(user, call_str,src=1,taskid=taskid)
-	
+
 	res,call_str=ok[0],ok[1]
 	if res is not 'success':
 		return (res,call_str)
@@ -1070,7 +1075,7 @@ def _call_extra(user,call_strs,taskid=None,kind='前置操作'):
 		if status is not 'success':
 			return (status,res)
 
-			
+
 			#viewcache(taskid,username,kind,"数据校验配置=>%s"%db_check)
 
 	return ('success','操作[%s]全部执行完毕'%call_strs)
@@ -1079,7 +1084,7 @@ def _call_extra(user,call_strs,taskid=None,kind='前置操作'):
 
 def _compute(taskid,user,checkexpression,type=None,target=None,kind=None,parse_type='json'):
 	"""
-	计算各种校验表达式 
+	计算各种校验表达式
 	多个时 分隔符 |
 	返回(success/fail,执行结果/消息)
 	"""
@@ -1103,7 +1108,7 @@ def _compute(taskid,user,checkexpression,type=None,target=None,kind=None,parse_t
 				resultlist.append(ress)
 
 		elif type=="itf_check":
-			# 
+			#
 
 			for item in checklist:
 				old=item
@@ -1141,7 +1146,7 @@ def _compute(taskid,user,checkexpression,type=None,target=None,kind=None,parse_t
 
 	except Exception as e:
 		return('error','计算表达式[%s]异常[%s]'%(checkexpression,traceback.format_exc()))
-		
+
 def _separate_expression(expectedexpression):
 	# _op=('==','>=','<=','!=')
 	for op in _op:
@@ -1151,7 +1156,7 @@ def _separate_expression(expectedexpression):
 			return k,v,op
 
 	raise RuntimeError("不能分割的表达式=>%s"%expectedexpression)
-	
+
 def _legal(ourexpression):
 
 	res=None
@@ -1164,10 +1169,10 @@ def _legal(ourexpression):
 
 		return "|".join(res)
 
-			
+
 	else:
 		res=_replace(ourexpression)
-	
+
 	return res
 
 
@@ -1237,12 +1242,12 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 		res=None
 
 		if need_chain_handle is True:
-			
+
 			k,v,op=_separate_expression(exp)
 			print('获取的项=>',k,v,op)
 			data=data.replace('null',"'None'").replace('true',"'True'").replace("false","'False'")
 			# print('data=>',data)
-			
+
 			p=None
 
 			if parse_type=='json':
@@ -1290,7 +1295,7 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 			if isinstance(rr, (tuple,)):
 				raise RuntimeError('需要特殊处理')
 
-				
+
 			print("实际计算表达式[%s] 结果[%s]"%(exp,rr))
 
 		return ('success','') if rr is True else ('fail','表达式%s校验失败'%ourexpression)
@@ -1318,7 +1323,7 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 						res= eval("'%s'%s'%s'"%(str(key),'<=',str(value)))
 					else:
 						res= eval("'%s'%s'%s'"%(str(key),op,str(value)))
-					
+
 					print('判断结果=>',res)
 					if res is True:
 						return ('success',res)
@@ -1379,7 +1384,7 @@ def _replace_variable(user,str_,src=1,taskid=None):
 			elif len(gain)>0 and len(value)==0:
 				v=None
 				if is_cache is True:
-					v=__varcache.get('%s.%s'%(user,varname)) 
+					v=__varcache.get('%s.%s'%(user,varname))
 					if v is None:
 						v=_gain_compute(user,gain,src=src,taskid=taskid)
 						if v[0] is not 'success':
@@ -1394,7 +1399,7 @@ def _replace_variable(user,str_,src=1,taskid=None):
 						return v
 					else:
 						v=v[1]
-	
+
 					# if v is None:
 					# 	return ('error','')
 					old=old.replace('{{%s}}'%varname,str(v))
@@ -1478,7 +1483,7 @@ def _is_sql_call(call_str):
 
 def _gain_compute(user,gain_str,src=1,taskid=None):
 	"""
-	获取方式计算  
+	获取方式计算
 	返回(success,计算结果)
 	返回(fail,错误消息)
 	src:1:from sql 2:from function call
@@ -1521,7 +1526,7 @@ def _gain_compute(user,gain_str,src=1,taskid=None):
 				return gain_str_rv
 
 			gain_str=gain_str_rv[1]
-			if src==1:			
+			if src==1:
 				if ';' in gain_str:
 					return op.db_execute2(gain_str,taskid=taskid,callername=user.name)
 				else:
@@ -1595,7 +1600,7 @@ def _save_builtin_property(taskid,username):
 	 #${PLAN_SUCCESS_RATE}
 	'''
 	detail=gettaskresult(taskid)
-	
+
 	base_url=settings.BASE_URL
 	url="%s/manager/querytaskdetail/?taskid=%s"%(base_url,taskid)
 	save_data(username,_tempinfo,'TASK_ID', detail['taskid'])
@@ -1666,7 +1671,7 @@ def save_data(username,d,k,v):
 
 def clear_data(username,d):
 	"""
-	清空用户相关缓存信息 
+	清空用户相关缓存信息
 	"""
 	for key in list(d.keys()):
 		if username in key:
@@ -1701,7 +1706,7 @@ class XMLParser(Struct):
         self.root=ET.fromstring(str(data))
 
     def getValue(self,xpath):
-        
+
         print('查找=>',xpath)
         result=''
         route_path=''
@@ -1764,7 +1769,7 @@ class JSONParser(Struct):
 		#print('==JSONParser 数据转字典=>',self.obj,type(self.obj))
 
 		#print("待匹配数据=>",self.obj)
-	
+
 	def _apply_filter(self,msg):
 		#print("leix=",type(msg))
 		msg=msg.replace("true","True").replace("false","False").replace("null","None")
@@ -1905,7 +1910,7 @@ class MainSender:
 				bodyhtml+='<td style="width:100px;">%s</td>'%step['db_check']
 				bodyhtml+='<td>%s</td>'%step['error']
 				bodyhtml+='</tr>'
-				
+
 			bodyhtml+='</table>'
 
 		return cssstr+rich_text+'<br/>'+'-'*40+'<br/>'+bodyhtml
@@ -1973,10 +1978,10 @@ class MainSender:
 			error=traceback.format_exc()
 
 		print("retret=",ret,error)
-		
-		
+
+
 		return cls._getdescrpition(mail_config.to_receive,ret,error)
-			
+
 	@classmethod
 	def _getdescrpition(cls,to_receive,send_result,error=None):
 		res=None
@@ -2090,7 +2095,7 @@ class Transformer:
 
 			if len(self.data_workbook)>1:
 				self._before_transform_check_flag=('fail','暂时不支持1个配置文件对应多个case文件')
-				return 
+				return
 		except:
 			print(traceback.format_exc())
 			self._before_transform_check_flag=('error','无法区分配置和用例文件')
@@ -2184,12 +2189,12 @@ class Transformer:
 
 
 	def _get_itf_detail_config(self):
-		'''	
+		'''
 		获取接口具体配置信息
 
 		'''
 		res={}
-		
+
 		script_cache=self._get_workbook_sheet_cache(self.config_workbook, 'Scripts')
 		for rowdata in script_cache:
 			try:
@@ -2227,7 +2232,7 @@ class Transformer:
 		title_order_map={}
 		for index in range(len(titles)):
 			title_order_map[str(index)]=str(titles[index])
-		
+
 
 		for rowindex in range(1, sheet_rows):
 			row_map={}
@@ -2409,20 +2414,20 @@ class Transformer:
 
 	def _get_step_names(self):
 		return [x for x in self.data_workbook.sheet_names() if x not in('变量定义','执行数据')]
-		
+
 
 	def _replace_var(self,old):
 		'''
 		1.执行数据参数值
 		2.DB检查数据
-		3.接口检查数据 
+		3.接口检查数据
 		4.数据字段
 		'''
 		# print('【变量转化】=>',old)
 		varlist=re.findall('{[ru,].*}', old)
 		if len(varlist)>0:
 
-			
+
 			for x in varlist:
 				varname=re.findall('{[ru],(.*?)}', x)
 				# print(varname)
@@ -2444,7 +2449,7 @@ class Transformer:
 			for rowdata in global_sheet:
 				# print('global_row->',rowdata)
 				varname=rowdata['变量名称']
-		
+
 				if 'gv_dbtype' in varname:
 					groupid=groupid+1
 					con=DBCon()
@@ -2485,7 +2490,7 @@ class Transformer:
 		except:
 			return ('error','新增数据连接失败->%s'%traceback.format_exc())
 
-			
+
 	def add_step_data(self):
 		'''
 		添加step
@@ -2513,7 +2518,7 @@ class Transformer:
 						step.step_type='interface'
 						step.description='%s_%s'%(rowdata['参数值'].split(':')[0].strip(),self.transform_id)
 						#step.description='%s'%(rowdata['参数值'].split(':')[0].strip())
-						
+
 						funcname=rowdata['函数名称']
 						try:
 							step.content_type=detail_config.get(funcname).get('content_type')
@@ -2537,7 +2542,7 @@ class Transformer:
 						self.add_case_step_relation(case.id, step.id)
 						self.add_step_bussiness_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
 						#self.add_case_business_relation2(case.id, self.data_workbook[k],rowdata['参数值'])
-					
+
 					else:
 						#函数
 						step.step_type='function'
@@ -2554,7 +2559,7 @@ class Transformer:
 						#step关联业务数据
 						try:
 							name="%s_%s"%(rowdata['测试要点概要'].strip(),self.transform_id)
-							
+
 							# l=list(BusinessData.objects.filter(businessname=name))
 							# print('size=>',len(l))
 							businessId=BusinessData.objects.get(businessname=name).id
@@ -2629,7 +2634,7 @@ class Transformer:
 
 				length=len(list(Case.objects.filter(description=dsp)))
 				if length==0:
-					case=Case()			
+					case=Case()
 					case.description=dsp
 					case.author=User.objects.get(name=self.callername)
 					case.save()
@@ -2774,7 +2779,7 @@ class Transformer:
 		'''
 		通过参数列定位业务数据
 		'''
-		
+
 		step=Step.objects.get(id=step_id)
 		sheetname=paramfieldvalue.split('：')[0]
 		cache=self._get_workbook_sheet_cache(workbook,sheetname)#?????
@@ -2818,7 +2823,7 @@ class Transformer:
 			print('==步骤关联测试点[%s]'%order)
 			#step.businessdatainfo.add(business)
 
-		
+
 	def add_var(self):
 		try:
 			for dwb in self.data_workbook:
@@ -2908,7 +2913,7 @@ class Transformer:
 
 			o2.delete()
 
-			
+
 
 
 
@@ -2972,13 +2977,13 @@ class DataMove:
 		##依赖关系
 		'relation':{
 			'plan_case':{
-	
+
 			},
 			'step_business':{
-	
+
 			},
 			'case_step':{
-	
+
 			},
 			'case_case':{
 
@@ -3149,7 +3154,7 @@ class DataMove:
 						funcs=list(Function.objects.filter(flag=flag))
 						if len(funcs)>1:
 							return JsonResponse(simplejson(code=44,msg='找到多个匹配的自定义函数 请检查'))
-						
+
 						stepd['related_id']=funcs[0].id
 
 						#导出使用的函数
@@ -3216,7 +3221,7 @@ class DataMove:
 				a.append((str(case.id),ordervalue))
 				self._data['relation']['plan_case'][str(planid)]=list(set(a))
 				self._add_case_relation_data(case)
-				
+
 			#统一导出变量
 			for key in self._varkeys:
 				self._add_var(key)
@@ -3259,7 +3264,7 @@ class DataMove:
 
 				a=self._data['relation']['plan_case'].get(str(planid),[])
 				ordervalue=Order.objects.get(kind='case',main_id=plan.id,follow_id=case.id).value
-				
+
 				a.append((str(case.id),ordervalue))
 				self._data['relation']['plan_case'][str(planid)]=list(set(a))
 
@@ -3327,7 +3332,7 @@ class DataMove:
 								funcs=list(Function.objects.filter(flag=flag))
 								if len(funcs)>1:
 									return JsonResponse(simplejson(code=44,msg='找到多个匹配的自定义函数 请检查'))
-								
+
 								stepd['related_id']=funcs[0].id
 								#导出使用的函数
 								func=Function.objects.get(id=funcs[0].id)
@@ -3368,7 +3373,7 @@ class DataMove:
 		if length>0:
 			if classstr in ('Variable','DBCon'):
 				return 'fail','%s[%s]已存在 略过导入请手动调整'%(_M.get(classstr,''),oldvalue)
-			
+
 			elif classstr =='BusinessData':
 				#print('yes=>',classstr)
 				return ('success',oldvalue)
@@ -3575,7 +3580,7 @@ class DataMove:
 			fo.description=f.get('description')
 			fo.name=f.get('name')
 			status,fo.flag=self._hanlde_repeat_name("flag=%s"%f.get('flag'),'Function',flag)
-			
+
 			if status is not 'success':
 				del _cache['func_%s'%f.get('id')]
 				_msg.append(fo.flag)
@@ -3655,7 +3660,7 @@ class DataMove:
 		for k,vs in case_case.items():
 			case=_cache.get('case_%s'%k)
 			for v,ordervalue in vs:
-				# 
+				#
 
 				case0=_cache.get('case_%s'%v)
 				order=Order()
@@ -3701,7 +3706,7 @@ class DataMove:
 						authoro.sex=author.get('sex')
 						authoro.save()
 						order.author=authoro
-						order.save()					
+						order.save()
 
 
 		#处理回调信息

@@ -265,7 +265,7 @@ def gettestdataparams(businessdata_id):
         if msg is not 'success':
             return (msg, step)
 
-        businessdatainst.params = businessdatainst.params.replace('null', 'None').replace('false', 'False').replace(
+        businessdatainst.params = businessdatainst.params.replace('null', 'None').replace(':false', ':False').replace(
             'true', 'True')
 
         if step.step_type == 'interface':

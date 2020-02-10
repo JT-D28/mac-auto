@@ -266,7 +266,7 @@ def gettestdataparams(businessdata_id):
             return (msg, step)
 
         businessdatainst.params = businessdatainst.params.replace('null', 'None').replace(':false', ':False').replace(
-            'true', 'True')
+            ':true', ':True')
 
         if step.step_type == 'interface':
             if step.content_type == 'xml':

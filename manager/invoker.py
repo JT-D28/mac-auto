@@ -1248,21 +1248,31 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 			data=data.replace('null',"'None'").replace('true',"'True'").replace("false","'False'")
 			# print('data=>',data)
 
-			p=None
+			if 'TEXT'==k:
+				if op=='$':
+					flag=str(data).__contains__(v)
+					if flag is True:
+						return('success','')
+					else:
+						return('fail','表达式%s校验失败'%ourexpression)
 
-			if parse_type=='json':
-				p=JSONParser(data)
-			elif parse_type=='xml':
-				# print('类型=>',type(parse_type))
-				# print('data=>')
-				# print(data)
-				#消除content-type首行
-				data='\n'.join(data.split('\n')[1:])
-				p=XMLParser(data)
+			else:
 
-			oldk=k
+				p=None
 
-			k=p.getValue(k)
+				if parse_type=='json':
+					p=JSONParser(data)
+				elif parse_type=='xml':
+					# print('类型=>',type(parse_type))
+					# print('data=>')
+					# print(data)
+					#消除content-type首行
+					data='\n'.join(data.split('\n')[1:])
+					p=XMLParser(data)
+
+				oldk=k
+
+				k=p.getValue(k)
 			# try:
 			# 	if eval(str(k)) in(None,True,False):
 			# 		k=str(k)
@@ -1291,6 +1301,7 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 				exp="".join([str(k),op,str(v)])
 				#return ('fail','表达式[%s]校验不通过 期望[%s]和实际类型[%s]不一致'%(ourexpression,type(v),type(k)))
 			#res=eval(exp)
+
 			rr=eval(exp)
 			if isinstance(rr, (tuple,)):
 				raise RuntimeError('需要特殊处理')

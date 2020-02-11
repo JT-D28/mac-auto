@@ -361,5 +361,15 @@ class CommonConfig(models.Model):
 # 	updatetime=models.DateTimeField(auto_now=True)
 
 
+class HumanResources(models.Model):
+	kind=models.CharField(max_length=64,default='user')
+	product_id=models.IntegerField()
+	user_id=models.IntegerField()
+	group_id=models.IntegerField()
+
+	createtime=models.DateTimeField(auto_now_add=True)
+	updatetime=models.DateTimeField(auto_now=True)
+
+
 
 

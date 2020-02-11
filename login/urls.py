@@ -29,5 +29,6 @@ urlpatterns = [
     path('addaccount/',views.addaccount),
     path('delaccount/',views.delaccount),
     path('editaccount/',views.editaccount),
+    
 
 ]

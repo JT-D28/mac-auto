@@ -207,9 +207,12 @@ layui.use(['table','layer'], function(){
 //新增功能
 
   $("#addbtn").click(function(e){
+
+    has_select=0
     //初始化联想信息
     success=function(d){
       data=JSON.parse(d)
+      $("#dblist").empty()
       for(var index=0;index<data.data.length;index++){
         $("#dblist").append("<li index='"+index+"' class=''>"+data.data[index]['name']+"</li>")
       }
@@ -236,14 +239,19 @@ layui.use(['table','layer'], function(){
         var flag
 
         // alert(e.keyCode)
+        var len=$('#gain').val().length
+        var last_word=$('#gain').val().charAt(len-1)
+      
 
-        if(e.keyCode==13){
+        if(e.keyCode==13&&last_word=='@'){
+          console.log('enter')
             cur=$("#dblist .active").text();
             $('#gain').val($('#gain').val()+cur);
             var e = jQuery.Event("keydown"); //模拟一个键盘事件
             e.keyCode = 8;
             e.which = 8;  //增加设置which
             $('#gain').trigger(e); //模拟按键
+            has_select=1;
             return;
 
           }

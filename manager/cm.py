@@ -1325,3 +1325,75 @@ def _status_decorate(decoratename,text):
 		text="<span style='background-color:#FFFF00'>%s</span>"%text
 	
 	return text
+
+def del_node_force(request):
+	'''强制递归删除节点
+	'''
+	id_=request.POST.get('ids')
+	ids=id_.split(',')
+	for i in ids:
+		node_type=i.split('_')[0]
+		idx=i.split('_')[1]
+
+		if node_type=='plan':
+			_del_plan_force(idx)
+		elif node_type=='case':
+			_del_case_force(idx)
+		elif node_type=='step':
+			_del_step_force(idx)
+
+			
+
+def _del_plan_force(plan_id):
+	try:
+		plan=Plan.objects.get(id=plan_id)
+		plan_order_list=list(Order.objects.filter(kind='plan_case',main_id=plan_id))
+		
+		if len(plan_order_list)>0:
+			for o in plan_order_list:
+				o.delete()
+				_del_case_force(o.follow_id)
+
+		plan.delete()
+	except:
+		print(traceback.format_exc())
+
+
+
+
+
+def _del_case_force(case_id):
+	case=Case.objects.get(id=case_id)
+	case_order_list=list(Order.objects.filter(kind='case_step',main_id=case_id))
+	case_order_list_2=list(Order.objects.filter(kind='case_case',main_id=case_id))
+
+	##处理case->step
+	for o in case_order_list:
+		o.delete()
+		Step.objects.get(id=o.follow_id).delete()
+
+	#处理case->case
+	for o in case_order_list_2:
+		o.delete()
+		c=Case.objects.get(id=o.follow_id)
+		c.delete()
+		_del_case_force(c.id)
+
+
+	#
+	case.delete()
+
+
+
+def _del_step_force(step_id):
+
+	step=Step.objects.get(id=step_id)
+	step_order_list=Order.objects.get(kind='step_business',main_id=step_id)
+	for o in step_order_list:
+		o.delete()
+		business=BusinessData.objects.get(id=o.follow_id)
+		business.delete()
+
+	step.delete()
+	
+

@@ -54,6 +54,8 @@ var tree={
 
 	init:function(searchvalue=''){
 		// return  
+
+		//alert('tree init..')
 		var t=this
 		success=function(data){
 			data=JSON.parse(data);
@@ -228,8 +230,32 @@ var tree={
 
 		    			layer.alert(e.msg,{icon:1,time:2000})
 		    		}
-		    		else
-		    			layer.alert(e.msg,{icon:2})
+		    		else{
+
+		    			layer.open(
+					      {
+					        title:'信息',
+					        icon:2,
+					        type:0,
+					        // area:["350px","350px"],
+					        content:e.msg,
+					        btn:['强制删除','取消'],
+					        yes:function(){
+					        	//layer.msg('强制删除.')
+					        	success=function(e){
+									var treeObj = $.fn.zTree.getZTreeObj(treeId);
+									var node = treeObj.getNodeByParam('id',treeNode.id);	   
+								
+							 		treeObj.removeNode(node)
+
+					    			layer.alert(e.msg,{icon:1,time:2000})
+
+					        	}
+
+					        	_post('/manager/treecontrol/',{'action':'del_node_force','ids':treeNode.id},success)
+					        }
+					    });
+		    		}
 
 		    	};
 		    	_post('/manager/treecontrol/',{

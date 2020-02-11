@@ -1329,22 +1329,52 @@ def _status_decorate(decoratename,text):
 def del_node_force(request):
 	'''强制递归删除节点
 	'''
+	print('强制del_node_force删除数据')
 	id_=request.POST.get('ids')
 	ids=id_.split(',')
 	for i in ids:
 		node_type=i.split('_')[0]
 		idx=i.split('_')[1]
 
-		if node_type=='plan':
+		if node_type=='product':
+			_del_product_force(idx)
+
+		elif node_type=='plan':
 			_del_plan_force(idx)
 		elif node_type=='case':
 			_del_case_force(idx)
 		elif node_type=='step':
 			_del_step_force(idx)
 
+	return {
+	'status':'success',
+	'msg':'删除成功.'
+	}
+
 			
+def _del_product_force(product_id):
+	try:
+		product=Product.objects.get(id=product_id)
+		product_order_list=list(Order.objects.filter(kind='product_plan',main_id=product_id))
+
+		for o in product_order_list:
+			o.delete()
+			_del_plan_force(o.follow_id)
+
+		product.delete()
+	except:
+		print(traceback.format_exc())
 
 def _del_plan_force(plan_id):
+
+
+	#取消上层依赖
+	try:
+		Order.objects.get(kind='product_plan',follow_id=plan_id).delete()
+	except:
+		print('取消上层依赖异常.')
+
+
 	try:
 		plan=Plan.objects.get(id=plan_id)
 		plan_order_list=list(Order.objects.filter(kind='plan_case',main_id=plan_id))
@@ -1363,6 +1393,14 @@ def _del_plan_force(plan_id):
 
 
 def _del_case_force(case_id):
+
+	#取消上层依赖
+	try:
+		Order.objects.get(kind='plan_case',follow_id=case_id).delete()
+	except:
+		print('取消上层依赖异常.')
+
+
 	case=Case.objects.get(id=case_id)
 	case_order_list=list(Order.objects.filter(kind='case_step',main_id=case_id))
 	case_order_list_2=list(Order.objects.filter(kind='case_case',main_id=case_id))
@@ -1374,10 +1412,12 @@ def _del_case_force(case_id):
 
 	#处理case->case
 	for o in case_order_list_2:
-		o.delete()
 		c=Case.objects.get(id=o.follow_id)
-		c.delete()
+		
 		_del_case_force(c.id)
+		c.delete()
+		o.delete()
+		
 
 
 	#
@@ -1387,13 +1427,24 @@ def _del_case_force(case_id):
 
 def _del_step_force(step_id):
 
-	step=Step.objects.get(id=step_id)
-	step_order_list=Order.objects.get(kind='step_business',main_id=step_id)
-	for o in step_order_list:
-		o.delete()
-		business=BusinessData.objects.get(id=o.follow_id)
-		business.delete()
+	#取消上层依赖
+	try:
+		Order.objects.get(kind='case_step',follow_id=step_id).delete()
+	except:
+		print('取消上层依赖异常.')
 
-	step.delete()
-	
+	try:
+
+		step=Step.objects.get(id=step_id)
+		step_order_list=list(Order.objects.get(kind='step_business',main_id=step_id))
+		for o in step_order_list:
+			o.delete()
+			business=BusinessData.objects.get(id=o.follow_id)
+			business.delete()
+
+		step.delete()
+
+	except:
+		print('删除步骤异常=>',traceback.format_exc())
+		
 

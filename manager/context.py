@@ -271,6 +271,12 @@ def gettestdataparams(businessdata_id):
         if step.step_type == 'interface':
             if step.content_type == 'xml':
                 return ('success', businessdatainst.params)
+
+            elif step.content_type == 'urlencode':
+                if businessdatainst.params.startswith("{"):
+                    return ('success', eval(businessdatainst.params))
+                else:
+                    return ('success', businessdatainst.params)
             else:
                 return ('success', eval(businessdatainst.params))
 

@@ -960,7 +960,8 @@ def _callinterface(taskid,user,url,body=None,method=None,headers=None,content_ty
 		#body=json.loads(body)
 		try:
 			print('urlencode=>',body)
-			body=eval(body)
+			if body.startswith("{"):
+				body=eval(body)
 
 		except :
 			print('参数转化异常：',traceback.format_exc())

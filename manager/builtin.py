@@ -3,8 +3,10 @@
 # @Date    : 2019-10-11 14:31:32
 # @Author  : Blackstone
 # @to      :
+import re
 import traceback,time,datetime,random
 
+from .context import get_top_common_config
 from .db import Mysqloper
 
 def dbexecute(sql,taskid=None,callername=None):
@@ -14,9 +16,15 @@ def dbexecute(sql,taskid=None,callername=None):
 	非查询语句返回执行后影响条数
 
 	"""
-	print("调用内置函数=>dbexecute \nsql=>",sql)
 	op=Mysqloper()
-	return op.db_execute(sql,taskid=taskid,callername=callername)
+	if re.search('@', sql) is None:
+		sql = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")[0]
+		dbnamecache = get_top_common_config(taskid)
+		print("调用内置函数=>dbexecute \nsql=>", sql)
+		return op.db_execute("%s@%s"%(sql,dbnamecache),taskid=taskid,callername=callername)
+	else:
+		print("调用内置函数=>dbexecute \nsql=>",sql)
+		return op.db_execute(sql,taskid=taskid,callername=callername)
 
 
 def dbexecute2(sql,taskid=None,callername=None):
@@ -30,15 +38,37 @@ def dbexecute2(sql,taskid=None,callername=None):
 	d=[]
 
 	try:
-		sqls=sql.split("@")[0].split(";")
-		conname=sql.split('@')[1]
-		for sql in sqls:
-			res,msg=dbexecute("%s@%s"%(sql,conname),taskid=taskid,callername=callername)
-			print('执行结果=>',(res,msg))
-			if res!='success':
-				return res,msg
-			d.append(str(msg))
-		return 'success','+'.join(d)
+		if re.search('@.*(;.*@)?', sql) is not None:
+			sqls1 = re.split("@", sql)
+			for i in range(len(sqls1)):
+				if i == 0:
+					continue
+				else:
+					# print(sqls1[i].split(";")[0])
+					sqls1[i - 1] += "@" + sqls1[i].split(";")[0]
+					sqls1[i] = sqls1[i].split(";", 1)[-1]
+			sqls1.pop()
+			for sql in sqls1:
+				sqls = sql.split("@")[0].split(";")
+				conname=sql.split('@')[1]
+				for sql in sqls:
+					res,msg=dbexecute("%s@%s"%(sql,conname),taskid=taskid,callername=callername)
+					print('执行结果=>',(res,msg))
+					if res!='success':
+						return res,msg
+					d.append(str(msg))
+			return 'success','+'.join(d)
+		elif re.search('@', sql) is None:
+			sqls2=sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")
+			print("sqltest",sqls2)
+			dbnamecache = get_top_common_config(taskid)
+			for sql in sqls2:
+				res,msg=dbexecute("%s@%s"%(sql,dbnamecache),taskid=taskid,callername=callername)
+				print('执行结果=>',(res,msg))
+				if res!='success':
+					return res,msg
+				d.append(str(msg))
+			return 'success','+'.join(d)
 
 
 

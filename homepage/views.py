@@ -205,53 +205,66 @@ def reportchart(request):
     code = 0
     taskids = list(ResultDetail.objects.values('taskid').filter(plan_id=planid))
     if taskids:
-        sql = ('''
-        SELECT
-            *,
-            ( success * 100 / total ) rate,
-            ( total - success - FAIL - skip ) error 
-        FROM
-            (
-        SELECT
-            plan_id,
-            manager_plan.description,
-            sum( CASE WHEN result = "success" THEN 1 ELSE 0 END ) AS success,
-            sum( CASE WHEN result = "fail" THEN 1 ELSE 0 END ) AS FAIL,
-            sum( CASE WHEN result = "skip" THEN 1 ELSE 0 END ) AS skip,
-            count( result ) AS total,
-            taskid,
-            strftime('%%m-%%d %%H:%%M',manager_resultdetail.createtime) as time
-        FROM
-            manager_resultdetail
-            LEFT JOIN manager_plan ON manager_resultdetail.plan_id = manager_plan.id 
-            WHERE plan_id = %s 
-        GROUP BY
-            taskid 
-            ) AS m  ORDER BY time DESC  LIMIT 10 
-            ''')
+        sql = '''
+        SELECT x.plan_id,m.description,CONCAT(success),CONCAT(FAIL),CONCAT(skip),CONCAT(total),x.taskid,DATE_FORMAT(TIME,'%%m-%%d %%H:%%i') AS time,
+        CONCAT(success*100/total) ,CONCAT(error) FROM (
+        SELECT DISTINCT manager_resultdetail.taskid,plan_id FROM manager_resultdetail) AS x JOIN (
+        SELECT taskid,sum(CASE WHEN result="success" THEN 1 ELSE 0 END) AS success,
+        sum(CASE WHEN result="fail" THEN 1 ELSE 0 END) AS FAIL,
+        sum(CASE WHEN result="error" THEN 1 ELSE 0 END) AS error,
+        sum(CASE WHEN result="skip" THEN 1 ELSE 0 END) AS skip,
+        sum(CASE WHEN result!="OMIT" THEN 1 ELSE 0 END) AS total,max(createtime) AS time 
+        FROM manager_resultdetail GROUP BY taskid) AS n JOIN manager_plan m 
+        ON x.taskid=n.taskid AND x.plan_id=m.id WHERE plan_id=%s ORDER BY time DESC LIMIT 10
+        '''
+
+        # sqlite3
+        sql2 = '''
+        SELECT plan_id,description,success,fail,skip,total,taskid,time,(success*100/total) rate,(total-success-FAIL-skip-omit) error FROM (
+        SELECT plan_id,manager_plan.description,sum(CASE WHEN result="success" THEN 1 ELSE 0 END) AS success,
+        sum(CASE WHEN result="fail" THEN 1 ELSE 0 END) AS FAIL,sum(CASE WHEN result="skip" THEN 1 ELSE 0 END) AS skip,
+        sum(CASE WHEN result="omit" THEN 1 ELSE 0 END) AS omit,count(result) AS total,taskid,
+        strftime('%%m-%%d %%H:%%M',manager_resultdetail.createtime) AS time FROM manager_resultdetail LEFT JOIN 
+        manager_plan ON manager_resultdetail.plan_id=manager_plan.id WHERE plan_id=%s GROUP BY taskid) AS m ORDER BY time DESC LIMIT 10
+        '''
         with connection.cursor() as cursor:
-            cursor.execute(sql, [planid])
+            cursor.execute(sql2, [planid])
             row = cursor.fetchall()
-            print(row)
+        print(row)
         return JsonResponse(simplejson(code=code, data=row), safe=False)
     else:
         return JsonResponse(simplejson(code=1, data="任务还没有运行过！"), safe=False)
 
 
-def add(num):
-    _report = {}
-    result = gettaskresult(num)
-    _report[num] = {
-        "planname": result["planname"],
-        "success": result["success"],
-        "fail": result["fail"],
-        "skip": result["skip"],
-        "total": result["total"],
-        "error": result["error"],
-        "success_rate": result["success_rate"],
-        "reporttime": result["reporttime"],
-    }
-    return _report
+
+
+
+@csrf_exempt
+def badresult(request):
+
+    taskid=request.POST.get("taskid")
+    sql2 = '''
+    SELECT manager_case.description as casename,manager_step.description as stepname,
+    manager_businessdata.businessname as businessname,manager_businessdata.itf_check as itfcheck,
+    manager_businessdata.db_check as dbcheck ,manager_resultdetail.result as result,manager_resultdetail.error as failresult 
+    from manager_case,manager_step,manager_businessdata,manager_resultdetail where manager_resultdetail.result in('fail','error') 
+    and manager_resultdetail.taskid=%s and manager_resultdetail.case_id=manager_case.id 
+    and manager_resultdetail.step_id=manager_step.id and manager_resultdetail.businessdata_id=manager_businessdata.id 
+    order by manager_resultdetail.createtime 
+    '''
+    with connection.cursor() as cursor:
+        cursor.execute(sql2, [taskid])
+        desc = cursor.description
+        row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+        print(row)
+    result= {"code":0,"msg":"","count":len(row),"data":row}
+    return JsonResponse(result)
+
+
+
+
+
+
 
 
 @csrf_exempt

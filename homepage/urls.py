@@ -30,5 +30,6 @@ urlpatterns = [
     path('restart/', views.restart),
     path('sendreport/',views.sendreport),
     path('reportchart/', views.reportchart),
+    path('badresult/',views.badresult),
 
 ]

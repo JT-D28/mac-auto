@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layui.css' %}" media="all">
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layuimini.css' %}" media="all">
     <script src="https://cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
-    <script type="text/javascript" src="https://assets.pyecharts.org/assets/echarts.min.js"></script>
     <link rel="stylesheet" href="{% static 'homepage/layui/css/public.css' %}" media="all">
     <style>
         .layui-card {
@@ -132,7 +131,10 @@
             </div>
         </div>
         <div class="layui-col-xs12 layui-col-md9">
-            <div id="echarts-records" style="background-color:#ffffff;min-height:400px;padding: 10px"></div>
+            <div id="echarts-records" style="background-color:#f2f2f2;min-height:400px;padding: 10px;"></div>
+        </div>
+        <div class="layui-col-xs12 layui-col-md12">
+            <table id="demo" lay-filter="test"></table>
         </div>
     </div>
 
@@ -248,7 +250,7 @@
     <script src="{% static 'manager/js/utils.js' %}" charset="utf-8"></script>
     <script src="{% static 'homepage/layui/lay-config.js' %}" charset="utf-8"></script>
     <script>
-        layui.use(['layer', 'echarts', 'common', 'form', 'jquery', 'element', 'layedit'], function () {
+        layui.use(['layer', 'echarts', 'common', 'form', 'jquery', 'element', 'layedit', 'table'], function () {
             var $ = layui.jquery,
                 layer = layui.layer,
                 echarts = layui.echarts;
@@ -257,7 +259,10 @@
             var form = layui.form;
             var layedit = layui.layedit;
             var le = layedit.build('rich_text'); //建立编辑器
+            var table = layui.table;
+
             var username = $("#username").text()
+
 
             common.ajax('/homepage/queryproduct/', 'post', 'json', {},
                 function (data) {
@@ -301,7 +306,6 @@
                                 report(result.data, result.code)
                             })
                             layui.form.render('select')
-
                         }
                     }
                 )
@@ -534,29 +538,35 @@
                     }
                 }
             );
+            echartsRecords = echarts.init(document.getElementById('echarts-records'), 'walden');
 
             function report(data, code) {
-                var x = [];
-                var success = [];
-                var fail = [];
-                var skip = [];
-                var error = [];
-                var success_rate = []
+                x = [];
+                success = [];
+                total = [];
+                fail = [];
+                skip = [];
+                error = [];
+                success_rate = []
+                hundred = [];
+                taskids = [];
                 if (code == 0) {
                     title = data[0][1]
                     for (let i = data.length - 1; i >= 0; i--) {
                         x.push(data[i][7])
                         success.push(data[i][2])
+                        total.push(data[i][5])
                         fail.push(data[i][3])
                         skip.push(data[i][4])
                         error.push(data[i][9])
+                        //mysql  success_rate.push(data[i][8].substr(0, 5))
                         success_rate.push(data[i][8])
+                        taskids.push(data[i][6])
+                        hundred.push(100)
                     }
                 } else {
-                    console.log(data)
                     title = data
                 }
-                echartsRecords = echarts.init(document.getElementById('echarts-records'), 'walden');
                 var optionRecords = {
                     title: {
                         text: title
@@ -650,7 +660,10 @@
                             min: 'dataMin',
                             max: 'dataMax',
                             axisPointer: {
-                            }
+                                label: {
+                                    show: false
+                                }
+                            },
                         }
                     ],
                     yAxis: [
@@ -671,11 +684,27 @@
                             axisTick: {show: false},
                             splitLine: {show: false},
                             min: 0,
-                            max: 100
+                            max: 100,
+                            axisPointer: {
+                                label: {
+                                    show: false
+                                }
+                            },
                         }
                     ],
 
                     series: [
+                        {
+                            name: ' 总数 ',
+                            axisPointer: {show: false},
+                            type: 'bar',
+                            itemStyle: {
+                                normal: {
+                                    color: 'rgba(0,0,0,0)',
+                                }
+                            },
+                            data: total
+                        },
                         {
                             name: '成功数',
                             type: 'line',
@@ -721,23 +750,61 @@
                             }
                         },
                         {
+                            type: 'bar',
+                            axisPointer: {show: false},
+                            xAxisIndex: 1,
+                            itemStyle: {
+                                normal: {
+                                    color: 'rgba(201,155,237,0)',
+                                }
+                            },
+                            yAxisIndex: 1,
+                            data: hundred
+                        },
+                        {
                             name: '成功率',
                             type: 'line',
                             label: {
                                 normal: {
                                     show: true,
-                                    position: 'top'
+                                    position: 'top',
+                                    color: 'black'
                                 }
                             },
+                            barWidth: 10,
                             areaStyle: {},
                             xAxisIndex: 1,
                             yAxisIndex: 1,
                             data: success_rate
-                        }
+                        },
                     ]
                 };
+                $("#echarts-records").css('background-color', 'white')
                 echartsRecords.setOption(optionRecords);
             }
+
+
+            echartsRecords.on('click', function (params) {
+                console.log(params)
+                taskid = taskids[params.dataIndex]
+                table.render({
+                    elem: '#demo'
+
+                    , method: 'POST'
+                    , url: '/homepage/badresult/' //数据接口
+                    , where: {taskid: taskid}
+                    , cols: [[ //表头
+                        {field: 'casename', title: '用例名', width: "12%", align: "center"}
+                        , {field: 'stepname', title: '步骤名', width: "13%", align: "center"}
+                        , {field: 'businessname', title: '测试点', width: "13%", align: "center"}
+                        , {field: 'itfcheck', title: '数据验证', width: "13%", align: "center"}
+                        , {field: 'dbcheck', title: '接口验证', width: "10%", align: "center"}
+                        , {field: 'failresult', title: '失败原因', width: "39%", align: "center"}
+                    ]], text: {
+                        none: '测试全部通过了！'
+                    }
+                });
+            });
 
 
             /**

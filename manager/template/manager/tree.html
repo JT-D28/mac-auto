@@ -2,139 +2,160 @@
 <!DOCTYPE html>
 <html style="height: 100%">
 <head>
-  <meta charset="utf-8">
-  <title>树组件</title>
-  <link rel="stylesheet" type="text/css" href="{% static 'manager/ztree/zTreeStyle.css' %}">  
-<!--   <link rel="stylesheet" type="text/css" href="{% static 'manager/ztree/demo.css' %}"> -->
-  <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+    <meta charset="utf-8">
+    <title>树组件</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/ztree/zTreeStyle.css' %}">
+    <!--   <link rel="stylesheet" type="text/css" href="{% static 'manager/ztree/demo.css' %}"> -->
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
 
-  <link rel="stylesheet" type="text/css" href="{% static 'manager/bootstrap/bootstrap.min.css' %}">
-  <link href="{% static 'manager/bootstrap-fileinput-master/css/fileinput.css'%}" media="all" rel="stylesheet" type="text/css"/>
-  <link href="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.css'%}" media="all" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/bootstrap/bootstrap.min.css' %}">
+    <link href="{% static 'manager/bootstrap-fileinput-master/css/fileinput.css' %}" media="all" rel="stylesheet"
+          type="text/css"/>
+    <link href="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.css' %}" media="all"
+          rel="stylesheet" type="text/css"/>
 
-  <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
-
-
-
-
-  <style type="text/css">
-
-  .ztree li span.button.add {margin-left:2px; margin-right: -1px; background-position:-144px 0; vertical-align:top; *vertical-align:middle}
-
-  .ztree li span.button.diy01_ico_open, .ztree li span.button.diy01_ico_close{margin-right:2px; background: url(../../static/manager/ztree/img/diy/1_open.png) no-repeat scroll 0 0 transparent; vertical-align:top; *vertical-align:middle}
-  .ztree li span.button.diy02_ico_docu{margin-right:2px; background: url(../../static/manager/ztree/img/diy/2.png) no-repeat scroll 0 0 transparent; vertical-align:top; *vertical-align:middle}
-
-  .ztree li span.button.diy03_ico_docu{margin-right:2px; background: url(../../static/manager/ztree/img/diy/3.png) no-repeat scroll 0 0 transparent; vertical-align:top; *vertical-align:middle}
-
-  .fa{
-
-    color:#FF6699;
-  }
-
-/*.fa{
-  color: #6699CC;
-}*/
-/*.fa.fa-plus{
-  color:#CCCCCC;
-
-}
-.fa.fa-minus{
-  color:#CCCCCC;
-
-}*/
-  .fa.fa-folder{
-    color:#FFCC66;
-  
-  }
-
-  .fa.fa-folder-open{
-    color:#FFCC66;
-  }
-
-/*  .fa.fa-file-o{
-    color:#c2c2c2;
-  }
-  .fa.fa-database{
-    color:#c2c2c2;
-  }
-  .fa.fa-star{
-    color:#FFCC00;
-  }
-
-  .fa.fa-product-hunt{
-
-    color:#00CC99;
-  }
-  .fa.fa-leaf{
-
-     color:#00CC99;
-  }
-  .fa.fa-home{
-    color:#66CCCC;
-  }
-  .fa.fa-folder{
-    color:#FFCC66;
-  
-  }
-
-  .fa.fa-folder-open{
-    color:#FFCC66;
-  }
-
-  .fa.fa-info{
-    color:#FF0033;
-  }
-  .fa.fa-facebook{
-    color: #FF9999;
-
-  }*/
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
 
 
+    <style type="text/css">
 
-  </style>
+        .ztree li span.button.add {
+            margin-left: 2px;
+            margin-right: -1px;
+            background-position: -144px 0;
+            vertical-align: top;
+            *vertical-align: middle
+        }
+
+        .ztree li span.button.diy01_ico_open, .ztree li span.button.diy01_ico_close {
+            margin-right: 2px;
+            background: url(../../static/manager/ztree/img/diy/1_open.png) no-repeat scroll 0 0 transparent;
+            vertical-align: top;
+            *vertical-align: middle
+        }
+
+        .ztree li span.button.diy02_ico_docu {
+            margin-right: 2px;
+            background: url(../../static/manager/ztree/img/diy/2.png) no-repeat scroll 0 0 transparent;
+            vertical-align: top;
+            *vertical-align: middle
+        }
+
+        .ztree li span.button.diy03_ico_docu {
+            margin-right: 2px;
+            background: url(../../static/manager/ztree/img/diy/3.png) no-repeat scroll 0 0 transparent;
+            vertical-align: top;
+            *vertical-align: middle
+        }
+
+        .fa {
+
+            color: #FF6699;
+        }
+
+        /*.fa{
+          color: #6699CC;
+        }*/
+        /*.fa.fa-plus{
+          color:#CCCCCC;
+
+        }
+        .fa.fa-minus{
+          color:#CCCCCC;
+
+        }*/
+        .fa.fa-folder {
+            color: #FFCC66;
+
+        }
+
+        .fa.fa-folder-open {
+            color: #FFCC66;
+        }
+
+        /*  .fa.fa-file-o{
+            color:#c2c2c2;
+          }
+          .fa.fa-database{
+            color:#c2c2c2;
+          }
+          .fa.fa-star{
+            color:#FFCC00;
+          }
+
+          .fa.fa-product-hunt{
+
+            color:#00CC99;
+          }
+          .fa.fa-leaf{
+
+             color:#00CC99;
+          }
+          .fa.fa-home{
+            color:#66CCCC;
+          }
+          .fa.fa-folder{
+            color:#FFCC66;
+
+          }
+
+          .fa.fa-folder-open{
+            color:#FFCC66;
+          }
+
+          .fa.fa-info{
+            color:#FF0033;
+          }
+          .fa.fa-facebook{
+            color: #FF9999;
+
+          }*/
+
+
+    </style>
 </head>
 <body style="height: 100%">
 
 
-<div style="margin-left: 50px;margin-right: 100px;height: 100%" >
-  <div class="layui-row layui-col-space10" style="height: 100%;" >
-    <div id='treelist' class="layui-col-md5 " style="max-height:100%;overflow-y:auto;">
-      <div class="layui-inline">
-        <input type="input" name="" placeholder="search" style='padding:5px;' id='search' autocomplete="off">
-        <button id='searchbtn' class="layui-btn  layui-btn-sm fa fa-search" style="color:#eee"></button>
-      </div>
-      <ul id="case-manager" class="ztree" style="margin-bottom: 20px"></ul>
+<div style="margin-left: 50px;margin-right: 100px;height: 100%">
+    <div class="layui-row layui-col-space10" style="height: 100%;">
+        <div id='treelist' class="layui-col-md5 " style="max-height:100%;overflow-y:auto;">
+            <div class="layui-inline">
+                <input type="input" name="" placeholder="search" style='padding:5px;' id='search' autocomplete="off">
+                <button id='searchbtn' class="layui-btn  layui-btn-sm fa fa-search" style="color:#eee"></button>
+            </div>
+            <ul id="case-manager" class="ztree" style="margin-bottom: 20px"></ul>
 
+        </div>
+
+        <div class="layui-col-md7" style="min-height:100%;max-height: 100%;overflow-y:auto;">
+            <iframe id='tree-content' name='tree-content' title="test" scrolling="yes" frameborder="0" src=""
+                    style="overflow-y:auto;width:100%;"></iframe>
+
+        </div>
     </div>
-
-    <div class="layui-col-md7" style="min-height:100%;max-height: 100%;overflow-y:auto;">
-      <iframe id='tree-content' name='tree-content' title="test" scrolling="yes" frameborder="0" src="" style="overflow-y:auto;width:100%;" ></iframe>
-
-    </div>
-  </div>
 </div>
 
-    <script>
+<script>
 
 
+    function changeFrameHeight() {
+        var ifm = document.getElementById("tree-content");
+        ifm.maxHeight = ifm.height = document.documentElement.clientHeight - 10;
+    }
 
-   // function changeFrameHeight(){
-     //   var ifm= document.getElementById("tree-content");
-       // ifm.maxHeight=ifm.height=document.documentElement.clientHeight-10;
-    //}
-
-    // window.onresize=function(){
-    //      changeFrameHeight();
-    // }
-
-        function calcPageHeight(doc) {
+    window.onresize = function () {
+        changeFrameHeight();
+    }
+    /**
+     function calcPageHeight(doc) {
           var cHeight = Math.max(doc.body.clientHeight, doc.documentElement.clientHeight)
           var sHeight = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight)
           var height  = Math.max(cHeight, sHeight)
           return height
       }
-      var ifr = document.getElementById('tree-content')
-      ifr.onload = function() {
+     var ifr = document.getElementById('tree-content')
+     ifr.onload = function() {
       	  //解决打开高度太高的页面后再打开高度较小页面滚动条不收缩
       	  ifr.style.height='0px';
           var iDoc = ifr.contentDocument || ifr.document
@@ -143,11 +164,11 @@
           	height = 490;
           }
           ifr.style.height = height + 'px'
-      }
-    </script>
+      }**/
+</script>
 
 <div id='import-div' style="padding:5px;" hidden>
-  <input id="file-explorer" type="file" multiple>
+    <input id="file-explorer" type="file" multiple>
 </div>
 
 
@@ -162,7 +183,8 @@
 <script src="{% static 'manager/ztree/jquery.ztree.exedit.js' %}"></script>
 <script src="{% static 'manager/js/mytree.js' %}"></script>
 
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
 <script src="{% static 'manager/bootstrap-fileinput-master/js/plugins/piexif.js' %}"></script>
 <script src="{% static 'manager/bootstrap-fileinput-master/js/plugins/sortable.js' %}"></script>
 <script src="{% static 'manager/bootstrap-fileinput-master/js/fileinput.js' %}"></script>
@@ -171,88 +193,86 @@
 <script src="{% static 'manager/bootstrap-fileinput-master/themes/fas/theme.js' %}"></script>
 <script src="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.js' %}"></script>
 <script type="text/javascript">
-tree.init()
+    tree.init()
 
 
-//search
-//  $('#search').on('input propertychange', function() {
-//   console.log($('#search').val())
-//   tree.init($('#search').val())
-// });
+    //search
+    //  $('#search').on('input propertychange', function() {
+    //   console.log($('#search').val())
+    //   tree.init($('#search').val())
+    // });
 
-$('#searchbtn').click(function(argument) {
-  alert('search')
-  console.log('search.')
-  
-  tree.init($('#search').val())
-})
+    $('#searchbtn').click(function (argument) {
+        alert('search')
+        console.log('search.')
 
-//add
+        tree.init($('#search').val())
+    })
 
-$('#add_product').click(function(e){
-  layer.prompt({
-    formType: 0,
-    value: '',
-    title: '新建产品'
-  }, function(value, index, elem){
-   
-    layer.close(index);
-    _post('/manager/treecontrol/',{'description':value,'action':'addproduct'},function(data){
-      if(data.code==0)
-        layer.alert(data.msg,{icon:1,time:2000})
-      else
-        layer.alert(data.msg,{icon:2})
+    //add
+
+    $('#add_product').click(function (e) {
+        layer.prompt({
+            formType: 0,
+            value: '',
+            title: '新建产品'
+        }, function (value, index, elem) {
+
+            layer.close(index);
+            _post('/manager/treecontrol/', {'description': value, 'action': 'addproduct'}, function (data) {
+                if (data.code == 0)
+                    layer.alert(data.msg, {icon: 1, time: 2000})
+                else
+                    layer.alert(data.msg, {icon: 2})
+
+            })
+        })
+
 
     })
-  })
 
 
-})
+    //
+
+    $("#file-explorer").fileinput({
+        'theme': 'explorer-fas',
+        'uploadUrl': '/manager/upload/',
+        'minFileCount': 1,
+        'uploadAsync': false,
+        uploadExtraData: function (previewId, index) {   //额外参数的关键点
+            var obj = {};
+            obj.kind = 'dataimport'
+            // obj.content_type='json'
+
+            return obj;
+        }
+        // 'allowedFileTypes':['json','xlsx']
+        // overwriteInitial: false,
+
+    });
 
 
-//
+    $('#file-explorer').on('filebatchuploaderror', function (event, data, msg) {
+        layer.alert('转换异常[' + msg + ']', {icon: 2})
 
-$("#file-explorer").fileinput({
-    'theme': 'explorer-fas',
-    'uploadUrl': '/manager/upload/',
-    'minFileCount':1,
-    'uploadAsync':false,
-    uploadExtraData: function(previewId, index) {   //额外参数的关键点
-        var obj = {
+    });
 
-        };
-        obj.kind='dataimport'
-        // obj.content_type='json'
-
-        return obj;
-    }
-    // 'allowedFileTypes':['json','xlsx']
-    // overwriteInitial: false,
-
-});
-
-
-$('#file-explorer').on('filebatchuploaderror', function(event, data, msg) {
-  layer.alert('转换异常['+msg+']',{icon:2})
- 
-});
-
-$('#file-explorer').on('filebatchuploadsuccess', function(event, data, previewId, index) { 
- // alert(JSON.stringify(data))
- // alert('success')
+    $('#file-explorer').on('filebatchuploadsuccess', function (event, data, previewId, index) {
+        // alert(JSON.stringify(data))
+        // alert('success')
 // console.log(data)
- response=JSON.parse(data.response)
+        response = JSON.parse(data.response)
 
- if(response.code==0){
-  layer.alert(response.msg,{icon:1})
- }else{
-  layer.alert(response.msg,{icon:2})
- }
-});
+        if (response.code == 0) {
+            layer.alert(response.msg, {icon: 1})
+        } else {
+            layer.alert(response.msg, {icon: 2})
+        }
+    });
 
-window.onload =function() {
-    document.documentElement.style.overflow='hidden';
-}
+    window.onload = function () {
+        document.documentElement.style.overflow = 'hidden';
+    }
 
 </script>
 </body>

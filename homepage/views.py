@@ -220,10 +220,10 @@ def reportchart(request):
 
         # sqlite3
         sql2 = '''
-        SELECT plan_id,description,success,fail,skip,total,taskid,time,(success*100/total) rate,(total-success-FAIL-skip-omit) error FROM (
+        SELECT plan_id,description,success,fail,skip,total,taskid,time,(success*100/total) rate,(total-success-FAIL-skip) error FROM (
         SELECT plan_id,manager_plan.description,sum(CASE WHEN result="success" THEN 1 ELSE 0 END) AS success,
         sum(CASE WHEN result="fail" THEN 1 ELSE 0 END) AS FAIL,sum(CASE WHEN result="skip" THEN 1 ELSE 0 END) AS skip,
-        sum(CASE WHEN result="omit" THEN 1 ELSE 0 END) AS omit,count(result) AS total,taskid,
+        sum(CASE WHEN result="omit" THEN 1 ELSE 0 END) AS omit,sum(CASE WHEN result!="omit" THEN 1 ELSE 0 END) AS total,taskid,
         strftime('%%m-%%d %%H:%%M',manager_resultdetail.createtime) AS time FROM manager_resultdetail LEFT JOIN 
         manager_plan ON manager_resultdetail.plan_id=manager_plan.id WHERE plan_id=%s GROUP BY taskid) AS m ORDER BY time DESC LIMIT 10
         '''

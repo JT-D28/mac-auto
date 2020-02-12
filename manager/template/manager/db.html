@@ -23,22 +23,22 @@
 
 </div>
 
-<table id='table-var' class="layui-table" lay-data="{height:400, cellMinWidth: 80, page: true, limit:10, url:'{{BASE_URL}}/manager/querydb/'}" lay-filter='target'>
+<table id='table-var' class="layui-table" lay-data="{height: 'full-80', cellMinWidth: 80, page: true, limit:10, url:'{{BASE_URL}}/manager/querydb/'}" lay-filter='target'>
   <thead>
     <tr>
-      <th lay-data="{type:'checkbox'}"></th>
+      <th lay-data="{type:'checkbox',width:'5%'}"></th>
       <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
-      <th lay-data="{field: 'description',width:160, sort: true}">描述</th>
-      <th lay-data="{field: 'kind',width:160, sort: true}">类型</th>
-      <th lay-data="{field: 'dbname',width:160, sort: true}">库名/服务名/SID</th>
-      <th lay-data="{field: 'host',width:160, sort: true}">主机名</th>
-      <th lay-data="{field: 'port',width:160, sort: true}">端口</th>
-      <th lay-data="{field: 'author',width:160, sort: true}">创建者</th>
+      <th lay-data="{field: 'description',width:'15%', sort: true}">描述</th>
+      <th lay-data="{field: 'kind',width:'10%', sort: true}">类型</th>
+      <th lay-data="{field: 'dbname',width:'20%', sort: true}">库名/服务名/SID</th>
+      <th lay-data="{field: 'host',width:'20%', sort: true}">主机名</th>
+      <th lay-data="{field: 'port',width:'10%', sort: true}">端口</th>
+      <th lay-data="{field: 'author',width:'8%', sort: true}">创建者</th>
 <!--       <th lay-data="{field: 'username',width:160, sort: true}">账号名</th>
       <th lay-data="{field: 'password',width:160, sort: true}">密码</th> -->
 <!--       <th lay-data="{field: 'createtime', width:160,sort:true}">创建时间</th>
       <th lay-data="{field: 'updatetime', width:160}">更改时间</th> -->
-      <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:160}">操作</th>
+      <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:'12%'}">操作</th>
  
     </tr>
   </thead>

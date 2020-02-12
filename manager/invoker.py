@@ -683,13 +683,14 @@ def _step_process_check(callername,taskid,order,kind):
 		if step.step_type=="interface":
 			viewcache(taskid,username,kind,"数据校验配置=>%s"%db_check)
 			viewcache(taskid,username,kind,"接口校验配置=>%s"%itf_check)
+			headers=[]
 
 			text,statuscode,itf_msg='',-1,''
 
 			if step.content_type=='xml':
 				text,statuscode,itf_msg=_callsocket(taskid, user, step.url,body=str(paraminfo))
 			else:
-				text,statuscode,itf_msg=_callinterface(taskid,user,step.url,str(paraminfo),step.method,step.headers,step.content_type,step.temp,kind)
+				headers,text,statuscode,itf_msg=_callinterface(taskid,user,step.url,str(paraminfo),step.method,step.headers,step.content_type,step.temp,kind)
 
 
 			viewcache(taskid,username,kind,"<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>"%text)
@@ -713,9 +714,9 @@ def _step_process_check(callername,taskid,order,kind):
 
 				if itf_check:
 					if step.content_type in('json','urlencode'):
-						res,error=_compute(taskid,user,itf_check,type='itf_check',target=text,kind=kind,parse_type='json')
+						res,error=_compute(taskid,user,itf_check,type='itf_check',target=text,kind=kind,parse_type='json',rps_header=headers)
 					else:
-						res,error=_compute(taskid,user,itf_check,type='itf_check',target=text,kind=kind,parse_type='xml')
+						res,error=_compute(taskid,user,itf_check,type='itf_check',target=text,kind=kind,parse_type='xml',rps_header=headers)
 
 					if res is not 'success':
 						return ('fail',error)
@@ -1001,7 +1002,7 @@ def _callinterface(taskid,user,url,body=None,method=None,headers=None,content_ty
 	status,err=_find_and_save_property(user,props, rps.text)
 	if status is not 'success':
 		return ('','',err)
-	return (rps.text,rps.status_code,"")
+	return (rps.headers,rps.text,rps.status_code,"")
 
 def _callfunction(user,functionid,call_method_name,call_method_params,taskid=None):
 	"""
@@ -1083,7 +1084,7 @@ def _call_extra(user,call_strs,taskid=None,kind='前置操作'):
 
 
 
-def _compute(taskid,user,checkexpression,type=None,target=None,kind=None,parse_type='json'):
+def _compute(taskid,user,checkexpression,type=None,target=None,kind=None,parse_type='json',rps_header=None):
 	"""
 	计算各种校验表达式
 	多个时 分隔符 |
@@ -1114,7 +1115,7 @@ def _compute(taskid,user,checkexpression,type=None,target=None,kind=None,parse_t
 			for item in checklist:
 				old=item
 				item=_legal(item)
-				ress=_eval_expression(user,item,need_chain_handle=True,data=target,taskid=taskid,parse_type=parse_type)
+				ress=_eval_expression(user,item,need_chain_handle=True,data=target,taskid=taskid,parse_type=parse_type,rps_header=rps_header)
 				print('ress2=>',ress)
 				if ress[0] is 'success':
 					viewcache(taskid,user.name,None,"判断表达式[%s] 结果[%s]"%(old,ress[0]))
@@ -1206,7 +1207,21 @@ def _replace(expressionsep):
 	finally:
 		return expressionsep
 
-def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direction='left',taskid=None,parse_type='json'):
+def _get_hearder_key(r):
+
+	def _upper_first(w):
+		if len(w)==1:
+			return w.upper()
+
+		else:
+			return w[0].upper()+w[1:]
+
+	rs=[_upper_first(str(_)) for _ in r.split('_')]
+	return '-'.join(rs)
+
+
+
+def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direction='left',taskid=None,parse_type='json',rps_header=None):
 	"""返回情况
 	返回(success,'')
 	返回(fail,failmsg)
@@ -1249,13 +1264,35 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 			data=data.replace('null',"'None'").replace('true',"'True'").replace("false","'False'")
 			# print('data=>',data)
 
-			if 'TEXT'==k:
+			if 'response.text'==k:
 				if op=='$':
 					flag=str(data).__contains__(v)
 					if flag is True:
 						return('success','')
 					else:
 						return('fail','表达式%s校验失败'%ourexpression)
+			elif k.startswith('response.header'):
+			
+				ak=k.split('.')[-1].lower()
+				hk=_get_hearder_key(ak)
+				rh=rps_header[hk]
+				#print('响应头=>',rh)
+
+				if op=='$':
+					flag=rh.__contains__(v)
+				elif op=='==':
+					flag=str(rps_header[bi[ak]]).strip()==str(v).strip()
+				else:
+					return ('fail','响应头校验暂时只支持=,$比较.')
+
+				if flag is True:
+					return('success','')
+				else:
+					return('fail','表达式%s校验失败'%ourexpression)
+
+
+
+
 
 			else:
 
@@ -3619,6 +3656,8 @@ class DataMove:
 		case_step=bl['relation']['case_step']
 		case_case=bl['relation']['case_case']
 		step_businesss=bl['relation']['step_business']
+
+		print('[step_businesss]=>%s'%step_businesss)
 		##
 		for k,vs in plan_cases.items():
 			plan=_cache.get('plan_%s'%k)
@@ -3645,6 +3684,7 @@ class DataMove:
 					order.save()
 
 		##
+		print('case_step')
 		for k,vs in case_step.items():
 			case=_cache.get('case_%s'%k)
 			for v,ordervalue in vs:
@@ -3669,6 +3709,7 @@ class DataMove:
 					order.author=authoro
 					order.save()
 			##
+		print('case_case')
 		for k,vs in case_case.items():
 			case=_cache.get('case_%s'%k)
 			for v,ordervalue in vs:
@@ -3695,30 +3736,38 @@ class DataMove:
 					order.author=authoro
 					order.save()
 
+					print(traceback.format_exc())
+
 			##
-			for k,vs in step_businesss.items():
-				step=_cache.get('step_%s'%k)
-				for v,ordervalue in vs:
-					business=_cache.get('business_%s'%v)
-					order=Order()
-					order.kind='step_business'
-					order.main_id=step.id
-					order.follow_id=business.id
-					order.value=ordervalue
-					try:
-						author=User.objects.get(name=callername)
-						order.author=author
-						order.save()
-					except:
-						author=[author for author in authors if author.get('name')==callername][0]
-						authoro=User()
-						authoro.name=author.get('name')
-						authoro.password=author.get('password')
-						authoro.email=author.get('email')
-						authoro.sex=author.get('sex')
-						authoro.save()
-						order.author=authoro
-						order.save()
+		print('[step_businesss]')
+		for k,vs in step_businesss.items():
+			step=_cache.get('step_%s'%k)
+			print('[1]=>')
+			for v,ordervalue in vs:
+				print('[2]=>')
+				business=_cache.get('business_%s'%v)
+				print('[business]=>',business)
+				order=Order()
+				order.kind='step_business'
+				order.main_id=step.id
+				order.follow_id=business.id
+				order.value=ordervalue
+				try:
+					author=User.objects.get(name=callername)
+					order.author=author
+					order.save()
+				except:
+					author=[author for author in authors if author.get('name')==callername][0]
+					authoro=User()
+					authoro.name=author.get('name')
+					authoro.password=author.get('password')
+					authoro.email=author.get('email')
+					authoro.sex=author.get('sex')
+					authoro.save()
+					order.author=authoro
+					order.save()
+
+				print('[建议步骤测试点关联]=>%s'%order)
 
 
 		#处理回调信息

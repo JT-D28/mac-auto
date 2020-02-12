@@ -564,6 +564,9 @@
                         taskids.push(data[i][6])
                         hundred.push(100)
                     }
+                    totalmax = total.map(function (e) {
+                        return Math.max.apply(null, total) + 2
+                    });
                 } else {
                     title = data
                 }
@@ -674,6 +677,7 @@
                                 show: true
                             },
                             min: 0,
+                            max: totalmax[0]
                         },
                         {
                             scale: true,
@@ -704,7 +708,7 @@
                                     color: 'rgba(0,0,0,0)',
                                 }
                             },
-                            data: total
+                            data: totalmax
                         },
                         {
                             name: '成功数',
@@ -786,7 +790,6 @@
 
 
             echartsRecords.on('click', function (params) {
-                console.log(params)
                 taskid = taskids[params.dataIndex]
                 table.render({
                     elem: '#demo'

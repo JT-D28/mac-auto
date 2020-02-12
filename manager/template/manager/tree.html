@@ -115,27 +115,6 @@
     </style>
 </head>
 <body style="height: 100%">
-
-
-<div style="margin-left: 50px;margin-right: 100px;height: 100%">
-    <div class="layui-row layui-col-space10" style="height: 100%;">
-        <div id='treelist' class="layui-col-md5 " style="max-height:100%;overflow-y:auto;">
-            <div class="layui-inline">
-                <input type="input" name="" placeholder="search" style='padding:5px;' id='search' autocomplete="off">
-                <button id='searchbtn' class="layui-btn  layui-btn-sm fa fa-search" style="color:#eee"></button>
-            </div>
-            <ul id="case-manager" class="ztree" style="margin-bottom: 20px"></ul>
-
-        </div>
-
-        <div class="layui-col-md7" style="min-height:100%;max-height: 100%;overflow-y:auto;">
-            <iframe id='tree-content' name='tree-content' title="test" scrolling="yes" frameborder="0" src=""
-                    style="overflow-y:auto;width:100%;" onload="changeFrameHeight()"></iframe>
-
-        </div>
-    </div>
-</div>
-
 <script>
 
 
@@ -166,6 +145,27 @@
           ifr.style.height = height + 'px'
       }**/
 </script>
+
+<div style="margin-left: 50px;margin-right: 100px;height: 100%">
+    <div class="layui-row layui-col-space10" style="height: 100%;">
+        <div id='treelist' class="layui-col-md5 " style="max-height:100%;overflow-y:auto;">
+            <div class="layui-inline">
+                <input type="input" name="" placeholder="search" style='padding:5px;' id='search' autocomplete="off">
+                <button id='searchbtn' class="layui-btn  layui-btn-sm fa fa-search" style="color:#eee"></button>
+            </div>
+            <ul id="case-manager" class="ztree" style="margin-bottom: 20px"></ul>
+
+        </div>
+
+        <div class="layui-col-md7" style="min-height:100%;max-height: 100%;overflow-y:auto;">
+            <iframe id='tree-content' name='tree-content' title="test" scrolling="yes" frameborder="0" src=""
+                    style="overflow-y:auto;width:100%;" onload="changeFrameHeight()"></iframe>
+
+        </div>
+    </div>
+</div>
+
+
 
 <div id='import-div' style="padding:5px;" hidden>
     <input id="file-explorer" type="file" multiple>

@@ -653,8 +653,8 @@ def _step_process_check(callername,taskid,order,kind):
 		if businessdata.count==0:
 			#viewcache(taskid,callername,None,'[%s]执行次数=0 略过..'%businessdata.businessname)
 			return ('omit',"测试点[%s]执行次数=0 略过."%businessdata.businessname)
-		preplist=businessdata.preposition.split("|")
-		postplist=businessdata.postposition.split("|")
+		preplist=businessdata.preposition.split("|") if businessdata.preposition is not None else ''
+		postplist=businessdata.postposition.split("|") if businessdata.postposition is not None else ''
 		db_check=businessdata.db_check
 		itf_check=businessdata.itf_check
 		status,paraminfo=gettestdataparams(order.follow_id)

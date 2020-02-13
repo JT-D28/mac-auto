@@ -177,7 +177,7 @@ class Variable(models.Model):
 	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
 	description=models.CharField(max_length=128)
 	tag=models.CharField(max_length=64,blank=True)#
-	key=models.CharField(max_length=64)
+	key=models.CharField(max_length=64,unique=True)
 	value=models.TextField(blank=True)
 	gain=models.CharField(max_length=500,blank=True)
 	is_cache=models.BooleanField(default=True)

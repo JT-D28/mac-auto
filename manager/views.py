@@ -460,7 +460,7 @@ def addvar(request):
 	except:
 		print(traceback.format_exc())
 		code=1
-		msg='新增失败'
+		msg='已存在相同键名' if "UNIQUE constraint failed" in traceback.format_exc() else "新增失败"
 	return JsonResponse(simplejson(code=code,msg=msg),safe=False)
 
 """

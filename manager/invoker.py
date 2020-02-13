@@ -963,6 +963,8 @@ def _callinterface(taskid,user,url,body=None,method=None,headers=None,content_ty
 			print('urlencode=>',body)
 			if body.startswith("{"):
 				body=eval(body)
+			else:
+				body=body.encode('UTF-8')
 
 		except :
 			print('参数转化异常：',traceback.format_exc())

@@ -2,7 +2,7 @@
 dbtype = 'sqlite3'
 
 # ME2 url地址
-ME2_URL = '127.0.0.1:8000'
+ME2_URL = '139.196.223.60:18006'
 
 # 环境数据库配置
 # mysql
@@ -24,7 +24,7 @@ REDIS_PASSWORD = ''
 EMAIL_HOST = 'smtp.qq.com'
 EMAIL_PORT = 465
 EMAIL_HOST_USER = '1090233097@qq.com'  # 邮箱帐号
-EMAIL_sender_nick = ''  # 名称
+EMAIL_sender_nick = 'me2'  # 名称
 EMAIL_HOST_PASSWORD = 'vgzevlmbpbmgfefd'  # 邮箱密码
 EMAIL_FROM = '1090233097@qq.com'  # 邮件发送者帐号
 

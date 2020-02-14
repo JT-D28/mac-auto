@@ -1,3 +1,5 @@
+import threading
+
 from django.db import connection
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
@@ -9,7 +11,7 @@ from manager import cm
 from manager.core import *
 
 # Create your views here.
-from manager.models import Product, Plan, ResultDetail
+from manager.models import Product, Plan, ResultDetail, MailConfig
 import json
 from random import randrange
 
@@ -168,35 +170,27 @@ def restart(request):
 def sendreport(request):
     code = 0
     msg = ''
+    threading.Thread(target=sendmail, args=(request,)).start()
+    return JsonResponse(simplejson(code=code, msg="发送中！"), safe=False)
+
+
+def sendmail(request):
     planid = request.POST.get('planid')
     plan = Plan.objects.get(id=planid)
-    user = request.session.get("username", None)
+    username = request.session.get("username", None)
     detail = list(ResultDetail.objects.filter(plan=plan).order_by('-createtime'))
     if detail is None:
         msg = "任务还没有运行过！"
     else:
-        taskids = detail[0].taskid
+        taskid = detail[0].taskid
 
-    mail_res = MainSender.dingding(taskids, user, mail_config)
+    config_id = plan.mail_config_id
+    if config_id:
+        mail_config = MailConfig.objects.get(id=config_id)
+        user = User.objects.get(name=username)
+        MainSender.send(taskid, user, mail_config)
+        MainSender.dingding(taskid, user, mail_config)
 
-    url = 'https://oapi.dingtalk.com/robot/send?access_token=a39ed3fdf3d48d674afc5addb602ffe35330ee94bb736d447fcd6511cac70c25'
-    pagrem = {
-        "msgtype": "markdown",
-        "markdown": {
-            "title": "你的自动化测试报告已生成",
-            "text": "#### 你的自动化测试报告已生成\n" +
-                    "> 9度，西北风1级，空气良89，相对温度73%\n\n" +
-                    "> ###### 10点20分发布 [天气](http://www.thinkpage.cn/) \n"
-        },
-        "at": {
-            "isAtAll": True
-        }
-    }
-    headers = {
-        'Content-Type': 'application/json'
-    }
-    requests.post(url, data=json.dumps(pagrem), headers=headers)
-    return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
 @csrf_exempt

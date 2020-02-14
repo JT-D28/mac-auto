@@ -157,62 +157,13 @@
                         <label class="layui-form-label">收件人</label>
                         <div class="layui-input-block">
                             <input type="text" class="layui-input" name="to_receive" value="" title="" checked
-                                   lay-filter=''>
-                        </div>
-                    </div>
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">抄送</label>
-                        <div class="layui-input-block">
-                            <input type="text" class="layui-input" name="cc_receive" value="" title="" checked
-                                   lay-filter='e'>
+                                   lay-filter='' placeholder="多收件人请用“,”分割">
                         </div>
                     </div>
                     <div class="layui-form-item">
                         <label class="layui-form-label">标题</label>
                         <div class="layui-input-block">
                             <input type="text" class="layui-input" name="description" value='' title="" checked
-                                   lay-filter=''>
-                        </div>
-                    </div>
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">富文本</label>
-                        <div class="layui-input-block">
-                        <textarea type="text" class="layui-textarea" id='rich_text' name="rich_text" value="" title=""
-                                  checked lay-filter=''></textarea>
-                        </div>
-                    </div>
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">smtp主机</label>
-                        <div class="layui-input-block">
-                            <input type="text" class="layui-input" name="smtp_host" value='' title="" checked
-                                   lay-filter=''>
-                        </div>
-                    </div>
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">smtp端口</label>
-                        <div class="layui-input-block">
-                            <input type="text" class="layui-input" name="smtp_port" value='' title="" checked
-                                   lay-filter=''>
-                        </div>
-                    </div>
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">发送账号</label>
-                        <div class="layui-input-block">
-                            <input type="text" class="layui-input" name="sender_name" value='' title="" checked
-                                   lay-filter=''>
-                        </div>
-                    </div>
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">发送昵称</label>
-                        <div class="layui-input-block">
-                            <input type="text" class="layui-input" name="sender_nick" value='' title="" checked
-                                   lay-filter=''>
-                        </div>
-                    </div>
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">发送密码</label>
-                        <div class="layui-input-block">
-                            <input type="text" class="layui-input" name="sender_pass" value='' title="" checked
                                    lay-filter=''>
                         </div>
                     </div>
@@ -233,7 +184,7 @@
         </div>
         <div class="layui-colla-item">
             <h2 class="layui-colla-title">jenkins-jacoco配置</h2>
-            <div class="layui-colla-content">tode</div>
+            <div class="layui-colla-content">todo</div>
         </div>
     </div>
 
@@ -445,7 +396,7 @@
                     layer.msg("请选择项目和计划！")
                 } else {
                     layer.open({
-                        title: '报告通知配置',
+                        title: '报告配置',
                         type: 1,
                         area: ['800px', '450px'],
                         content: $('#settings'),
@@ -463,21 +414,13 @@
                                         $("[name='color_scheme']").val(ee.data['color_scheme'])
                                         layui.form.render('select');
                                         $("[name='description']").val(ee.data['description'])
-                                        $("[name='rich_text']").val(ee.data['rich_text'])
                                         $("[name='to_receive']").val(ee.data['to_receive'])
-                                        $("[name='cc_receive']").val(ee.data['cc_receive'])
-                                        $("[name='sender_name']").val(ee.data['sender_name'])
-                                        $("[name='sender_nick']").val(ee.data['sender_nick'])
-                                        $("[name='sender_pass']").val(ee.data['sender_pass'])
-                                        $("[name='smtp_host']").val(ee.data['smtp_host'])
-                                        $("[name='smtp_port']").val(ee.data['smtp_port'])
                                         $("[name='dingdingtoken']").val(ee.data['dingdingtoken'])
                                     }
                                 } else {
                                     ee = JSON.parse(ee)
                                     if (ee.code == 1) {
                                         op = '新建'
-                                        console.log('还未关联邮件 新建一个')
                                     }
                                 }
                             })
@@ -496,29 +439,20 @@
                                 id: planid,
                                 color_scheme: $("[name='color_scheme']").val(),
                                 description: $("[name='description']").val(),
-                                // rich_text:$("[name='rich_text']").val(),
-                                rich_text: layedit.getContent(le),
                                 to_receive: $("[name='to_receive']").val(),
-                                cc_receive: $("[name='cc_receive']").val(),
-                                sender_name: $("[name='sender_name']").val(),
-                                sender_nick: $("[name='sender_nick']").val(),
-                                sender_pass: $("[name='sender_pass']").val(),
-                                smtp_port: $("[name='smtp_port']").val(),
-                                smtp_host: $("[name='smtp_host']").val(),
                                 dingdingtoken: $("[name='dingdingtoken']").val(),
-                                // is_send_mail:$("[name=apply]").attr('checked')==false?'close':'open',
                             }, success)
                         }
                     });
                 }
             })
             $("#sendrepoet").click(function () {
-                common.ajax('/homepage/sendreport/', 'post', 'json', {'planid': $("[name='plan']").val().substr(5)}, function (date) {
-                    date = JSON.parse(data)
+                common.ajax('/homepage/sendreport/', 'post', 'json', {'planid': $("[name='plan']").val().substr(5)}, function (data) {
+                    data = JSON.parse(data)
                     if (data.code == 0) {
-                        layer.alert("发送成功！", {icon: 1, time: 1500})
+                        layer.alert(data.msg, {icon: 1, time: 1550},area= ['500px', '300px'])
                     } else {
-                        layer.alert(data.msg, {icon: 2, time: 2000})
+                        layer.alert(data.msg, {icon: 2, time: 1500})
                     }
                 })
             })

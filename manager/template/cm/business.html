@@ -1,6 +1,6 @@
-{%load static%}
+{% load static %}
 <!DOCTYPE html>
-<html lang="en"  style="height: 100%">
+<html lang="en" style="height: 100%">
 <head>
     <meta charset="UTF-8">
     <title>业务数据</title>
@@ -8,119 +8,139 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
     <style type="text/css">
-      .layui-icon:hover{
-        cursor: pointer;
-      }
-      .icon-tool{
-        float: right;
-      }
-      .icon-tool-item:hover{
-        cursor: pointer;
-      }
-      .icon-tool-item{
-        margin-left: 5px;
-      }
-      #case-selected p{
-        height: 30px;
-        padding: 0;
-       /* text-overflow: ellipsis;*/
-   /*     max-width:200px;*/
-      }
-      #can-select p:hover{
-        background-color: #009688;
-        color: white;
-      }
-      #is-selected p:hover{
-        background-color: #009688;
-        color:white;
-      }
-      .func_btn{
-        font-size: 10px;
-        margin:5px;
-      }
-      .func_btn:hover{
-        cursor: pointer;
-        color:#009688;
-        font-weight:10px;
-      }
-      .func_btn_bar{
-/*        background-color: red;*/
-      }
-    .mailpadding{
-        padding: 9px 1px;
-    }
+        .layui-icon:hover {
+            cursor: pointer;
+        }
+
+        .icon-tool {
+            float: right;
+        }
+
+        .icon-tool-item:hover {
+            cursor: pointer;
+        }
+
+        .icon-tool-item {
+            margin-left: 5px;
+        }
+
+        #case-selected p {
+            height: 30px;
+            padding: 0;
+            /* text-overflow: ellipsis;*/
+            /*     max-width:200px;*/
+        }
+
+        #can-select p:hover {
+            background-color: #009688;
+            color: white;
+        }
+
+        #is-selected p:hover {
+            background-color: #009688;
+            color: white;
+        }
+
+        .func_btn {
+            font-size: 10px;
+            margin: 5px;
+        }
+
+        .func_btn:hover {
+            cursor: pointer;
+            color: #009688;
+            font-weight: 10px;
+        }
+
+        .func_btn_bar {
+            /*        background-color: red;*/
+        }
+
+        .mailpadding {
+            padding: 9px 1px;
+        }
     </style>
 
 </head>
 <body>
 
 <div class="layui-row" style="height: 100%">
-      <div class="layui-col-md12" style="height: 100%;padding:0 15px" >
-          <fieldset style="height:95%">
-              <legend style="font-size: 20px;border-top-width:0px !important;">
+    <div class="layui-col-md12" style="height: 100%;padding:0 15px">
+        <fieldset style="height:95%">
+            <legend style="font-size: 20px;border-top-width:0px !important;">
                   <span class="layui-breadcrumb">
                       <a href="">用例管理</a>
                       <a href="">业务数据</a>
                   </span>
-              </legend>
-              <form id='addbusiness' class='layui-form layui-form-pane'>
-                  <div class="layui-form-item " id='weight_item' hidden>
-                      <label class="layui-form-label required">权重</label>
-                      <div class="layui-input-block">
-                          <input type="text" name="weight" placeholder="请输入" autocomplete="off" class="layui-input"   id='weight' disabled>
-                      </div>
-                  </div>
-                  <div class="layui-form-item ">
-                      <label class="layui-form-label required">执行次数</label>
-                      <div class="layui-input-block">
-                          <input type="text" name="count" placeholder="请输入" autocomplete="off" class="layui-input"   id='count' >
-                      </div>
-                  </div>
-                  <div class="layui-form-item ">
-                      <label class="layui-form-label required">测试点</label>
-                      <div class="layui-input-block">
-                          <input type="text" name="businessname" placeholder="请输入" autocomplete="off" class="layui-input" lay-verify="required">
-                      </div>
-                  </div>
-                  <div class="layui-form-item ">
-                      <label class="layui-form-label">前置操作</label>
-                      <div class="layui-input-block">
-                          <input type="text" id='pre' name="pre" placeholder="单个使用sleep(4),多个sleep(4)|dbexecute2(变量引用)" autocomplete="off" class="layui-input" lay-verify="required">
-                      </div>
-                  </div>
-                  <div class="layui-form-item ">
-                      <label class="layui-form-label ">后置操作</label>
-                      <div class="layui-input-block">
-                          <input type="text" id='post' name="post" placeholder="同前置条件" autocomplete="off" class="layui-input" lay-verify="required">
-                      </div>
-                  </div>
-                  <div class="layui-form-item ">
-                      <label class="layui-form-label required">接口校验</label>
-                      <div class="layui-input-block">
-                          <input type="text" id='itf_check' name="itf_check" placeholder="请输入" autocomplete="off" class="layui-input" lay-verify="required">
-                      </div>
-                  </div>
-                  <div class="layui-form-item ">
-                      <label class="layui-form-label required">DB校验</label>
-                      <div class="layui-input-block">
-                          <input type="text" id='db_check' name="db_check" placeholder="请输入" autocomplete="off" class="layui-input" lay-verify="required">
-                        </div>
+            </legend>
+            <form id='addbusiness' class='layui-form layui-form-pane'>
+                <div class="layui-form-item " id='weight_item' hidden>
+                    <label class="layui-form-label required">权重</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="weight" placeholder="请输入" autocomplete="off" class="layui-input"
+                               id='weight' disabled>
                     </div>
-                  <div class="layui-form-item ">
-                      <label class="layui-form-label required">参数信息</label>
-                      <div class="layui-input-block">
-                          <textarea name="params" id='params' placeholder="接口时输入json字符串 函数时直接输入参数,多个时,分隔" autocomplete="off" class="layui-textarea" lay-verify="required"  style="min-height:140px!important;"></textarea>
-                      </div>
-                  </div>
-                  <div class="layui-form-item">
-                      <button class="layui-btn" id='save' style="visibility:hidden;">保存</button>
-                  </div>
-              </form>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-inline" style="width: 65%;">
+                    <label class="layui-form-label required">测试点</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="businessname" placeholder="请输入" autocomplete="off" class="layui-input"
+                               lay-verify="required">
+                    </div>
+                    </div>
+                    <div class="layui-inline" style="width: 30%;float: right;margin-right:0">
+                    <label class="layui-form-label required">执行次数</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="count" placeholder="请输入" autocomplete="off" class="layui-input"
+                               id='count'>
+                    </div>
+                    </div>
+                </div>
+
+                <div class="layui-form-item ">
+                    <label class="layui-form-label">前置操作</label>
+                    <div class="layui-input-block">
+                        <input type="text" id='pre' name="pre" placeholder="单个使用sleep(4),多个sleep(4)|dbexecute2(变量引用)"
+                               autocomplete="off" class="layui-input" lay-verify="required">
+                    </div>
+                </div>
+                <div class="layui-form-item ">
+                    <label class="layui-form-label ">后置操作</label>
+                    <div class="layui-input-block">
+                        <input type="text" id='post' name="post" placeholder="同前置条件" autocomplete="off"
+                               class="layui-input" lay-verify="required">
+                    </div>
+                </div>
+                <div class="layui-form-item ">
+                    <label class="layui-form-label required">接口校验</label>
+                    <div class="layui-input-block">
+                        <input type="text" id='itf_check' name="itf_check" placeholder="请输入" autocomplete="off"
+                               class="layui-input" lay-verify="required">
+                    </div>
+                </div>
+                <div class="layui-form-item ">
+                    <label class="layui-form-label required">DB校验</label>
+                    <div class="layui-input-block">
+                        <input type="text" id='db_check' name="db_check" placeholder="请输入" autocomplete="off"
+                               class="layui-input" lay-verify="required">
+                    </div>
+                </div>
+                <div class="layui-form-item ">
+                    <label class="layui-form-label required">参数信息</label>
+                    <div class="layui-input-block">
+                        <textarea name="params" id='params' placeholder="接口时输入json字符串 函数时直接输入参数,多个时,分隔"
+                                  autocomplete="off" class="layui-textarea" lay-verify="required"
+                                  style="min-height:140px!important;"></textarea>
+                    </div>
+                </div>
+                <div class="layui-form-item" id="savaline">
+                    <button class="layui-btn" id='save' style="visibility:hidden;">保存</button>
+                </div>
+            </form>
         </fieldset>
     </div>
-  </div>
-
-
+</div>
 
 
 </body>
@@ -132,105 +152,103 @@
 <script type="text/javascript">
 
 
-layui.use(['table','element','form'],function(){
+    layui.use(['table', 'element', 'form'], function () {
 
-  var table = layui.table;
-  var $=layui.jquery
-  var layer=layui.layer;
-  var form=layui.form
-  uid=_get_query_param('uid')
-  pid=_get_query_param('pid')
-  action=_get_query_param('action')
-  detail='addbusiness'
+        var table = layui.table;
+        var $ = layui.jquery
+        var layer = layui.layer;
+        var form = layui.form
+        uid = _get_query_param('uid')
+        pid = _get_query_param('pid')
+        action = _get_query_param('action')
+        detail = 'addbusiness'
 
-  if(action!='view')
-    $('#save').css('visibility','visible')
-  else{
-    $('#save').css('visibility','hidden')
-    $('#weight_item').removeAttr('hidden')
-  }
+        if (action != 'view')
+            $('#save').css('visibility', 'visible')
+        else {
+            $('#save').css('visibility', 'hidden')
+            $('#savaline').css('height',0)
+            $('#weight_item').removeAttr('hidden')
+        }
 
-  // alert(uid)
+        // alert(uid)
 
-  if(uid){
-    detail='editbusiness'
-    success=function(d){
-      data=d.data[0]
+        if (uid) {
+            detail = 'editbusiness'
+            success = function (d) {
+                data = d.data[0]
 
-      $("[name='weight']").val(data['weight'])
-      $("[name='count']").val(data['count'])
-      $("[name='businessname']").val(data['businessname'])
-      $("[name='itf_check']").val(data['itf_check'])
-      $("[name='db_check']").val(data['db_check'])
-      $("[name='params']").val(data['params'])
-      $("[name='pre']").val(data['preposition'])
-      $("[name='post']").val(data['postposition'])
+                $("[name='weight']").val(data['weight'])
+                $("[name='count']").val(data['count'])
+                $("[name='businessname']").val(data['businessname'])
+                $("[name='itf_check']").val(data['itf_check'])
+                $("[name='db_check']").val(data['db_check'])
+                $("[name='params']").val(data['params'])
+                $("[name='pre']").val(data['preposition'])
+                $("[name='post']").val(data['postposition'])
 
-    };
-    _post('/manager/queryonebusiness/',{'vid':uid},success);
+            };
+            _post('/manager/queryonebusiness/', {'vid': uid}, success);
 
-  }
+        }
 
-  if (detail=='addbusiness'){
-     $("[name='count']").val(1)
-
-
-  }
+        if (detail == 'addbusiness') {
+            $("[name='count']").val(1)
 
 
-  //save
+        }
 
-  btn=$('#save')
-  if(btn)btn.bind('click',function(){
-    data={
-      'uid':uid,
-      'pid':pid,
-      'action':detail,
-      'businessname':$("[name='businessname']").val(),
-      'itf_check':$("[name='itf_check']").val(),
-      'db_check':$("[name='db_check']").val(),
-      'params':$("[name='params']").val(),
-      'preposition':$("[name='pre']").val(),
-      'postposition':$("[name='post']").val(),
-      'count':$("[name='count']").val(),
 
-    }
-    _post('/manager/treecontrol/',data,function(e){
-      if(e.code==0){
-        layer.alert(e.msg,{icon:1,time:2000})
+        //save
 
-            var treeObj = parent.$.fn.zTree.getZTreeObj('case-manager');
-
-            if(detail=='addbusiness'){
-              var node = treeObj.getNodeByParam('id',pid); 
-              console.log('addbusiness=>'+JSON.stringify(e.data)) 
-              treeObj.addNodes(node,e.data);
-              treeObj.expandNode(node,true)
-
-            }else{
-              var node = treeObj.getNodeByParam('id',uid);
-              // console.log('search tid '+utid+'=>'+node)
-              node.name=e.data['name']
-              treeObj.updateNode(node)
+        btn = $('#save')
+        if (btn) btn.bind('click', function () {
+            data = {
+                'uid': uid,
+                'pid': pid,
+                'action': detail,
+                'businessname': $("[name='businessname']").val(),
+                'itf_check': $("[name='itf_check']").val(),
+                'db_check': $("[name='db_check']").val(),
+                'params': $("[name='params']").val(),
+                'preposition': $("[name='pre']").val(),
+                'postposition': $("[name='post']").val(),
+                'count': $("[name='count']").val(),
 
             }
+            _post('/manager/treecontrol/', data, function (e) {
+                if (e.code == 0) {
+                    layer.alert(e.msg, {icon: 1, time: 2000})
 
-        
-      }
-      else
-        layer.alert(e.msg,{icon:2})
+                    var treeObj = parent.$.fn.zTree.getZTreeObj('case-manager');
+
+                    if (detail == 'addbusiness') {
+                        var node = treeObj.getNodeByParam('id', pid);
+                        console.log('addbusiness=>' + JSON.stringify(e.data))
+                        treeObj.addNodes(node, e.data);
+                        treeObj.expandNode(node, true)
+
+                    } else {
+                        var node = treeObj.getNodeByParam('id', uid);
+                        // console.log('search tid '+utid+'=>'+node)
+                        node.name = e.data['name']
+                        treeObj.updateNode(node)
+
+                    }
 
 
-    });
-
-    return false;
-
+                } else
+                    layer.alert(e.msg, {icon: 2})
 
 
+            });
 
-  });
+            return false;
 
-})
+
+        });
+
+    })
 
 </script>
 

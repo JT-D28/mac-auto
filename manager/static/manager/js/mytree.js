@@ -123,7 +123,7 @@ var tree={
 		_m1={
 			'root':['add'],
 			'product':['add','edit','del','mimport'],
-			'plan':['add','edit','del','run','mexport'],
+			'plan':['add','edit','del','run','mexport','logs'],
 			'case':['add','edit','del'],
 			'step':['add','edit','del'],
 			'business':['edit','del']
@@ -138,6 +138,7 @@ var tree={
 			'run':"<span class='fa fa-play-circle' id='run_#tid#' title='运行'></span>",
 			'add':"<span class='fa fa-plus-circle' id='add_#tid#' title='增加' onfocus='this.blur();'></span>",
 			'del':"<span class='fa fa-trash' id='del_#tid#' title='删除' onfocus='this.blur();'></span>",
+			'logs':"<span class='fa fa-bug' id='logs_#tid#' title='调试日志' onfocus='this.blur();'></span>",
 		}
 
 		var type=treeNode.type
@@ -175,6 +176,7 @@ var tree={
 		if($("#run_"+treeNode.tId).length>0)return
 		if($("#mimport_"+treeNode.tId).length>0)return
 		if($("#mexport_"+treeNode.tId).length>0)return
+		if($("#logs_"+treeNode.tId).length>0)return
 
 		sObj.after(btnstr);
 	
@@ -327,6 +329,31 @@ var tree={
 			return false;
 		});
 
+
+
+
+
+		logs_btn=$("#logs_"+treeNode.tId)
+		if (logs_btn)logs_btn.bind("click", function(){
+
+			_post('/homepage/plandebug/',{
+				'action':'run',
+				'ids':treeNode.id
+			},function(data){
+				if(data.code==0){
+					layer.alert('你已提交任务 ID='+data.msg,{icon:1,time:2000})
+				}else{
+					layer.alert('提交异常..')
+				}
+
+
+
+			})
+
+			return false;
+		});
+
+
 	},
 
 	_removeHoverDom:function(treeId, treeNode) {
@@ -338,7 +365,7 @@ var tree={
 	    $("#mimport_"+treeNode.tId).unbind().remove();   
 	    $("#mexport_"+treeNode.tId).unbind().remove();   
 	    $("#run_"+treeNode.tId).unbind().remove();      
-
+		$("#logs_"+treeNode.tId).unbind().remove();
 	},
 
 	_onBeforeExpand:function(e,treeId,treeNode){

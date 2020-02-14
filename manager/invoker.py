@@ -7,7 +7,7 @@ from django.conf import settings
 from django.db.models import Q
 from django.http import JsonResponse
 
-from django_demo import configs
+from ME2 import configs
 from login.models import *
 from manager.models import *
 from .core import ordered, Fu, getbuiltin, EncryptUtils, genorder, simplejson

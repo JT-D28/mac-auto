@@ -1,5 +1,5 @@
 """
-WSGI config for django_demo project.
+WSGI config for ME2 project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -13,7 +13,7 @@ from django.core.wsgi import get_wsgi_application
 
 from .pipline import *
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_demo.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ME2.settings')
 application = get_wsgi_application()
 
 

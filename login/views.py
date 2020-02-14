@@ -1,6 +1,6 @@
 from django.shortcuts import render,redirect,render_to_response
 from django.conf import settings
-from django_demo import configs
+from ME2 import configs
 from . import forms
 from manager import models
 from login import models as md

@@ -293,3 +293,9 @@ def jenkins_add(request):
         code = 1
         msg = '添加异常'
     return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+
+
+
+@csrf_exempt
+def plandebug(request):
+    return JsonResponse(simplejson(code=0, msg="1"), safe=False)

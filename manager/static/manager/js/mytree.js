@@ -2,7 +2,7 @@ var tree={
 	// _newCount:1,
 	className:'dark',
 	_getsetting:function(){
-		var setting = 
+		var setting =
 		{
 			view: {
 		        addHoverDom:this._addHoverDom, //当鼠标移动到节点上时，显示用户自定义控件
@@ -27,10 +27,10 @@ var tree={
 
 		   	},
 
-			data:{ 
-			    simpleData:{ 
-			      enable:true //支持json格式 
-				} 
+			data:{
+			    simpleData:{
+			      enable:true //支持json格式
+				}
 			},
 			callback: {
 				onClick:this._onClick,
@@ -47,13 +47,13 @@ var tree={
 				// onRename: this._onRename,
       		}
   		}
-	
+
 		return setting
 
 	},
 
 	init:function(searchvalue=''){
-		// return  
+		// return
 
 		//alert('tree init..')
 		var t=this
@@ -179,7 +179,7 @@ var tree={
 		if($("#logs_"+treeNode.tId).length>0)return
 
 		sObj.after(btnstr);
-	
+
 		//ADD
 		var add_btn = $("#add_"+treeNode.tId);
 		//console.log('len=>'+add_btn.length)
@@ -204,7 +204,7 @@ var tree={
 			console.log(treeNode.id)
 			_load_tree_content('/manager/treecontrol/?action=loadpage&op=add&page='+page+'&pid='+treeNode.id+'&ptid='+treeNode.tid)
 			return false
-			
+
 		});
 		// //EDIT
 		var edit_btn = $("#edit_"+treeNode.tId);
@@ -213,7 +213,7 @@ var tree={
 			type=treeNode.type
 			_load_tree_content('/manager/treecontrol/?action=loadpage&uid='+treeNode.id+'&page='+type+'&utid='+treeNode.tid)
 			return false
-			
+
 		});
 
 		// //DEL
@@ -226,8 +226,8 @@ var tree={
 		    		if(e.code==0){
 
 						var treeObj = $.fn.zTree.getZTreeObj(treeId);
-						var node = treeObj.getNodeByParam('id',treeNode.id);	   
-					
+						var node = treeObj.getNodeByParam('id',treeNode.id);
+
 				 		treeObj.removeNode(node)
 
 		    			layer.alert(e.msg,{icon:1,time:2000})
@@ -246,8 +246,8 @@ var tree={
 					        	//layer.msg('强制删除.')
 					        	success=function(e){
 									var treeObj = $.fn.zTree.getZTreeObj(treeId);
-									var node = treeObj.getNodeByParam('id',treeNode.id);	   
-								
+									var node = treeObj.getNodeByParam('id',treeNode.id);
+
 							 		treeObj.removeNode(node)
 
 					    			layer.alert(e.msg,{icon:1,time:2000})
@@ -337,11 +337,19 @@ var tree={
 		if (logs_btn)logs_btn.bind("click", function(){
 
 			_post('/homepage/plandebug/',{
-				'action':'run',
-				'ids':treeNode.id
+				'planid':treeNode.id.substr(5)
 			},function(data){
+				data=JSON.parse(data)
 				if(data.code==0){
-					layer.alert('你已提交任务 ID='+data.msg,{icon:1,time:2000})
+					layer.open({
+						title:'任务名xxxx时间的执行结果',
+						type: 1,
+						area :['90%', '90%'],
+						content: $('#test'),
+						shade: [0],
+						anim: 2,
+						shadeClose: true
+					});
 				}else{
 					layer.alert('提交异常..')
 				}
@@ -359,12 +367,12 @@ var tree={
 	_removeHoverDom:function(treeId, treeNode) {
 	    $("#add_"+treeNode.tId).unbind().remove();
 	    $("#up_"+treeNode.tId).unbind().remove();
-	    $("#down_"+treeNode.tId).unbind().remove();  
-	    $("#edit_"+treeNode.tId).unbind().remove();   
-	    $("#del_"+treeNode.tId).unbind().remove();   
-	    $("#mimport_"+treeNode.tId).unbind().remove();   
-	    $("#mexport_"+treeNode.tId).unbind().remove();   
-	    $("#run_"+treeNode.tId).unbind().remove();      
+	    $("#down_"+treeNode.tId).unbind().remove();
+	    $("#edit_"+treeNode.tId).unbind().remove();
+	    $("#del_"+treeNode.tId).unbind().remove();
+	    $("#mimport_"+treeNode.tId).unbind().remove();
+	    $("#mexport_"+treeNode.tId).unbind().remove();
+	    $("#run_"+treeNode.tId).unbind().remove();
 		$("#logs_"+treeNode.tId).unbind().remove();
 	},
 
@@ -399,7 +407,7 @@ var tree={
 		console.log('onClick')
 
 		console.log('节点expand状态=>'+treeNode.open)
-		
+
 		var treeObj = $.fn.zTree.getZTreeObj(treeId);
 		// var node = treeObj.getNodeByTId(treeNode.tId);
 
@@ -420,7 +428,7 @@ var tree={
 			treeObj.removeChildNodes(treeNode)
 			treeObj.addNodes(treeNode, data.data);
 			treeObj.expandNode(treeNode,true)
-			
+
 		}
 		_post('/manager/querytreelist/',params,success)
 
@@ -462,7 +470,7 @@ var tree={
     	warn='不允许此操作['+_call_map[src_type]+'->'+_call_map[target_type]+']'
 
     	if('inner'==moveType){
-    		
+
     		if(expected.indexOf(target_type)==-1){
     			layer.alert(warn,{icon:2,time:2000})
     			return false;
@@ -480,7 +488,7 @@ var tree={
     	}
 
 		return true
-       
+
     },
     _onDrop:function(event, treeId, treeNodes, targetNode, moveType, isCopy){
 		_post('/manager/treecontrol/',{
@@ -507,7 +515,7 @@ var tree={
 				treeObj.removeChildNodes(node)
 				treeObj.addNodes(node, data.data);
 				treeObj.expandNode(node,true)
-				
+
 			}
 			_post('/manager/querytreelist/',params,success)
 

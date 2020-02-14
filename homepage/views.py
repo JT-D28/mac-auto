@@ -5,6 +5,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from ME2 import configs
 from manager.invoker import gettaskresult, MainSender
 from . import rpechart
 from manager import cm
@@ -199,7 +200,7 @@ def reportchart(request):
     code = 0
     taskids = list(ResultDetail.objects.values('taskid').filter(plan_id=planid))
     if taskids:
-        sql = '''
+        sql1 = '''
         SELECT x.plan_id,m.description,CONCAT(success),CONCAT(FAIL),CONCAT(skip),CONCAT(total),x.taskid,DATE_FORMAT(TIME,'%%m-%%d %%H:%%i') AS time,
         CONCAT(success*100/total) ,CONCAT(error) FROM (
         SELECT DISTINCT manager_resultdetail.taskid,plan_id FROM manager_resultdetail) AS x JOIN (
@@ -221,8 +222,11 @@ def reportchart(request):
         strftime('%%m-%%d %%H:%%M',manager_resultdetail.createtime) AS time FROM manager_resultdetail LEFT JOIN 
         manager_plan ON manager_resultdetail.plan_id=manager_plan.id WHERE plan_id=%s GROUP BY taskid) AS m ORDER BY time DESC LIMIT 10
         '''
+
+        sql=sql2 if configs.dbtype=='sqlite' else sql2
+
         with connection.cursor() as cursor:
-            cursor.execute(sql2, [planid])
+            cursor.execute(sql, [planid])
             row = cursor.fetchall()
         print(row)
         return JsonResponse(simplejson(code=code, data=row), safe=False)
@@ -298,4 +302,5 @@ def jenkins_add(request):
 
 @csrf_exempt
 def plandebug(request):
-    return JsonResponse(simplejson(code=0, msg="1"), safe=False)
+    x =reportchart(request)
+    return x

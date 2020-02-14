@@ -12,24 +12,18 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 import json
+from django_demo import configs
 
-
-config = json.load(open('config','r',encoding='utf-8'))
-
-BASE_URL='http://'+config["me2url"]
-
+BASE_URL = 'http://' + configs.ME2_URL
 ##Redis配置
+REDIS_HOST = configs.REDIS_HOST
+REDIS_PORT = configs.REDIS_PORT
 
-REDIS_HOST=config["redisip"]
-REDIS_PORT=config["redisport"]
-
-
-#环境
-env_id=''
+# 环境
+env_id = ''
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
@@ -41,7 +35,6 @@ SECRET_KEY = 'd6yqlb(u%mxu!t$4evtz@3#5zqo@zy8db09cj1pi2r38^6fi*y'
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
 
 # Application definition
 
@@ -61,7 +54,6 @@ INSTALLED_APPS = [
     # 'django_crontab',
 ]
 
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -73,7 +65,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'mymiddleware.Interceptor',
 
-
 ]
 
 # 指定ASGI的路由地址
@@ -84,7 +75,8 @@ ROOT_URLCONF = 'django_demo.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR,'login/template'),os.path.join(BASE_DIR,'manager/template'),os.path.join(BASE_DIR,'homepage/template')],
+        'DIRS': [os.path.join(BASE_DIR, 'login/template'), os.path.join(BASE_DIR, 'manager/template'),
+                 os.path.join(BASE_DIR, 'homepage/template')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -100,20 +92,32 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'django_demo.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        'OPTIONS':{
-          'timeout':20
+
+if configs.dbtype == 'sqlite3':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+            'OPTIONS': {
+                'timeout': 20
+            }
         }
     }
-}
 
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': configs.DATABASES_NAME,  # 新建数据库名
+            'USER': configs.DATABASES_USER,  # 数据库登录名
+            'PASSWORD': configs.DATABASES_PWD,  # 数据库登录密码
+            'HOST': configs.DATABASES_HOST,  # 数据库所在服务器ip地址
+            'PORT': configs.DATABASES_PORT,  # 监听端口 默认3306即可
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -133,7 +137,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
@@ -147,75 +150,41 @@ USE_L10N = True
 
 USE_TZ = False
 
-
 ###############################
 
 LOGGING = {
-
- 'version': 1,
-
- 'disable_existing_loggers': False,
-
- 'formatters': {
-
-  'verbose': {
-
-   'format': '[%(asctime)s] [%(levelname)s] %(message)s'
-
-  },
-
- },
-
- 'handlers': {
-
-  'console':{
-
-   'level':'INFO',
-
-   'class':'logging.StreamHandler',
-
-   'formatter': 'verbose'
-
-  },
-
-  'file': {
-
-   'level': 'INFO',
-
-   'class': 'logging.FileHandler',
-
-   'filename': '../monitor.log',
-
-   'formatter': 'verbose'
-
-  },
-
-  'email': {
-
-   'level': 'ERROR',
-
-   'class': 'django.utils.log.AdminEmailHandler',
-
-   'include_html' : True,
-
-  }
-
- },
-
- 'loggers': {
-
-  'django': {
-
-   'handlers': ['console', 'file', 'email'],
-
-   'level': 'INFO',
-
-   'propagate': True,
-
-  },
-
- },
-
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[%(asctime)s] [%(levelname)s] %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': './logs/monitor.log',
+            'formatter': 'verbose'
+        },
+        'email': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'include_html': True,
+        }
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file', 'email'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
 }
 
 # Static files (CSS, JavaScript, Images)
@@ -224,18 +193,18 @@ LOGGING = {
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR,"login/static"),
-    os.path.join(BASE_DIR,'manager/static'),
+    os.path.join(BASE_DIR, "login/static"),
+    os.path.join(BASE_DIR, 'manager/static'),
     os.path.join(BASE_DIR, 'homepage/static')
 
 ]
 
-#配置解决跨域问题
+# 配置解决跨域问题
 # 跨域增加忽略
 CORS_ALLOW_CREDENTIALS = True
 # CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_WHITELIST = (
-    'http://localhost:8000','http://127.0.0.1:8000'
+    'http://localhost:8000', 'http://127.0.0.1:8000'
 )
 # ALLOWED_HOSTS = ['*']
 CORS_ALLOW_METHODS = (
@@ -260,4 +229,4 @@ CORS_ALLOW_HEADERS = (
     'x-requested-with',
 )
 
-APPEND_SLASH=False
+APPEND_SLASH = False

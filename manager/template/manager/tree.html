@@ -271,6 +271,44 @@
         document.documentElement.style.overflow = 'hidden';
     }
 
+
+
+    layui.use(['util', 'jquery'], function () {
+        var util = layui.util;
+        var $ = layui.jquery;
+
+        util.fixbar({
+            bar1: "dabug"
+            , css: {right: 10, bottom: '80%'}
+            , bgcolor: '#4a00ed'
+            , click: function () {
+                $.ajax({
+                    url: '/homepage/process/',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {'taskid': "MTU4MTU2MTc2MS4xMjU3ODU="},
+                    success: function (res) {
+                        res = JSON.parse(res)
+                        var log_text = res.data
+                        var is_done = res.msg
+                        layer.open({
+                                type: 1,
+                                id: "log-process",
+                                title: false,
+                                shade: [0],
+                                area: ['90%', '90%'],
+                                anim: 2,
+                                shadeClose: true,
+                                content: $("#seeprocess"),
+                            });
+                    }
+                });
+            }
+        });
+    });
+
+
+
 </script>
 </body>
 </html>

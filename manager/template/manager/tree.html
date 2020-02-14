@@ -271,6 +271,20 @@
         document.documentElement.style.overflow = 'hidden';
     }
 
+    layui.use(['util', 'jquery'], function () {
+        var util = layui.util;
+        var $ = layui.jquery;
+
+        util.fixbar({
+            bar1: "↻"
+            , css: {right: 10, bottom: '10%'}
+            , bgcolor: '#4bedbf'
+            , click: function () {
+                 document.getElementById('tree-content').contentWindow.location.reload();
+            }
+        });
+    });
+
 </script>
 </body>
 </html>

@@ -1290,7 +1290,10 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 				if op=='$':
 					flag=rh.__contains__(v)
 				elif op=='==':
-					flag=str(rps_header[bi[ak]]).strip()==str(v).strip()
+					act=rh
+					expect=str(v).strip()
+					print('act=>%s expect=>%s'%(act,expect))
+					flag=act==expect
 				else:
 					return ('fail','响应头校验暂时只支持=,$比较.')
 

@@ -17,6 +17,6 @@
 
 # print('a.content-type')
 
-seq=('a','b')
-print('-'.join(seq))
+a='application/json'
+print(a)
 

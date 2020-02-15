@@ -1336,13 +1336,17 @@ def del_node_force(request):
 		node_type=i.split('_')[0]
 		idx=i.split('_')[1]
 
+		# print('node_type=>',node_type)
+		# print('idx=>',idx)
+
 		if node_type=='product':
 			_del_product_force(idx)
 
 		elif node_type=='plan':
 			_del_plan_force(idx)
 		elif node_type=='case':
-			_del_case_force(idx)
+			up=_get_case_up_level_kind(idx)
+			_del_case_force(idx,up='%s_case'%up)
 		elif node_type=='step':
 			_del_step_force(idx)
 
@@ -1351,6 +1355,14 @@ def del_node_force(request):
 	'msg':'删除成功.'
 	}
 
+def _get_case_up_level_kind(case_id):
+	case_desp=Case.objects.get(id=case_id).description
+	o=list(Order.objects.filter(Q(kind__contains='_case')&Q(follow_id=case_id)))[0]
+	# print('order=>',o)
+	kind=o.kind.split('_')[0]
+	# print('获得文件夹[%s]上层节点类型=>%s'%(case_desp,kind))
+	return kind
+
 			
 def _del_product_force(product_id):
 	try:
@@ -1358,7 +1370,7 @@ def _del_product_force(product_id):
 		product_order_list=list(Order.objects.filter(kind='product_plan',main_id=product_id))
 
 		for o in product_order_list:
-			o.delete()
+			#o.delete()
 			_del_plan_force(o.follow_id)
 
 		product.delete()
@@ -1366,8 +1378,6 @@ def _del_product_force(product_id):
 		print(traceback.format_exc())
 
 def _del_plan_force(plan_id):
-
-
 	#取消上层依赖
 	try:
 		Order.objects.get(kind='product_plan',follow_id=plan_id).delete()
@@ -1381,8 +1391,8 @@ def _del_plan_force(plan_id):
 		
 		if len(plan_order_list)>0:
 			for o in plan_order_list:
-				o.delete()
-				_del_case_force(o.follow_id)
+				#o.delete()
+				_del_case_force(o.follow_id,kind='plan_case')
 
 		plan.delete()
 	except:
@@ -1392,13 +1402,14 @@ def _del_plan_force(plan_id):
 
 
 
-def _del_case_force(case_id):
+def _del_case_force(case_id,up='plan_case'):
 
 	#取消上层依赖
+	
 	try:
-		Order.objects.get(kind='plan_case',follow_id=case_id).delete()
+		Order.objects.get(kind=up,follow_id=case_id).delete()
 	except:
-		print('取消上层依赖异常.')
+		print('取消上层依赖异常.case_id=%s type=%s'%(case_id,up))
 
 
 	case=Case.objects.get(id=case_id)
@@ -1407,19 +1418,18 @@ def _del_case_force(case_id):
 
 	##处理case->step
 	for o in case_order_list:
-		o.delete()
-		Step.objects.get(id=o.follow_id).delete()
+		#o.delete()
+		#Step.objects.get(id=o.follow_id).delete()
+		_del_step_force(o.follow_id)
 
 	#处理case->case
 	for o in case_order_list_2:
 		c=Case.objects.get(id=o.follow_id)
 		
-		_del_case_force(c.id)
-		c.delete()
-		o.delete()
+		_del_case_force(c.id,up='case_case')
+		#c.delete()
+		#o.delete()
 		
-
-
 	#
 	case.delete()
 
@@ -1436,7 +1446,7 @@ def _del_step_force(step_id):
 	try:
 
 		step=Step.objects.get(id=step_id)
-		step_order_list=list(Order.objects.get(kind='step_business',main_id=step_id))
+		step_order_list=list(Order.objects.filter(kind='step_business',main_id=step_id))
 		for o in step_order_list:
 			o.delete()
 			business=BusinessData.objects.get(id=o.follow_id)

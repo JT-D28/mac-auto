@@ -1430,6 +1430,7 @@ def _replace_variable(user,str_,src=1,taskid=None):
 
 			elif len(gain)==0 and len(value)>0:
 				old=old.replace('{{%s}}'%varname,str(value))
+				viewcache(taskid,user.name,None,'替换变量 {{%s}}=>%s'%(varname,value))
 				#__replace_route["%s.%s"%(user.name,varname)]=value
 
 			elif len(gain)>0 and len(value)==0:
@@ -1443,6 +1444,11 @@ def _replace_variable(user,str_,src=1,taskid=None):
 							return v
 						else:
 							v=v[1]
+						old=old.replace('{{%s}}'%varname,str(v))
+						viewcache(taskid,user.name,None,'替换变量 {{%s}}=>%s'%(varname,v))
+
+
+
 				else:
 					v=_gain_compute(user,gain,src=src,taskid=taskid)
 					if v[0] is not 'success':
@@ -1454,6 +1460,7 @@ def _replace_variable(user,str_,src=1,taskid=None):
 					# if v is None:
 					# 	return ('error','')
 					old=old.replace('{{%s}}'%varname,str(v))
+					viewcache(taskid,user.name,None,'替换变量 {{%s}}=>%s'%(varname,v))
 
 		return ('success',old)
 	except Exception as e:

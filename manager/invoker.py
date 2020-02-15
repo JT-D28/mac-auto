@@ -106,8 +106,9 @@ def gettaskresult(taskid):
 	detail={}
 	spend_total=0
 	res=ResultDetail.objects.filter(taskid=taskid)
-	# print("size=>",list(res))
-	plan=list(res)[0].plan
+	reslist=list(res)
+	print('res=>',reslist)
+	plan=reslist[0].plan
 	planname=plan.description
 	planid=plan.id
 
@@ -135,14 +136,16 @@ def gettaskresult(taskid):
 		if caseobj.get("steps",None) is None:
 			caseobj['steps']=[]
 		caseid=case.id
+		print('taskid=>%s case_id=>%s'%(taskid,case))
 		step_query=list(ResultDetail.objects.filter(taskid=taskid,case=case))
-
+		##case_step
 		for x in step_query:
 			businessobj={}
 			business=x.businessdata
 			status,step=gettestdatastep(business.id)
 
 
+			print('a=>%s b=>%s'%(case.id,step.id))
 			step_weight=Order.objects.get(main_id=case.id,follow_id=step.id,kind='case_step').value
 
 			business_index=Order.objects.get(main_id=step.id,follow_id=business.id,kind='step_business').value.split('.')[1]
@@ -171,7 +174,9 @@ def gettaskresult(taskid):
 					error,stepinst=gettestdatastep(business.id)
 					print('%s=>%s,%s'%(business.id,error,stepinst))
 					businessobj['stepname']=stepinst.description
-					businessobj['api']='/'+'/'.join(re.findall('http://(.*)',stepinst.url)[0].split('/')[1:])
+					matcher=re.findall('http://(.*)',stepinst.url)
+					print('matcher=>',matcher)
+					businessobj['api']='/'+'/'.join(matcher[0].split('/')[1:])
 				except:
 					print('获取步骤api和名称异常=>',traceback.format_exc())
 					businessobj['api']=stepinst.body
@@ -187,6 +192,7 @@ def gettaskresult(taskid):
 					detail['max']=businessobj['spend']
 
 				caseobj.get('steps').append(businessobj)
+		##case_case map
 
 		detail.get("cases").append(caseobj)
 

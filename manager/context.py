@@ -324,9 +324,13 @@ def viewcache(taskid, username, kind=None, *msg):
         what = "%s        %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), what)
         # print("console:",what)
         print('redis=>', what)
-        f = open(logname, "a")
-        f.write(what + "<br>\n")
-        f.close
+        # f = open(logname, "a")
+        # f.write(what + "<br>\n")
+        # f.close
+
+        with open(logname, 'a',encoding='UTF-8') as f:
+            f.write(what+'\n')
+
         print(what)
         con = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
         key = "console.msg::%s::%s" % (username, taskid)

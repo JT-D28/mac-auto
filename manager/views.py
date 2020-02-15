@@ -1630,57 +1630,27 @@ def editmailconfig(request):
 		mail_config_id=plan.mail_config_id
 
 		to_receive = request.POST.get('to_receive')
-		rich_text = request.POST.get('rich_text')
 		description = request.POST.get('description')
-		smtp_host = request.POST.get('smtp_host')
-		smtp_port = request.POST.get('smtp_port')
-		sender_name = request.POST.get('sender_name')
-		sender_nick = request.POST.get('sender_nick')
-		sender_pass = request.POST.get('sender_pass')
 		dingdingtoken = request.POST.get('dingdingtoken')
-		# if to_receive=='' or rich_text=='' or description==''or smtp_host==''or smtp_port==''or sender_name=='' or sender_nick=='' or sender_pass=='' :
-		# 	code=1
-		# 	msg='请检查输入项是否填写！'
-		# 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
-		# else:
 		if mail_config_id:
 			config=MailConfig.objects.get(id=mail_config_id)
 			config.to_receive=to_receive
-			config.cc_receive=request.POST.get('cc_receive')
-			config.rich_text=rich_text
 			config.color_scheme=request.POST.get('color_scheme')
 			config.description=description
-			config.smtp_host=smtp_host
-			config.smtp_port=smtp_port
-			config.sender_name=sender_name
-			config.sender_nick=sender_nick
-			config.sender_pass = sender_pass
 			config.dingdingtoken = dingdingtoken
-
-			# config.is_send_mail=request.POST.get('is_send_mail')
 			config.save()
 			msg='编辑成功'
 		else:
 			config = MailConfig()
 			config.to_receive = to_receive
-			config.cc_receive = request.POST.get('cc_receive')
-			config.rich_text = rich_text
 			config.color_scheme = request.POST.get('color_scheme')
 			config.description = description
-			config.smtp_host = smtp_host
-			config.smtp_port = smtp_port
-			config.sender_name = sender_name
-			config.sender_nick = sender_nick
-			config.sender_pass = sender_pass
 			config.dingdingtoken = dingdingtoken
 			author = md.User.objects.get(name=request.session.get('username'))
 			config.author = author
-			# config.is_send_mail=request.POST.get('is_send_mail')
 			config.save()
-
 			plan.mail_config_id = config.id
 			plan.save()
-
 			msg = '新建成功'
 
 	except:

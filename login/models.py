@@ -20,6 +20,14 @@ class User(models.Model):
     def __str__(self):
         return self.name
 
+    @classmethod
+    def create_superuser(cls, password):
+        if not User.objects.filter(name='admin').exists():
+            user = User()
+            user.name = 'admin'
+            user.password = password
+            user.save()
+
     class Meta:
         ordering = ["-createtime"]
         verbose_name = "用户"

@@ -2,14 +2,12 @@
 /__pycache__/
 /manager/__pycache__/
 /db.sqlite3
-/django_demo/settings.py
 /manager/static/manager/js/util.js
 /db1.sqlite3
-/django_demo/__pycache__/
+/ME2/__pycache__/
 /homepage/__pycache__/
 /tools/__pycache__/
 /manager/__pycache__/
 /logs/*
-configs.py
 /login/__pycache__/
 /login/migrations/__pycache__/

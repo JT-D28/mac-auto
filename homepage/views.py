@@ -1,15 +1,18 @@
+import threading
+
 from django.db import connection
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from ME2 import configs
 from manager.invoker import gettaskresult, MainSender
 from . import rpechart
 from manager import cm
 from manager.core import *
 
 # Create your views here.
-from manager.models import Product, Plan, ResultDetail
+from manager.models import Product, Plan, ResultDetail, MailConfig
 import json
 from random import randrange
 
@@ -168,35 +171,27 @@ def restart(request):
 def sendreport(request):
     code = 0
     msg = ''
+    threading.Thread(target=sendmail, args=(request,)).start()
+    return JsonResponse(simplejson(code=code, msg="发送中！"), safe=False)
+
+
+def sendmail(request):
     planid = request.POST.get('planid')
     plan = Plan.objects.get(id=planid)
-    user = request.session.get("username", None)
+    username = request.session.get("username", None)
     detail = list(ResultDetail.objects.filter(plan=plan).order_by('-createtime'))
     if detail is None:
         msg = "任务还没有运行过！"
     else:
-        taskids = detail[0].taskid
+        taskid = detail[0].taskid
 
-    mail_res = MainSender.dingding(taskids, user, mail_config)
+    config_id = plan.mail_config_id
+    if config_id:
+        mail_config = MailConfig.objects.get(id=config_id)
+        user = User.objects.get(name=username)
+        MainSender.send(taskid, user, mail_config)
+        MainSender.dingding(taskid, user, mail_config)
 
-    url = 'https://oapi.dingtalk.com/robot/send?access_token=a39ed3fdf3d48d674afc5addb602ffe35330ee94bb736d447fcd6511cac70c25'
-    pagrem = {
-        "msgtype": "markdown",
-        "markdown": {
-            "title": "你的自动化测试报告已生成",
-            "text": "#### 你的自动化测试报告已生成\n" +
-                    "> 9度，西北风1级，空气良89，相对温度73%\n\n" +
-                    "> ###### 10点20分发布 [天气](http://www.thinkpage.cn/) \n"
-        },
-        "at": {
-            "isAtAll": True
-        }
-    }
-    headers = {
-        'Content-Type': 'application/json'
-    }
-    requests.post(url, data=json.dumps(pagrem), headers=headers)
-    return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
 @csrf_exempt
@@ -205,7 +200,7 @@ def reportchart(request):
     code = 0
     taskids = list(ResultDetail.objects.values('taskid').filter(plan_id=planid))
     if taskids:
-        sql = '''
+        sql1 = '''
         SELECT x.plan_id,m.description,CONCAT(success),CONCAT(FAIL),CONCAT(skip),CONCAT(total),x.taskid,DATE_FORMAT(TIME,'%%m-%%d %%H:%%i') AS time,
         CONCAT(success*100/total) ,CONCAT(error) FROM (
         SELECT DISTINCT manager_resultdetail.taskid,plan_id FROM manager_resultdetail) AS x JOIN (
@@ -227,8 +222,11 @@ def reportchart(request):
         strftime('%%m-%%d %%H:%%M',manager_resultdetail.createtime) AS time FROM manager_resultdetail LEFT JOIN 
         manager_plan ON manager_resultdetail.plan_id=manager_plan.id WHERE plan_id=%s GROUP BY taskid) AS m ORDER BY time DESC LIMIT 10
         '''
+
+        sql=sql2 if configs.dbtype=='sqlite' else sql2
+
         with connection.cursor() as cursor:
-            cursor.execute(sql2, [planid])
+            cursor.execute(sql, [planid])
             row = cursor.fetchall()
         print(row)
         return JsonResponse(simplejson(code=code, data=row), safe=False)
@@ -299,3 +297,26 @@ def jenkins_add(request):
         code = 1
         msg = '添加异常'
     return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+
+
+
+@csrf_exempt
+def plandebug(request):
+    type=''
+    if request.POST.get("type")=='info':
+        planname=request.POST.get("id")
+        return JsonResponse(simplejson(code=0,planname=planname,time='20200215'), safe=False)
+    elif request.POST.get("type")=='plan':
+        type='case'
+        data =  [{'title': '用例1', 'id': 'case_1','type':'case'}] if request.POST.get("id")=='16' else [{'title': '用例2', 'id': 'case_2','type':'case'}]
+    elif request.POST.get("type")=='case':
+        type='step'
+        data = [{'title': '步骤1', 'id': 'step_1','type':'step'}, {'title': '步骤2', 'id': 'step_2','type':'step'}]
+    elif request.POST.get("type") == 'step':
+        type='bussiness'
+        if request.POST.get('id')=='step_1':
+            data = [{'title': '业务数据1', 'id': 'bussiness_1','type':'bussiness'}]
+        else:
+            data = [{'title': '业务数据2', 'id': 'bussiness_2','type':'bussiness'}]
+
+    return JsonResponse(simplejson(code=0, type=type,msg=data), safe=False)

@@ -7,6 +7,7 @@ from django.conf import settings
 from django.db.models import Q
 from django.http import JsonResponse
 
+from ME2 import configs
 from login.models import *
 from manager.models import *
 from .core import ordered, Fu, getbuiltin, EncryptUtils, genorder, simplejson
@@ -1989,27 +1990,28 @@ class MainSender:
 			is_send_mail=mail_config.is_send_mail
 			if is_send_mail=='close':
 				return '=========发送邮件功能没开启 跳过发送================='
-			sender_name=mail_config.sender_name
-			sender_nick=mail_config.sender_nick
-			sender_pass=mail_config.sender_pass
+			sender_name=configs.EMAIL_HOST_USER
+			sender_nick=configs.EMAIL_sender_nick
+			sender_pass=configs.EMAIL_HOST_PASSWORD
 			to_receive=mail_config.to_receive
-			cc_receive=mail_config.cc_receive
-			rich_text_rp=_replace_property(user,mail_config.rich_text)
-			rich_text=''
-			if rich_text_rp[0] is 'success':
-				rich_text_rv=_replace_variable(user,rich_text_rp[1],taskid=taskid)
-				if rich_text_rv[0] is 'success':
-					rich_text=rich_text_rv[1]
-				else:
-					ret=1
-					error='变量替换异常,检查变量是否已定义'
 
-			else:
-				ret=1
-				error='属性替换异常 可用属性'
+			rich_text = ''
 
-			smtp_host=mail_config.smtp_host#"smtp.qq.com"
-			smtp_port=mail_config.smtp_port#465
+			# rich_text_rp=_replace_property(user,mail_config.rich_text)
+			# rich_text=''
+			# if rich_text_rp[0] is 'success':
+			# 	rich_text_rv=_replace_variable(user,rich_text_rp[1],taskid=taskid)
+			# 	if rich_text_rv[0] is 'success':
+			# 		rich_text=rich_text_rv[1]
+			# 	else:
+			# 		ret=1
+			# 		error='变量替换异常,检查变量是否已定义'
+			# else:
+			# 	ret=1
+			# 	error='属性替换异常 可用属性'
+
+			smtp_host=configs.EMAIL_HOST		#"smtp.qq.com"
+			smtp_port=configs.EMAIL_PORT			#465
 			subject=''
 			description=mail_config.description
 			description_rp=_replace_property(user, description)

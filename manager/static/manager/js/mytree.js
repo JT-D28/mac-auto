@@ -2,7 +2,7 @@ var tree={
 	// _newCount:1,
 	className:'dark',
 	_getsetting:function(){
-		var setting = 
+		var setting =
 		{
 			view: {
 		        addHoverDom:this._addHoverDom, //当鼠标移动到节点上时，显示用户自定义控件
@@ -27,10 +27,10 @@ var tree={
 
 		   	},
 
-			data:{ 
-			    simpleData:{ 
-			      enable:true //支持json格式 
-				} 
+			data:{
+			    simpleData:{
+			      enable:true //支持json格式
+				}
 			},
 			callback: {
 				onClick:this._onClick,
@@ -47,13 +47,13 @@ var tree={
 				// onRename: this._onRename,
       		}
   		}
-	
+
 		return setting
 
 	},
 
 	init:function(searchvalue=''){
-		// return  
+		// return
 
 		//alert('tree init..')
 		var t=this
@@ -123,7 +123,7 @@ var tree={
 		_m1={
 			'root':['add'],
 			'product':['add','edit','del','mimport'],
-			'plan':['add','edit','del','run','mexport'],
+			'plan':['add','edit','del','run','mexport','logs'],
 			'case':['add','edit','del'],
 			'step':['add','edit','del'],
 			'business':['edit','del']
@@ -138,6 +138,7 @@ var tree={
 			'run':"<span class='fa fa-play-circle' id='run_#tid#' title='运行'></span>",
 			'add':"<span class='fa fa-plus-circle' id='add_#tid#' title='增加' onfocus='this.blur();'></span>",
 			'del':"<span class='fa fa-trash' id='del_#tid#' title='删除' onfocus='this.blur();'></span>",
+			'logs':"<span class='fa fa-bug' id='logs_#tid#' title='调试日志' onfocus='this.blur();'></span>",
 		}
 
 		var type=treeNode.type
@@ -175,9 +176,10 @@ var tree={
 		if($("#run_"+treeNode.tId).length>0)return
 		if($("#mimport_"+treeNode.tId).length>0)return
 		if($("#mexport_"+treeNode.tId).length>0)return
+		if($("#logs_"+treeNode.tId).length>0)return
 
 		sObj.after(btnstr);
-	
+
 		//ADD
 		var add_btn = $("#add_"+treeNode.tId);
 		//console.log('len=>'+add_btn.length)
@@ -202,7 +204,7 @@ var tree={
 			console.log(treeNode.id)
 			_load_tree_content('/manager/treecontrol/?action=loadpage&op=add&page='+page+'&pid='+treeNode.id+'&ptid='+treeNode.tid)
 			return false
-			
+
 		});
 		// //EDIT
 		var edit_btn = $("#edit_"+treeNode.tId);
@@ -211,7 +213,7 @@ var tree={
 			type=treeNode.type
 			_load_tree_content('/manager/treecontrol/?action=loadpage&uid='+treeNode.id+'&page='+type+'&utid='+treeNode.tid)
 			return false
-			
+
 		});
 
 		// //DEL
@@ -224,8 +226,8 @@ var tree={
 		    		if(e.code==0){
 
 						var treeObj = $.fn.zTree.getZTreeObj(treeId);
-						var node = treeObj.getNodeByParam('id',treeNode.id);	   
-					
+						var node = treeObj.getNodeByParam('id',treeNode.id);
+
 				 		treeObj.removeNode(node)
 
 		    			layer.alert(e.msg,{icon:1,time:2000})
@@ -244,8 +246,8 @@ var tree={
 					        	//layer.msg('强制删除.')
 					        	success=function(e){
 									var treeObj = $.fn.zTree.getZTreeObj(treeId);
-									var node = treeObj.getNodeByParam('id',treeNode.id);	   
-								
+									var node = treeObj.getNodeByParam('id',treeNode.id);
+
 							 		treeObj.removeNode(node)
 
 					    			layer.alert(e.msg,{icon:1,time:2000})
@@ -327,18 +329,94 @@ var tree={
 			return false;
 		});
 
+
+		layui.use(['tree'], function () {
+			var tree = layui.tree;
+
+			logs_btn = $("#logs_" + treeNode.tId)
+
+			if (logs_btn) logs_btn.bind("click", function () {
+				_post('/homepage/plandebug/', {
+					'id': treeNode.id.substr(5),
+					'type': 'info'
+				}, function (data) {
+					data=JSON.parse(data)
+					layer.open({
+						title: '任务名['+data.planname+']在'+data.time +'的执行结果',
+						type: 1,
+						area: ['90%', '90%'],
+						content: $('#test'),
+						shade: [0],
+						anim: 2,
+						shadeClose: true,
+						success: function () {
+							querydebug(treeNode.id.substr(5), 'plan')
+						},
+						end: function () {
+							tree.reload('demo1', {data: [], text: {none: ''}});
+							tree.reload('demo2', {data: [], text: {none: ''}});
+							tree.reload('demo3', {data: [], text: {none: ''}});
+							$("#log_text").html('');
+						}
+					});
+				});
+				return false;
+			});
+
+			function querydebug(id,type) {
+				_post('/homepage/plandebug/', {
+					'id': id,
+					'type': type
+				}, function (data) {
+					plandebug(JSON.parse(data))
+				})
+
+			}
+
+			function plandebug(data) {
+				if (data.type == "case") {
+					tree.render({
+						elem: '#demo1',id : 'demo1', data: data.msg, accordion: true,showLine: false,
+						text: {none: '本次调试全部通过'},
+						click: function (obj) {
+							querydebug(obj.data.id,'case')
+						}
+					})
+				} else if (data.type == "step") {
+					tree.render({
+						elem: '#demo2', id: 'demo2', data: data.msg, accordion: true, showLine: false,
+						click: function (obj) {
+							querydebug(obj.data.id,'step')
+						}
+					})
+				} else if (data.type == "bussiness") {
+					tree.render({
+						elem: '#demo3',id: 'demo3', data: data.msg,accordion: true,showLine: false,
+						click: function (obj) {
+							$("#log_text").html(obj.data.title);
+						}
+					})
+				}
+			}
+		})
+
+
+
+
+
+
 	},
 
 	_removeHoverDom:function(treeId, treeNode) {
 	    $("#add_"+treeNode.tId).unbind().remove();
 	    $("#up_"+treeNode.tId).unbind().remove();
-	    $("#down_"+treeNode.tId).unbind().remove();  
-	    $("#edit_"+treeNode.tId).unbind().remove();   
-	    $("#del_"+treeNode.tId).unbind().remove();   
-	    $("#mimport_"+treeNode.tId).unbind().remove();   
-	    $("#mexport_"+treeNode.tId).unbind().remove();   
-	    $("#run_"+treeNode.tId).unbind().remove();      
-
+	    $("#down_"+treeNode.tId).unbind().remove();
+	    $("#edit_"+treeNode.tId).unbind().remove();
+	    $("#del_"+treeNode.tId).unbind().remove();
+	    $("#mimport_"+treeNode.tId).unbind().remove();
+	    $("#mexport_"+treeNode.tId).unbind().remove();
+	    $("#run_"+treeNode.tId).unbind().remove();
+		$("#logs_"+treeNode.tId).unbind().remove();
 	},
 
 	_onBeforeExpand:function(e,treeId,treeNode){
@@ -372,7 +450,7 @@ var tree={
 		console.log('onClick')
 
 		console.log('节点expand状态=>'+treeNode.open)
-		
+
 		var treeObj = $.fn.zTree.getZTreeObj(treeId);
 		// var node = treeObj.getNodeByTId(treeNode.tId);
 
@@ -393,7 +471,7 @@ var tree={
 			treeObj.removeChildNodes(treeNode)
 			treeObj.addNodes(treeNode, data.data);
 			treeObj.expandNode(treeNode,true)
-			
+
 		}
 		_post('/manager/querytreelist/',params,success)
 
@@ -435,7 +513,7 @@ var tree={
     	warn='不允许此操作['+_call_map[src_type]+'->'+_call_map[target_type]+']'
 
     	if('inner'==moveType){
-    		
+
     		if(expected.indexOf(target_type)==-1){
     			layer.alert(warn,{icon:2,time:2000})
     			return false;
@@ -453,7 +531,7 @@ var tree={
     	}
 
 		return true
-       
+
     },
     _onDrop:function(event, treeId, treeNodes, targetNode, moveType, isCopy){
 		_post('/manager/treecontrol/',{
@@ -480,7 +558,7 @@ var tree={
 				treeObj.removeChildNodes(node)
 				treeObj.addNodes(node, data.data);
 				treeObj.expandNode(node,true)
-				
+
 			}
 			_post('/manager/querytreelist/',params,success)
 

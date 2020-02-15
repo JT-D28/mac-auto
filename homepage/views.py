@@ -302,5 +302,21 @@ def jenkins_add(request):
 
 @csrf_exempt
 def plandebug(request):
-    x =reportchart(request)
-    return x
+    type=''
+    if request.POST.get("type")=='info':
+        planname=request.POST.get("id")
+        return JsonResponse(simplejson(code=0,planname=planname,time='20200215'), safe=False)
+    elif request.POST.get("type")=='plan':
+        type='case'
+        data =  [{'title': '用例1', 'id': 'case_1','type':'case'}] if request.POST.get("id")=='16' else [{'title': '用例2', 'id': 'case_2','type':'case'}]
+    elif request.POST.get("type")=='case':
+        type='step'
+        data = [{'title': '步骤1', 'id': 'step_1','type':'step'}, {'title': '步骤2', 'id': 'step_2','type':'step'}]
+    elif request.POST.get("type") == 'step':
+        type='bussiness'
+        if request.POST.get('id')=='step_1':
+            data = [{'title': '业务数据1', 'id': 'bussiness_1','type':'bussiness'}]
+        else:
+            data = [{'title': '业务数据2', 'id': 'bussiness_2','type':'bussiness'}]
+
+    return JsonResponse(simplejson(code=0, type=type,msg=data), safe=False)

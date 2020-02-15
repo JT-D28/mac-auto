@@ -177,15 +177,24 @@
 
 
 <div id="test" hidden class="layui-row layui-col-space10" style="height: 100%;">
-    <div class="layui-col-md3 " style="max-height:100%;overflow-y:auto;">
+    <div class="layui-col-md2 " style="max-height:100%;overflow-y:auto;">
         <ul id="demo1"></ul>
     </div>
 
-    <div class="layui-col-md3 " style="max-height:100%;overflow-y:auto;">
+    <div class="layui-col-md2 " style="max-height:100%;overflow-y:auto;">
         <ul id="demo2"></ul>
     </div>
-    <div class="layui-col-md3 " style="max-height:100%;overflow-y:auto;">
+    <div class="layui-col-md2 " style="max-height:100%;overflow-y:auto;">
         <ul id="demo3"></ul>
+    </div>
+    <div class="layui-col-md5 " style="max-height:100%;overflow-y:auto;">
+        <div id="debug" >
+            <div class="layui-table">
+                <div class="layui-card-body">
+                    <div id="log_text"></div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -291,74 +300,8 @@
         document.documentElement.style.overflow = 'hidden';
     }
 
-    layui.use(['util', 'jquery','element','tree'], function () {
+    layui.use(['util'], function () {
         var util = layui.util;
-        var $ = layui.jquery;
-        var element = layui.element;
-        var tree = layui.tree;
-
-        data = [{
-            title: '早餐'
-            , id: 1
-            , children: [{
-                title: '油条'
-                , id: 5
-            }, {
-                title: '包子'
-                , id: 6
-            }, {
-                title: '豆浆'
-                , id: 7
-            }]
-        }, {
-            title: '午餐'
-            , id: 2
-            , checked: true
-            , children: [{
-                title: '藜蒿炒腊肉'
-                , id: 8
-            }, {
-                title: '西湖醋鱼'
-                , id: 9
-            }, {
-                title: '小白菜'
-                , id: 10
-            }, {
-                title: '海带排骨汤'
-                , id: 11
-            }]
-        }, {
-            title: '晚餐'
-            , id: 3
-            , children: [{
-                title: '红烧肉'
-                , id: 12
-                , fixed: true
-            }, {
-                title: '番茄炒蛋'
-                , id: 13
-            }]
-        } ];
-
-        tree.render({
-            elem: '#demo1'
-            , data: data
-            , accordion:true
-            , showLine: false,  //是否开启连接线,
-            click: function (obj) {
-                console.log(obj.data); //得到当前点击的节点数据
-                console.log(obj.state); //得到当前节点的展开状态：open、close、normal
-                console.log(obj.elem); //得到当前节点元素
-
-                console.log(obj.data.children); //当前节点下是否有子节点
-            }
-        });
-
-
-
-
-
-
         util.fixbar({
             bar1: "↻"
             , css: {right: 10, bottom: '10%'}

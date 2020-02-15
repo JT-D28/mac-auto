@@ -330,36 +330,79 @@ var tree={
 		});
 
 
+		layui.use(['tree'], function () {
+			var tree = layui.tree;
 
+			logs_btn = $("#logs_" + treeNode.tId)
 
-
-		logs_btn=$("#logs_"+treeNode.tId)
-		if (logs_btn)logs_btn.bind("click", function(){
-
-			_post('/homepage/plandebug/',{
-				'planid':treeNode.id.substr(5)
-			},function(data){
-				data=JSON.parse(data)
-				if(data.code==0){
+			if (logs_btn) logs_btn.bind("click", function () {
+				_post('/homepage/plandebug/', {
+					'id': treeNode.id.substr(5),
+					'type': 'info'
+				}, function (data) {
+					data=JSON.parse(data)
 					layer.open({
-						title:'任务名xxxx时间的执行结果',
+						title: '任务名['+data.planname+']在'+data.time +'的执行结果',
 						type: 1,
-						area :['90%', '90%'],
+						area: ['90%', '90%'],
 						content: $('#test'),
 						shade: [0],
 						anim: 2,
-						shadeClose: true
+						shadeClose: true,
+						success: function () {
+							querydebug(treeNode.id.substr(5), 'plan')
+						},
+						end: function () {
+							tree.reload('demo1', {data: [], text: {none: ''}});
+							tree.reload('demo2', {data: [], text: {none: ''}});
+							tree.reload('demo3', {data: [], text: {none: ''}});
+							$("#log_text").html('');
+						}
 					});
-				}else{
-					layer.alert('提交异常..')
+				});
+				return false;
+			});
+
+			function querydebug(id,type) {
+				_post('/homepage/plandebug/', {
+					'id': id,
+					'type': type
+				}, function (data) {
+					plandebug(JSON.parse(data))
+				})
+
+			}
+
+			function plandebug(data) {
+				if (data.type == "case") {
+					tree.render({
+						elem: '#demo1',id : 'demo1', data: data.msg, accordion: true,showLine: false,
+						text: {none: '本次调试全部通过'},
+						click: function (obj) {
+							querydebug(obj.data.id,'case')
+						}
+					})
+				} else if (data.type == "step") {
+					tree.render({
+						elem: '#demo2', id: 'demo2', data: data.msg, accordion: true, showLine: false,
+						click: function (obj) {
+							querydebug(obj.data.id,'step')
+						}
+					})
+				} else if (data.type == "bussiness") {
+					tree.render({
+						elem: '#demo3',id: 'demo3', data: data.msg,accordion: true,showLine: false,
+						click: function (obj) {
+							$("#log_text").html(obj.data.title);
+						}
+					})
 				}
+			}
+		})
 
 
 
-			})
 
-			return false;
-		});
 
 
 	},

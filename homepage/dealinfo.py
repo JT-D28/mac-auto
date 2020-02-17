@@ -11,14 +11,14 @@ def doDebugInfo(request):
 
     if type == 'info':
         sql = '''
-        SELECT description as planname,max(manager_resultdetail.createtime) as time,taskid FROM manager_resultdetail 
+        SELECT description as planname,max(manager_resultdetail.createtime) as time,taskid,is_running FROM manager_resultdetail 
         LEFT JOIN manager_plan on manager_plan.id=manager_resultdetail.plan_id where plan_id=%s
         '''
         with connection.cursor() as cursor:
             cursor.execute(sql, [id])
             desc = cursor.description
             row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-        return row, 'info', ''
+        return row, 'info', '',row[0]['is_running']
     if type == 'plan':
         sql2 = '''
         SELECT description as title,case_id as id FROM manager_resultdetail r LEFT JOIN manager_case c on r.case_id=c.id 
@@ -32,7 +32,7 @@ def doDebugInfo(request):
         for i in list(row):
             if i not in case_row:
                 case_row.append(i)
-        return case_row, 'case', taskid
+        return case_row, 'case', taskid,0
     if type == 'case':
         sql2 = '''
         SELECT description as title,step_id as id FROM manager_resultdetail r LEFT JOIN manager_step s 
@@ -46,7 +46,7 @@ def doDebugInfo(request):
         for i in list(row):
             if i not in step_row:
                 step_row.append(i)
-        return step_row, 'step', taskid
+        return step_row, 'step', taskid,0
     if type == 'step':
         sql2 = '''
         SELECT businessname as title,businessdata_id as id FROM manager_resultdetail r 
@@ -60,7 +60,7 @@ def doDebugInfo(request):
         for i in list(row):
             if i not in businessdata_row:
                 businessdata_row.append(i)
-        return businessdata_row, 'bussiness', taskid
+        return businessdata_row, 'bussiness', taskid,0
     # if type == 'bussiness':
     #     res = ''
     #     sql2 = '''
@@ -154,12 +154,12 @@ def doDebugInfo(request):
             for i in ress:
                 if id in i:
                     print(i)
-                    return i, 'debuginfo', ''
+                    return i, 'debuginfo', '',0
                 else:
                     res=''
         else:
             res = '请稍等！'
-        return res, 'debuginfo', ''
+        return res, 'debuginfo', '',0
 
 
 def dealDeBuginfo(taskid):

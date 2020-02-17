@@ -301,7 +301,7 @@ def jenkins_add(request):
 
 @csrf_exempt
 def plandebug(request):
-    res, type, taskid = doDebugInfo(request)
-    return JsonResponse({"code": 0, "type": type, "data": res, "taskid": taskid})
+    res, type, taskid,code = doDebugInfo(request)
+    return JsonResponse({"code":code, "type": type, "data": res, "taskid": taskid})
 
 

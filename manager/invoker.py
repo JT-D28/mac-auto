@@ -470,7 +470,8 @@ def runplan(callername,taskid,planid,kind=None):
 	username=callername
 	try:
 		plan=Plan.objects.get(id=planid)
-
+		plan.is_running=1
+		plan.save()
 		dbid=plan.db_id
 		if dbid:
 			desp=DBCon.objects.get(id=int(dbid)).description
@@ -491,10 +492,12 @@ def runplan(callername,taskid,planid,kind=None):
 
 		if planre:
 			plan.last='success'
+			plan.is_running = 0
 			plan.save()
 			viewcache(taskid, username,kind,"结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-green'>success</span>"%plan.description)
 		else:
 			plan.last='fail'
+			plan.is_running = 0
 			plan.save()
 			viewcache(taskid, username,kind,"结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-red'>fail</span>"%plan.description)
 

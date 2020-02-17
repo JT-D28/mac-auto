@@ -273,27 +273,7 @@ var tree={
 			return false;
 		});
 
-		//RUN
 
-		run_btn=$("#run_"+treeNode.tId)
-		if (run_btn)run_btn.bind("click", function(){
-
-			_post('/manager/treecontrol/',{
-				'action':'run',
-				'ids':treeNode.id
-			},function(data){
-				if(data.code==0){
-					layer.alert('你已提交任务 ID='+data.msg,{icon:1,time:2000})
-				}else{
-					layer.alert('提交异常..')
-				}
-
-
-
-			})
-
-			return false;
-		});
 
 		//EXPORT
 		export_btn=$("#mexport_"+treeNode.tId)
@@ -336,36 +316,78 @@ var tree={
 		layui.use(['tree', 'table'], function () {
 			var tree = layui.tree;
 			var table = layui.table;
-			logs_btn = $("#logs_" + treeNode.tId)
 
-			if (logs_btn) logs_btn.bind("click", function () {
-				_post('/homepage/plandebug/', {
-					'id': treeNode.id.substr(5),
-					'type': 'info'
+
+			//RUN
+			run_btn = $("#run_" + treeNode.tId)
+			if (run_btn) run_btn.bind("click", function () {
+				_post('/manager/treecontrol/', {
+					'action': 'run',
+					'ids': treeNode.id
 				}, function (data) {
-					layer.open({
-						title: '任务名【' + data.data[0]['planname'] + '】在【' + data.data[0]['time'].substr(5, 11) + '】执行不通过情况',
-						type: 1,
-						area: ['90%', '90%'],
-						content: $('#test'),
-						shade: [0],
-						anim: 2,
-						shadeClose: true,
-						success: function () {
-							querydebug(treeNode.id.substr(5), 'plan', data.data[0]['taskid'])
-						},
-						end: function () {
-							table.reload('demo', {data: [],text: {none: '测试全部通过了！'}});
-							tree.reload('demo1', {data: [], text: {none: ''}});
-							tree.reload('demo2', {data: [], text: {none: ''}});
-							tree.reload('demo3', {data: [], text: {none: ''}});
-							$("#debuginfo").css('display','none');
-							$("#log_text").html('');
-						}
-					});
-				});
+					if (data.code == 0) {
+						layer.confirm('你已提交任务 ID=' + data.msg, {
+							btn: ['打开控制台', '查看调试信息', '关闭'] //按钮
+						}, function () {
+							window.top.document.getElementById("console").click()
+						}, function () {
+							opendebug(treeNode)
+						}, function (index, layero) {
+							layer.close(index)
+						});
+					} else {
+						layer.alert('提交异常..')
+					}
+				})
 				return false;
 			});
+
+			logs_btn = $("#logs_" + treeNode.tId)
+			if (logs_btn) logs_btn.bind("click", function () {
+				is_running = opendebug(treeNode)
+				_post('/homepage/plandebug/', {'id': treeNode.id.substr(5), 'type': 'info'},
+					function (data) {
+						if (data.code == 1){
+							layer.msg("任务正在运行中，请稍后！")
+						}else opendebug(treeNode)
+					})
+				return false;
+			});
+
+			function opendebug(treeNode) {
+				$.ajax({
+					type: 'POST', url: '/homepage/plandebug/', data: {
+						'id': treeNode.id.substr(5),
+						'type': 'info'
+					}, success: function (data) {
+						if (data.code == 0) {
+							layer.open({
+								title: '任务名【' + data.data[0]['planname'] + '】在【' + data.data[0]['time'].substr(5, 11) + '】执行不通过情况',
+								type: 1,
+								area: ['90%', '90%'],
+								content: $('#test'),
+								shade: [0],
+								anim: 2,
+								shadeClose: true,
+								success: function () {
+									querydebug(treeNode.id.substr(5), 'plan', data.data[0]['taskid'])
+								},
+								end: function () {
+									table.reload('demo', {data: [], text: {none: '测试全部通过了！'}});
+									tree.reload('demo1', {data: [], text: {none: ''}});
+									tree.reload('demo2', {data: [], text: {none: ''}});
+									tree.reload('demo3', {data: [], text: {none: ''}});
+									$("#debuginfo").css('display', 'none');
+									$("#log_text").html('');
+								}
+							});
+						} else setTimeout(function () {
+							opendebug(treeNode)
+						}, 1000)
+					},
+					dataType: 'json'
+				});
+			}
 
 			function querydebug(id, type, taskid) {
 				_post('/homepage/plandebug/', {
@@ -433,6 +455,7 @@ var tree={
 						}
 					)
 				}
+									return false;
 			}
 		})
 

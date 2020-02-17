@@ -113,15 +113,13 @@ var tree={
     switchObj.remove();
     icoObj.parent().before(switchObj);
     var spantxt = $("#" + treeNode.tId + "_span").html();
-    if (treeNode.type=='step' & spantxt.length> 15 ) {
-        spantxt = spantxt.substring(0, 15) + "...";
-        $("#" + treeNode.tId + "_span").html(spantxt);
-    }else if(spantxt.length> 12){
-    	spantxt = spantxt.substring(0, 12) + "...";
-        $("#" + treeNode.tId + "_span").html(spantxt);
-	}
-
-
+		if (treeNode.type == 'step' & spantxt.length > 15) {
+			spantxt = spantxt.substring(0, 15) + "...";
+			$("#" + treeNode.tId + "_span").html(spantxt);
+		} else if (spantxt.length > 10 & treeNode.type != 'step') {
+			spantxt = spantxt.substring(0, 12) + "...";
+			$("#" + treeNode.tId + "_span").html(spantxt);
+		}
 	},
 	_addHoverDom:function(treeId, treeNode){
 		//console.log(treeNode)

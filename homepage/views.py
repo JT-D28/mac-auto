@@ -96,7 +96,7 @@ def process(request):
     logname = "./logs/" + taskid + ".log"
     try:
         if os.path.exists(logname):
-            with open(logname, 'r') as f:
+            with open(logname, 'r', encoding='utf-8') as f:
                 log_text = f.read()
         if done_msg in log_text:
             is_done = 'yes'
@@ -223,7 +223,7 @@ def reportchart(request):
         manager_plan ON manager_resultdetail.plan_id=manager_plan.id WHERE plan_id=%s GROUP BY taskid) AS m ORDER BY time DESC LIMIT 10
         '''
 
-        sql=sql2 if configs.dbtype=='sqlite' else sql2
+        sql = sql2 if configs.dbtype == 'sqlite' else sql2
 
         with connection.cursor() as cursor:
             cursor.execute(sql, [planid])
@@ -302,21 +302,93 @@ def jenkins_add(request):
 
 @csrf_exempt
 def plandebug(request):
-    type=''
-    if request.POST.get("type")=='info':
-        planname=request.POST.get("id")
-        return JsonResponse(simplejson(code=0,planname=planname,time='20200215'), safe=False)
-    elif request.POST.get("type")=='plan':
-        type='case'
-        data =  [{'title': '用例1', 'id': 'case_1','type':'case'}] if request.POST.get("id")=='16' else [{'title': '用例2', 'id': 'case_2','type':'case'}]
-    elif request.POST.get("type")=='case':
-        type='step'
-        data = [{'title': '步骤1', 'id': 'step_1','type':'step'}, {'title': '步骤2', 'id': 'step_2','type':'step'}]
-    elif request.POST.get("type") == 'step':
-        type='bussiness'
-        if request.POST.get('id')=='step_1':
-            data = [{'title': '业务数据1', 'id': 'bussiness_1','type':'bussiness'}]
-        else:
-            data = [{'title': '业务数据2', 'id': 'bussiness_2','type':'bussiness'}]
+    res, type, taskid = doDebugInfo(request)
+    return JsonResponse({"code": 0, "type": type, "data": res, "taskid": taskid})
 
-    return JsonResponse(simplejson(code=0, type=type,msg=data), safe=False)
+
+def doDebugInfo(request):
+    type = request.POST.get("type")
+    id = request.POST.get("id")
+    taskid = request.POST.get("taskid")
+
+    if type == 'info':
+        sql = '''
+        SELECT description as planname,max(manager_resultdetail.createtime) as time,taskid FROM manager_resultdetail 
+        LEFT JOIN manager_plan on manager_plan.id=manager_resultdetail.plan_id where plan_id=%s
+        '''
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [id])
+            desc = cursor.description
+            row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+        return row, 'info', ''
+    if type == 'plan':
+        sql2 = '''
+        SELECT description as title,case_id as id FROM manager_resultdetail r LEFT JOIN manager_case c on r.case_id=c.id 
+        where plan_id=%s and taskid=%s and result in ('fail','error')
+        '''
+        with connection.cursor() as cursor:
+            cursor.execute(sql2, [id, taskid])
+            desc = cursor.description
+            row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+        case_row = []
+        for i in list(row):
+            if i not in case_row:
+                case_row.append(i)
+        return case_row, 'case', taskid
+    if type == 'case':
+        sql2 = '''
+        SELECT description as title,step_id as id FROM manager_resultdetail r LEFT JOIN manager_step s 
+        on r.step_id=s.id where case_id=%s and taskid=%s  and result in ('fail','error')
+        '''
+        with connection.cursor() as cursor:
+            cursor.execute(sql2, [id, taskid])
+            desc = cursor.description
+            row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+        step_row = []
+        for i in list(row):
+            if i not in step_row:
+                step_row.append(i)
+        return step_row, 'step', taskid
+    if type == 'step':
+        sql2 = '''
+        SELECT businessname as title,businessdata_id as id FROM manager_resultdetail r 
+        LEFT JOIN manager_businessdata b on r.businessdata_id=b.id where step_id=%s and taskid=%s and result in ('fail','error');
+        '''
+        with connection.cursor() as cursor:
+            cursor.execute(sql2, [id, taskid])
+            desc = cursor.description
+            row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+        businessdata_row = []
+        for i in list(row):
+            if i not in businessdata_row:
+                businessdata_row.append(i)
+        return businessdata_row, 'bussiness', taskid
+    if type == 'bussiness':
+        sql2 = '''
+        SELECT itf_check ,db_check,params ,preposition,postposition from manager_businessdata where id =%s
+        '''
+        with connection.cursor() as cursor:
+            cursor.execute(sql2, [id])
+            desc = cursor.description
+            businessdata_row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+        print(businessdata_row[0]['itf_check'])
+        if 'itf' == 'itf':
+            res = [
+                {"id": "前置操作", "expect": businessdata_row[0]['preposition'], "real": businessdata_row[0]['db_check']},
+                {"id": "header", "expect": businessdata_row[0]['itf_check'], "real": businessdata_row[0]['db_check']},
+                {"id": "content-type", "expect": businessdata_row[0]['itf_check'], "real": businessdata_row[0]['db_check']},
+                {"id": "url", "expect": businessdata_row[0]['itf_check'], "real": businessdata_row[0]['db_check']},
+                {"id": "参数", "expect": businessdata_row[0]['params'], "real": businessdata_row[0]['db_check']},
+                {"id": "后置操作", "expect": businessdata_row[0]['postposition'], "real": businessdata_row[0]['db_check']},
+                {"id": "接口校验", "expect": businessdata_row[0]['db_check'], "real": businessdata_row[0]['db_check']},
+                {"id": "db校验", "expect": businessdata_row[0]['itf_check'], "real": businessdata_row[0]['db_check']},
+            ]
+        elif businessdata_row[0]['type'] == 'function':
+            res = [
+                {"id": "前置操作", "expect": businessdata_row[0]['itf_check'], "real": businessdata_row[0]['db_check']},
+                {"id": "调用函数", "expect": businessdata_row[0]['itf_check'], "real": businessdata_row[0]['db_check']},
+                {"id": "参数", "expect": businessdata_row[0]['itf_check'], "real": businessdata_row[0]['db_check']},
+                {"id": "后置操作", "expect": businessdata_row[0]['itf_check'], "real": businessdata_row[0]['db_check']},
+            ]
+
+        return res, 'businessdata', taskid

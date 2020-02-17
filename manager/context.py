@@ -329,7 +329,7 @@ def viewcache(taskid, username, kind=None, *msg):
         # f.close
 
         with open(logname, 'a',encoding='UTF-8') as f:
-            f.write(what+'\n')
+            f.write(what+'<br>\n')
 
         print(what)
         con = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)

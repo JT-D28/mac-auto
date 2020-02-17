@@ -113,10 +113,15 @@ var tree={
     switchObj.remove();
     icoObj.parent().before(switchObj);
     var spantxt = $("#" + treeNode.tId + "_span").html();
-    if (spantxt.length> 10) {
-        spantxt = spantxt.substring(0, 10) + "...";
+    if (treeNode.type=='step' & spantxt.length> 15 ) {
+        spantxt = spantxt.substring(0, 15) + "...";
         $("#" + treeNode.tId + "_span").html(spantxt);
-    }
+    }else if(spantxt.length> 12){
+    	spantxt = spantxt.substring(0, 12) + "...";
+        $("#" + treeNode.tId + "_span").html(spantxt);
+	}
+
+
 	},
 	_addHoverDom:function(treeId, treeNode){
 		//console.log(treeNode)
@@ -330,9 +335,9 @@ var tree={
 		});
 
 
-		layui.use(['tree'], function () {
+		layui.use(['tree', 'table'], function () {
 			var tree = layui.tree;
-
+			var table = layui.table;
 			logs_btn = $("#logs_" + treeNode.tId)
 
 			if (logs_btn) logs_btn.bind("click", function () {
@@ -340,9 +345,8 @@ var tree={
 					'id': treeNode.id.substr(5),
 					'type': 'info'
 				}, function (data) {
-					data=JSON.parse(data)
 					layer.open({
-						title: '任务名['+data.planname+']在'+data.time +'的执行结果',
+						title: '任务名【' + data.data[0]['planname'] + '】在【' + data.data[0]['time'].substr(5, 11) + '】执行不通过情况',
 						type: 1,
 						area: ['90%', '90%'],
 						content: $('#test'),
@@ -350,9 +354,10 @@ var tree={
 						anim: 2,
 						shadeClose: true,
 						success: function () {
-							querydebug(treeNode.id.substr(5), 'plan')
+							querydebug(treeNode.id.substr(5), 'plan', data.data[0]['taskid'])
 						},
 						end: function () {
+							table.reload('demo', {data: [],text: {none: '测试全部通过了！'}});
 							tree.reload('demo1', {data: [], text: {none: ''}});
 							tree.reload('demo2', {data: [], text: {none: ''}});
 							tree.reload('demo3', {data: [], text: {none: ''}});
@@ -363,12 +368,13 @@ var tree={
 				return false;
 			});
 
-			function querydebug(id,type) {
+			function querydebug(id, type, taskid) {
 				_post('/homepage/plandebug/', {
 					'id': id,
-					'type': type
+					'type': type,
+					'taskid': taskid
 				}, function (data) {
-					plandebug(JSON.parse(data))
+					plandebug(data)
 				})
 
 			}
@@ -376,26 +382,48 @@ var tree={
 			function plandebug(data) {
 				if (data.type == "case") {
 					tree.render({
-						elem: '#demo1',id : 'demo1', data: data.msg, accordion: true,showLine: false,
+						elem: '#demo1', id: 'demo1', data: data.data, accordion: true, showLine: true,
 						text: {none: '本次调试全部通过'},
 						click: function (obj) {
-							querydebug(obj.data.id,'case')
+							querydebug(obj.data.id, 'case', data.taskid)
+							// tree.reload('demo3', {data: [], text: {none: ''}});
 						}
 					})
 				} else if (data.type == "step") {
 					tree.render({
-						elem: '#demo2', id: 'demo2', data: data.msg, accordion: true, showLine: false,
+						elem: '#demo2', id: 'demo2', data: data.data, accordion: true, showLine: true,
 						click: function (obj) {
-							querydebug(obj.data.id,'step')
+							querydebug(obj.data.id, 'step', data.taskid)
 						}
 					})
 				} else if (data.type == "bussiness") {
 					tree.render({
-						elem: '#demo3',id: 'demo3', data: data.msg,accordion: true,showLine: false,
-						click: function (obj) {
-							$("#log_text").html(obj.data.title);
+							elem: '#demo3', id: 'demo3', data: data.data, accordion: true, showLine: true,
+							click: function (obj) {
+								table.render({
+									elem: '#demo',
+									id:'demo'
+									, method: 'POST'
+									, url: '/homepage/plandebug/' //数据接口
+									, where: {
+										'id': obj.data.id,
+										'type': 'bussiness',
+										'taskid': data.taskid
+									}
+									, cols: [[ //表头
+										{field: 'id', title: '项目', width: "20%", align: "center"}
+										, {field: 'expect', title: '预期', width: "40%", align: "center"}
+										, {field: 'real', title: '实际', width: "40%", align: "center"}
+									]], text: {
+										none: '测试全部通过了！'
+									}
+								});
+								// text="接口校验预期："+data.msg[0]["itf_check"]
+								// text2 ="数据库校验预期："+data.msg[0]["db_check"]
+								// $("#log_text").html(text+'<br>'+text2);
+							}
 						}
-					})
+					)
 				}
 			}
 		})

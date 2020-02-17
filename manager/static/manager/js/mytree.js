@@ -403,24 +403,32 @@ var tree={
 							elem: '#demo3', id: 'demo3', data: data.data, accordion: true, showLine: true,
 							click: function (obj) {
 								$("#debuginfo").css('display','inherit');
-								table.render({
-									elem: '#demo',
-									id:'demo'
-									, method: 'POST'
-									, url: '/homepage/plandebug/'
-									, where: {
-										'id': obj.data.id,
-										'type': 'bussiness',
-										'taskid': data.taskid
-									}
-									, cols: [[
-										{field: 'id', title: '', width: "14%", align: "center"}
-										, {field: 'expect', title: '预期', width: "43%", align: "center"}
-										, {field: 'real', title: '实际', width: "43%", align: "center"}
-									]], text: {
-										none: '测试全部通过了！'
-									}
-								});
+								_post('/homepage/plandebug/', {
+									'id': obj.data.title,
+									'type': 'bussiness',
+									'taskid':  data.taskid
+								}, function (data) {
+									$("#log_text").html(data.data);
+								})
+
+								// table.render({
+								// 	elem: '#demo',
+								// 	id:'demo'
+								// 	, method: 'POST'
+								// 	, url: '/homepage/plandebug/'
+								// 	, where: {
+								// 		'id': obj.data.id,
+								// 		'type': 'bussiness',
+								// 		'taskid': data.taskid
+								// 	}
+								// 	, cols: [[
+								// 		{field: 'id', title: '', width: "14%", align: "center"}
+								// 		, {field: 'expect', title: '预期', width: "43%", align: "center"}
+								// 		, {field: 'real', title: '实际', width: "43%", align: "center"}
+								// 	]], text: {
+								// 		none: '测试全部通过了！'
+								// 	}
+								// });
 							}
 						}
 					)

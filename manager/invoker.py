@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 
 from ME2 import configs
+from homepage.dealinfo import dealDeBuginfo
 from login.models import *
 from manager.models import *
 from .core import ordered, Fu, getbuiltin, EncryptUtils, genorder, simplejson
@@ -444,13 +445,13 @@ def _runcase(username,taskid,case,plan,planresult,kind):
 			##
 			#print(len(result),len('success'),result=='success')
 			if 'success' in result:
-				viewcache(taskid,username,kind,"执行结果%s"%(result))
+				viewcache(taskid,username,kind,"步骤执行结果%s"%(result))
 			elif 'omit' in result:
 				continue
 			else:
 				if error is False:
 					error='表达式不成立'
-				viewcache(taskid,username,kind,"执行结果%s 原因=>%s"%(result,error))
+				viewcache(taskid,username,kind,"步骤执行结果%s 原因=>%s"%(result,error))
 
 
 	casere=(len([x for x in caseresult if x in ('success','omit')])==len([x for x in caseresult]))
@@ -513,6 +514,8 @@ def runplan(callername,taskid,planid,kind=None):
 			viewcache(taskid,username,kind,mail_res)
 			print("发送钉钉通知 结果[%s]" % dingding_res)
 			viewcache(taskid, username, kind, dingding_res)
+
+		threading.Thread(target=dealDeBuginfo,args=(taskid,)).start()
 
 	except Exception as e:
 		#traceback.print_exc()
@@ -673,11 +676,6 @@ def _step_process_check(callername,taskid,order,kind):
 		if status is not 'success':
 			return (status,step)
 
-		##前置操作
-		status,res=_call_extra(user,preplist,taskid=taskid,kind='前置操作')###????
-		if status is not 'success':
-			return (status,res)
-
 		dbid=step.db_id
 		if dbid:
 			desp=DBCon.objects.get(id=int(dbid)).description
@@ -686,6 +684,11 @@ def _step_process_check(callername,taskid,order,kind):
 		username=callername
 		viewcache(taskid,username,kind,"--"*100)
 		viewcache(taskid,username,kind,"开始执行步骤[<span style='color:#FF3399'>%s-%s</span>] 测试点[<span style='color:#FF3399'>%s</span>]"%(order.value,step.description,businessdata.businessname))
+
+		##前置操作
+		status,res=_call_extra(user,preplist,taskid=taskid,kind='前置操作')###????
+		if status is not 'success':
+			return (status,res)
 
 		if step.step_type=="interface":
 			viewcache(taskid,username,kind,"数据校验配置=>%s"%db_check)
@@ -749,7 +752,7 @@ def _step_process_check(callername,taskid,order,kind):
 
 			viewcache(taskid,username,kind,"调用函数=>%s"%step.body)
 			res,msg=_callfunction(user,step.related_id,step.body,paraminfo,taskid=taskid)
-			viewcache(taskid,username,kind,"执行结果=>%s"%res)
+			viewcache(taskid,username,kind,"函数执行结果=>%s"%res)
 
 			# print('fjdajfd=>',res,msg)
 			if res is not 'success':

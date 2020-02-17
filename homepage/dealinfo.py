@@ -62,6 +62,7 @@ def doDebugInfo(request):
                 businessdata_row.append(i)
         return businessdata_row, 'bussiness', taskid
     if type == 'bussiness':
+        res=''
         sql2 = '''
         select c.description as casename,s.description as stepname,b.businessname as businessname, 
         s.step_type,s.headers,s.body,s.url,s.method,s.content_type,b.itf_check,b.db_check,b.params,b.preposition,
@@ -92,40 +93,39 @@ def doDebugInfo(request):
                                 "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36', ",
                                 '')
                             tmep1 = tmep1 + tmep
-                temp2 = re.sub(
-                    r'[1-9]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])\s+(20|21|22|23|[0-1]\d):[0-5]\d:[0-5]\d',
-                    '', tmep1)
+                temp2 = re.sub(r'[1-9]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])\s+(20|21|22|23|[0-1]\d):[0-5]\d:[0-5]\d','', tmep1)
                 tmep3 = temp2.split('开始执行用例')
                 for i in range(len(tmep3)):
                     if businessdata_row[0]['casename'] and businessdata_row[0]['stepname'] in tmep3[i]:
-                        print(businessdata_row[0]['businessname'])
-                        tmep4 = tmep3[i].split(businessdata_row[0]['businessname'])
-                        itfcheck = re.search(r"接口校验配置.*?(?=<br>)", tmep4[1]).group().rstrip()
-                        dbcheck = re.search(r"数据校验配置.*?(?=<br>)", tmep4[1]).group().rstrip()
-                        url = re.search(r"url=>.*?(?=<br>)", tmep4[1]).group().rstrip()
-                        method = re.search(r"method.*?(?=<br>)", tmep4[1]).group().rstrip()
-                        headers = re.search(r"headers.*?(?=<br>)", tmep4[1]).group().rstrip()
-                        params = re.search(r"params.*?(?=<br>)", tmep4[1]).group().rstrip()
-                        请求响应 = re.search(r"请求响应.*?(?=<br>)", tmep4[1]).group().rstrip()
-                        判断表达式 = re.search(r"判断表达式.*?(?=<br>)", tmep4[1]).group().rstrip()
-                        执行结果 = re.search(r"执行结果.*?(?=<br>)", tmep4[1]).group().rstrip()
-        if businessdata_row[0]['step_type'] == 'interface':
-            res = [
-                {"id": "前置操作", "expect": businessdata_row[0]['preposition'], "real": itfcheck},
-                {"id": "headers", "expect": businessdata_row[0]['headers'], "real": headers},
-                {"id": "content-type", "expect": businessdata_row[0]['content_type'], "real": headers},
-                {"id": "url", "expect": businessdata_row[0]['url'], "real": url},
-                {"id": "参数", "expect": businessdata_row[0]['params'], "real": params},
-                {"id": "后置操作", "expect": businessdata_row[0]['postposition'], "real": params},
-                {"id": "接口校验", "expect": businessdata_row[0]['itf_check'], "real": itfcheck},
-                {"id": "db校验", "expect": businessdata_row[0]['db_check'], "real": dbcheck},
-            ]
-        elif businessdata_row[0]['step_type'] == 'function':
-            res = [
-                {"id": "前置操作", "expect": businessdata_row[0]['preposition'], "real": businessdata_row[0]['db_check']},
-                {"id": "调用函数", "expect": businessdata_row[0]['body'], "real": businessdata_row[0]['db_check']},
-                {"id": "参数", "expect": businessdata_row[0]['params'], "real": businessdata_row[0]['db_check']},
-                {"id": "后置操作", "expect": businessdata_row[0]['postposition'], "real": businessdata_row[0]['db_check']},
-            ]
+                        spitdes='测试点['+businessdata_row[0]['businessname']
+                        tmep4 = tmep3[i].split(spitdes)
+                        if businessdata_row[0]['step_type'] == 'interface':
+                            url = re.search(r"url=>.*?(?=<br>)", tmep4[1]).group().rstrip()
+                            headers = re.search(r"headers.*?(?=<br>)", tmep4[1]).group().rstrip()
+                            params = re.search(r"params.*?(?=<br>)", tmep4[1]).group().rstrip()
+                            请求响应 = re.search(r"请求响应.*?(?=<br>)", tmep4[1]).group().rstrip()
+                            前置操作 = re.search(r"前置操作.*?(?=<br>)", tmep4[0]).group().rstrip().replace(']','：') if '前置操作' in tmep4[0] else ''
+                            后置操作 = re.search(r"后置操作.*?(?=<br>)", tmep4[1]).group().rstrip().replace(']','：') if '后置操作' in tmep4[1] else ''
+                            res = [
+                                {"id": "前置操作", "expect": businessdata_row[0]['preposition'], "real": 前置操作},
+                                {"id": "headers", "expect": businessdata_row[0]['headers'], "real": headers},
+                                {"id": "url", "expect": businessdata_row[0]['url'], "real": url},
+                                {"id": "参数", "expect": businessdata_row[0]['params'], "real": params},
+                                {"id": "后置操作", "expect": businessdata_row[0]['postposition'], "real": 后置操作},
+                                {"id": "接口校验", "expect": businessdata_row[0]['itf_check'], "real": 请求响应},
+                                {"id": "db校验", "expect": businessdata_row[0]['db_check'], "real": ''},
+
+                            ]
+                        else :
+                            前置操作 = re.search(r"前置操作.*?(?=<br>)", tmep4[0]).group().rstrip().replace(']','：') if '前置操作' in tmep4[0] else ''
+                            后置操作 = re.search(r"后置操作.*?(?=<br>)", tmep4[1]).group().rstrip().replace(']','：') if '后置操作' in tmep4[1] else ''
+                            调用函数 = re.search(r"调用函数.*?(?=<br>)", tmep4[1]).group().rstrip()
+                            参数 = re.search(r"替换变量后的函数参数.*?(?=<br>)", tmep4[1]).group().rstrip() if '替换变量后的' in tmep4[1] else ''
+                            res = [
+                                {"id": "前置操作", "expect": businessdata_row[0]['preposition'], "real": 前置操作},
+                                {"id": "调用函数", "expect": businessdata_row[0]['body'], "real": 调用函数},
+                                {"id": "参数", "expect": businessdata_row[0]['params'], "real": 参数},
+                                {"id": "后置操作", "expect": businessdata_row[0]['postposition'], "real": 后置操作}
+                            ]
 
         return res, 'businessdata', taskid

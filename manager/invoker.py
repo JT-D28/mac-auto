@@ -755,6 +755,11 @@ def _step_process_check(callername,taskid,order,kind):
 			if res is not 'success':
 				return res,msg
 
+			status, res = _call_extra(user, postplist, taskid=taskid, kind='后置操作')  ###????
+			if status is not 'success':
+				return (status, res)
+
+
 			if db_check:
 				res,error=_compute(taskid,user,db_check,type='db_check',kind=kind)
 				if res is not 'success':
@@ -1075,7 +1080,7 @@ def _call_extra(user,call_strs,taskid=None,kind='前置操作'):
 		try:
 			methodname=re.findall('(.*?)\(', s)[0]
 		except:
-			return('error','解析前置操作[%s]失败[%s]'%(s,traceback.format_exc()))
+			return('error','解析%s[%s]失败[%s]'%(kind,s,traceback.format_exc()))
 
 		isbuiltin=(methodname in builtinmethods)
 		if isbuiltin == False:

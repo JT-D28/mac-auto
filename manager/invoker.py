@@ -747,8 +747,9 @@ def _step_process_check(callername,taskid,order,kind):
 			# builtinmethods=[x.name for x in getbuiltin() ]
 			# builtin=(methodname in builtinmethods)
 
-
+			viewcache(taskid,username,kind,"调用函数=>%s"%step.body)
 			res,msg=_callfunction(user,step.related_id,step.body,paraminfo,taskid=taskid)
+			viewcache(taskid,username,kind,"执行结果=>%s"%res)
 
 			# print('fjdajfd=>',res,msg)
 			if res is not 'success':
@@ -1041,6 +1042,9 @@ def _callfunction(user,functionid,call_method_name,call_method_params,taskid=Non
 
 	print('测试函数调用=>',call_str)
 	ok=_replace_variable(user, call_str,src=1,taskid=taskid)
+	if re.search(r"\(.*?(?=,taskid)",ok[1]):
+		viewcache(taskid, user, None, "替换变量后的函数参数=>%s" %re.search(r"(?<=\().*?(?=,taskid)",ok[1]).group())
+
 
 	res,call_str=ok[0],ok[1]
 	if res is not 'success':
@@ -1376,7 +1380,7 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 					print('value=>',value)
 					res=None
 					if op=='$':
-						res= eval("'%s'.__contains__('%s')"%(str(key),str(value)))
+						res= eval("'%s'.__contains__('%s')"%(str(key).replace('\n','').replace('\r',''),str(value)))
 
 					elif op=='>=':
 						res= eval("'%s'%s'%s'"%(str(key),'>=',str(value)))

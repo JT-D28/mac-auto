@@ -550,7 +550,7 @@ def addbusiness(request):
 		b.params=request.POST.get('params')
 		b.postposition=request.POST.get('postposition')
 		b.preposition=request.POST.get('preposition')
-		b.count=int(request.POST.get('count').strip())
+		b.count=int(request.POST.get('count').strip()) if request.POST.get('count') !='' else int(1)
 		if b.count==0:
 			bname='<s>%s</s>'%bname
 
@@ -626,7 +626,7 @@ def editbusiness(request):
 		b.params=request.POST.get('params')
 		b.postposition=request.POST.get('postposition')
 		b.preposition=request.POST.get('preposition')
-		b.count=int(request.POST.get('count').strip())
+		b.count=int(request.POST.get('count').strip()) if request.POST.get('count') !='' else int(1)
 
 		if b.count==0:
 			bname='<s>%s</s>'%bname

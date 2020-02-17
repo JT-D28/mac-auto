@@ -344,7 +344,6 @@ var tree={
 
 			logs_btn = $("#logs_" + treeNode.tId)
 			if (logs_btn) logs_btn.bind("click", function () {
-				is_running = opendebug(treeNode)
 				_post('/homepage/plandebug/', {'id': treeNode.id.substr(5), 'type': 'info'},
 					function (data) {
 						if (data.code == 1){

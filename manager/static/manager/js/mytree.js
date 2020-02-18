@@ -323,7 +323,8 @@ var tree={
 			if (run_btn) run_btn.bind("click", function () {
 				_post('/manager/treecontrol/', {
 					'action': 'run',
-					'ids': treeNode.id
+					'ids': treeNode.id,
+					'is_verify':'0'
 				}, function (data) {
 					if (data.code == 0) {
 						layer.confirm('你已提交任务 ID=' + data.msg, {

@@ -283,7 +283,7 @@
                 if (planid == '') {
                     layer.msg("请选择项目和计划！")
                 } else {
-                    common.ajax('/manager/runplan', 'post', 'json', {ids: planid},
+                    common.ajax('/manager/runplan', 'post', 'json', {ids: planid,is_verify:'1'},
                         function (data) {
                             data = JSON.parse(data)
                             if (data.code == 0) {

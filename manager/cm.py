@@ -240,7 +240,8 @@ def run(request):
 	callername=request.session.get('username')
 	taskid=gettaskid()
 	planids=[x.split('_')[1] for x in request.POST.get('ids').split(',')]
-	runplans(callername, taskid, planids)
+	is_verify=request.POST.get('is_verify')
+	runplans(callername, taskid, planids,is_verify)
 
 	return {
 	'status':'success',

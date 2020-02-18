@@ -197,7 +197,7 @@ def sendmail(request):
 def reportchart(request):
     planid = request.POST.get("planid")
     code = 0
-    taskids = list(ResultDetail.objects.values('taskid').filter(plan_id=planid))
+    taskids = list(ResultDetail.objects.values('taskid').filter(plan_id=planid,is_verify=1))
     if taskids:
         sql1 = '''
         SELECT x.plan_id,m.description,CONCAT(success),CONCAT(FAIL),CONCAT(skip),CONCAT(total),x.taskid,DATE_FORMAT(TIME,'%%m-%%d %%H:%%i') AS time,
@@ -209,7 +209,7 @@ def reportchart(request):
         sum(CASE WHEN result="skip" THEN 1 ELSE 0 END) AS skip,
         sum(CASE WHEN result!="OMIT" THEN 1 ELSE 0 END) AS total,max(createtime) AS time 
         FROM manager_resultdetail GROUP BY taskid) AS n JOIN manager_plan m 
-        ON x.taskid=n.taskid AND x.plan_id=m.id WHERE plan_id=%s ORDER BY time DESC LIMIT 10
+        ON x.taskid=n.taskid AND x.plan_id=m.id WHERE is_verify=1 and plan_id=%s ORDER BY time DESC LIMIT 10
         '''
 
         # sqlite3
@@ -219,7 +219,7 @@ def reportchart(request):
         sum(CASE WHEN result="fail" THEN 1 ELSE 0 END) AS FAIL,sum(CASE WHEN result="skip" THEN 1 ELSE 0 END) AS skip,
         sum(CASE WHEN result="omit" THEN 1 ELSE 0 END) AS omit,sum(CASE WHEN result!="omit" THEN 1 ELSE 0 END) AS total,taskid,
         strftime('%%m-%%d %%H:%%M',manager_resultdetail.createtime) AS time FROM manager_resultdetail LEFT JOIN 
-        manager_plan ON manager_resultdetail.plan_id=manager_plan.id WHERE plan_id=%s GROUP BY taskid) AS m ORDER BY time DESC LIMIT 10
+        manager_plan ON manager_resultdetail.plan_id=manager_plan.id WHERE plan_id=%s and is_verify=1 GROUP BY taskid) AS m ORDER BY time DESC LIMIT 10
         '''
 
         sql = sql2 if configs.dbtype == 'sqlite' else sql2
@@ -245,7 +245,7 @@ def badresult(request):
     manager_businessdata.businessname as businessname,manager_businessdata.itf_check as itfcheck,
     manager_businessdata.db_check as dbcheck ,manager_resultdetail.result as result,manager_resultdetail.error as failresult 
     from manager_case,manager_step,manager_businessdata,manager_resultdetail where manager_resultdetail.result in('fail','error') 
-    and manager_resultdetail.taskid=%s and manager_resultdetail.case_id=manager_case.id 
+    and manager_resultdetail.taskid=%s and manager_resultdetail.case_id=manager_case.id and manager_resultdetail.is_verify=1
     and manager_resultdetail.step_id=manager_step.id and manager_resultdetail.businessdata_id=manager_businessdata.id 
     order by manager_resultdetail.createtime 
     '''

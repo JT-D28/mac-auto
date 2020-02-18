@@ -171,7 +171,7 @@ class ResultDetail(models.Model):
 	error=models.CharField(max_length=500,blank=True)
 	createtime=models.DateTimeField(auto_now_add=True)
 	updatetime=models.DateTimeField(auto_now=True)
-
+	is_verify=models.CharField(max_length=4,default=0)
 	# def __str__(self):
 	# 	return "%s[%s]"%(self.case,self.step)
 

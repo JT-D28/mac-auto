@@ -253,7 +253,7 @@ def check_user_task():
 					runplan(planid)
 
 
-def runplans(username,taskid,planids,kind=None):
+def runplans(username,taskid,planids,is_verify,kind=None):
 	"""
 	任务运行
 	kind 运行方式 手动其他
@@ -262,11 +262,11 @@ def runplans(username,taskid,planids,kind=None):
 	if kind is not None:
 		kindmsg=kind
 		#print("kindmsg=>",kindmsg,username,taskid)
+	verifymsg = '调试' if is_verify in ('0',None,'') else '验证'
 
-
-	viewcache(taskid,username,kind,"=======开始%s任务【<span style='color:#FF3399'>%s</span>】===="%(kindmsg,taskid))
+	viewcache(taskid,username,kind,"=======开始%s%s任务【<span style='color:#FF3399'>%s</span>】===="%(kindmsg,verifymsg,taskid))
 	for planid in planids:
-		threading.Thread(target=runplan,args=(username,taskid,planid,kind,)).start()
+		threading.Thread(target=runplan,args=(username,taskid,planid,is_verify,kind)).start()
 
 
 # def runplan(callername,taskid,planid,kind=None):
@@ -399,7 +399,7 @@ def runplans(username,taskid,planids,kind=None):
 # 		clear_data(username, _tempinfo)
 
 
-def _runcase(username,taskid,case0,plan,planresult,kind):
+def _runcase(username,taskid,case0,plan,planresult,is_verify,kind):
 
 	caseresult=[]
 
@@ -417,7 +417,7 @@ def _runcase(username,taskid,case0,plan,planresult,kind):
 			case=Case.objects.get(id=o.follow_id)
 			if case.count==0 or case.count=='0':
 				continue;
-			_runcase(username,taskid,case,plan,planresult,kind)
+			_runcase(username,taskid,case,plan,planresult,is_verify,kind)
 			continue;
 
 		stepid=o.follow_id
@@ -459,6 +459,7 @@ def _runcase(username,taskid,case0,plan,planresult,kind):
 				detail.result=result
 				detail.error=error
 				detail.spend=spend
+				detail.is_verify=is_verify
 				detail.save()
 
 				print('保存结果=>',detail)
@@ -497,7 +498,7 @@ def _runcase(username,taskid,case0,plan,planresult,kind):
 
 
 
-def runplan(callername,taskid,planid,kind=None):
+def runplan(callername,taskid,planid,is_verify,kind=None):
 	'''
 	'''
 	groupskip=[]
@@ -522,7 +523,7 @@ def runplan(callername,taskid,planid,kind=None):
 		for case in cases:
 			if case.count==0 or case.count=='0':
 				continue;
-			_runcase(username,taskid,case,plan,planresult,kind=None)
+			_runcase(username,taskid,case,plan,planresult,is_verify,kind=None)
 		#plan
 		planre=(len([x for x in planresult])==len([x for x in planresult if x==True]))
 

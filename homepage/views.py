@@ -14,8 +14,7 @@ from manager.core import *
 # Create your views here.
 from manager.models import Product, Plan, ResultDetail, MailConfig
 import json
-from random import randrange
-
+from .dealinfo import doDebugInfo
 
 
 
@@ -96,7 +95,7 @@ def process(request):
     logname = "./logs/" + taskid + ".log"
     try:
         if os.path.exists(logname):
-            with open(logname, 'r') as f:
+            with open(logname, 'r', encoding='utf-8') as f:
                 log_text = f.read()
         if done_msg in log_text:
             is_done = 'yes'
@@ -223,7 +222,7 @@ def reportchart(request):
         manager_plan ON manager_resultdetail.plan_id=manager_plan.id WHERE plan_id=%s GROUP BY taskid) AS m ORDER BY time DESC LIMIT 10
         '''
 
-        sql=sql2 if configs.dbtype=='sqlite' else sql2
+        sql = sql2 if configs.dbtype == 'sqlite' else sql2
 
         with connection.cursor() as cursor:
             cursor.execute(sql, [planid])
@@ -302,21 +301,7 @@ def jenkins_add(request):
 
 @csrf_exempt
 def plandebug(request):
-    type=''
-    if request.POST.get("type")=='info':
-        planname=request.POST.get("id")
-        return JsonResponse(simplejson(code=0,planname=planname,time='20200215'), safe=False)
-    elif request.POST.get("type")=='plan':
-        type='case'
-        data =  [{'title': '用例1', 'id': 'case_1','type':'case'}] if request.POST.get("id")=='16' else [{'title': '用例2', 'id': 'case_2','type':'case'}]
-    elif request.POST.get("type")=='case':
-        type='step'
-        data = [{'title': '步骤1', 'id': 'step_1','type':'step'}, {'title': '步骤2', 'id': 'step_2','type':'step'}]
-    elif request.POST.get("type") == 'step':
-        type='bussiness'
-        if request.POST.get('id')=='step_1':
-            data = [{'title': '业务数据1', 'id': 'bussiness_1','type':'bussiness'}]
-        else:
-            data = [{'title': '业务数据2', 'id': 'bussiness_2','type':'bussiness'}]
+    res, type, taskid,code = doDebugInfo(request)
+    return JsonResponse({"code":code, "type": type, "data": res, "taskid": taskid})
 
-    return JsonResponse(simplejson(code=0, type=type,msg=data), safe=False)
+

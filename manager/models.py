@@ -141,7 +141,7 @@ class Plan(models.Model):
 	# run_value=models.CharField(max_length=64)
 	#3状态 succes fail 未运行
 	last=models.CharField(max_length=32,blank=True)
-	#open|close
+	is_running=models.CharField(max_length=4,default=0)
 	# is_send_mail=models.CharField(max_length=6,default='close')
 	mail_config_id=models.CharField(max_length=125,blank=True)
 

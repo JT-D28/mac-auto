@@ -184,7 +184,7 @@ layui.define('form', function(exports){
                 if(hasChild){
                   return '<span class="layui-tree-iconClick layui-tree-icon"><i class="layui-icon '+ (item.spread ? "layui-icon-subtraction" : "layui-icon-addition") +'"></i></span>';
                 }else{
-                  return '<span class="layui-tree-iconClick"><i class="layui-icon layui-icon-file"></i></span>';
+                  return '<span class="layui-tree-iconClick"><i class="layui-badge-dot layui-bg-red"></i></span>';
                 };
               }else{
                 return '<span class="layui-tree-iconClick"><i class="layui-tree-iconArrow '+ (hasChild ? "": HIDE) +'"></i></span>';

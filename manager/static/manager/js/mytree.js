@@ -113,10 +113,13 @@ var tree={
     switchObj.remove();
     icoObj.parent().before(switchObj);
     var spantxt = $("#" + treeNode.tId + "_span").html();
-    if (spantxt.length> 10) {
-        spantxt = spantxt.substring(0, 10) + "...";
-        $("#" + treeNode.tId + "_span").html(spantxt);
-    }
+		if (treeNode.type == 'step' & spantxt.length > 15) {
+			spantxt = spantxt.substring(0, 15) + "...";
+			$("#" + treeNode.tId + "_span").html(spantxt);
+		} else if (spantxt.length > 10 & treeNode.type != 'step') {
+			spantxt = spantxt.substring(0, 12) + "...";
+			$("#" + treeNode.tId + "_span").html(spantxt);
+		}
 	},
 	_addHoverDom:function(treeId, treeNode){
 		//console.log(treeNode)
@@ -270,27 +273,7 @@ var tree={
 			return false;
 		});
 
-		//RUN
 
-		run_btn=$("#run_"+treeNode.tId)
-		if (run_btn)run_btn.bind("click", function(){
-
-			_post('/manager/treecontrol/',{
-				'action':'run',
-				'ids':treeNode.id
-			},function(data){
-				if(data.code==0){
-					layer.alert('你已提交任务 ID='+data.msg,{icon:1,time:2000})
-				}else{
-					layer.alert('提交异常..')
-				}
-
-
-
-			})
-
-			return false;
-		});
 
 		//EXPORT
 		export_btn=$("#mexport_"+treeNode.tId)
@@ -330,45 +313,88 @@ var tree={
 		});
 
 
-		layui.use(['tree'], function () {
+		layui.use(['tree', 'table'], function () {
 			var tree = layui.tree;
+			var table = layui.table;
 
-			logs_btn = $("#logs_" + treeNode.tId)
 
-			if (logs_btn) logs_btn.bind("click", function () {
-				_post('/homepage/plandebug/', {
-					'id': treeNode.id.substr(5),
-					'type': 'info'
+			//RUN
+			run_btn = $("#run_" + treeNode.tId)
+			if (run_btn) run_btn.bind("click", function () {
+				_post('/manager/treecontrol/', {
+					'action': 'run',
+					'ids': treeNode.id
 				}, function (data) {
-					data=JSON.parse(data)
-					layer.open({
-						title: '任务名['+data.planname+']在'+data.time +'的执行结果',
-						type: 1,
-						area: ['90%', '90%'],
-						content: $('#test'),
-						shade: [0],
-						anim: 2,
-						shadeClose: true,
-						success: function () {
-							querydebug(treeNode.id.substr(5), 'plan')
-						},
-						end: function () {
-							tree.reload('demo1', {data: [], text: {none: ''}});
-							tree.reload('demo2', {data: [], text: {none: ''}});
-							tree.reload('demo3', {data: [], text: {none: ''}});
-							$("#log_text").html('');
-						}
-					});
-				});
+					if (data.code == 0) {
+						layer.confirm('你已提交任务 ID=' + data.msg, {
+							btn: ['打开控制台', '查看调试信息', '关闭'] //按钮
+						}, function () {
+							window.top.document.getElementById("console").click()
+						}, function () {
+							opendebug(treeNode)
+						}, function (index, layero) {
+							layer.close(index)
+						});
+					} else {
+						layer.alert('提交异常..')
+					}
+				})
 				return false;
 			});
 
-			function querydebug(id,type) {
+			logs_btn = $("#logs_" + treeNode.tId)
+			if (logs_btn) logs_btn.bind("click", function () {
+				_post('/homepage/plandebug/', {'id': treeNode.id.substr(5), 'type': 'info'},
+					function (data) {
+						if (data.code == 1){
+							layer.msg("任务正在运行中，请稍后！")
+						}else opendebug(treeNode)
+					})
+				return false;
+			});
+
+			function opendebug(treeNode) {
+				$.ajax({
+					type: 'POST', url: '/homepage/plandebug/', data: {
+						'id': treeNode.id.substr(5),
+						'type': 'info'
+					}, success: function (data) {
+						if (data.code == 0) {
+							layer.open({
+								title: '任务名【' + data.data[0]['planname'] + '】在【' + data.data[0]['time'].substr(5, 11) + '】执行不通过情况',
+								type: 1,
+								area: ['90%', '90%'],
+								content: $('#test'),
+								shade: [0],
+								anim: 2,
+								shadeClose: true,
+								success: function () {
+									querydebug(treeNode.id.substr(5), 'plan', data.data[0]['taskid'])
+								},
+								end: function () {
+									table.reload('demo', {data: [], text: {none: '测试全部通过了！'}});
+									tree.reload('demo1', {data: [], text: {none: ''}});
+									tree.reload('demo2', {data: [], text: {none: ''}});
+									tree.reload('demo3', {data: [], text: {none: ''}});
+									$("#debuginfo").css('display', 'none');
+									$("#log_text").html('');
+								}
+							});
+						} else setTimeout(function () {
+							opendebug(treeNode)
+						}, 1000)
+					},
+					dataType: 'json'
+				});
+			}
+
+			function querydebug(id, type, taskid) {
 				_post('/homepage/plandebug/', {
 					'id': id,
-					'type': type
+					'type': type,
+					'taskid': taskid
 				}, function (data) {
-					plandebug(JSON.parse(data))
+					plandebug(data)
 				})
 
 			}
@@ -376,32 +402,61 @@ var tree={
 			function plandebug(data) {
 				if (data.type == "case") {
 					tree.render({
-						elem: '#demo1',id : 'demo1', data: data.msg, accordion: true,showLine: false,
+						elem: '#demo1', id: 'demo1', data: data.data, accordion: true, showLine: true,
 						text: {none: '本次调试全部通过'},
 						click: function (obj) {
-							querydebug(obj.data.id,'case')
+							$("#debuginfo").css('display','none');
+							tree.render({elem: '#demo3',id: 'demo3',text: {none: ''}})
+							querydebug(obj.data.id, 'case', data.taskid)
+							tree.reload('demo3', {data: [], text: {none: ''}});
 						}
 					})
 				} else if (data.type == "step") {
 					tree.render({
-						elem: '#demo2', id: 'demo2', data: data.msg, accordion: true, showLine: false,
+						elem: '#demo2', id: 'demo2', data: data.data, accordion: true, showLine: true,
 						click: function (obj) {
-							querydebug(obj.data.id,'step')
+							$("#debuginfo").css('display','none');
+							querydebug(obj.data.id, 'step', data.taskid)
 						}
 					})
 				} else if (data.type == "bussiness") {
 					tree.render({
-						elem: '#demo3',id: 'demo3', data: data.msg,accordion: true,showLine: false,
-						click: function (obj) {
-							$("#log_text").html(obj.data.title);
+							elem: '#demo3', id: 'demo3', data: data.data, accordion: true, showLine: true,
+							click: function (obj) {
+								$("#debuginfo").css('display','inherit');
+								_post('/homepage/plandebug/', {
+									'id': obj.data.title,
+									'type': 'bussiness',
+									'taskid':  data.taskid
+								}, function (data) {
+									$("#log_text").html(data.data);
+								})
+
+								// table.render({
+								// 	elem: '#demo',
+								// 	id:'demo'
+								// 	, method: 'POST'
+								// 	, url: '/homepage/plandebug/'
+								// 	, where: {
+								// 		'id': obj.data.id,
+								// 		'type': 'bussiness',
+								// 		'taskid': data.taskid
+								// 	}
+								// 	, cols: [[
+								// 		{field: 'id', title: '', width: "14%", align: "center"}
+								// 		, {field: 'expect', title: '预期', width: "43%", align: "center"}
+								// 		, {field: 'real', title: '实际', width: "43%", align: "center"}
+								// 	]], text: {
+								// 		none: '测试全部通过了！'
+								// 	}
+								// });
+							}
 						}
-					})
+					)
 				}
+									return false;
 			}
 		})
-
-
-
 
 
 

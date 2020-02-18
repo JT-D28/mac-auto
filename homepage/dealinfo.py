@@ -49,8 +49,10 @@ def doDebugInfo(request):
         return step_row, 'step', taskid,0
     if type == 'step':
         sql2 = '''
-        SELECT businessname as title,businessdata_id as id FROM manager_resultdetail r 
-        LEFT JOIN manager_businessdata b on r.businessdata_id=b.id where step_id=%s and taskid=%s and result in ('fail','error');
+        SELECT businessname as title,businessdata_id AS id ,c.description as casename,s.description as stepname 
+        from manager_resultdetail r , manager_businessdata b,manager_case c,manager_step s where r.businessdata_id=b.id 
+        and r.step_id=%s AND r.taskid=%s AND r.result IN ('fail','error') and r.case_id=c.id 
+        and s.id=r.step_id;
         '''
         with connection.cursor() as cursor:
             cursor.execute(sql2, [id, taskid])
@@ -151,12 +153,12 @@ def doDebugInfo(request):
             with open(logname, 'r', encoding='utf-8') as f:
                 res = f.read()
             ress = res.split("========")
+            pattern = re.compile('开始执行步骤.*?'+id.split(';')[2]+'.*?测试点\[.*?'+id.split(';')[0]+'.*?<br>')
             for i in ress:
-                if id in i:
-                    print(i)
+                if pattern.search(i):
                     return i, 'debuginfo', '',0
                 else:
-                    res=''
+                    res='未匹配到，你可以查看完整日志！'
         else:
             res = '请稍等！'
         return res, 'debuginfo', '',0
@@ -191,4 +193,5 @@ def dealDeBuginfo(taskid):
                 for step in step_matchs:
                     with open(dealogname, 'a', encoding='UTF-8') as f:
                         f.write(step.replace("        ", '\n') + '\n========\n')
+            print('处理日志完成------')
 

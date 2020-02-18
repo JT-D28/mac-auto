@@ -788,11 +788,14 @@ def getchild(kind,main_id):
 	orderlist=ordered(list(Order.objects.filter(kind=kind,main_id=main_id)))		
 	if kind=='product_plan':
 		for order in orderlist:
-			print('plnaid=>',order.follow_id)
+			print('planid=>',order.follow_id)
 			try:
-				child.append(Plan.objects.get(id=order.follow_id))
+				p=Plan.objects.get(id=order.follow_id)
+				# print('添加计划=>',plan)
+				child.append(p)
+				#pirnt('child=>',child)
 			except:
-				pass
+				print(traceback.format_exc())
 	elif kind=='plan_case':
 		for order in orderlist:
 			child.append(Case.objects.get(id=order.follow_id))

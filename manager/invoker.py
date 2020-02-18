@@ -121,15 +121,20 @@ def _get_full_case_name(case_id,curent_case_name):
 def gettaskresult(taskid):
 	from .cm import getchild
 
+
+	##区分迭代次数
+	bset=set()
+	bmap={}
+
+
+	##
+
 	detail={}
 	spend_total=0
 	res=ResultDetail.objects.filter(taskid=taskid)
 	reslist=list(res)
 	if len(reslist)==0:
 		return detail
-
-	print('res=>',reslist)
-
 
 	plan=reslist[0].plan
 	planname=plan.description
@@ -158,23 +163,24 @@ def gettaskresult(taskid):
 		#caseobj['casename']=casename
 		caseobj['casename']=_get_full_case_name(caseid,casename)
 		if caseobj.get("steps",None) is None:
-			caseobj['steps']=[]
+			caseobj['steps']={}
 		caseid=case.id
 		print('taskid=>%s case_id=>%s'%(taskid,case))
 		step_query=list(ResultDetail.objects.filter(taskid=taskid,case=case))
 		##case_step
 		for x in step_query:
+			#rblist=list(ResultDetail.objects.filter(taskid=taskid,plan=plan,case=case,step=stepinst,businessdata=business))
+			# for rb in rblist:
 			businessobj={}
 			business=x.businessdata
-			print('c=>%s'%business.id)
+			# print('c=>%s'%business.id)
 			status,step=gettestdatastep(business.id)
-
-
-			print('a=>%s b=>%s'%(case.id,step.id))
+			# print('a=>%s b=>%s'%(case.id,step.id))
 			step_weight=Order.objects.get(main_id=case.id,follow_id=step.id,kind='case_step').value
 
 			business_index=Order.objects.get(main_id=step.id,follow_id=business.id,kind='step_business').value.split('.')[1]
 			businessobj['num']='%s_%s'%(step_weight,business_index)
+
 			stepname=business.businessname
 			result=x.result
 			if 'omit' != result:
@@ -191,6 +197,10 @@ def gettaskresult(taskid):
 					detail['error']=detail['error']+1
 				error=x.error
 				businessobj['businessname']=x.businessdata.businessname
+
+
+
+				##
 				businessobj['result']=result
 				businessobj['error']=error
 				#businessobj['api']=re.findall('\/(.*?)[?]',step.url)[0] or step.body
@@ -209,7 +219,8 @@ def gettaskresult(taskid):
 
 				businessobj['itf_check']=business.itf_check
 				businessobj['db_check']=business.db_check
-				businessobj['spend']=ResultDetail.objects.get(taskid=taskid,plan=plan,case=case,step=stepinst,businessdata=business).spend
+				#businessobj['spend']=ResultDetail.objects.get(taskid=taskid,plan=plan,case=case,step=stepinst,businessdata=business).spend
+				businessobj['spend']=x.spend
 				spend_total+=int(businessobj['spend'])
 				if int(businessobj['spend'])<=int(detail['min']):
 					detail['min']=businessobj['spend']
@@ -217,7 +228,27 @@ def gettaskresult(taskid):
 				if int(businessobj['spend'])>int(detail['max']):
 					detail['max']=businessobj['spend']
 
-				caseobj.get('steps').append(businessobj)
+				# caseobj.get('steps').append(businessobj)
+
+				##计算当前迭代次数
+				if x.businessdata.id in bset:
+					bcount=bmap.get(str(x.businessdata.id),0)
+					bcount=bcount+1
+					bmap[str(x.businessdata.id)]=bcount
+					L=caseobj.get('steps').get(str(bcount),[])
+					L.append(businessobj)
+					caseobj['steps'][str(bcount)]=L
+
+				else:
+					bset.add(x.businessdata.id)
+					bcount=bmap.get(str(x.businessdata.id),0)
+					bcount=bcount+1
+					bmap[str(x.businessdata.id)]=bcount
+					L=caseobj.get('steps').get(str(bcount),[])
+					L.append(businessobj)
+					caseobj['steps'][str(bcount)]=L
+
+
 		##case_case map
 
 		detail.get("cases").append(caseobj)
@@ -239,6 +270,11 @@ def gettaskresult(taskid):
 	except:
 		detail['success_rate']='-1'
 	detail["reporttime"]=time.strftime("%m-%d %H:%M", time.localtime())
+
+	print('报告数据=>',detail)
+	# with open('d:/1.txt','w') as f:
+	# 	f.write(str(detail))
+
 	return detail
 
 
@@ -411,79 +447,88 @@ def _runcase(username,taskid,case0,plan,planresult,kind):
 	groupskip=[]
 	viewcache(taskid,username,kind,"开始执行用例[<span style='color:#FF3399'>%s</span>]"%case0.description)
 	steporderlist=ordered(list(Order.objects.filter(Q(kind='case_step')|Q(kind='case_case'),main_id=case0.id)))
+	##case执行次数
+	casecount=case0.count
 	# print('ccc=>',steporderlist)
-	for o in steporderlist:
-		if o.kind=='case_case':
-			case=Case.objects.get(id=o.follow_id)
-			_runcase(username,taskid,case,plan,planresult,kind)
-			continue;
-
-		stepid=o.follow_id
-
-		try:
-
-			stepcount=Step.objects.get(id=stepid).count
-			if stepcount==0:
+	for lid in range(0,casecount):
+		for o in steporderlist:
+			if o.kind=='case_case':
+				case=Case.objects.get(id=o.follow_id)
+				_runcase(username,taskid,case,plan,planresult,kind)
 				continue;
-		except:
-			continue;
-		# print('stepfdafasdadfa=>',Step.objects.get(id=stepid).description)
-		businessorderlist=list(Order.objects.filter(kind='step_business',main_id=stepid))
-		# print('bbb=>',businessorderlist)
-		for order in businessorderlist:
-			groupid=order.value.split(".")[0]
-			# step=Step.objects.get(id=order.follow_id)
-			start=time.time()
-			spend=0
-			if groupid not in groupskip:
-				print('传入order=>',order.value)
-				result,error=_step_process_check(username,taskid,order,kind)
-				spend=int((time.time()-start)*1000)
 
-				if result  not in ('success','omit'):
-					groupskip.append(groupid)
-			else:
-				result,error='skip','skip'
+			stepid=o.follow_id
 
-			##保存结果
 			try:
-				print("准备保存结果===")
-				detail=ResultDetail()
-				detail.taskid=taskid
-				detail.plan=plan
-				detail.case=case0
-				detail.step=Step.objects.get(id=o.follow_id)
-				detail.businessdata=BusinessData.objects.get(id=order.follow_id)
-				detail.result=result
-				detail.error=error
-				detail.spend=spend
-				detail.save()
 
-				print('保存结果=>',detail)
+				stepcount=Step.objects.get(id=stepid).count
+				if stepcount==0:
+					continue;
+
+				else:
+					#步骤执行次数>0
+					for ldx in range(0,stepcount):
+						businessorderlist=list(Order.objects.filter(kind='step_business',main_id=stepid))
+						# print('bbb=>',businessorderlist)
+						for order in businessorderlist:
+							groupid=order.value.split(".")[0]
+							# step=Step.objects.get(id=order.follow_id)
+							start=time.time()
+							spend=0
+							if groupid not in groupskip:
+								print('传入order=>',order.value)
+								result,error=_step_process_check(username,taskid,order,kind)
+								spend=int((time.time()-start)*1000)
+
+								if result  not in ('success','omit'):
+									groupskip.append(groupid)
+							else:
+								result,error='skip','skip'
+
+							##保存结果
+							try:
+								print("准备保存结果===")
+								detail=ResultDetail()
+								detail.taskid=taskid
+								detail.plan=plan
+								detail.case=case0
+								detail.step=Step.objects.get(id=o.follow_id)
+								detail.businessdata=BusinessData.objects.get(id=order.follow_id)
+								detail.result=result
+								detail.error=error
+								detail.spend=spend
+								detail.loop_id=1
+								detail.save()
+
+								print('保存结果=>',detail)
+							except:
+								print('保存结果异常=>',traceback.format_exc())
+							##
+							caseresult.append(result)
+							##
+							if "success" in result:
+								result="<span class='layui-bg-green'>%s</span>"%result
+
+							elif "fail" in result:
+								result="<span class='layui-bg-red'>%s</span>"%result
+							elif "skip" in result:
+								result="<span class='layui-bg-orange'>%s</span>"%result
+							elif "omit" in result:
+								result="<span class='layui-bg-green'>%s</span>"%result
+							##
+							#print(len(result),len('success'),result=='success')
+							if 'success' in result:
+								viewcache(taskid,username,kind,"步骤执行结果%s"%(result))
+							elif 'omit' in result:
+								continue
+							else:
+								if error is False:
+									error='表达式不成立'
+								viewcache(taskid,username,kind,"步骤执行结果%s 原因=>%s"%(result,error))
 			except:
-				print('保存结果异常=>',traceback.format_exc())
-			##
-			caseresult.append(result)
-			##
-			if "success" in result:
-				result="<span class='layui-bg-green'>%s</span>"%result
+				continue;
 
-			elif "fail" in result:
-				result="<span class='layui-bg-red'>%s</span>"%result
-			elif "skip" in result:
-				result="<span class='layui-bg-orange'>%s</span>"%result
-			elif "omit" in result:
-				result="<span class='layui-bg-green'>%s</span>"%result
-			##
-			#print(len(result),len('success'),result=='success')
-			if 'success' in result:
-				viewcache(taskid,username,kind,"步骤执行结果%s"%(result))
-			elif 'omit' in result:
-				continue
-			else:
-				if error is False:
-					error='表达式不成立'
-				viewcache(taskid,username,kind,"步骤执行结果%s 原因=>%s"%(result,error))
+
 
 
 	casere=(len([x for x in caseresult if x in ('success','omit')])==len([x for x in caseresult]))
@@ -520,7 +565,11 @@ def runplan(callername,taskid,planid,kind=None):
 		for case in cases:
 			if case.count==0:
 				continue;
-			_runcase(username,taskid,case,plan,planresult,kind=None)
+			else:
+				# for ldx in range(0,case.count):
+				_runcase(username,taskid,case,plan,planresult,kind=None)
+
+
 		#plan
 		planre=(len([x for x in planresult])==len([x for x in planresult if x==True]))
 

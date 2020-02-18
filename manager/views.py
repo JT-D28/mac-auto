@@ -2244,10 +2244,13 @@ def querytreelist(request):
 	def _get_pid_data(idx,type,data):
 
 		if type=='product':
+			
 			product=Product.objects.get(id=idx)
+			print('product=>',product)
 			plans=cm.getchild('product_plan',idx)
+			print('plans=>',plans)
 			for plan in plans:
-				datanode.append({
+				data.append({
 				
 					'id':'plan_%s'%plan.id,
 					'pId':'product_%s'%product.id,
@@ -2262,11 +2265,13 @@ def querytreelist(request):
 		elif type=='plan':
 			plan=Plan.objects.get(id=idx)
 			cases=cm.getchild('plan_case',idx)
+			print('cases=>',cases)
 			for case in cases:
+				print('case=>',case)
 				casename=case.description
 				if case.count==0:
 					casename='<s>%s</s>'%casename
-				datanode.append({
+				data.append({
 					'id':'case_%s'%case.id,
 					'pId':'plan_%s'%plan.id,
 					'name':casename,
@@ -2320,7 +2325,7 @@ def querytreelist(request):
 				bname=business.businessname
 				if business.count==0:
 					bname='<s>%s</s>'%bname
-				datanode.append({
+				data.append({
 					'id':'business_%s'%business.id,
 					'pId':'step_%s'%step.id,
 					'name':bname,
@@ -2347,6 +2352,7 @@ def querytreelist(request):
 
 	if id_:
 		datanode=_get_pid_data(id_,type_,datanode)
+		print('cur d=>',datanode)
 	elif searchvalue:
 		datanode=get_search_match(searchvalue)
 		

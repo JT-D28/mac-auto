@@ -11,7 +11,8 @@
 <style type="text/css">
 
 body{
-	font-family: Microsoft YaHei
+	font-family: Microsoft YaHei;
+	font-size: 13px;
 }
 .success{
 	color:#009933;
@@ -58,24 +59,29 @@ td{
 
 <strong>测试详情</strong>
 {% for case in detail.cases %}
-<p style="text-indent:2em;" >用例名[{{case.casename}}]</p>
-<table>
-<tr><th>执行序号</th><th>结果</th><th>耗时(ms)</th><th>步骤名称</th><th>测试点</th><th>api</th><th>接口验证</th><th>数据验证</th><th>消息</th></tr>
- {% for step in case.steps %}
- <tr>
- 	<td style="width:100px;">{{step.num}}</td>
- 	<td style="width:100px;" class='{{step.result}}'>{{step.result}}</td>
- 	<td style="width:100px;">{{step.spend}}</td>
- 	<td style="width:200px;" title="{{step.stepname}}">{{step.stepname}}</td>
- 	<td style="width:200px;" title="{{step.businessname}}">{{step.businessname}}</td>
-	<td style="width:200px;">{{step.api}}</td>
- 	<td style="width:100px;">{{step.itf_check}}</td>
- 	<td style="width:100px;">{{step.db_check}}</td>
- 	<td>{{step.error}}</td>
- </tr>
+<p style="text-indent:2em;" ><strong>用例名[{{case.casename}}]</strong></p>
 
+<!-- <tr><th>执行序号</th><th>结果</th><th>耗时(ms)</th><th>步骤名称</th><th>测试点</th><th>api</th><th>接口验证</th><th>数据验证</th><th>消息</th></tr> -->
+ {% for itercount,s in case.steps.items %}
+ <p style="text-indent:3em;" ><strong>第{{itercount}}次迭代</strong></p>
+	<table style="overflow-x: scroll;">
+	<tr><th>序号</th><th>结果</th><th>耗时(ms)</th><th>步骤名称</th><th>测试点</th><th>api</th><th>接口验证</th><th>数据验证</th><th>消息</th></tr>
+ 	{% for step in s %}
+		 <tr>
+		 	<td style="width:100px;">{{step.num}}</td>
+		 	<td style="width:80px;" class='{{step.result}}'>{{step.result}}</td>
+		 	<td style="width:80px;">{{step.spend}}</td>
+		 	<td style="width:200px;" title="{{step.stepname}}">{{step.stepname}}</td>
+		 	<td style="width:200px;" title="{{step.businessname}}">{{step.businessname}}</td>
+			<td style="width:200px;text-overflow:ellipsis;overflow:hidden;">{{step.api}}</td>
+		 	<td style="width:100px;max-width:250px;text-overflow:ellipsis;overflow:hidden;" title="{{step.itf_check}}">{{step.itf_check}}</td>
+		 	<td style="width:100px;">{{step.db_check}}</td>
+		 	<td>{{step.error}}</td>
+		 </tr>
+ 	{% endfor %}
+
+	</table>
  {% endfor %}
-</table>
 
 {% endfor %}
 

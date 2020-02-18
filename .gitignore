@@ -2,12 +2,12 @@
 /__pycache__/
 /manager/__pycache__/
 /db.sqlite3
-/manager/static/manager/js/util.js
 /db1.sqlite3
 /ME2/__pycache__/
-/homepage/__pycache__/
+/homepage/migrations/__pycache__/
 /tools/__pycache__/
 /manager/__pycache__/
-/logs/*
+/logs/*.log
+/logs/deal/*.log
 /login/__pycache__/
 /login/migrations/__pycache__/

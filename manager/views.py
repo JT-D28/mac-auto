@@ -898,6 +898,7 @@ def querytaskdetail(request):
 @csrf_exempt
 def runtask(request):
 	planids=request.POST.get("ids")
+	is_verify=request.POST.get('is_verify')
 	#username=request.session.get('username',None)
 	list_=[int(x) for x in planids.split(",")]
 	#username=Plan.objects.get(id=list_[0]).author.name
@@ -906,7 +907,7 @@ def runtask(request):
 	# user_tasks[gettaskid()]=list_
 	taskid=gettaskid()
 	#print(username,taskid,list_)
-	runplans(username,taskid,list_)
+	runplans(username,taskid,list_,is_verify)
 
 	# viewcache(taskid,username,"##################结束任务%s###############"%taskid)
 	return JsonResponse(simplejson(code=0,msg="",taskid=taskid),safe=False)

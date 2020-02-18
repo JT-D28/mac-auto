@@ -323,7 +323,8 @@ var tree={
 			if (run_btn) run_btn.bind("click", function () {
 				_post('/manager/treecontrol/', {
 					'action': 'run',
-					'ids': treeNode.id
+					'ids': treeNode.id,
+					'is_verify':'0'
 				}, function (data) {
 					if (data.code == 0) {
 						layer.confirm('你已提交任务 ID=' + data.msg, {
@@ -331,6 +332,7 @@ var tree={
 						}, function () {
 							window.top.document.getElementById("console").click()
 						}, function () {
+							layer.msg("将在完成后打开")
 							opendebug(treeNode)
 						}, function (index, layero) {
 							layer.close(index)
@@ -423,9 +425,10 @@ var tree={
 					tree.render({
 							elem: '#demo3', id: 'demo3', data: data.data, accordion: true, showLine: true,
 							click: function (obj) {
+								console.log(obj)
 								$("#debuginfo").css('display','inherit');
 								_post('/homepage/plandebug/', {
-									'id': obj.data.title,
+									'id': obj.data.title+";"+obj.data.casename+";"+obj.data.stepname,
 									'type': 'bussiness',
 									'taskid':  data.taskid
 								}, function (data) {

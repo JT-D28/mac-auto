@@ -289,7 +289,7 @@ def check_user_task():
 					runplan(planid)
 
 
-def runplans(username,taskid,planids,kind=None):
+def runplans(username,taskid,planids,is_verify,kind=None):
 	"""
 	任务运行
 	kind 运行方式 手动其他
@@ -298,11 +298,11 @@ def runplans(username,taskid,planids,kind=None):
 	if kind is not None:
 		kindmsg=kind
 		#print("kindmsg=>",kindmsg,username,taskid)
+	verifymsg = '调试' if is_verify in ('0',None,'') else '验证'
 
-
-	viewcache(taskid,username,kind,"=======开始%s任务【<span style='color:#FF3399'>%s</span>】===="%(kindmsg,taskid))
+	viewcache(taskid,username,kind,"=======开始%s%s任务【<span style='color:#FF3399'>%s</span>】===="%(kindmsg,verifymsg,taskid))
 	for planid in planids:
-		threading.Thread(target=runplan,args=(username,taskid,planid,kind,)).start()
+		threading.Thread(target=runplan,args=(username,taskid,planid,is_verify,kind)).start()
 
 
 # def runplan(callername,taskid,planid,kind=None):
@@ -435,7 +435,7 @@ def runplans(username,taskid,planids,kind=None):
 # 		clear_data(username, _tempinfo)
 
 
-def _runcase(username,taskid,case0,plan,planresult,kind):
+def _runcase(username,taskid,case0,plan,planresult,is_verify,kind):
 
 	caseresult=[]
 
@@ -450,11 +450,12 @@ def _runcase(username,taskid,case0,plan,planresult,kind):
 	##case执行次数
 	casecount=case0.count
 	# print('ccc=>',steporderlist)
+
 	for lid in range(0,casecount):
 		for o in steporderlist:
 			if o.kind=='case_case':
 				case=Case.objects.get(id=o.follow_id)
-				_runcase(username,taskid,case,plan,planresult,kind)
+				_runcase(username,taskid,case,plan,planresult,is_verify,kind)
 				continue;
 
 			stepid=o.follow_id
@@ -525,6 +526,7 @@ def _runcase(username,taskid,case0,plan,planresult,kind):
 								if error is False:
 									error='表达式不成立'
 								viewcache(taskid,username,kind,"步骤执行结果%s 原因=>%s"%(result,error))
+
 			except:
 				continue;
 
@@ -540,7 +542,7 @@ def _runcase(username,taskid,case0,plan,planresult,kind):
 
 
 
-def runplan(callername,taskid,planid,kind=None):
+def runplan(callername,taskid,planid,is_verify,kind=None):
 	'''
 	'''
 	groupskip=[]
@@ -563,11 +565,11 @@ def runplan(callername,taskid,planid,kind=None):
 
 
 		for case in cases:
-			if case.count==0:
+			if case.count==0 or case.count=='0':
 				continue;
 			else:
 				# for ldx in range(0,case.count):
-				_runcase(username,taskid,case,plan,planresult,kind=None)
+				_runcase(username,taskid,case,plan,planresult,is_verify,kind=None)
 
 
 		#plan
@@ -754,22 +756,22 @@ def _step_process_check(callername,taskid,order,kind):
 		db_check=businessdata.db_check
 		itf_check=businessdata.itf_check
 		status,paraminfo=gettestdataparams(order.follow_id)
+		status1,step=gettestdatastep(businessdata.id)
+
+		username=callername
+		viewcache(taskid,username,kind,"--"*100)
+		viewcache(taskid,username,kind,"开始执行步骤[<span style='color:#FF3399'>%s-%s</span>] 测试点[<span style='color:#FF3399'>%s</span>]"%(order.value,step.description,businessdata.businessname))
+
 		if status is not 'success':
 			return (status,paraminfo)
-
-		status,step=gettestdatastep(businessdata.id)
-
-		if status is not 'success':
-			return (status,step)
+		if status1 is not 'success':
+			return (status1,step)
 
 		dbid=step.db_id
 		if dbid:
 			desp=DBCon.objects.get(id=int(dbid)).description
 			set_top_common_config(taskid, desp,src='step')
 
-		username=callername
-		viewcache(taskid,username,kind,"--"*100)
-		viewcache(taskid,username,kind,"开始执行步骤[<span style='color:#FF3399'>%s-%s</span>] 测试点[<span style='color:#FF3399'>%s</span>]"%(order.value,step.description,businessdata.businessname))
 
 		##前置操作
 		status,res=_call_extra(user,preplist,taskid=taskid,kind='前置操作')###????
@@ -1010,47 +1012,54 @@ def _callinterface(taskid,user,url,body=None,method=None,headers=None,content_ty
 	返回(rps.text,rps.status_code,msg)
 	"""
 	##url data headers过滤
-
+	viewcache(taskid,user.name,kind,"执行接口请求=>")
 	if content_type=='formdata':
-		return ('','','form-data方式暂不支持..')
+		return ('','','','form-data方式暂不支持..')
+	viewcache(taskid,user.name,kind,"<span style='color:#009999;'>content_type=>%s</span>"%content_type)
+	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>原始url=>%s</span>" % url)
 	url_rp=_replace_property(user,url)
 	if url_rp[0] is not 'success':
-		return ('','',url_rp[1])
+		return ('','','',url_rp[1])
 	url_rv=_replace_variable(user,url_rp[1],taskid=taskid)
 	if url_rv[0] is not 'success':
-		return('','',url_rv[1])
+		return('','','',url_rv[1])
 	url=url_rv[1]
+	viewcache(taskid,user.name,kind,"<span style='color:#009999;'>url=>%s</span>"%url)
 
+	viewcache(taskid,user.name,kind,"<span style='color:#009999;'>原始params=>%s</span>"%body)
 	data_rp=_replace_property(user,body)
 	if data_rp[0] is not 'success':
-		return('','',data_rp[1])
+		return('','','',data_rp[1])
 	data_rv=_replace_variable(user,data_rp[1],taskid=taskid)
 	if data_rv[0] is not 'success':
-		return ('','',data_rv[1])
+		return ('','','',data_rv[1])
 	body=data_rv[1]
+	viewcache(taskid,user.name,kind,"<span style='color:#009999;'>params=>%s</span>"%body)
 
 	#body=json.loads(body)
 
 	#print(type(headers))
-
+	viewcache(taskid,user.name,kind,"<span style='color:#009999;'>原始headers=>%s</span>"%(headers))
 	if headers is None or len(headers.strip())==0:
 		headers={}
 
 	headers_rp=_replace_property(user,str(headers))
 	if headers_rp[0] is not 'success':
-		return('','',headers_rp[1])
+		return('','','',headers_rp[1])
 	headers_rv=_replace_variable(user,headers_rp[1],taskid=taskid)
 	if headers_rv[0] is not 'success':
-		return ('','',headers_rv[1])
+		return ('','','',headers_rv[1])
 
 	try:
 		headers=eval(headers_rv[1])
 	except:
-		return ('','','接口请求头格式不对 请检查')
+		return ('','','','接口请求头格式不对 请检查')
 
 	##
 
 	default={'User-Agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36"}
+	viewcache(taskid,user.name,kind,"<span style='color:#009999;'>headers=>%s</span>"%{**default,**headers})
+	viewcache(taskid,user.name,kind,"<span style='color:#009999;'>method=>%s</span>"%method)
 
 	if content_type=='json':
 		#body=body.encode('utf-8')
@@ -1070,20 +1079,15 @@ def _callinterface(taskid,user,url,body=None,method=None,headers=None,content_ty
 
 		except :
 			print('参数转化异常：',traceback.format_exc())
-			return ('','','接口参数格式不对 请检查..')
+			return ('','','','接口参数格式不对 请检查..')
 		default["Content-Type"]='application/x-www-form-urlencoded;charset=UTF-8'
 	elif content_type=='xml':
 		isxml=0
 
 	else:
 		raise NotImplementedError("content_type=%s没实现"%content_type)
-	viewcache(taskid,user.name,kind,"执行接口请求=>")
-	viewcache(taskid,user.name,kind,"<span style='color:#009999;'>url=>%s</span>"%url)
-	viewcache(taskid,user.name,kind,"<span style='color:#009999;'>method=>%s</span>"%method)
-	viewcache(taskid,user.name,kind,"<span style='color:#009999;'>content_type=>%s</span>"%content_type)
-	viewcache(taskid,user.name,kind,"<span style='color:#009999;'>headers=>%s</span>"%{**default,**headers})
+
 	# viewcache(taskid,user.name,kind,"body[old]=%s"%body)
-	viewcache(taskid,user.name,kind,"<span style='color:#009999;'>params=>%s</span>"%body)
 
 	#print("method=>",method)
 	rps=None
@@ -1100,12 +1104,12 @@ def _callinterface(taskid,user,url,body=None,method=None,headers=None,content_ty
 
 		#print("textfdafda=>",rps.text)
 	else:
-		return ('','',"请求方法%s没实现.."%method)
+		return ('','','',"请求方法%s没实现.."%method)
 
 	###响应报文中props处理
 	status,err=_find_and_save_property(user,props, rps.text)
 	if status is not 'success':
-		return ('','',err)
+		return ('','','',err)
 	return (rps.headers,rps.text,rps.status_code,"")
 
 def _callfunction(user,functionid,call_method_name,call_method_params,taskid=None):

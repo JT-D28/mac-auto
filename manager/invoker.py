@@ -100,6 +100,22 @@ def db_connect(config):
         return ('error','连接异常->%s'%error)
 
 
+def _get_full_case_name(case_id,curent_case_name):
+	'''
+	对于case_case结构的tree节点 报告中用例名显示为 casename0_casename1
+	'''
+	case0=Case.objects.get(id=case_id)
+	# fullname=case0.description
+	olist=list(Order.objects.filter(follow_id=case_id,kind='case_case'))
+	if len(olist)==0:
+		return curent_case_name
+
+	else:
+		cname=Case.objects.get(id=olist[0].main_id).description
+		curent_case_name="%s_%s"%(cname,curent_case_name)
+		return _get_full_case_name(olist[0].main_id,curent_case_name)
+
+
 
 def gettaskresult(taskid):
 	from .cm import getchild
@@ -108,7 +124,12 @@ def gettaskresult(taskid):
 	spend_total=0
 	res=ResultDetail.objects.filter(taskid=taskid)
 	reslist=list(res)
+	if len(reslist)==0:
+		return detail
+
 	print('res=>',reslist)
+
+
 	plan=reslist[0].plan
 	planname=plan.description
 	planid=plan.id
@@ -133,7 +154,8 @@ def gettaskresult(taskid):
 		case=d
 		casename=case.description
 		caseid=case.id
-		caseobj['casename']=casename
+		#caseobj['casename']=casename
+		caseobj['casename']=_get_full_case_name(caseid,casename)
 		if caseobj.get("steps",None) is None:
 			caseobj['steps']=[]
 		caseid=case.id
@@ -143,6 +165,7 @@ def gettaskresult(taskid):
 		for x in step_query:
 			businessobj={}
 			business=x.businessdata
+			print('c=>%s'%business.id)
 			status,step=gettestdatastep(business.id)
 
 
@@ -176,8 +199,9 @@ def gettaskresult(taskid):
 					print('%s=>%s,%s'%(business.id,error,stepinst))
 					businessobj['stepname']=stepinst.description
 					matcher=re.findall('http://(.*)',stepinst.url)
-					print('matcher=>',matcher)
-					businessobj['api']='/'+'/'.join(matcher[0].split('/')[1:])
+					
+					mlist=('/'+matcher[0]).split('/')[2:]
+					businessobj['api']='/'+'/'.join(mlist)
 				except:
 					print('获取步骤api和名称异常=>',traceback.format_exc())
 					businessobj['api']=stepinst.body
@@ -374,18 +398,18 @@ def runplans(username,taskid,planids,kind=None):
 # 		clear_data(username, _tempinfo)
 
 
-def _runcase(username,taskid,case,plan,planresult,kind):
+def _runcase(username,taskid,case0,plan,planresult,kind):
 
 	caseresult=[]
 
-	dbid=case.db_id
+	dbid=case0.db_id
 	if dbid:
 		desp=DBCon.objects.get(id=int(dbid)).description
 		set_top_common_config(taskid, desp,src='case')
 
 	groupskip=[]
-	viewcache(taskid,username,kind,"开始执行用例[<span style='color:#FF3399'>%s</span>]"%case.description)
-	steporderlist=ordered(list(Order.objects.filter(Q(kind='case_step')|Q(kind='case_case'),main_id=case.id)))
+	viewcache(taskid,username,kind,"开始执行用例[<span style='color:#FF3399'>%s</span>]"%case0.description)
+	steporderlist=ordered(list(Order.objects.filter(Q(kind='case_step')|Q(kind='case_case'),main_id=case0.id)))
 	# print('ccc=>',steporderlist)
 	for o in steporderlist:
 		if o.kind=='case_case':
@@ -394,6 +418,14 @@ def _runcase(username,taskid,case,plan,planresult,kind):
 			continue;
 
 		stepid=o.follow_id
+
+		try:
+
+			stepcount=Step.objects.get(id=stepid).count
+			if stepcount==0:
+				continue;
+		except:
+			continue;
 		# print('stepfdafasdadfa=>',Step.objects.get(id=stepid).description)
 		businessorderlist=list(Order.objects.filter(kind='step_business',main_id=stepid))
 		# print('bbb=>',businessorderlist)
@@ -418,7 +450,7 @@ def _runcase(username,taskid,case,plan,planresult,kind):
 				detail=ResultDetail()
 				detail.taskid=taskid
 				detail.plan=plan
-				detail.case=case
+				detail.case=case0
 				detail.step=Step.objects.get(id=o.follow_id)
 				detail.businessdata=BusinessData.objects.get(id=order.follow_id)
 				detail.result=result
@@ -456,9 +488,9 @@ def _runcase(username,taskid,case,plan,planresult,kind):
 	casere=(len([x for x in caseresult if x in ('success','omit')])==len([x for x in caseresult]))
 	planresult.append(casere)
 	if casere:
-		viewcache(taskid, username,kind,"结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-green'>success</span>"%case.description)
+		viewcache(taskid, username,kind,"结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-green'>success</span>"%case0.description)
 	else:
-		viewcache(taskid, username,kind,"结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-red'>fail</span>"%case.description)
+		viewcache(taskid, username,kind,"结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-red'>fail</span>"%case0.description)
 
 
 
@@ -484,6 +516,8 @@ def runplan(callername,taskid,planid,kind=None):
 
 
 		for case in cases:
+			if case.count==0:
+				continue;
 			_runcase(username,taskid,case,plan,planresult,kind=None)
 		#plan
 		planre=(len([x for x in planresult])==len([x for x in planresult if x==True]))
@@ -1251,7 +1285,7 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 
 		#print("ourexpression=>",ourexpression)
 		exp_rp=_replace_property(user, ourexpression)
-		print('qqqqq=>',exp_rp)
+		# print('qqqqq=>',exp_rp)
 
 		# print('exp-pr=>',exp_rp)
 		if exp_rp[0] is not 'success':
@@ -1292,7 +1326,7 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 				elif op=='==':
 					act=rh
 					expect=str(v).strip()
-					print('act=>%s expect=>%s'%(act,expect))
+					#print('act=>%s expect=>%s'%(act,expect))
 					flag=act==expect
 				else:
 					return ('fail','响应头校验暂时只支持=,$比较.')
@@ -1668,6 +1702,10 @@ def _save_builtin_property(taskid,username):
 	 #${PLAN_SUCCESS_RATE}
 	'''
 	detail=gettaskresult(taskid)
+	if detail=={}:
+		print('==内置属性赋值提前结束，执行结果表无数据')
+		return
+
 
 	base_url=settings.BASE_URL
 	url="%s/manager/querytaskdetail/?taskid=%s"%(base_url,taskid)

@@ -476,7 +476,7 @@ class ItfEncoder(XJsonEncoder):
 
 class CaseEncoder(XJsonEncoder):
 	def __init__(self,**args):
-		super(CaseEncoder,self).__init__(['id','author','priority','description','steps','createtime','updatetime','db_id'],**args)
+		super(CaseEncoder,self).__init__(['id','author','priority','description','steps','createtime','updatetime','db_id','count'],**args)
 
 	def encode(self,obj):
 		L=eval(super(XJsonEncoder,self).encode(obj))
@@ -574,7 +574,7 @@ class FunctionEncoder(XJsonEncoder):
 
 class StepEncoder(XJsonEncoder):
 	def __init__(self,**args):
-		super(StepEncoder,self).__init__(['id','businesstitle','author','priority','interface','description','headers','body','db_check','itf_check','step_type','createtime','updatetime','tag_id','temp','url','content_type','method','db_id'],**args)
+		super(StepEncoder,self).__init__(['id','businesstitle','author','priority','interface','description','headers','body','db_check','itf_check','step_type','createtime','updatetime','tag_id','temp','url','content_type','method','db_id','count'],**args)
 	
 	def encode(self,obj):
 		L=eval(super(XJsonEncoder,self).encode(obj))

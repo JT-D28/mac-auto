@@ -304,12 +304,17 @@ def editcase(request):
 		case=Case.objects.get(id=id_)
 		case.description=request.POST.get('description')
 		case.db_id=request.POST.get('dbid')
+		case.count=int(request.POST.get('count'))
 		case.save()
+		casename=case.description
+		if case.count==0:
+			casename='<s>%s</s>'%casename
+
 		return{
 		'status':'success',
 		'msg':'编辑成功',
 		'data':{
-		 'name':case.description
+		 'name':casename
 		}
 		}
 	except:
@@ -458,6 +463,7 @@ def addstep(request):
 def editstep(request):
 	id_=request.POST.get('uid').split('_')[1]
 	try:
+		count=request.POST.get('count')
 		dbid=request.POST.get('dbid')
 		step_type=request.POST.get('step_type')
 		description=request.POST.get('description')
@@ -481,6 +487,7 @@ def editstep(request):
 		# if step_type is None:
 		# 	step.step_type='function'
 
+		step.count=int(count)
 		step.description=description
 		step.headers=headers
 		step.body=body
@@ -492,12 +499,20 @@ def editstep(request):
 		step.db_id=dbid
 
 		step.save()
+		stepname=description
+
+		print('step save,count=>',count)
+		if step.count==0:
+
+			stepname='<s>%s</s>'%stepname
+
 		# mounttestdata(username, step.id,trigger='edit')
 
+		print('step save,name=>',stepname)
 		return{
 		'status':'success',
 		'msg':'编辑成功',
-		'data':{'name':step.description}
+		'data':{'name':stepname}
 		}
 
 	except Exception as e:

@@ -80,6 +80,7 @@ class BusinessTitle(models.Model):
 class Step(models.Model):
 
 	choice=(('interface','接口'),('function','函数'))
+	count=models.IntegerField(default=1)
 
 	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
 	step_type=models.CharField(choices=choice,max_length=12)
@@ -111,6 +112,8 @@ class Step(models.Model):
 		return "[%s]%s"%(self.id,self.description)
 
 class Case(models.Model):
+
+	count=models.IntegerField(default=1)
 	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
 	# priority=models.CharField(max_length=32)
 	description=models.CharField(max_length=128)

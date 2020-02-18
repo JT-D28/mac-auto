@@ -78,6 +78,16 @@
                           <input id='weight' type="text" name="weight" placeholder="" autocomplete="off" class="layui-input" disabled>
                       </div>
                   </div>
+                  <div class="layui-form-item">
+                    <label class="layui-form-label required">执行次数</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="count" placeholder="请输入" autocomplete="off" class="layui-input"
+                               id='count'>
+                    </div>
+
+                  </div>
+
+
                   <div class="layui-form-item" pane="">
                       <label class="layui-form-label">步骤类型</label>
                       <div class="layui-input-block">
@@ -353,6 +363,7 @@ layui.use(['table','layer','element','form'], function(){
     // alert(detail)
     success=function(data){
 
+        count=data.data[0]['count']
         weight=data.data[0]['weight']
         step_type=data.data[0]['step_type']
         // alert(step_type)
@@ -373,6 +384,8 @@ layui.use(['table','layer','element','form'], function(){
         else
           selectdir()
 
+
+        $("[name='count']").val(count)
         $("[name='weight']").val(weight)
         $("[name='description']").val(description)
         $("[name='url']").val(url)
@@ -409,6 +422,13 @@ layui.use(['table','layer','element','form'], function(){
     _post('/manager/queryonestep/',{id:uid},success);
   }
 
+//set default
+    if (detail == 'addstep') {
+        $("[name='count']").val(1)
+
+
+    }
+
 //bind
 
  //save
@@ -432,6 +452,7 @@ layui.use(['table','layer','element','form'], function(){
         'content_type':$("[name='content-type']:checked").val(),
         'tmp':$("[name='property']").val(),
         'dbid':$("[name='db_id']").val(),
+        'count':$("[name='count']").val(),
         // 'node_type':$("[name='node_type']:checked").val(),
 
       }

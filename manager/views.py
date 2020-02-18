@@ -2263,10 +2263,13 @@ def querytreelist(request):
 			plan=Plan.objects.get(id=idx)
 			cases=cm.getchild('plan_case',idx)
 			for case in cases:
+				casename=case.description
+				if case.count==0:
+					casename='<s>%s</s>'%casename
 				datanode.append({
 					'id':'case_%s'%case.id,
 					'pId':'plan_%s'%plan.id,
-					'name':case.description,
+					'name':casename,
 					'type':'case',
 					'textIcon':'fa fa-folder',
 					# 'open':True
@@ -2281,10 +2284,13 @@ def querytreelist(request):
 			steps=cm.getchild('case_step',idx)
 
 			for step in steps:
+				stepname=step.description
+				if step.count==0:
+					stepname='<s>%s</s>'%stepname
 				data.append({
 				'id':'step_%s'%step.id,
 				'pId':'case_%s'%case.id,
-				'name':step.description,
+				'name':stepname,
 				'type':'step',
 				'textIcon':'fa fa-file-o',
 				# 'open':True				
@@ -2292,10 +2298,13 @@ def querytreelist(request):
 
 			cases=cm.getchild('case_case',idx)
 			for case0 in cases:
+				casename=case0.description
+				if case0.count==0:
+					casename='<s>%s</s>'%casename
 				data.append({
 					'id':'case_%s'%case0.id,
 					'pId':'case_%s'%idx,
-					'name':case0.description,
+					'name':casename,
 					'type':'case',
 					'textIcon':'fa fa-folder',
 					})

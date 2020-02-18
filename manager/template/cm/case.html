@@ -69,6 +69,15 @@
                           <input type="text" name="weight" placeholder="请输入" autocomplete="off" class="layui-input" id='weight' disabled>
                       </div>
                   </div>
+
+                  <div class="layui-form-item">
+                    <label class="layui-form-label required">执行次数</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="count" placeholder="请输入" autocomplete="off" class="layui-input"
+                               id='count'>
+                    </div>
+
+                  </div>
                   <div class="layui-form-item">
                       <label class="layui-form-label">用例名称</label>
                       <div class="layui-input-block">
@@ -127,12 +136,18 @@ layui.use(['table','layer','form','element'], function(){
       //alert(description)
       $("[name='description']").val(description)
       $("[name='db_id']").val(data.data[0]['db_id'])
-      $("[name='weight']").val(data.data[0]['weight'])    
+      $("[name='weight']").val(data.data[0]['weight'])
+      $("[name='count']").val(data.data[0]['count'])    
       layui.form.render('select')
     };
 
     _post('/manager/queryonecase/',{id:uid},success)
   }
+
+
+  //set default
+  if(detail=='addcase')
+    $("[name='count']").val(1)
 
   //save
   btn=$('#save')
@@ -143,7 +158,8 @@ layui.use(['table','layer','form','element'], function(){
     'pid':pid,
     'action':detail,
     'description':$("[name='description']").val(),
-    'dbid':$("[name='db_id']").val()
+    'dbid':$("[name='db_id']").val(),
+    'count':$("[name='count']").val()
 
     }
 

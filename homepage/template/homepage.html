@@ -55,6 +55,31 @@
 
     </style>
 </head>
+
+<style>
+    .layui-tab-title {
+        border-bottom: none;
+    }
+
+    /* 重置 - 去掉下划线 */
+    .layui-tab-title .layui-this {
+        background: #81ffd9;
+    }
+
+    /* 增加背景 */
+    .layui-tab-title .layui-this:after {
+        border: none;
+    }
+
+    /* 重置 -this无边框 */
+    .layui-tab-title li {
+        display: list-item;
+    }
+
+    /* 重置 -纵向显示 */
+</style>
+
+
 <body>
 <!--<div class="layuimini-container">-->
 <div class="layuimini-main">
@@ -62,68 +87,68 @@
 
     <div class="layui-row layui-col-space15">
         <div class="layui-col-xs12 layui-col-md3">
-            <div class="layui-card">
-                <div class="layui-card-header" style="padding: 0 0">
-                    <form class="layui-form" action="">
-                        <div class="layui-form-item" style="margin-bottom: 0">
-                            <div class="layui-input-inline" style="width: 40%;margin-right: 5%">
-                                <select id='product' name="product" lay-filter="product"
-                                        lay-verify="required" lay-search>
-                                    <option value=''>选择项目</option>
-                                </select>
+                <div class="layui-card">
+                    <div class="layui-card-header" style="padding: 0 0">
+                        <form class="layui-form" action="">
+                            <div class="layui-form-item" style="margin-bottom: 0">
+                                <div class="layui-input-inline" style="width: 40%;margin-right: 5%">
+                                    <select id='product' name="product" lay-filter="product"
+                                            lay-verify="required" lay-search>
+                                        <option value=''>选择项目</option>
+                                    </select>
+                                </div>
+                                <div class="layui-input-inline" style="width: 55%;margin-right: 0px">
+                                    <select name="plan" lay-filter="plan" lay-verify="required" lay-search>
+                                        <option value=''>选择计划</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="layui-input-inline" style="width: 55%;margin-right: 0px">
-                                <select name="plan" lay-filter="plan" lay-verify="required" lay-search>
-                                    <option value=''>选择计划</option>
-                                </select>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="layui-card-body">
-                    <div class="welcome-module">
-                        <div class="layui-row layui-col-space10 layuimini-qiuck">
-                            <div class="layui-col-xs4 layuimini-qiuck-module">
-                                <a href="javascript:;" data-iframe-tab="page/menu.html" data-title="菜单管理"
-                                   data-icon="fa fa-window-maximize">
-                                    <i id='runplan' class="layui-icon layui-icon-play"></i>
-                                    <cite>运行计划</cite>
-                                </a>
-                            </div>
-                            <div class="layui-col-xs4 layuimini-qiuck-module">
-                                <a href="javascript:;" data-iframe-tab="page/setting.html" data-title="系统设置"
-                                   data-icon="fa fa-gears">
-                                    <i id='setplan' class="layui-icon layui-icon-set"></i>
-                                    <cite>项目设置</cite>
-                                </a>
-                            </div>
-                            <div class="layui-col-xs4 layuimini-qiuck-module">
-                                <a href="javascript:;" data-iframe-tab="page/table.html" data-title="表格示例"
-                                   data-icon="fa fa-file-text">
-                                    <i id='editplan' class="layui-icon layui-icon-code-circle"></i>
-                                    <cite>跳转编辑</cite>
-                                </a>
-                            </div>
-                            <div class="layui-col-xs4 layuimini-qiuck-module">
-                                <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
-                                   data-icon="fa fa-dot-circle-o">
-                                    <i id='repoetplan' class="layui-icon layui-icon-chart-screen"></i>
-                                    <cite>最新报告</cite>
-                                </a>
-                            </div>
-                            <div class="layui-col-xs4 layuimini-qiuck-module">
-                                <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
-                                   data-icon="fa fa-dot-circle-o">
-                                    <i id='sendrepoet' class="layui-icon layui-icon-picture"></i>
-                                    <cite>发送报告</cite>
-                                </a>
-                            </div>
-                            <div class="layui-col-xs4 layuimini-qiuck-module">
-                                <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
-                                   data-icon="fa fa-dot-circle-o">
-                                    <i id='process' class="layui-icon layui-icon-log"></i>
-                                    <cite>运行日志</cite>
-                                </a>
+                        </form>
+                    </div>
+                    <div class="layui-card-body">
+                        <div class="welcome-module">
+                            <div class="layui-row layui-col-space10 layuimini-qiuck">
+                                <div class="layui-col-xs4 layuimini-qiuck-module">
+                                    <a href="javascript:;" data-iframe-tab="page/menu.html" data-title="菜单管理"
+                                       data-icon="fa fa-window-maximize">
+                                        <i id='runplan' class="layui-icon layui-icon-play"></i>
+                                        <cite>运行计划</cite>
+                                    </a>
+                                </div>
+                                <div class="layui-col-xs4 layuimini-qiuck-module">
+                                    <a href="javascript:;" data-iframe-tab="page/setting.html" data-title="系统设置"
+                                       data-icon="fa fa-gears">
+                                        <i id='setplan' class="layui-icon layui-icon-set"></i>
+                                        <cite>项目设置</cite>
+                                    </a>
+                                </div>
+                                <div class="layui-col-xs4 layuimini-qiuck-module">
+                                    <a href="javascript:;" data-iframe-tab="page/table.html" data-title="表格示例"
+                                       data-icon="fa fa-file-text">
+                                        <i id='buglog' class="layui-icon layui-icon-code-circle"></i>
+                                        <cite>历史缺陷</cite>
+                                    </a>
+                                </div>
+                                <div class="layui-col-xs4 layuimini-qiuck-module">
+                                    <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
+                                       data-icon="fa fa-dot-circle-o">
+                                        <i id='repoetplan' class="layui-icon layui-icon-chart-screen"></i>
+                                        <cite>最新报告</cite>
+                                    </a>
+                                </div>
+                                <div class="layui-col-xs4 layuimini-qiuck-module">
+                                    <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
+                                       data-icon="fa fa-dot-circle-o">
+                                        <i id='sendrepoet' class="layui-icon layui-icon-picture"></i>
+                                        <cite>发送报告</cite>
+                                    </a>
+                                </div>
+                                <div class="layui-col-xs4 layuimini-qiuck-module">
+                                    <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
+                                       data-icon="fa fa-dot-circle-o">
+                                        <i id='process' class="layui-icon layui-icon-log"></i>
+                                        <cite>运行日志</cite>
+                                    </a>
                             </div>
                         </div>
                     </div>
@@ -196,24 +221,81 @@
         </div>
     </div>
 
-    <!--</div>-->
-    <script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
-    <script src="{% static 'manager/js/utils.js' %}" charset="utf-8"></script>
-    <script src="{% static 'homepage/layui/lay-config.js' %}" charset="utf-8"></script>
-    <script>
-        layui.use(['layer', 'echarts', 'common', 'form', 'jquery', 'element', 'layedit', 'table'], function () {
-            var $ = layui.jquery,
-                layer = layui.layer,
-                echarts = layui.echarts;
-            var common = layui.common;
-            var element = layui.element;
-            var form = layui.form;
-            var layedit = layui.layedit;
-            var le = layedit.build('rich_text'); //建立编辑器
-            var table = layui.table;
 
-            var username = $("#username").text()
 
+    <div id="oldbug" hidden class="layui-row" style="height: 100%;">
+        <div class="layui-tab">
+            <ul class="layui-tab-title layui-col-md1" style="height:100%;">
+                <li class="layui-this">网站设置</li>
+                <li>用户管理</li>
+                <li>权限分配</li>
+                <li>商品管理</li>
+                <li>订单管理</li>
+            </ul>
+            <div class="layui-tab-content  layui-col-md11" style="padding:0 0 0 10px;height:100%;overflow-y:auto;">
+                <div class="layui-tab-item layui-show">
+                    <div class="layui-col-md12">
+                        <div class="layui-card" style="margin-bottom:0px">
+                            <div class="layui-card-header card">
+                                <div class="layui-form-item">
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">日期范围</label>
+                                        <div class="layui-input-inline">
+                                            <input type="text" class="layui-input" id="time" placeholder=" - "
+                                                   lay-key="7">
+                                        </div>
+                                    </div>
+                                    <div class="layui-btn-group">
+                                        <button type="button" id="timeall" class="layui-btn layui-btn-sm">全部</button>
+                                        <button type="button" id="timeseven" class="layui-btn layui-btn-sm ">7天</button>
+                                        <button type="button" id="timemonth" class="layui-btn layui-btn-sm">一个月</button>
+                                    </div>
+
+                                    <div class="layui-input-inline" style="width: 30%;margin-right: 0px">
+                                        <form class="layui-form" action="">
+                                            <select name="plan_log" lay-filter="plan_log" lay-verify="required"
+                                                    lay-search>
+                                                <option value=''>选择计划</option>
+                                            </select>
+                                        </form>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        <table id="oldbugtable1" lay-size='sm' lay-filter="oldbugtable1"></table>
+                    </div>
+                </div>
+                <div class="layui-tab-item">内容2</div>
+                <div class="layui-tab-item">内容3</div>
+                <div class="layui-tab-item">内容4</div>
+                <div class="layui-tab-item">内容5</div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+
+<script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
+<script src="{% static 'manager/js/utils.js' %}" charset="utf-8"></script>
+<script src="{% static 'homepage/layui/lay-config.js' %}" charset="utf-8"></script>
+<script>
+    layui.use(['layer', 'echarts', 'common', 'form', 'jquery', 'element', 'layedit', 'table', 'laydate'], function () {
+        var $ = layui.jquery,
+            layer = layui.layer,
+            echarts = layui.echarts;
+        var common = layui.common;
+        var element = layui.element;
+        var form = layui.form;
+        var layedit = layui.layedit;
+        var le = layedit.build('rich_text'); //建立编辑器
+        var table = layui.table;
+        var date = new Date()
+        var username = $("#username").text()
+        var laydate = layui.laydate
+        nowdate = date.toJSON().substr(0, 10)
 
             common.ajax('/homepage/queryproduct/', 'post', 'json', {},
                 function (data) {
@@ -227,147 +309,201 @@
                 }
             );
 
-
-            form.on('select(product)', function (data) {
-                var id = $("[name='product']").val()
-                common.ajax('/homepage/queryplan/', 'post', 'json', {
-                        'id': id
-                    }, function (data) {
-                        data = JSON.parse(data)
-                        if (data.code != '0') {
-                            $("[name='plan']").empty()
-                            $("[name='plan']").append("<option value=''>选择计划</option>")
-                            layui.form.render('select')
+        form.on('select(product)', function (data) {
+            var id = $("[name='product']").val()
+            common.ajax('/homepage/queryplan/', 'post', 'json', {
+                    'id': id
+                }, function (data) {
+                    data = JSON.parse(data)
+                    if (data.code != '0') {
+                        $("[name='plan']").empty()
+                        $("[name='plan']").append("<option value=''>选择计划</option>")
+                        layui.form.render('select')
+                    } else {
+                        data = data.data
+                        $("[name='plan']").empty()
+                        if (data.length != 0) {
+                            for (var index = 0; index < data.length; index++) {
+                                $("[name='plan']").append("<option value='" + data[index]['id'] + "'>" + data[index]['name'] + "</option>")
+                                $("[name='plan_log']").append("<option value='" + data[index]['id'] + "'>" + data[index]['name'] + "</option>")
+                            }
                         } else {
-                            data = data.data
-                            $("[name='plan']").empty()
-                            if (data.length != 0) {
-                                for (var index = 0; index < data.length; index++) {
-                                    $("[name='plan']").append("<option value='" + data[index]['id'] + "'>" + data[index]['name'] + "</option>")
-                                }
-                            } else {
-                                $("[name='plan']").append("<option value=''>该项目下没有计划</option>")
-                            }
-                            //  chart = echarts.init(document.getElementById('bar'), 'white', {renderer: 'canvas'});
-                            //   fetchData(chart)
-                            common.ajax('/homepage/reportchart/', 'post', 'json', {
-                                planid: $("[name='plan']").val().substr(5)
-                            }, function (result) {
-                                result = JSON.parse(result)
-                                report(result.data, result.code)
-                            })
-                            layui.form.render('select')
+                            $("[name='plan']").append("<option value=''>该项目下没有计划</option>")
+                            $("[name='plan_log']").append("<option value=''>该项目下没有计划</option>")
                         }
-                    }
-                )
-            });
-            /**
-             form.on('select(plan)', function (data) {
-                planid = $("[name='plan']").val().substr(5);
-                fetchData(chart)
-            });
-
-             function fetchData() {  //获取图表
-                planid = $("[name='plan']").val().substr(5)
-                if (planid != '') {
-                    common.ajax('/homepage/reportchart/', 'post', 'json', {
-                        planid: $("[name='plan']").val().substr(5)
-                    }, function (result) {
-                        chart.setOption(result.data);
-                    })
-                }
-            }
-             **/
-            $('#runplan').click(function () {
-                var planid = $("[name='plan']").val().substr(5)
-                if (planid == '') {
-                    layer.msg("请选择项目和计划！")
-                } else {
-                    common.ajax('/manager/runplan', 'post', 'json', {ids: planid,is_verify:'1'},
-                        function (data) {
-                            data = JSON.parse(data)
-                            if (data.code == 0) {
-                                var mes = "你的任务正在运行中..."
-                                layer.msg(mes, {
-                                    time: 30000, //20s后自动关闭
-                                    shade: 0.2,
-                                    shadeClose: true,
-                                    btn: ['火速围观', '残忍拒绝'],
-                                    yes: function (index, layero) {
-                                        window.top.document.getElementById("console").click()
-                                        layer.close(index)
-                                    }
-                                });
-                            }
+                        common.ajax('/homepage/reportchart/', 'post', 'json', {
+                            planid: $("[name='plan']").val().substr(5)
+                        }, function (result) {
+                            result = JSON.parse(result)
+                            report(result.data, result.code)
                         })
+                        layui.form.render('select')
+                    }
                 }
-            })
-            $('#editplan').click(function () {
-                var planid = $("[name='plan']").val().substr(5)
-                if (planid == '') {
-                    layer.msg("请选择项目和计划！")
-                } else {
-                    window.top.document.getElementById("tree").click()
-                }
-            });//没啥用
-            $('#repoetplan').click(function () {
-                var planid = $("[name='plan']").val().substr(5)
-                if (planid == '') {
-                    layer.msg("请选择项目和计划！")
-                } else {
-                    common.ajax('/homepage/querytaskid/', 'post', 'json', {
-                        'planid': planid
-                    }, function (data) {
+            )
+        });
+        $('#runplan').click(function () {
+            var planid = $("[name='plan']").val().substr(5)
+            if (planid == '') {
+                layer.msg("请选择项目和计划！")
+            } else {
+                common.ajax('/manager/runplan', 'post', 'json', {ids: planid, is_verify: '1'},
+                    function (data) {
                         data = JSON.parse(data)
-                        taskid = data.data
-                        if (data.code != 0) {
-                            layer.msg(data.msg);
-                        } else {
-                            var resulturl = '/manager/querytaskdetail/?taskid=' + taskid
-                            //window.open(resulturl)
-                            layer.open({
-                                type: 2,
-                                title: false,
-                                shade: [0],
-                                area: ['90%', '90%'],
-                                anim: 2,
+                        if (data.code == 0) {
+                            var mes = "你的任务正在运行中..."
+                            layer.msg(mes, {
+                                time: 30000, //20s后自动关闭
+                                shade: 0.2,
                                 shadeClose: true,
-                                content: [resulturl, 'yes'], //iframe的url，no代表不显示滚动条
-                            });
-                        }
-                    })
-                }
-            })
-            $("#process").click(function () {
-                var planid = $("[name='plan']").val().substr(5)
-                if (planid == '') {
-                    layer.msg("请选择项目和计划！")
-                } else {
-                    common.ajax('/homepage/querytaskid/', 'post', 'json', {
-                        'planid': planid
-                    }, function (data) {
-                        data = JSON.parse(data)
-                        taskid = data.data
-                        if (data.code != 0) {
-                            layer.msg(data.msg);
-                        } else {
-                            layer.open({
-                                type: 1,
-                                id: "log-process",
-                                title: false,
-                                shade: [0],
-                                area: ['90%', '90%'],
-                                anim: 2,
-                                shadeClose: true,
-                                content: $("#seeprocess"),
-                                success: function () {
-                                    showlog(taskid)
+                                btn: ['火速围观', '残忍拒绝'],
+                                yes: function (index, layero) {
+                                    window.top.document.getElementById("console").click()
+                                    layer.close(index)
                                 }
                             });
                         }
                     })
+            }
+        })
+        $('#buglog').click(function () {
+            layer.open({
+                type: 1,
+                id: "log-bug",
+                title: false,
+                shade: [0],
+                area: ['90%', '90%'],
+                anim: 0,
+                shadeClose: true,
+                content: $("#oldbug"),
+                success: function () {
+                    laydate.render({
+                        elem: '#time',
+                        range: true,
+                        max: nowdate,
+                        value: addDate(nowdate, -15) + ' - ' + nowdate,
+                        done: function (date) {
+                            queryoldbug($("[name='product']").val(), date);
+                        }
+                    });
+                    setTimeout(function () {
+                        queryoldbug($("[name='product']").val(), addDate(nowdate, -15) + ' - ' + addDate(nowdate, 1));
+                    }, 500)
                 }
-            })
+            });
+        })
+
+
+        function queryoldbug(productid, time) {
+            table.render({
+                elem: '#oldbugtable'
+                , method: 'POST'
+                , url: '/homepage/buglog/' //数据接口
+                , where: {productid: productid, time: time}
+                , cols: [[ //表头
+                    {field: '路径', title: '路径', width: "30%", align: "left"}
+                    , {field: '接口', title: '接口', width: "30%", align: "left"}
+                    , {field: '测试点', title: '测试点', width: "10%", align: "left"}
+                    , {field: '参数信息', title: '参数信息', width: "15%", align: "left"}
+                    , {field: '失败原因', title: '失败原因', width: "15%", align: "left"}
+                ]], text: {
+                    none: '该期间无运行记录！'
+                }
+            });
+        }
+
+
+        function addDate(date, days) {
+            var d = new Date(date);
+            d.setDate(d.getDate() + days);
+            var m = d.getMonth() + 1;
+            m = m > 10 ? m : '0' + m
+            var day = d.getDate() > 9 ? d.getDate() : '0' + d.getDate()
+            return d.getFullYear() + '-' + m + '-' + day;
+        }
+
+        $("#timeall").click(function () {
+            laydate.render({elem: '#time', range: true, max: nowdate, value: '2020-01-01 - ' + nowdate});
+            queryoldbug($("[name='product']").val(), '2020-01-01 - ' + addDate(nowdate, 1));
+        })
+        $("#timeseven").click(function () {
+            laydate.render({
+                elem: '#time',
+                range: true,
+                max: nowdate,
+                value: addDate(nowdate, -7) + ' - ' + nowdate
+            });
+            queryoldbug($("[name='product']").val(), addDate(nowdate, -7) + ' - ' + addDate(nowdate, 1));
+
+        })
+        $("#timemonth").click(function () {
+            laydate.render({
+                elem: '#time',
+                range: true,
+                max: nowdate,
+                value: addDate(nowdate, -30) + ' - ' + nowdate
+            });
+            queryoldbug($("[name='product']").val(), addDate(nowdate, -30) + ' - ' + addDate(nowdate, 1));
+        })
+
+        $('#repoetplan').click(function () {
+            var planid = $("[name='plan']").val().substr(5)
+            if (planid == '') {
+                layer.msg("请选择项目和计划！")
+            } else {
+                common.ajax('/homepage/querytaskid/', 'post', 'json', {
+                    'planid': planid
+                }, function (data) {
+                    data = JSON.parse(data)
+                    taskid = data.data
+                    if (data.code != 0) {
+                        layer.msg(data.msg);
+                    } else {
+                        var resulturl = '/manager/querytaskdetail/?taskid=' + taskid
+                        //window.open(resulturl)
+                        layer.open({
+                            type: 2,
+                            title: false,
+                            shade: [0],
+                            area: ['90%', '90%'],
+                            anim: 2,
+                            shadeClose: true,
+                            content: [resulturl, 'yes'], //iframe的url，no代表不显示滚动条
+                        });
+                    }
+                })
+            }
+        })
+        $("#process").click(function () {
+            var planid = $("[name='plan']").val().substr(5)
+            if (planid == '') {
+                layer.msg("请选择项目和计划！")
+            } else {
+                common.ajax('/homepage/querytaskid/', 'post', 'json', {
+                    'planid': planid
+                }, function (data) {
+                    data = JSON.parse(data)
+                    taskid = data.data
+                    if (data.code != 0) {
+                        layer.msg(data.msg);
+                    } else {
+                        layer.open({
+                            type: 1,
+                            id: "log-process",
+                            title: false,
+                            shade: [0],
+                            area: ['90%', '90%'],
+                            anim: 2,
+                            shadeClose: true,
+                            content: $("#seeprocess"),
+                            success: function () {
+                                showlog(taskid)
+                            }
+                        });
+                    }
+                })
+            }
+        })
 
             function showlog(taskid) {
                 $.ajax({

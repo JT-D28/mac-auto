@@ -499,6 +499,7 @@ def _runcase(username,taskid,case0,plan,planresult,is_verify,kind):
 								detail.error=error
 								detail.spend=spend
 								detail.loop_id=1
+								detail.is_verify=1
 								detail.save()
 
 								print('保存结果=>',detail)
@@ -585,6 +586,8 @@ def runplan(callername,taskid,planid,is_verify,kind=None):
 			plan.is_running = 0
 			plan.save()
 			viewcache(taskid, username,kind,"结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-red'>fail</span>"%plan.description)
+		#处理日志
+		threading.Thread(target=dealDeBuginfo,args=(taskid,)).start()
 
 		##清除请求session
 		clear_task_session('%s_%s'%(taskid,callername))
@@ -602,8 +605,6 @@ def runplan(callername,taskid,planid,is_verify,kind=None):
 			viewcache(taskid,username,kind,mail_res)
 			print("发送钉钉通知 结果[%s]" % dingding_res)
 			viewcache(taskid, username, kind, dingding_res)
-
-		threading.Thread(target=dealDeBuginfo,args=(taskid,)).start()
 
 	except Exception as e:
 		#traceback.print_exc()

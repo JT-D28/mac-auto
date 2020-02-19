@@ -7,12 +7,11 @@ from django.views.decorators.csrf import csrf_exempt
 
 from ME2 import configs
 from manager.invoker import gettaskresult, MainSender
-from . import rpechart
 from manager import cm
 from manager.core import *
 
 # Create your views here.
-from manager.models import Product, Plan, ResultDetail, MailConfig
+from manager.models import Product, Plan, ResultDetail, MailConfig, Order
 import json
 from .dealinfo import doDebugInfo
 
@@ -253,7 +252,6 @@ def badresult(request):
         cursor.execute(sql2, [taskid])
         desc = cursor.description
         row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-        print(row)
     result= {"code":0,"msg":"","count":len(row),"data":row}
     return JsonResponse(result)
 
@@ -300,8 +298,30 @@ def jenkins_add(request):
 
 
 @csrf_exempt
-def plandebug(request):
+def plandebug(request): #调试日志
     res, type, taskid,code = doDebugInfo(request)
     return JsonResponse({"code":code, "type": type, "data": res, "taskid": taskid})
 
+
+@csrf_exempt
+def querybuglog(request): #历史缺陷
+    productid=request.POST.get('productid')
+    print(request.POST.get('time').split(" - ")[1])
+    res=[]
+    sql = '''
+    SELECT b.id as bussiness_id,p.description as '计划名', c.description as '用例名' ,s.description as '步骤名',s.headers as headers,
+    s.body as body ,s.url as url ,b.businessname as '测试点',b.itf_check as '接口校验',b.db_check as 'db校验', b.params as '参数信息',
+    r.error as '失败原因' from manager_resultdetail r,manager_plan p,manager_case c,manager_step s,
+    manager_businessdata b WHERE r.plan_id in (SELECT follow_id FROM manager_order where main_id=%s) 
+    and r.result in ('error','fail') and r.is_verify=1 and r.plan_id=p.id and r.case_id=c.id 
+    and r.step_id=s.id and r.businessdata_id=b.id and r.createtime BETWEEN %s and %s
+    '''
+    with connection.cursor() as cursor:
+        cursor.execute(sql, [productid,request.POST.get('time').split(" - ")[0],request.POST.get('time').split(" - ")[1]])
+        desc = cursor.description
+        rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+    for i in range(len(rows)):
+        res.append({'路径':rows[i-1]['计划名']+'-'+rows[i-1]['用例名']+'-'+rows[i-1]['步骤名'],'接口':rows[i-1]['url'],'测试点':rows[i-1]['测试点'],'参数信息':rows[i-1]['参数信息'],'失败原因':rows[i-1]['失败原因']})
+    print(res)
+    return JsonResponse({"code":0, "data": res})
 

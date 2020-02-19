@@ -32,5 +32,5 @@ urlpatterns = [
     path('reportchart/', views.reportchart),
     path('badresult/',views.badresult),
     path('plandebug/', views.plandebug),
-
+    path('buglog/',views.querybuglog)
 ]

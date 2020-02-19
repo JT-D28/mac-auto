@@ -705,7 +705,7 @@ def third_party_call(request):
 	print('调用方=>',callername)
 	print('调用计划=>',planid)
 
-	runplans(callername,taskid,[planid])
+	runplans(callername,taskid,[planid],'1')
 	return JsonResponse(simplejson(code=0,msg="调用成功",taskid=taskid),safe=False)
 
 

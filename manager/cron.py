@@ -51,7 +51,7 @@ class Cron(object):
             else:
                 crontaskid=config.taskid
                 cfg=eval(config.value)
-                cls._addcrontab(runplans,args=[username,crontaskid,[plan.id],'定时'],taskid=crontaskid,**cfg)
+                cls._addcrontab(runplans,args=[username,crontaskid,[plan.id],'1','定时'],taskid=crontaskid,**cfg)
 
                 config.status='open'
                 config.save()
@@ -93,7 +93,7 @@ class Cron(object):
             crontaskid=task.taskid
             cfg=eval(task.value)
             username=task.author.name
-            cls._addcrontab(runplans,args=[username,crontaskid,[planid],'定时'],taskid=crontaskid,**cfg)
+            cls._addcrontab(runplans,args=[username,crontaskid,[planid],'1','定时'],taskid=crontaskid,**cfg)
 
         print("定时任务重新装载完成...")
 

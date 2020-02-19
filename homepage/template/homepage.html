@@ -87,62 +87,62 @@
 
     <div class="layui-row layui-col-space15">
         <div class="layui-col-xs12 layui-col-md3">
-                <div class="layui-card">
-                    <div class="layui-card-header" style="padding: 0 0">
-                        <form class="layui-form" action="">
-                            <div class="layui-form-item" style="margin-bottom: 0">
-                                <div class="layui-input-inline" style="width: 40%;margin-right: 5%">
-                                    <select id='product' name="product" lay-filter="product"
-                                            lay-verify="required" lay-search>
-                                        <option value=''>选择项目</option>
-                                    </select>
-                                </div>
-                                <div class="layui-input-inline" style="width: 55%;margin-right: 0px">
-                                    <select name="plan" lay-filter="plan" lay-verify="required" lay-search>
-                                        <option value=''>选择计划</option>
-                                    </select>
-                                </div>
+            <div class="layui-card">
+                <div class="layui-card-header" style="padding: 0 0">
+                    <form class="layui-form" action="">
+                        <div class="layui-form-item" style="margin-bottom: 0">
+                            <div class="layui-input-inline" style="width: 40%;margin-right: 5%">
+                                <select id='product' name="product" lay-filter="product"
+                                        lay-verify="required" lay-search>
+                                    <option value=''>选择项目</option>
+                                </select>
                             </div>
-                        </form>
-                    </div>
-                    <div class="layui-card-body">
-                        <div class="welcome-module">
-                            <div class="layui-row layui-col-space10 layuimini-qiuck">
-                                <div class="layui-col-xs4 layuimini-qiuck-module" onmouseover=verifytips(this)>
-                                    <a href="javascript:;" data-icon="fa fa-window-maximize">
-                                        <i id='runplan' class="layui-icon layui-icon-play"></i>
-                                        <cite>验证</cite>
-                                    </a>
-                                </div>
-                                <div class="layui-col-xs4 layuimini-qiuck-module">
-                                    <a href="javascript:;" data-icon="fa fa-gears">
-                                        <i id='setplan' class="layui-icon layui-icon-set"></i>
-                                        <cite>项目设置</cite>
-                                    </a>
-                                </div>
-                                <div class="layui-col-xs4 layuimini-qiuck-module">
-                                    <a href="javascript:;"  data-icon="fa fa-file-text">
-                                        <i id='buglog' class="layui-icon layui-icon-code-circle"></i>
-                                        <cite>历史缺陷</cite>
-                                    </a>
-                                </div>
-                                <div class="layui-col-xs4 layuimini-qiuck-module">
-                                    <a href="javascript:;" data-icon="fa fa-dot-circle-o">
-                                        <i id='repoetplan' class="layui-icon layui-icon-chart-screen"></i>
-                                        <cite>最新报告</cite>
-                                    </a>
-                                </div>
-                                <div class="layui-col-xs4 layuimini-qiuck-module">
-                                    <a href="javascript:;" data-icon="fa fa-dot-circle-o">
-                                        <i id='sendrepoet' class="layui-icon layui-icon-picture"></i>
-                                        <cite>发送报告</cite>
-                                    </a>
-                                </div>
-                                <div class="layui-col-xs4 layuimini-qiuck-module">
-                                    <a href="javascript:;" data-icon="fa fa-dot-circle-o">
-                                        <i id='process' class="layui-icon layui-icon-log"></i>
-                                        <cite>运行日志</cite>
-                                    </a>
+                            <div class="layui-input-inline" style="width: 55%;margin-right: 0px">
+                                <select name="plan" lay-filter="plan" lay-verify="required" lay-search>
+                                    <option value=''>选择计划</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="layui-card-body">
+                    <div class="welcome-module">
+                        <div class="layui-row layui-col-space10 layuimini-qiuck">
+                            <div class="layui-col-xs4 layuimini-qiuck-module">
+                                <a href="javascript:;" title="这里是验证用例，调试去用例管理！" data-icon="fa fa-window-maximize">
+                                    <i id='runplan' class="layui-icon layui-icon-play"></i>
+                                    <cite>验证</cite>
+                                </a>
+                            </div>
+                            <div class="layui-col-xs4 layuimini-qiuck-module">
+                                <a href="javascript:;" data-icon="fa fa-gears">
+                                    <i id='setplan' class="layui-icon layui-icon-set"></i>
+                                    <cite>项目设置</cite>
+                                </a>
+                            </div>
+                            <div class="layui-col-xs4 layuimini-qiuck-module">
+                                <a href="javascript:;" data-icon="fa fa-file-text">
+                                    <i id='buglog' class="layui-icon layui-icon-code-circle"></i>
+                                    <cite>历史缺陷</cite>
+                                </a>
+                            </div>
+                            <div class="layui-col-xs4 layuimini-qiuck-module">
+                                <a href="javascript:;" data-icon="fa fa-dot-circle-o">
+                                    <i id='repoetplan' class="layui-icon layui-icon-chart-screen"></i>
+                                    <cite>最新报告</cite>
+                                </a>
+                            </div>
+                            <div class="layui-col-xs4 layuimini-qiuck-module">
+                                <a href="javascript:;" data-icon="fa fa-dot-circle-o">
+                                    <i id='sendrepoet' class="layui-icon layui-icon-picture"></i>
+                                    <cite>发送报告</cite>
+                                </a>
+                            </div>
+                            <div class="layui-col-xs4 layuimini-qiuck-module">
+                                <a href="javascript:;" data-icon="fa fa-dot-circle-o">
+                                    <i id='process' class="layui-icon layui-icon-log"></i>
+                                    <cite>运行日志</cite>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -214,7 +214,6 @@
             </div>
         </div>
     </div>
-
 
 
     <div id="oldbug" hidden class="layui-row" style="height: 100%;">
@@ -291,17 +290,17 @@
         var laydate = layui.laydate
         nowdate = date.toJSON().substr(0, 10)
 
-            common.ajax('/homepage/queryproduct/', 'post', 'json', {},
-                function (data) {
-                    console.log('项目名称=>' + data)
-                    data = JSON.parse(data)
-                    data = data.data
-                    for (var index = 0; index < data.length; index++) {
-                        $("[name='product']").append("<option value='" + data[index]['id'] + "'>" + data[index]['description'] + "</option>")
-                    }
-                    layui.form.render('select')
+        common.ajax('/homepage/queryproduct/', 'post', 'json', {},
+            function (data) {
+                console.log('项目名称=>' + data)
+                data = JSON.parse(data)
+                data = data.data
+                for (var index = 0; index < data.length; index++) {
+                    $("[name='product']").append("<option value='" + data[index]['id'] + "'>" + data[index]['description'] + "</option>")
                 }
-            );
+                layui.form.render('select')
+            }
+        );
 
         form.on('select(product)', function (data) {
             var id = $("[name='product']").val()
@@ -499,393 +498,393 @@
             }
         })
 
-            function showlog(taskid) {
-                $.ajax({
-                    url: '/homepage/process/',
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {'taskid': taskid},
-                    success: function (res) {
-                        res = JSON.parse(res)
-                        var log_text = res.data
-                        var is_done = res.msg
-                        $("#log_text").html(log_text);
-                        var ta = document.getElementById('log-process');
-                        ta.scrollTop = ta.scrollHeight;//定位到最后
-                        if (is_done != 'yes') {
-                            window.setTimeout(showlog(taskid), 500);
+        function showlog(taskid) {
+            $.ajax({
+                url: '/homepage/process/',
+                type: 'POST',
+                dataType: 'json',
+                data: {'taskid': taskid},
+                success: function (res) {
+                    res = JSON.parse(res)
+                    var log_text = res.data
+                    var is_done = res.msg
+                    $("#log_text").html(log_text);
+                    var ta = document.getElementById('log-process');
+                    ta.scrollTop = ta.scrollHeight;//定位到最后
+                    if (is_done != 'yes') {
+                        window.setTimeout(showlog(taskid), 500);
+                    }
+                    return false;
+                }
+            });
+        }
+
+        $("#setplan").click(function () {
+            var planid = $("[name='plan']").val().substr(5)
+            if (planid == '') {
+                layer.msg("请选择项目和计划！")
+            } else {
+                layer.open({
+                    title: '报告配置',
+                    type: 1,
+                    area: ['800px', '450px'],
+                    content: $('#settings'),
+                    btn: ['确定', '取消'],
+                    success: function () {
+                        $("#mailconfig")[0].reset()
+                        layui.form.render()
+                        common.ajax('/manager/queryonemailconfig/', 'post', 'json', {id: planid}, function (ee) {
+                            op = ''
+                            if (typeof (ee) != 'string') {
+                                if (ee.code == 0) {
+                                    //赋值form
+                                    op = '编辑'
+                                    console.log(ee.data)
+                                    $("[name='color_scheme']").val(ee.data['color_scheme'])
+                                    layui.form.render('select');
+                                    $("[name='description']").val(ee.data['description'])
+                                    $("[name='to_receive']").val(ee.data['to_receive'])
+                                    $("[name='dingdingtoken']").val(ee.data['dingdingtoken'])
+                                }
+                            } else {
+                                ee = JSON.parse(ee)
+                                if (ee.code == 1) {
+                                    op = '新建'
+                                }
+                            }
+                        })
+                    },
+                    yes: function (index, layero) {
+                        success = function (data) {
+                            data = JSON.parse(data)
+                            if (data.code == 0) {
+                                layer.close(index)
+                                layer.alert(data.msg, {icon: 1, time: 1500})
+                            } else {
+                                layer.alert(data.msg, {icon: 2, time: 2000})
+                            }
                         }
-                        return false;
+                        _post("/manager/editmailconfig/", {
+                            id: planid,
+                            color_scheme: $("[name='color_scheme']").val(),
+                            description: $("[name='description']").val(),
+                            to_receive: $("[name='to_receive']").val(),
+                            dingdingtoken: $("[name='dingdingtoken']").val(),
+                        }, success)
                     }
                 });
             }
+        })
+        $("#sendrepoet").click(function () {
+            common.ajax('/homepage/sendreport/', 'post', 'json', {'planid': $("[name='plan']").val().substr(5)}, function (data) {
+                data = JSON.parse(data)
+                if (data.code == 0) {
+                    layer.alert(data.msg, {icon: 1, time: 1550}, area = ['500px', '300px'])
+                } else {
+                    layer.alert(data.msg, {icon: 2, time: 1500})
+                }
+            })
+        })
 
-            $("#setplan").click(function () {
+
+        form.on('select(plan)', function (data) {
                 var planid = $("[name='plan']").val().substr(5)
                 if (planid == '') {
                     layer.msg("请选择项目和计划！")
                 } else {
-                    layer.open({
-                        title: '报告配置',
-                        type: 1,
-                        area: ['800px', '450px'],
-                        content: $('#settings'),
-                        btn: ['确定', '取消'],
-                        success: function () {
-                            $("#mailconfig")[0].reset()
-                            layui.form.render()
-                            common.ajax('/manager/queryonemailconfig/', 'post', 'json', {id: planid}, function (ee) {
-                                op = ''
-                                if (typeof (ee) != 'string') {
-                                    if (ee.code == 0) {
-                                        //赋值form
-                                        op = '编辑'
-                                        console.log(ee.data)
-                                        $("[name='color_scheme']").val(ee.data['color_scheme'])
-                                        layui.form.render('select');
-                                        $("[name='description']").val(ee.data['description'])
-                                        $("[name='to_receive']").val(ee.data['to_receive'])
-                                        $("[name='dingdingtoken']").val(ee.data['dingdingtoken'])
-                                    }
-                                } else {
-                                    ee = JSON.parse(ee)
-                                    if (ee.code == 1) {
-                                        op = '新建'
-                                    }
-                                }
-                            })
-                        },
-                        yes: function (index, layero) {
-                            success = function (data) {
-                                data = JSON.parse(data)
-                                if (data.code == 0) {
-                                    layer.close(index)
-                                    layer.alert(data.msg, {icon: 1, time: 1500})
-                                } else {
-                                    layer.alert(data.msg, {icon: 2, time: 2000})
-                                }
-                            }
-                            _post("/manager/editmailconfig/", {
-                                id: planid,
-                                color_scheme: $("[name='color_scheme']").val(),
-                                description: $("[name='description']").val(),
-                                to_receive: $("[name='to_receive']").val(),
-                                dingdingtoken: $("[name='dingdingtoken']").val(),
-                            }, success)
-                        }
-                    });
+                    common.ajax('/homepage/reportchart/', 'post', 'json', {
+                        planid: $("[name='plan']").val().substr(5)
+                    }, function (result) {
+                        result = JSON.parse(result)
+                        report(result.data, result.code)
+                    })
                 }
-            })
-            $("#sendrepoet").click(function () {
-                common.ajax('/homepage/sendreport/', 'post', 'json', {'planid': $("[name='plan']").val().substr(5)}, function (data) {
-                    data = JSON.parse(data)
-                    if (data.code == 0) {
-                        layer.alert(data.msg, {icon: 1, time: 1550},area= ['500px', '300px'])
-                    } else {
-                        layer.alert(data.msg, {icon: 2, time: 1500})
-                    }
-                })
-            })
-
-
-            form.on('select(plan)', function (data) {
-                    var planid = $("[name='plan']").val().substr(5)
-                    if (planid == '') {
-                        layer.msg("请选择项目和计划！")
-                    } else {
-                        common.ajax('/homepage/reportchart/', 'post', 'json', {
-                            planid: $("[name='plan']").val().substr(5)
-                        }, function (result) {
-                            result = JSON.parse(result)
-                            report(result.data, result.code)
-                        })
-                    }
-                }
-            );
-            echartsRecords = echarts.init(document.getElementById('echarts-records'), 'walden');
-
-            function report(data, code) {
-                x = [];
-                success = [];
-                total = [];
-                fail = [];
-                skip = [];
-                error = [];
-                success_rate = []
-                hundred = [];
-                taskids = [];
-                if (code == 0) {
-                    title = data[0][1]
-                    for (let i = data.length - 1; i >= 0; i--) {
-                        x.push(data[i][7])
-                        success.push(data[i][2])
-                        total.push(data[i][5])
-                        fail.push(data[i][3])
-                        skip.push(data[i][4])
-                        error.push(data[i][9])
-                        //mysql  success_rate.push(data[i][8].substr(0, 5))
-                        success_rate.push(data[i][8])
-                        taskids.push(data[i][6])
-                        hundred.push(100)
-                    }
-                    totalmax = total.map(function (e) {
-                        return Math.max.apply(null, total) + 2
-                    });
-                } else {
-                    title = data
-                    totalmax=1
-                }
-                var optionRecords = {
-                    title: {
-                        text: title
-                    },
-                    animation: false,
-                    legend: {
-                        left: 'center',
-                        data: ['成功率', '成功数', '失败数', '错误数', '跳过数',]
-                    },
-                    tooltip: {
-                        trigger: 'axis',
-                        axisPointer: {
-                            type: 'cross'
-                        },
-                        backgroundColor: 'rgba(245, 245, 245, 0.8)',
-                        borderWidth: 1,
-                        borderColor: '#ccc',
-                        padding: 10,
-                        textStyle: {
-                            color: '#000'
-                        },
-                        position: function (pos, params, el, elRect, size) {
-                            var obj = {top: 10};
-                            obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30;
-                            return obj;
-                        },
-                        extraCssText: 'width: 100px'
-                    },
-                    axisPointer: {
-                        link: {xAxisIndex: 'all'},
-                        label: {
-                            backgroundColor: '#777'
-                        }
-                    },
-                    toolbox: {
-                        feature: {
-                            dataZoom: {
-                                yAxisIndex: false
-                            },
-                            brush: {
-                                type: ['lineX', 'clear']
-                            }
-                        }
-                    },
-                    brush: {
-                        xAxisIndex: 'all',
-                        brushLink: 'all',
-                        outOfBrush: {
-                            colorAlpha: 0.1
-                        }
-                    },
-                    grid: [
-                        {
-                            left: '5%',
-                            right: '5%',
-                            height: '48%'
-                        },
-                        {
-                            left: '5%',
-                            right: '5%',
-                            bottom: '3%',
-                            height: '20%'
-                        }
-                    ],
-                    xAxis: [
-                        {
-                            type: 'category',
-                            data: x,
-                            scale: true,
-                            boundaryGap: false,
-                            axisLine: {onZero: false},
-                            splitLine: {show: false},
-                            splitNumber: 20,
-                            min: 'dataMin',
-                            max: 'dataMax',
-                            axisPointer: {
-                                z: 100
-                            }
-                        },
-                        {
-                            type: 'category',
-                            gridIndex: 1,
-                            data: x,
-                            scale: true,
-                            boundaryGap: false,
-                            axisLine: {onZero: false},
-                            axisTick: {show: false},
-                            splitLine: {show: false},
-                            axisLabel: {show: false},
-                            splitNumber: 20,
-                            min: 'dataMin',
-                            max: 'dataMax',
-                            axisPointer: {
-                                label: {
-                                    show: false
-                                }
-                            },
-                        }
-                    ],
-                    yAxis: [
-                        {
-                            scale: true,
-                            name: '用例数',
-                            splitArea: {
-                                show: true
-                            },
-                            min: 0,
-                            max: totalmax[0]
-                        },
-                        {
-                            scale: true,
-                            name: '成功率',
-                            gridIndex: 1,
-                            splitNumber: 2,
-                            axisLabel: {show: true, formatter: '{value}%'},
-                            axisLine: {show: true},
-                            axisTick: {show: false},
-                            splitLine: {show: false},
-                            min: 0,
-                            max: 100,
-                            axisPointer: {
-                                label: {
-                                    show: false
-                                }
-                            },
-                        }
-                    ],
-
-                    series: [
-                        {
-                            name: ' 总数 ',
-                            axisPointer: {show: false},
-                            type: 'bar',
-                            itemStyle: {
-                                normal: {
-                                    color: 'rgba(0,0,0,0)',
-                                }
-                            },
-                            data: totalmax
-                        },
-                        {
-                            name: '成功数',
-                            type: 'line',
-                            areaStyle: {},
-                            stack: '总量',
-                            data: success,
-                            smooth: true,
-                            lineStyle: {
-                                normal: {opacity: 0.5}
-                            }
-                        },
-                        {
-                            name: '失败数',
-                            stack: '总量',
-                            areaStyle: {},
-                            type: 'line',
-                            data: fail,
-                            smooth: true,
-                            lineStyle: {
-                                normal: {opacity: 0.5}
-                            }
-                        },
-                        {
-                            name: '跳过数',
-                            stack: '总量',
-                            areaStyle: {},
-                            type: 'line',
-                            data: skip,
-                            smooth: true,
-                            lineStyle: {
-                                normal: {opacity: 0.5}
-                            }
-                        },
-                        {
-                            name: '错误数',
-                            stack: '总量',
-                            areaStyle: {},
-                            type: 'line',
-                            data: error,
-                            smooth: true,
-                            lineStyle: {
-                                normal: {opacity: 0.5}
-                            }
-                        },
-                        {
-                            type: 'bar',
-                            axisPointer: {show: false},
-                            xAxisIndex: 1,
-                            itemStyle: {
-                                normal: {
-                                    color: 'rgba(201,155,237,0)',
-                                }
-                            },
-                            yAxisIndex: 1,
-                            data: hundred
-                        },
-                        {
-                            name: '成功率',
-                            type: 'line',
-                            label: {
-                                normal: {
-                                    show: true,
-                                    position: 'top',
-                                    color: 'black'
-                                }
-                            },
-                            barWidth: 10,
-                            areaStyle: {},
-                            xAxisIndex: 1,
-                            yAxisIndex: 1,
-                            data: success_rate
-                        },
-                    ]
-                };
-                $("#echarts-records").css('background-color', 'white')
-                echartsRecords.setOption(optionRecords);
             }
+        );
+        echartsRecords = echarts.init(document.getElementById('echarts-records'), 'walden');
 
-
-            echartsRecords.on('click', function (params) {
-                taskid = taskids[params.dataIndex]
-                table.render({
-                    elem: '#demo'
-                    , method: 'POST'
-                    , url: '/homepage/badresult/' //数据接口
-                    , where: {taskid: taskid}
-                    , cols: [[ //表头
-                        {field: 'casename', title: '用例名', width: "12%", align: "center"}
-                        , {field: 'stepname', title: '步骤名', width: "13%", align: "center"}
-                        , {field: 'businessname', title: '测试点', width: "13%", align: "center"}
-                        , {field: 'itfcheck', title: '数据验证', width: "13%", align: "center"}
-                        , {field: 'dbcheck', title: '接口验证', width: "10%", align: "center"}
-                        , {field: 'failresult', title: '失败原因', width: "39%", align: "center"}
-                    ]], text: {
-                        none: '测试全部通过了！'
-                    }
+        function report(data, code) {
+            x = [];
+            success = [];
+            total = [];
+            fail = [];
+            skip = [];
+            error = [];
+            success_rate = []
+            hundred = [];
+            taskids = [];
+            if (code == 0) {
+                title = data[0][1]
+                for (let i = data.length - 1; i >= 0; i--) {
+                    x.push(data[i][7])
+                    success.push(data[i][2])
+                    total.push(data[i][5])
+                    fail.push(data[i][3])
+                    skip.push(data[i][4])
+                    error.push(data[i][9])
+                    //mysql  success_rate.push(data[i][8].substr(0, 5))
+                    success_rate.push(data[i][8])
+                    taskids.push(data[i][6])
+                    hundred.push(100)
+                }
+                totalmax = total.map(function (e) {
+                    return Math.max.apply(null, total) + 2
                 });
-            });
-
-
-            /**
-             * 报表功能
-             */
-
-
-            // echarts 窗口缩放自适应
-            window.onresize = function () {
-                echartsRecords.resize();
+            } else {
+                title = data
+                totalmax = 1
             }
+            var optionRecords = {
+                title: {
+                    text: title
+                },
+                animation: false,
+                legend: {
+                    left: 'center',
+                    data: ['成功率', '成功数', '失败数', '错误数', '跳过数',]
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    },
+                    backgroundColor: 'rgba(245, 245, 245, 0.8)',
+                    borderWidth: 1,
+                    borderColor: '#ccc',
+                    padding: 10,
+                    textStyle: {
+                        color: '#000'
+                    },
+                    position: function (pos, params, el, elRect, size) {
+                        var obj = {top: 10};
+                        obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30;
+                        return obj;
+                    },
+                    extraCssText: 'width: 100px'
+                },
+                axisPointer: {
+                    link: {xAxisIndex: 'all'},
+                    label: {
+                        backgroundColor: '#777'
+                    }
+                },
+                toolbox: {
+                    feature: {
+                        dataZoom: {
+                            yAxisIndex: false
+                        },
+                        brush: {
+                            type: ['lineX', 'clear']
+                        }
+                    }
+                },
+                brush: {
+                    xAxisIndex: 'all',
+                    brushLink: 'all',
+                    outOfBrush: {
+                        colorAlpha: 0.1
+                    }
+                },
+                grid: [
+                    {
+                        left: '5%',
+                        right: '5%',
+                        height: '48%'
+                    },
+                    {
+                        left: '5%',
+                        right: '5%',
+                        bottom: '3%',
+                        height: '20%'
+                    }
+                ],
+                xAxis: [
+                    {
+                        type: 'category',
+                        data: x,
+                        scale: true,
+                        boundaryGap: false,
+                        axisLine: {onZero: false},
+                        splitLine: {show: false},
+                        splitNumber: 20,
+                        min: 'dataMin',
+                        max: 'dataMax',
+                        axisPointer: {
+                            z: 100
+                        }
+                    },
+                    {
+                        type: 'category',
+                        gridIndex: 1,
+                        data: x,
+                        scale: true,
+                        boundaryGap: false,
+                        axisLine: {onZero: false},
+                        axisTick: {show: false},
+                        splitLine: {show: false},
+                        axisLabel: {show: false},
+                        splitNumber: 20,
+                        min: 'dataMin',
+                        max: 'dataMax',
+                        axisPointer: {
+                            label: {
+                                show: false
+                            }
+                        },
+                    }
+                ],
+                yAxis: [
+                    {
+                        scale: true,
+                        name: '用例数',
+                        splitArea: {
+                            show: true
+                        },
+                        min: 0,
+                        max: totalmax[0]
+                    },
+                    {
+                        scale: true,
+                        name: '成功率',
+                        gridIndex: 1,
+                        splitNumber: 2,
+                        axisLabel: {show: true, formatter: '{value}%'},
+                        axisLine: {show: true},
+                        axisTick: {show: false},
+                        splitLine: {show: false},
+                        min: 0,
+                        max: 100,
+                        axisPointer: {
+                            label: {
+                                show: false
+                            }
+                        },
+                    }
+                ],
 
+                series: [
+                    {
+                        name: ' 总数 ',
+                        axisPointer: {show: false},
+                        type: 'bar',
+                        itemStyle: {
+                            normal: {
+                                color: 'rgba(0,0,0,0)',
+                            }
+                        },
+                        data: totalmax
+                    },
+                    {
+                        name: '成功数',
+                        type: 'line',
+                        areaStyle: {},
+                        stack: '总量',
+                        data: success,
+                        smooth: true,
+                        lineStyle: {
+                            normal: {opacity: 0.5}
+                        }
+                    },
+                    {
+                        name: '失败数',
+                        stack: '总量',
+                        areaStyle: {},
+                        type: 'line',
+                        data: fail,
+                        smooth: true,
+                        lineStyle: {
+                            normal: {opacity: 0.5}
+                        }
+                    },
+                    {
+                        name: '跳过数',
+                        stack: '总量',
+                        areaStyle: {},
+                        type: 'line',
+                        data: skip,
+                        smooth: true,
+                        lineStyle: {
+                            normal: {opacity: 0.5}
+                        }
+                    },
+                    {
+                        name: '错误数',
+                        stack: '总量',
+                        areaStyle: {},
+                        type: 'line',
+                        data: error,
+                        smooth: true,
+                        lineStyle: {
+                            normal: {opacity: 0.5}
+                        }
+                    },
+                    {
+                        type: 'bar',
+                        axisPointer: {show: false},
+                        xAxisIndex: 1,
+                        itemStyle: {
+                            normal: {
+                                color: 'rgba(201,155,237,0)',
+                            }
+                        },
+                        yAxisIndex: 1,
+                        data: hundred
+                    },
+                    {
+                        name: '成功率',
+                        type: 'line',
+                        label: {
+                            normal: {
+                                show: true,
+                                position: 'top',
+                                color: 'black'
+                            }
+                        },
+                        barWidth: 10,
+                        areaStyle: {},
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        data: success_rate
+                    },
+                ]
+            };
+            $("#echarts-records").css('background-color', 'white')
+            echartsRecords.setOption(optionRecords);
+        }
+
+
+        echartsRecords.on('click', function (params) {
+            taskid = taskids[params.dataIndex]
+            table.render({
+                elem: '#demo'
+                , method: 'POST'
+                , url: '/homepage/badresult/' //数据接口
+                , where: {taskid: taskid}
+                , cols: [[ //表头
+                    {field: 'casename', title: '用例名', width: "12%", align: "center"}
+                    , {field: 'stepname', title: '步骤名', width: "13%", align: "center"}
+                    , {field: 'businessname', title: '测试点', width: "13%", align: "center"}
+                    , {field: 'itfcheck', title: '数据验证', width: "13%", align: "center"}
+                    , {field: 'dbcheck', title: '接口验证', width: "10%", align: "center"}
+                    , {field: 'failresult', title: '失败原因', width: "39%", align: "center"}
+                ]], text: {
+                    none: '测试全部通过了！'
+                }
+            });
         });
-    </script>
+
+
+        /**
+         * 报表功能
+         */
+
+
+        // echarts 窗口缩放自适应
+        window.onresize = function () {
+            echartsRecords.resize();
+        }
+
+    });
+</script>
 </body>
 </html>

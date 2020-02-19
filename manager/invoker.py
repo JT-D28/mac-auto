@@ -448,7 +448,7 @@ def _runcase(username,taskid,case0,plan,planresult,is_verify,kind):
 	viewcache(taskid,username,kind,"开始执行用例[<span style='color:#FF3399'>%s</span>]"%case0.description)
 	steporderlist=ordered(list(Order.objects.filter(Q(kind='case_step')|Q(kind='case_case'),main_id=case0.id)))
 	##case执行次数
-	casecount=case0.count
+	casecount=int(case0.count)
 	# print('ccc=>',steporderlist)
 
 	for lid in range(0,casecount):

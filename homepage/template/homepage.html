@@ -23,6 +23,10 @@
             margin-top: 10px
         }
 
+        .layui-tab-title li {
+            min-width: 0;
+        }
+
         .layuimini-qiuck-module a i {
             display: inline-block;
             width: 100%;
@@ -306,13 +310,14 @@
                     '最近7日': [moment().subtract(6, 'days'), moment()],
                     '最近30日': [moment().subtract(29, 'days'), moment()],
                     '本月': [moment().startOf('month'), moment().endOf('month')],
-                    '上月': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month')
-                        .endOf('month')
-                    ]
+                    '上月': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                    '全部': ['2020-01-01', moment()]
                 },
                 "alwaysShowCalendars": true,
                 "startDate": new Date(),
                 "endDate": new Date(),
+                "minDate":'2020-01-01',
+                "maxDate":new Date(),
                 "opens": "right",
             }, function (start, end, label) {
                 queryoldbug($("[name='product']").val(), start.format('YYYY-MM-DD') + ' - ' + end.format('YYYY-MM-DD'), $("[name='plan_log']").val());
@@ -403,8 +408,8 @@
                 content: $("#oldbug"),
                 success: function () {
                     setTimeout(function () {
-                        queryoldbug($("[name='product']").val(),$('#demotime').val(), $("[name='plan_log']").val());
-                    }, 200)
+                        queryoldbug($("[name='product']").val(), $('#demotime').val(), $("[name='plan_log']").val());
+                    }, 500)
                 }
             });
         })
@@ -417,8 +422,8 @@
                 , url: '/homepage/buglog/' //数据接口
                 , where: {productid: productid, time: time, planid: planid}
                 , cols: [[ //表头
-                    {field: '路径', title: '路径', width: "30%", align: "left"}
-                    , {field: '接口', title: '接口', width: "30%", align: "left"}
+                    {field: '路径', title: '用例-步骤', width: "20%", align: "left"}
+                    , {field: '接口', title: '接口', width: "40%", align: "left"}
                     , {field: '测试点', title: '测试点', width: "10%", align: "left"}
                     , {field: '参数信息', title: '参数信息', width: "15%", align: "left"}
                     , {field: '失败原因', title: '失败原因', width: "15%", align: "left"}
@@ -429,7 +434,7 @@
         }
 
         form.on('select(plan_log)', function () {
-            queryoldbug($("[name='product']").val(),$('#demotime').val(),$("[name='plan_log']").val())
+            queryoldbug($("[name='product']").val(), $('#demotime').val(), $("[name='plan_log']").val())
         })
 
 

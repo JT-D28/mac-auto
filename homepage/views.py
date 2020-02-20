@@ -311,7 +311,7 @@ def querybuglog(request):  # 历史缺陷
         rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
     for i in range(len(rows)):
         res.append(
-            {'路径': rows[i - 1]['计划名'] + '-' + rows[i - 1]['用例名'] + '-' + rows[i - 1]['步骤名'], '接口': rows[i - 1]['url'],
+            {'路径': rows[i - 1]['用例名'] + '-' + rows[i - 1]['步骤名'], '接口': rows[i - 1]['url'],
              '测试点': rows[i - 1]['测试点'], '参数信息': rows[i - 1]['参数信息'], '失败原因': rows[i - 1]['失败原因']})
     print(res)
     return JsonResponse({"code": 0, "data": res})

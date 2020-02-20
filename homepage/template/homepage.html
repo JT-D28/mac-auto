@@ -225,7 +225,7 @@
                 <li>2</li>
                 <li>3</li>
             </ul>
-            <div class="layui-tab-content  layui-col-md11" style="padding:0 0 0 10px;height:100%;overflow-y:auto;">
+            <div class="layui-tab-content  layui-col-md11" style="padding:0 15px 0 14px;height:100%">
                 <div class="layui-tab-item layui-show">
                     <div class="layui-col-md12" style="min-height: 400px">
                         <div class="layui-card" style="margin-bottom:0px">
@@ -234,16 +234,9 @@
                                     <div class="layui-inline">
                                         <label class="layui-form-label">日期范围</label>
                                         <div class="layui-input-inline">
-                                            <input type="text" class="layui-input" id="time" placeholder=" - "
-                                                   lay-key="7">
+                                            <input type="text" class="layui-input" id="demotime" placeholder="请选择时间！">
                                         </div>
                                     </div>
-                                    <div class="layui-btn-group">
-                                        <button type="button" id="timeall" class="layui-btn layui-btn-sm">全部</button>
-                                        <button type="button" id="timeseven" class="layui-btn layui-btn-sm ">7天</button>
-                                        <button type="button" id="timemonth" class="layui-btn layui-btn-sm">一个月</button>
-                                    </div>
-
                                     <div class="layui-input-inline" style="width: 30%;margin-right: 0px">
                                         <form class="layui-form" action="">
                                             <select name="plan_log" lay-filter="plan_log" lay-verify="required"
@@ -274,8 +267,11 @@
 <script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
 <script src="{% static 'manager/js/utils.js' %}" charset="utf-8"></script>
 <script src="{% static 'homepage/layui/lay-config.js' %}" charset="utf-8"></script>
+<script src="{% static 'homepage/moment.min.js' %}" charset="utf-8"></script>
+<script src="{% static 'homepage/daterangepicker.js' %}" charset="utf-8"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'homepage/daterangepicker.css' %}"/>
 <script>
-    layui.use(['layer', 'echarts', 'common', 'form', 'jquery', 'element', 'layedit', 'table', 'laydate'], function () {
+    layui.use(['layer', 'echarts', 'common', 'form', 'jquery', 'element', 'layedit', 'table'], function () {
         var $ = layui.jquery,
             layer = layui.layer,
             echarts = layui.echarts;
@@ -285,10 +281,44 @@
         var layedit = layui.layedit;
         var le = layedit.build('rich_text'); //建立编辑器
         var table = layui.table;
-        var date = new Date()
         var username = $("#username").text()
-        var laydate = layui.laydate
-        nowdate = date.toJSON().substr(0, 10)
+
+
+        $(function () {
+            var locale = {
+                "format": 'YYYY-MM-DD',
+                "separator": " - ",
+                "applyLabel": "确定",
+                "cancelLabel": "取消",
+                "fromLabel": "起始时间",
+                "toLabel": "结束时间'",
+                "customRangeLabel": "自定义",
+                "weekLabel": "W",
+                "daysOfWeek": ["日", "一", "二", "三", "四", "五", "六"],
+                "monthNames": ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"],
+                "firstDay": 1
+            };
+            $('#demotime').daterangepicker({
+                'locale': locale,
+                ranges: {
+                    '今日': [moment(), moment()],
+                    '昨日': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    '最近7日': [moment().subtract(6, 'days'), moment()],
+                    '最近30日': [moment().subtract(29, 'days'), moment()],
+                    '本月': [moment().startOf('month'), moment().endOf('month')],
+                    '上月': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month')
+                        .endOf('month')
+                    ]
+                },
+                "alwaysShowCalendars": true,
+                "startDate": new Date(),
+                "endDate": new Date(),
+                "opens": "right",
+            }, function (start, end, label) {
+                queryoldbug($("[name='product']").val(), start.format('YYYY-MM-DD') + ' - ' + end.format('YYYY-MM-DD'), $("[name='plan_log']").val());
+            });
+        })
+
 
         common.ajax('/homepage/queryproduct/', 'post', 'json', {},
             function (data) {
@@ -302,7 +332,7 @@
             }
         );
 
-        form.on('select(product)', function (data) {
+        form.on('select(product)', function () {
             var id = $("[name='product']").val()
             common.ajax('/homepage/queryplan/', 'post', 'json', {
                     'id': id
@@ -370,29 +400,20 @@
                 shadeClose: true,
                 content: $("#oldbug"),
                 success: function () {
-                    laydate.render({
-                        elem: '#time',
-                        range: true,
-                        max: nowdate,
-                        value: addDate(nowdate, -15) + ' - ' + nowdate,
-                        done: function (date) {
-                            queryoldbug($("[name='product']").val(), date);
-                        }
-                    });
                     setTimeout(function () {
-                        queryoldbug($("[name='product']").val(), addDate(nowdate, -15) + ' - ' + addDate(nowdate, 1));
-                    }, 500)
+                        queryoldbug($("[name='product']").val(),$('#demotime').val(), $("[name='plan_log']").val());
+                    }, 200)
                 }
             });
         })
 
 
-        function queryoldbug(productid, time) {
+        function queryoldbug(productid, time, planid) {
             table.render({
                 elem: '#oldbugtable'
                 , method: 'POST'
                 , url: '/homepage/buglog/' //数据接口
-                , where: {productid: productid, time: time}
+                , where: {productid: productid, time: time, planid: planid}
                 , cols: [[ //表头
                     {field: '路径', title: '路径', width: "30%", align: "left"}
                     , {field: '接口', title: '接口', width: "30%", align: "left"}
@@ -400,44 +421,15 @@
                     , {field: '参数信息', title: '参数信息', width: "15%", align: "left"}
                     , {field: '失败原因', title: '失败原因', width: "15%", align: "left"}
                 ]], text: {
-                    none: '该期间无失败记录！'
+                    none: '该期间无缺陷记录！'
                 }
             });
         }
 
-
-        function addDate(date, days) {
-            var d = new Date(date);
-            d.setDate(d.getDate() + days);
-            var m = d.getMonth() + 1;
-            m = m > 10 ? m : '0' + m
-            var day = d.getDate() > 9 ? d.getDate() : '0' + d.getDate()
-            return d.getFullYear() + '-' + m + '-' + day;
-        }
-
-        $("#timeall").click(function () {
-            laydate.render({elem: '#time', range: true, max: nowdate, value: '2020-01-01 - ' + nowdate});
-            queryoldbug($("[name='product']").val(), '2020-01-01 - ' + addDate(nowdate, 1));
+        form.on('select(plan_log)', function () {
+            queryoldbug($("[name='plan_log']").val(),$('#demotime').val(),$("[name='plan_log']").val())
         })
-        $("#timeseven").click(function () {
-            laydate.render({
-                elem: '#time',
-                range: true,
-                max: nowdate,
-                value: addDate(nowdate, -7) + ' - ' + nowdate
-            });
-            queryoldbug($("[name='product']").val(), addDate(nowdate, -7) + ' - ' + addDate(nowdate, 1));
 
-        })
-        $("#timemonth").click(function () {
-            laydate.render({
-                elem: '#time',
-                range: true,
-                max: nowdate,
-                value: addDate(nowdate, -30) + ' - ' + nowdate
-            });
-            queryoldbug($("[name='product']").val(), addDate(nowdate, -30) + ' - ' + addDate(nowdate, 1));
-        })
 
         $('#repoetplan').click(function () {
             var planid = $("[name='plan']").val().substr(5)

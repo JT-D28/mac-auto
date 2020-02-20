@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layuimini.css' %}" media="all">
     <script src="https://cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
     <link rel="stylesheet" href="{% static 'homepage/layui/css/public.css' %}" media="all">
+    <script src="https://gw.alipayobjects.com/os/lib/antv/g2plot/0.11.3/dist/g2plot.js"></script>
     <style>
         .layui-card {
             border: 1px solid #f2f2f2;
@@ -234,7 +235,7 @@
                     <div class="layui-col-md12" style="min-height: 400px">
                         <div class="layui-card" style="margin-bottom:0px">
                             <div class="layui-card-header card">
-                                <div class="layui-form-item">
+                                <div class="layui-form-item" style="margin-top:3px">
                                     <div class="layui-inline">
                                         <label class="layui-form-label">日期范围</label>
                                         <div class="layui-input-inline">
@@ -256,7 +257,9 @@
                         <table id="oldbugtable" lay-size='sm' lay-filter="oldbugtable"></table>
                     </div>
                 </div>
-                <div class="layui-tab-item">内容2</div>
+                <div class="layui-tab-item">
+                    <div id="bugcount"></div>
+                </div>
                 <div class="layui-tab-item">内容3</div>
                 <div class="layui-tab-item">内容4</div>
                 <div class="layui-tab-item">内容5</div>
@@ -316,8 +319,8 @@
                 "alwaysShowCalendars": true,
                 "startDate": new Date(),
                 "endDate": new Date(),
-                "minDate":'2020-01-01',
-                "maxDate":new Date(),
+                "minDate": '2020-01-01',
+                "maxDate": new Date(),
                 "opens": "right",
             }, function (start, end, label) {
                 queryoldbug($("[name='product']").val(), start.format('YYYY-MM-DD') + ' - ' + end.format('YYYY-MM-DD'), $("[name='plan_log']").val());
@@ -410,6 +413,10 @@
                     setTimeout(function () {
                         queryoldbug($("[name='product']").val(), $('#demotime').val(), $("[name='plan_log']").val());
                     }, 500)
+                    initbugcount($("[name='product']").val())
+                },
+                end: function () {
+
                 }
             });
         })
@@ -872,16 +879,58 @@
             });
         });
 
-
-        /**
-         * 报表功能
-         */
-
-
         // echarts 窗口缩放自适应
         window.onresize = function () {
             echartsRecords.resize();
         }
+
+
+        function initbugcount(productid) {
+            common.ajax('/homepage/initbugcount/', 'post', 'json', {productid: productid}, function (data) {
+                data = data.data
+                plot.changeData(data);
+            })
+        }
+
+
+        const container = document.getElementById('bugcount');
+        const data = [
+            {
+                "接口": "家具家电",
+                "次数": 981
+            }
+        ];
+        const config = {
+            "title": {
+                "visible": true,
+                "text": "饼图"
+            },
+            "description": {
+                "visible": true,
+                "text": "一个简单的饼图"
+            },
+            "legend": {
+                "flipPage": false
+            },
+            "width": 560,
+            "height": 376,
+            "forceFit": false,
+            "radius": 1,
+            "colorField": "接口",
+            "angleField": "次数",
+            "color": [
+                "#5B8FF9",
+                "#5AD8A6",
+                "#5D7092",
+                "#F6BD16",
+                "#E8684A"
+            ]
+        }
+        const plot = new g2plot.Pie(container, {
+            data,
+            ...config,
+        });
+        plot.render();
 
     });
 </script>

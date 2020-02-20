@@ -168,21 +168,23 @@ def restart(request):
 def sendreport(request):
     code = 0
     msg = ''
-    threading.Thread(target=sendmail, args=(request,)).start()
-    return JsonResponse(simplejson(code=code, msg="发送中！"), safe=False)
-
-
-def sendmail(request):
     planid = request.POST.get('planid')
     plan = Plan.objects.get(id=planid)
     username = request.session.get("username", None)
     detail = list(ResultDetail.objects.filter(plan=plan).order_by('-createtime'))
+    config_id = plan.mail_config_id
     if detail is None:
         msg = "任务还没有运行过！"
+    elif plan.is_running in ('1',1) :
+        msg = "任务运行中，请稍后！"
     else:
         taskid = detail[0].taskid
+        threading.Thread(target=sendmail, args=(config_id,username,taskid)).start()
+        msg='发送中...'
+    return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
-    config_id = plan.mail_config_id
+
+def sendmail(config_id,username,taskid):
     if config_id:
         mail_config = MailConfig.objects.get(id=config_id)
         user = User.objects.get(name=username)
@@ -313,5 +315,23 @@ def querybuglog(request):  # 历史缺陷
         res.append(
             {'路径': rows[i - 1]['用例名'] + '-' + rows[i - 1]['步骤名'], '接口': rows[i - 1]['url'],
              '测试点': rows[i - 1]['测试点'], '参数信息': rows[i - 1]['参数信息'], '失败原因': rows[i - 1]['失败原因']})
-    print(res)
     return JsonResponse({"code": 0, "data": res})
+
+
+@csrf_exempt
+def initbugcount(request):  # 缺陷统计
+    productid = request.POST.get('productid')
+
+    sql = '''
+    SELECT url as '接口' ,count(*) as '次数' from manager_resultdetail r ,manager_step s
+    WHERE r.plan_id in (SELECT follow_id FROM manager_order WHERE main_id=%s) and r.result 
+    in ('error','fail') and r.is_verify=1 and r.step_id=s.id GROUP BY s.url order by 次数 desc limit 10
+    '''
+    with connection.cursor() as cursor:
+        cursor.execute(sql, [productid])
+        desc = cursor.description
+        rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+    return JsonResponse({"code": 0, "data": rows})
+
+
+

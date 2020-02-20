@@ -345,6 +345,8 @@
                     } else {
                         data = data.data
                         $("[name='plan']").empty()
+                        $("[name='plan_log").empty()
+                        $("[name='plan_log']").append("<option value=''>全部计划</option>")
                         if (data.length != 0) {
                             for (var index = 0; index < data.length; index++) {
                                 $("[name='plan']").append("<option value='" + data[index]['id'] + "'>" + data[index]['name'] + "</option>")
@@ -427,7 +429,7 @@
         }
 
         form.on('select(plan_log)', function () {
-            queryoldbug($("[name='plan_log']").val(),$('#demotime').val(),$("[name='plan_log']").val())
+            queryoldbug($("[name='product']").val(),$('#demotime').val(),$("[name='plan_log']").val())
         })
 
 

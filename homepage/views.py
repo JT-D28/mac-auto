@@ -16,7 +16,6 @@ import json
 from .dealinfo import doDebugInfo
 
 
-
 @csrf_exempt
 def homepage(request):
     return render(request, 'homepage.html')
@@ -191,12 +190,11 @@ def sendmail(request):
         MainSender.dingding(taskid, user, mail_config)
 
 
-
 @csrf_exempt
 def reportchart(request):
     planid = request.POST.get("planid")
     code = 0
-    taskids = list(ResultDetail.objects.values('taskid').filter(plan_id=planid,is_verify=1))
+    taskids = list(ResultDetail.objects.values('taskid').filter(plan_id=planid, is_verify=1))
     if taskids:
         sql1 = '''
         SELECT x.plan_id,m.description,CONCAT(success),CONCAT(FAIL),CONCAT(skip),CONCAT(total),x.taskid,DATE_FORMAT(TIME,'%%m-%%d %%H:%%i') AS time,
@@ -232,13 +230,9 @@ def reportchart(request):
         return JsonResponse(simplejson(code=1, data="任务还没有运行过！"), safe=False)
 
 
-
-
-
 @csrf_exempt
 def badresult(request):
-
-    taskid=request.POST.get("taskid")
+    taskid = request.POST.get("taskid")
     sql2 = '''
     SELECT manager_case.description as casename,manager_step.description as stepname,
     manager_businessdata.businessname as businessname,manager_businessdata.itf_check as itfcheck,
@@ -252,14 +246,8 @@ def badresult(request):
         cursor.execute(sql2, [taskid])
         desc = cursor.description
         row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-    result= {"code":0,"msg":"","count":len(row),"data":row}
+    result = {"code": 0, "msg": "", "count": len(row), "data": row}
     return JsonResponse(result)
-
-
-
-
-
-
 
 
 @csrf_exempt
@@ -296,32 +284,34 @@ def jenkins_add(request):
     return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
+@csrf_exempt
+def plandebug(request):  # 调试日志
+    res, type, taskid, code = doDebugInfo(request)
+    return JsonResponse({"code": code, "type": type, "data": res, "taskid": taskid})
+
 
 @csrf_exempt
-def plandebug(request): #调试日志
-    res, type, taskid,code = doDebugInfo(request)
-    return JsonResponse({"code":code, "type": type, "data": res, "taskid": taskid})
-
-
-@csrf_exempt
-def querybuglog(request): #历史缺陷
-    productid=request.POST.get('productid')
-    print(request.POST.get('time').split(" - ")[1])
+def querybuglog(request):  # 历史缺陷
+    productid = request.POST.get('productid')
     res=[]
     sql = '''
-    SELECT b.id as bussiness_id,p.description as '计划名', c.description as '用例名' ,s.description as '步骤名',s.headers as headers,
-    s.body as body ,s.url as url ,b.businessname as '测试点',b.itf_check as '接口校验',b.db_check as 'db校验', b.params as '参数信息',
-    r.error as '失败原因' from manager_resultdetail r,manager_plan p,manager_case c,manager_step s,
-    manager_businessdata b WHERE r.plan_id in (SELECT follow_id FROM manager_order where main_id=%s) 
-    and r.result in ('error','fail') and r.is_verify=1 and r.plan_id=p.id and r.case_id=c.id 
-    and r.step_id=s.id and r.businessdata_id=b.id and r.createtime BETWEEN %s and %s
+    SELECT r.plan_id,r.createtime, b.id AS bussiness_id,p.description AS '计划名',c.description AS '用例名',
+    s.description AS '步骤名',s.headers AS headers,s.body AS body,s.url AS url,
+    b.businessname AS '测试点',b.itf_check AS '接口校验',b.db_check AS 'db校验',b.params AS '参数信息',
+    r.error AS '失败原因' FROM manager_resultdetail r,manager_plan p,manager_case c,manager_step s,
+    manager_businessdata b WHERE r.plan_id IN (SELECT follow_id FROM manager_order WHERE main_id=%s) 
+    AND r.result IN ('error','fail') AND r.is_verify=1 AND r.plan_id=p.id AND r.case_id=c.id AND r.step_id=s.id
+    AND r.businessdata_id=b.id AND  r.createtime  BETWEEN %s and %s 
     '''
+    sql = sql if request.POST.get('planid') == '' else sql + 'and r.plan_id=' + request.POST.get('planid').split("_")[1]
     with connection.cursor() as cursor:
-        cursor.execute(sql, [productid,request.POST.get('time').split(" - ")[0],request.POST.get('time').split(" - ")[1]])
+        cursor.execute(sql, [productid, request.POST.get('time').split(" - ")[0],
+                             request.POST.get('time').split(" - ")[1] + '23:59:59'])
         desc = cursor.description
         rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
     for i in range(len(rows)):
-        res.append({'路径':rows[i-1]['计划名']+'-'+rows[i-1]['用例名']+'-'+rows[i-1]['步骤名'],'接口':rows[i-1]['url'],'测试点':rows[i-1]['测试点'],'参数信息':rows[i-1]['参数信息'],'失败原因':rows[i-1]['失败原因']})
+        res.append(
+            {'路径': rows[i - 1]['计划名'] + '-' + rows[i - 1]['用例名'] + '-' + rows[i - 1]['步骤名'], '接口': rows[i - 1]['url'],
+             '测试点': rows[i - 1]['测试点'], '参数信息': rows[i - 1]['参数信息'], '失败原因': rows[i - 1]['失败原因']})
     print(res)
-    return JsonResponse({"code":0, "data": res})
-
+    return JsonResponse({"code": 0, "data": res})

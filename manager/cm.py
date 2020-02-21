@@ -241,6 +241,13 @@ def run(request):
 	taskid=gettaskid()
 	planids=[x.split('_')[1] for x in request.POST.get('ids').split(',')]
 	is_verify=request.POST.get('is_verify')
+	for planid in planids:
+		plan=Plan.objects.get(id=planid)
+		if plan.is_running in (1,'1'):
+			return {
+				'status': 'fail',
+				'msg': '任务已在运行，稍后再试！'
+			}
 	runplans(callername, taskid, planids,is_verify)
 
 	return {

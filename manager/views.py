@@ -898,19 +898,17 @@ def querytaskdetail(request):
 @csrf_exempt
 def runtask(request):
 	planids=request.POST.get("ids")
-	is_verify=request.POST.get('is_verify')
-	#username=request.session.get('username',None)
 	list_=[int(x) for x in planids.split(",")]
-	#username=Plan.objects.get(id=list_[0]).author.name
-	username=request.session.get('username')
-	# user_tasks=_taskmap.get(username,{})
-	# user_tasks[gettaskid()]=list_
-	taskid=gettaskid()
-	#print(username,taskid,list_)
-	runplans(username,taskid,list_,is_verify)
+	for planid in list_:
+		plan=Plan.objects.get(id=planid)
+		if plan.is_running in (1,'1'):
+			return JsonResponse(simplejson(code=1, msg="任务已在运行，请稍后！"), safe=False)
 
-	# viewcache(taskid,username,"##################结束任务%s###############"%taskid)
-	return JsonResponse(simplejson(code=0,msg="",taskid=taskid),safe=False)
+	username=request.session.get('username')
+	taskid=gettaskid()
+	is_verify=request.POST.get('is_verify')
+	runplans(username,taskid,list_,is_verify)
+	return JsonResponse(simplejson(code=0,msg="你的任务正在运行中",taskid=taskid),safe=False)
 
 @csrf_exempt
 def callfromthreeparty(request):

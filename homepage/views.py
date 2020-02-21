@@ -45,7 +45,7 @@ def queryproduct(request):
 def queryplan(request):
     code, msg = 0, ''
     sql = '''
-    SELECT sum(CASE WHEN r.result='success' THEN 1 ELSE 0 END) AS '成功数' ,count(*) as '总数'  
+    SELECT COUNT(DISTINCT taskid) as 'total',sum(CASE WHEN r.result='success' THEN 1 ELSE 0 END) AS '成功数' ,count(*) as '总数'  
     FROM manager_resultdetail r WHERE r.plan_id IN (SELECT follow_id FROM manager_order WHERE main_id=%s) 
     AND r.result NOT IN ('omit') AND r.is_verify=1
     '''
@@ -54,6 +54,7 @@ def queryplan(request):
         desc = cursor.description
         rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
     success_rate=rows[0]['成功数']/rows[0]['总数']*100 if rows[0]['总数']!=0 else 0
+    total = rows[0]['total'] if rows[0]['total'] is not None else 0
     datanode = []
     try:
         plans = cm.getchild('product_plan', request.POST.get('id'))
@@ -62,7 +63,7 @@ def queryplan(request):
                 'id': 'plan_%s' % plan.id,
                 'name': '%s' % plan.description,
             })
-        return JsonResponse(simplejson(code=0, msg='操作成功', data=datanode,rate=str(success_rate)[0:5]), safe=False)
+        return JsonResponse(simplejson(code=0, msg='操作成功', data=datanode,rate=str(success_rate)[0:5],total=total), safe=False)
 
     except:
         print(traceback.format_exc())
@@ -306,7 +307,7 @@ def querybuglog(request):  # 历史缺陷
     productid = request.POST.get('productid')
     res=[]
     sql = '''
-    SELECT r.plan_id,r.createtime, b.id AS bussiness_id,p.description AS '计划名',c.description AS '用例名',
+    SELECT r.taskid as '任务id', r.plan_id,r.createtime, b.id AS bussiness_id,p.description AS '计划名',c.description AS '用例名',
     s.description AS '步骤名',s.headers AS headers,s.body AS body,s.url AS url,
     b.businessname AS '测试点',b.itf_check AS '接口校验',b.db_check AS 'db校验',b.params AS '参数信息',
     r.error AS '失败原因' FROM manager_resultdetail r,manager_plan p,manager_case c,manager_step s,
@@ -323,8 +324,10 @@ def querybuglog(request):  # 历史缺陷
     for i in range(len(rows)):
         res.append(
             {'路径': rows[i - 1]['用例名'] + '-' + rows[i - 1]['步骤名'], '接口': rows[i - 1]['url'],
-             '测试点': rows[i - 1]['测试点'], '参数信息': rows[i - 1]['参数信息'], '失败原因': rows[i - 1]['失败原因']})
-    return JsonResponse({"code": 0, "data": res})
+             '测试点': rows[i - 1]['测试点'], '参数信息': rows[i - 1]['参数信息'], '失败原因': rows[i - 1]['失败原因'],'任务id':rows[i-1]['任务id']})
+    res,total=getpagedata(res,request.POST.get('page'),request.POST.get('limit'))
+
+    return JsonResponse({"code": 0,'count':total, "data": res})
 
 
 @csrf_exempt

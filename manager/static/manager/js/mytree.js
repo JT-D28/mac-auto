@@ -338,7 +338,7 @@ var tree={
 							layer.close(index)
 						});
 					} else {
-						layer.alert('提交异常..')
+						layer.alert(data.msg)
 					}
 				})
 				return false;

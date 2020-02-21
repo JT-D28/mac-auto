@@ -128,7 +128,7 @@
                                 </div>
                                 <div class="layui-col-xs4 layuimini-qiuck-module">
                                     <a href="javascript:;" data-icon="fa fa-file-text">
-                                        <i id='buglog' class="layui-icon layui-icon-code-circle"></i>
+                                        <i id='buglog' class="layui-icon layui-icon-survey"></i>
                                         <cite>历史缺陷</cite>
                                     </a>
                                 </div>
@@ -140,7 +140,7 @@
                                 </div>
                                 <div class="layui-col-xs4 layuimini-qiuck-module">
                                     <a href="javascript:;" data-icon="fa fa-dot-circle-o">
-                                        <i id='sendrepoet' class="layui-icon layui-icon-picture"></i>
+                                        <i id='sendrepoet' class="layui-icon layui-icon-notice"></i>
                                         <cite>发送报告</cite>
                                     </a>
                                 </div>
@@ -231,9 +231,6 @@
             <ul class="layui-tab-title layui-col-md1" style="height:100%;">
                 <li class="layui-this">历史缺陷</li>
                 <li>统计</li>
-                <li>1</li>
-                <li>2</li>
-                <li>3</li>
             </ul>
             <div class="layui-tab-content  layui-col-md11" style="padding:0 15px 0 14px;height:100%">
                 <div class="layui-tab-item layui-show">
@@ -264,9 +261,6 @@
                 </div>
                 <div class="layui-tab-item">
                 </div>
-                <div class="layui-tab-item">内容3</div>
-                <div class="layui-tab-item">内容4</div>
-                <div class="layui-tab-item">内容5</div>
             </div>
         </div>
     </div>
@@ -355,7 +349,7 @@
                         $("[name='plan']").append("<option value=''>选择计划</option>")
                         layui.form.render('select')
                     } else {
-                        success_rate_count(data.rate)
+                        success_rate_count(data.rate, data.total)
                         data = data.data
                         $("[name='plan']").empty()
                         $("[name='plan_log").empty()
@@ -393,8 +387,7 @@
                     function (data) {
                         data = JSON.parse(data)
                         if (data.code == 0) {
-                            var mes = "你的任务正在运行中..."
-                            layer.msg(mes, {
+                            layer.msg(data.msg, {
                                 time: 30000, //20s后自动关闭
                                 shade: 0.2,
                                 shadeClose: true,
@@ -404,7 +397,7 @@
                                     layer.close(index)
                                 }
                             });
-                        }
+                        }else layer.msg(data.msg)
                     })
             }
         })
@@ -434,14 +427,18 @@
             table.render({
                 elem: '#oldbugtable'
                 , method: 'POST'
+                , page: true
+                , limit: 10
+                , height: 'full-140'
                 , url: '/homepage/buglog/' //数据接口
                 , where: {productid: productid, time: time, planid: planid}
                 , cols: [[ //表头
                     {field: '路径', title: '用例-步骤', width: "20%", align: "left"}
                     , {field: '接口', title: '接口', width: "40%", align: "left"}
-                    , {field: '测试点', title: '测试点', width: "10%", align: "left"}
+                    , {field: '测试点', title: '测试点', width: "13%", align: "left"}
                     , {field: '参数信息', title: '参数信息', width: "15%", align: "left"}
                     , {field: '失败原因', title: '失败原因', width: "15%", align: "left"}
+                    , {field: '任务id', title: '任务id', width: "25%", align: "left"}
                 ]], text: {
                     none: '该期间无缺陷记录！'
                 }
@@ -893,20 +890,22 @@
         }
 
 
-        function success_rate_count(data) {
+        function success_rate_count(rate, total) {
             plot.updateConfig({
                 "title": {
-                    "text": "项目整体成功率：",
+                    "text": "项目共运行 " + total + " 次,通过率："+parseFloat(rate)+"%",
                     "visible": true,
+                    "style": {'fontSize': '16','fontWeight':'10'}
                 },
                 "width": 300,
                 "height": 160,
                 "min": 0,
                 "max": 100,
-                "value": parseFloat(data),
+                "value": parseFloat(rate),
             })
             plot.render();
         }
+
         const container = document.getElementById('success_rate_count');
         const data = 332;
         let config = {

@@ -371,14 +371,13 @@ var tree={
 								anim: 2,
 								shadeClose: true,
 								success: function () {
+									$("#log_text").html('点击左侧失败用例查看日志');
 									querydebug(treeNode.id.substr(5), 'plan', data.data[0]['taskid'])
 								},
 								end: function () {
-									table.reload('demo', {data: [], text: {none: '测试全部通过了！'}});
 									tree.reload('demo1', {data: [], text: {none: ''}});
 									tree.reload('demo2', {data: [], text: {none: ''}});
 									tree.reload('demo3', {data: [], text: {none: ''}});
-									$("#debuginfo").css('display', 'none');
 									$("#log_text").html('');
 								}
 							});
@@ -407,7 +406,7 @@ var tree={
 						elem: '#demo1', id: 'demo1', data: data.data, accordion: true, showLine: true,
 						text: {none: '本次调试全部通过'},
 						click: function (obj) {
-							$("#debuginfo").css('display','none');
+							$("#log_text").html('点击左侧失败步骤点查看日志');
 							tree.render({elem: '#demo3',id: 'demo3',text: {none: ''}})
 							querydebug(obj.data.id, 'case', data.taskid)
 							tree.reload('demo3', {data: [], text: {none: ''}});
@@ -417,7 +416,7 @@ var tree={
 					tree.render({
 						elem: '#demo2', id: 'demo2', data: data.data, accordion: true, showLine: true,
 						click: function (obj) {
-							$("#debuginfo").css('display','none');
+							$("#log_text").html('点击左侧失败测试点查看日志');
 							querydebug(obj.data.id, 'step', data.taskid)
 						}
 					})
@@ -434,30 +433,11 @@ var tree={
 								}, function (data) {
 									$("#log_text").html(data.data);
 								})
-
-								// table.render({
-								// 	elem: '#demo',
-								// 	id:'demo'
-								// 	, method: 'POST'
-								// 	, url: '/homepage/plandebug/'
-								// 	, where: {
-								// 		'id': obj.data.id,
-								// 		'type': 'bussiness',
-								// 		'taskid': data.taskid
-								// 	}
-								// 	, cols: [[
-								// 		{field: 'id', title: '', width: "14%", align: "center"}
-								// 		, {field: 'expect', title: '预期', width: "43%", align: "center"}
-								// 		, {field: 'real', title: '实际', width: "43%", align: "center"}
-								// 	]], text: {
-								// 		none: '测试全部通过了！'
-								// 	}
-								// });
 							}
 						}
 					)
 				}
-									return false;
+				return false;
 			}
 		})
 

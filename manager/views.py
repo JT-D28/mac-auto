@@ -2268,7 +2268,7 @@ def querytreelist(request):
 			for case in cases:
 				print('case=>',case)
 				casename=case.description
-				if case.count==0:
+				if case.count in (0,'0'):
 					casename='<s>%s</s>'%casename
 				data.append({
 					'id':'case_%s'%case.id,
@@ -2278,7 +2278,6 @@ def querytreelist(request):
 					'textIcon':'fa fa-folder',
 					# 'open':True
 					})
-
 			return data
 				#return get_pid_data(case.id,'case',data)
 			
@@ -2289,7 +2288,7 @@ def querytreelist(request):
 
 			for step in steps:
 				stepname=step.description
-				if step.count==0:
+				if step.count in (0,'0'):
 					stepname='<s>%s</s>'%stepname
 				data.append({
 				'id':'step_%s'%step.id,
@@ -2303,7 +2302,7 @@ def querytreelist(request):
 			cases=cm.getchild('case_case',idx)
 			for case0 in cases:
 				casename=case0.description
-				if case0.count==0:
+				if case0.count in (0,'0'):
 					casename='<s>%s</s>'%casename
 				data.append({
 					'id':'case_%s'%case0.id,
@@ -2322,7 +2321,7 @@ def querytreelist(request):
 
 			for business in businesslist:
 				bname=business.businessname
-				if business.count==0:
+				if business.count in (0,'0'):
 					bname='<s>%s</s>'%bname
 				data.append({
 					'id':'business_%s'%business.id,

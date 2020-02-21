@@ -44,7 +44,16 @@ def queryproduct(request):
 @csrf_exempt
 def queryplan(request):
     code, msg = 0, ''
-    res = []
+    sql = '''
+    SELECT sum(CASE WHEN r.result='success' THEN 1 ELSE 0 END) AS '成功数' ,count(*) as '总数'  
+    FROM manager_resultdetail r WHERE r.plan_id IN (SELECT follow_id FROM manager_order WHERE main_id=%s) 
+    AND r.result NOT IN ('omit') AND r.is_verify=1
+    '''
+    with connection.cursor() as cursor:
+        cursor.execute(sql, [request.POST.get('id')])
+        desc = cursor.description
+        rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+    success_rate=rows[0]['成功数']/rows[0]['总数']*100 if rows[0]['总数']!=0 else 0
     datanode = []
     try:
         plans = cm.getchild('product_plan', request.POST.get('id'))
@@ -53,7 +62,7 @@ def queryplan(request):
                 'id': 'plan_%s' % plan.id,
                 'name': '%s' % plan.description,
             })
-        return JsonResponse(simplejson(code=0, msg='操作成功', data=datanode), safe=False)
+        return JsonResponse(simplejson(code=0, msg='操作成功', data=datanode,rate=str(success_rate)[0:5]), safe=False)
 
     except:
         print(traceback.format_exc())
@@ -331,7 +340,7 @@ def initbugcount(request):  # 缺陷统计
         cursor.execute(sql, [productid])
         desc = cursor.description
         rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-    return JsonResponse({"code": 0, "data": rows})
+    return JsonResponse({"code": 0, "data": 13})
 
 
 

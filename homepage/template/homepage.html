@@ -92,66 +92,71 @@
 
     <div class="layui-row layui-col-space15">
         <div class="layui-col-xs12 layui-col-md3">
-            <div class="layui-card">
-                <div class="layui-card-header" style="padding: 0 0">
-                    <form class="layui-form" action="">
-                        <div class="layui-form-item" style="margin-bottom: 0">
-                            <div class="layui-input-inline" style="width: 40%;margin-right: 5%">
-                                <select id='product' name="product" lay-filter="product"
-                                        lay-verify="required" lay-search>
-                                    <option value=''>选择项目</option>
-                                </select>
+            <div class="layui-col-md12">
+                <div class="layui-card">
+                    <div class="layui-card-header" style="padding: 0 0">
+                        <form class="layui-form" action="">
+                            <div class="layui-form-item" style="margin-bottom: 0">
+                                <div class="layui-input-inline" style="width: 40%;margin-right: 5%">
+                                    <select id='product' name="product" lay-filter="product"
+                                            lay-verify="required" lay-search>
+                                        <option value=''>选择项目</option>
+                                    </select>
+                                </div>
+                                <div class="layui-input-inline" style="width: 55%;margin-right: 0px">
+                                    <select name="plan" lay-filter="plan" lay-verify="required" lay-search>
+                                        <option value=''>选择计划</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="layui-input-inline" style="width: 55%;margin-right: 0px">
-                                <select name="plan" lay-filter="plan" lay-verify="required" lay-search>
-                                    <option value=''>选择计划</option>
-                                </select>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="layui-card-body">
-                    <div class="welcome-module">
-                        <div class="layui-row layui-col-space10 layuimini-qiuck">
-                            <div class="layui-col-xs4 layuimini-qiuck-module">
-                                <a href="javascript:;" title="这里是验证用例，调试去用例管理！" data-icon="fa fa-window-maximize">
-                                    <i id='runplan' class="layui-icon layui-icon-play"></i>
-                                    <cite>验证</cite>
-                                </a>
-                            </div>
-                            <div class="layui-col-xs4 layuimini-qiuck-module">
-                                <a href="javascript:;" data-icon="fa fa-gears">
-                                    <i id='setplan' class="layui-icon layui-icon-set"></i>
-                                    <cite>项目设置</cite>
-                                </a>
-                            </div>
-                            <div class="layui-col-xs4 layuimini-qiuck-module">
-                                <a href="javascript:;" data-icon="fa fa-file-text">
-                                    <i id='buglog' class="layui-icon layui-icon-code-circle"></i>
-                                    <cite>历史缺陷</cite>
-                                </a>
-                            </div>
-                            <div class="layui-col-xs4 layuimini-qiuck-module">
-                                <a href="javascript:;" data-icon="fa fa-dot-circle-o">
-                                    <i id='repoetplan' class="layui-icon layui-icon-chart-screen"></i>
-                                    <cite>最新报告</cite>
-                                </a>
-                            </div>
-                            <div class="layui-col-xs4 layuimini-qiuck-module">
-                                <a href="javascript:;" data-icon="fa fa-dot-circle-o">
-                                    <i id='sendrepoet' class="layui-icon layui-icon-picture"></i>
-                                    <cite>发送报告</cite>
-                                </a>
-                            </div>
-                            <div class="layui-col-xs4 layuimini-qiuck-module">
-                                <a href="javascript:;" data-icon="fa fa-dot-circle-o">
-                                    <i id='process' class="layui-icon layui-icon-log"></i>
-                                    <cite>运行日志</cite>
-                                </a>
+                        </form>
+                    </div>
+                    <div class="layui-card-body">
+                        <div class="welcome-module">
+                            <div class="layui-row layui-col-space10 layuimini-qiuck">
+                                <div class="layui-col-xs4 layuimini-qiuck-module">
+                                    <a href="javascript:;" title="这里是验证用例，调试去用例管理！" data-icon="fa fa-window-maximize">
+                                        <i id='runplan' class="layui-icon layui-icon-play"></i>
+                                        <cite>验证</cite>
+                                    </a>
+                                </div>
+                                <div class="layui-col-xs4 layuimini-qiuck-module">
+                                    <a href="javascript:;" data-icon="fa fa-gears">
+                                        <i id='setplan' class="layui-icon layui-icon-set"></i>
+                                        <cite>项目设置</cite>
+                                    </a>
+                                </div>
+                                <div class="layui-col-xs4 layuimini-qiuck-module">
+                                    <a href="javascript:;" data-icon="fa fa-file-text">
+                                        <i id='buglog' class="layui-icon layui-icon-code-circle"></i>
+                                        <cite>历史缺陷</cite>
+                                    </a>
+                                </div>
+                                <div class="layui-col-xs4 layuimini-qiuck-module">
+                                    <a href="javascript:;" data-icon="fa fa-dot-circle-o">
+                                        <i id='repoetplan' class="layui-icon layui-icon-chart-screen"></i>
+                                        <cite>最新报告</cite>
+                                    </a>
+                                </div>
+                                <div class="layui-col-xs4 layuimini-qiuck-module">
+                                    <a href="javascript:;" data-icon="fa fa-dot-circle-o">
+                                        <i id='sendrepoet' class="layui-icon layui-icon-picture"></i>
+                                        <cite>发送报告</cite>
+                                    </a>
+                                </div>
+                                <div class="layui-col-xs4 layuimini-qiuck-module">
+                                    <a href="javascript:;" data-icon="fa fa-dot-circle-o">
+                                        <i id='process' class="layui-icon layui-icon-log"></i>
+                                        <cite>运行日志</cite>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="layui-col-md12">
+                <div id="success_rate_count" style="visibility: hidden"></div>
             </div>
         </div>
         <div class="layui-col-xs12 layui-col-md9">
@@ -258,7 +263,6 @@
                     </div>
                 </div>
                 <div class="layui-tab-item">
-                    <div id="bugcount"></div>
                 </div>
                 <div class="layui-tab-item">内容3</div>
                 <div class="layui-tab-item">内容4</div>
@@ -351,6 +355,7 @@
                         $("[name='plan']").append("<option value=''>选择计划</option>")
                         layui.form.render('select')
                     } else {
+                        success_rate_count(data.rate)
                         data = data.data
                         $("[name='plan']").empty()
                         $("[name='plan_log").empty()
@@ -370,7 +375,11 @@
                             result = JSON.parse(result)
                             report(result.data, result.code)
                         })
+
                         layui.form.render('select')
+                        setTimeout(function () {
+                            $("#success_rate_count").css('visibility', 'visible')
+                        }, 300)
                     }
                 }
             )
@@ -885,48 +894,30 @@
         }
 
 
-        function initbugcount(productid) {
-            common.ajax('/homepage/initbugcount/', 'post', 'json', {productid: productid}, function (data) {
-                data = data.data
-                plot.changeData(data);
+        function success_rate_count(data) {
+            plot.updateConfig({
+                "title": {
+                    "text": "项目整体成功率：",
+                    "visible": true,
+                },
+                "width": 300,
+                "height": 160,
+                "min": 0,
+                "max": 100,
+                "value": parseFloat(data),
             })
+            plot.render();
         }
-
-
-        const container = document.getElementById('bugcount');
-        const data = [
-            {
-                "接口": "家具家电",
-                "次数": 981
-            }
-        ];
-        const config = {
-            "title": {
-                "visible": true,
-                "text": "饼图"
-            },
-            "description": {
-                "visible": true,
-                "text": "一个简单的饼图"
-            },
-            "legend": {
-                "flipPage": false
-            },
-            "width": 560,
-            "height": 376,
-            "forceFit": false,
-            "radius": 1,
-            "colorField": "接口",
-            "angleField": "次数",
-            "color": [
-                "#5B8FF9",
-                "#5AD8A6",
-                "#5D7092",
-                "#F6BD16",
-                "#E8684A"
-            ]
+        const container = document.getElementById('success_rate_count');
+        const data = 332;
+        let config = {
+            "width": 374,
+            "height": 363,
+            "min": 0,
+            "max": 100,
+            "value": 0
         }
-        const plot = new g2plot.Pie(container, {
+        const plot = new g2plot.Liquid(container, {
             data,
             ...config,
         });

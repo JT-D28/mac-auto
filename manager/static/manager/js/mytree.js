@@ -373,6 +373,36 @@ var tree={
 								success: function () {
 									$("#log_text").html('点击左侧失败用例查看日志');
 									querydebug(treeNode.id.substr(5), 'plan', data.data[0]['taskid'])
+									$("#downloadlog").click(function () {
+										taskid=data.data[0]["taskid"]
+										const req = new XMLHttpRequest();
+										req.open('POST', '/homepage/downloadlog/', true);
+										 req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+										req.responseType = 'blob';
+										req.send("taskid="+taskid); //输入参数
+										req.onload = function() {
+											if (this.status === 200) {
+												const data = req.response;
+												const blob = new Blob([data]);
+												var a = document.createElement('a');
+												a.download = taskid+'.log';
+												a.href = window.URL.createObjectURL(blob);
+												a.click();
+											}
+										};
+										$.ajax({
+											type: 'POST',
+											url: '/homepage/downloadlog/',
+											data: {taskid:taskid},
+											success: function (data) {
+												console.log("下载"+taskid+"的日志")
+												var b = document.createElement('b');
+												b.download = 'plan.ME2';
+												b.href = window.URL.createObjectURL(blob);
+												b.click();
+											},
+										});
+									})
 								},
 								end: function () {
 									tree.reload('demo1', {data: [], text: {none: ''}});
@@ -424,7 +454,6 @@ var tree={
 					tree.render({
 							elem: '#demo3', id: 'demo3', data: data.data, accordion: true, showLine: true,
 							click: function (obj) {
-								console.log(obj)
 								$("#debuginfo").css('display','inherit');
 								_post('/homepage/plandebug/', {
 									'id': obj.data.title+";"+obj.data.casename+";"+obj.data.stepname,

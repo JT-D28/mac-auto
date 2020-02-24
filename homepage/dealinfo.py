@@ -158,7 +158,7 @@ def doDebugInfo(request):
                 if pattern.search(i):
                     return i, 'debuginfo', '',0
                 else:
-                    res='未匹配到，你可以查看完整日志！'
+                    res='未匹配到日志记录，你可以试试下载并且查看完整日志！'
         else:
             res = '请稍等！'
         return res, 'debuginfo', '',0

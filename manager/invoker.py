@@ -498,7 +498,7 @@ def _runcase(username,taskid,case0,plan,planresult,is_verify,kind):
 								detail.error=error
 								detail.spend=spend
 								detail.loop_id=1
-								detail.is_verify=1
+								detail.is_verify=is_verify
 								detail.save()
 
 								print('保存结果=>',detail)

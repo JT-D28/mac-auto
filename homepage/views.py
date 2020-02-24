@@ -80,7 +80,7 @@ def querytaskid(request):
     try:
         planid = request.POST.get('planid')
         plan = Plan.objects.get(id=planid)
-        taskids = list(ResultDetail.objects.values('taskid').filter(plan=plan).order_by('-createtime'))
+        taskids = list(ResultDetail.objects.values('taskid').filter(plan=plan,is_verify=1).order_by('-createtime'))
         if taskids:
             taskids = taskids[0]["taskid"]
         else:
@@ -181,7 +181,7 @@ def sendreport(request):
     planid = request.POST.get('planid')
     plan = Plan.objects.get(id=planid)
     username = request.session.get("username", None)
-    detail = list(ResultDetail.objects.filter(plan=plan).order_by('-createtime'))
+    detail = list(ResultDetail.objects.filter(plan=plan,is_verify=1).order_by('-createtime'))
     config_id = plan.mail_config_id
     if detail is None:
         msg = "任务还没有运行过！"
@@ -346,4 +346,21 @@ def initbugcount(request):  # 缺陷统计
     return JsonResponse({"code": 0, "data": 13})
 
 
+@csrf_exempt
+def downloadlog(request):
+    logname='./logs/deal/'+request.POST.get('taskid')+'.log'
+    # file = open(logname, 'rb')
+    with open(logname, 'r', encoding='utf-8') as f:
+        log_text = f.read()
+    log_text=log_text.replace("<span style='color:#FF3399'>", '').replace("</xmp>", '').replace(
+                                    "<xmp style='color:#009999;'>", '').replace(
+                                    "<span class='layui-bg-green'>", '').replace("<span class='layui-bg-red'>", '').replace(
+                                    "<span class='layui-bg-orange'>", '').replace("</span>", '').replace(
+                                    "<span style='color:#009999;'>", '').replace('<br>', '').replace(
+                                    "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36', ",
+                                    '')
+    response = HttpResponse(log_text)
+    response['Content-Type'] = 'application/octet-stream'
+    response['Content-Disposition'] = 'attachment;filename=%s.log'%request.POST.get('taskid')
+    return response
 

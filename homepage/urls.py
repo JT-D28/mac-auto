@@ -33,5 +33,6 @@ urlpatterns = [
     path('badresult/',views.badresult),
     path('plandebug/', views.plandebug),
     path('buglog/',views.querybuglog),
-    path('initbugcount/',views.initbugcount)
+    path('initbugcount/',views.initbugcount),
+    path('downloadlog/',views.downloadlog)
 ]

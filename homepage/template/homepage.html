@@ -129,7 +129,7 @@
                                 <div class="layui-col-xs4 layuimini-qiuck-module">
                                     <a href="javascript:;" data-icon="fa fa-file-text">
                                         <i id='buglog' class="layui-icon layui-icon-survey"></i>
-                                        <cite>历史缺陷</cite>
+                                        <cite>历史记录</cite>
                                     </a>
                                 </div>
                                 <div class="layui-col-xs4 layuimini-qiuck-module">
@@ -228,9 +228,9 @@
 
     <div id="oldbug" hidden class="layui-row" style="height: 100%;">
         <div class="layui-tab">
-            <ul class="layui-tab-title layui-col-md1" style="height:100%;">
+            <ul class="layui-tab-title layui-col-md1 layui-col-sm2" style="height:100%;">
                 <li class="layui-this">历史缺陷</li>
-                <li>统计</li>
+                <li>历史日志</li>
             </ul>
             <div class="layui-tab-content  layui-col-md11" style="padding:0 15px 0 14px;height:100%">
                 <div class="layui-tab-item layui-show">
@@ -252,7 +252,6 @@
                                             </select>
                                         </form>
                                     </div>
-
                                 </div>
                             </div>
                         </div>
@@ -260,6 +259,26 @@
                     </div>
                 </div>
                 <div class="layui-tab-item">
+                    <div class="layui-col-md12" style="min-height: 400px">
+                        <div class="layui-form-item">
+                            <form class="layui-form" action="">
+                                <div class="layui-input-inline">
+                                <select name="plan_log1" lay-filter="plan_log1" lay-verify="required"
+                                                    lay-search>
+                                                <option value=''>选择计划</option>
+                                            </select>
+                                </div>
+                                <div class="layui-input-inline">
+                                     <div class="layui-input-inline">
+                                        <input type="text" class="layui-input" id="demotime1" placeholder="请选择时间！">
+                                    </div>
+                                </div>
+                            <div class="layui-input-inline">
+
+                            </div>
+                            </form>
+                        </div>
+                  </div>
                 </div>
             </div>
         </div>
@@ -304,6 +323,26 @@
                 "firstDay": 1
             };
             $('#demotime').daterangepicker({
+                'locale': locale,
+                ranges: {
+                    '今日': [moment(), moment()],
+                    '昨日': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    '最近7日': [moment().subtract(6, 'days'), moment()],
+                    '最近30日': [moment().subtract(29, 'days'), moment()],
+                    '本月': [moment().startOf('month'), moment().endOf('month')],
+                    '上月': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                    '全部': ['2020-01-01', moment()]
+                },
+                "alwaysShowCalendars": true,
+                "startDate": new Date(),
+                "endDate": new Date(),
+                "minDate": '2020-01-01',
+                "maxDate": new Date(),
+                "opens": "right",
+            }, function (start, end, label) {
+                queryoldbug($("[name='product']").val(), start.format('YYYY-MM-DD') + ' - ' + end.format('YYYY-MM-DD'), $("[name='plan_log']").val());
+            });
+            $('#demotime1').daterangepicker({
                 'locale': locale,
                 ranges: {
                     '今日': [moment(), moment()],

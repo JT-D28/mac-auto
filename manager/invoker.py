@@ -205,17 +205,16 @@ def gettaskresult(taskid):
 				businessobj['error']=error
 				#businessobj['api']=re.findall('\/(.*?)[?]',step.url)[0] or step.body
 				stepinst=None
-				try:
-					error,stepinst=gettestdatastep(business.id)
+				error,stepinst=gettestdatastep(business.id)
+				if stepinst.url:
+
 					print('%s=>%s,%s'%(business.id,error,stepinst))
 					businessobj['stepname']=stepinst.description
-					matcher=re.findall('http://(.*)',stepinst.url)
-					
-					mlist=('/'+matcher[0]).split('/')[2:]
-					businessobj['api']='/'+'/'.join(mlist)
-				except:
-					print('获取步骤api和名称异常=>',traceback.format_exc())
-					businessobj['api']=stepinst.body
+					matcher=[a for a in stepinst.url.split('/') if not a.__contains__("{{")]
+					businessobj['api']='/'+'/'.join(matcher)
+				else:
+					businessobj['api']=stepinst.body.strip()
+
 
 				businessobj['itf_check']=business.itf_check
 				businessobj['db_check']=business.db_check

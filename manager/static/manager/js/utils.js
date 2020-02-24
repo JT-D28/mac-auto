@@ -260,11 +260,31 @@ function _fill_form(data,fieldids){
       console.error('')
     }
 
-
   }
 
-
   layui.form.render('select')
+
+}
+
+function _set_form_not_editable(){
+/***设置表单不可编辑***/
+  console.log('view状态 表单不可编辑')
+  $('form input').each(function(){
+    $(this).attr('disabled','')
+  });
+
+  $('form textarea').each(function(){
+    $(this).attr('disabled','')
+  });
+
+
+
+}
+
+function reset_form(){
+  /**
+  恢复表单编辑状态
+  **/
 
 
 

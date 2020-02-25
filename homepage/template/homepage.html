@@ -168,52 +168,102 @@
     </div>
 
     <div class="layui-collapse " lay-accordion hidden id="settings">
-        <div class="layui-colla-item">
-            <h2 class="layui-colla-title ">邮箱配置</h2>
-            <div class="layui-colla-content">
-                <form id='mailconfig' enctype=multipart/form-data method=POST class="layui-form" style="padding: 10px;">
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">配色方案</label>
-                        <div class="layui-input-block">
-                            <select name="color_scheme" lay-verify="">
-                                <option value="">请选择</option>
-                                <option value="blue">blue</option>
-                                <option value="red">red</option>
-                            </select>
-                        </div>
+        <div class="layui-tab">
+            <ul class="layui-tab-title layui-col-md2 layui-col-sm2" style="height:100%;">
+                <li class="layui-this">报告通知配置</li>
+                <li>jacoco配置</li>
+            </ul>
+            <div class="layui-tab-content  layui-col-md10" style="padding:0 15px 0 15px;">
+                <div class="layui-tab-item layui-show">
+                    <div class="layui-col-md12">
+                        <form id='mailconfig' class="layui-form layui-form-pane" role="form-group"
+                              style="display: inherit;margin-top: 20px;margin-left: 20px" id="tb">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label" style="width: 100%">邮件通知</label>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">配色方案</label>
+                                <div class="layui-input-block">
+                                    <select name="color_scheme" lay-verify="">
+                                        <option value="">请选择</option>
+                                        <option value="blue">blue</option>
+                                        <option value="red">red</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">收件人</label>
+                                <div class="layui-input-block">
+                                    <input type="text" class="layui-input" name="to_receive" value="" title="" checked
+                                           lay-filter='' placeholder="多收件人请用“,”分割">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">标题</label>
+                                <div class="layui-input-block">
+                                    <input type="text" class="layui-input" name="description" value='' title="" checked
+                                           lay-filter=''>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label" style="width: 100%">钉钉通知</label>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">钉钉群token</label>
+                                <div class="layui-input-block">
+                                    <input type="text" name="dingdingtoken" required lay-verify="required"
+                                           placeholder="请输入token" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">收件人</label>
-                        <div class="layui-input-block">
-                            <input type="text" class="layui-input" name="to_receive" value="" title="" checked
-                                   lay-filter='' placeholder="多收件人请用“,”分割">
+                </div>
+                <div class="layui-tab-item">
+                    <div class="layui-col-md12">
+                        <div class="layui-form-item">
+                            <form class="layui-form layui-form-pane" role="form-group"
+                                  style="display: inherit;margin-top: 20px;margin-left: 20px" id="tb">
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">jenkins地址</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="jenkinsurl" autocomplete="off"
+                                               placeholder="请输入jenkins地址：格式 http://10.60.44.219" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-inline" style="width: 49%;margin-right:0.1rem">
+                                        <label class="layui-form-label required">用户名</label>
+                                        <div class="layui-input-block">
+                                            <input type="text" name="authname" placeholder="请输入用户名" autocomplete="off"
+                                                   class="layui-input"
+                                                   lay-verify="required">
+                                        </div>
+                                    </div>
+                                    <div class="layui-inline" style="width: 49%;margin-right:0">
+                                        <label class="layui-form-label required">密码</label>
+                                        <div class="layui-input-block">
+                                            <input type="text" name="authpwd" placeholder="请输入密码" autocomplete="off"
+                                                   class="layui-input"
+                                                   id='count'>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label" style="width: 100%">服务名称（描述）和任务名</label>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-input-block" style="margin-left: 0">
+                                        <textarea name="jobname" id='jobname' placeholder='填入内容为描述（或者说是服务名称）和jenkins中对应的任务名，格式示例：
+settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'
+                                                  autocomplete="off" class="layui-textarea" lay-verify="required"
+                                                  style="min-height:150px!important;"></textarea>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
-                    </div>
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">标题</label>
-                        <div class="layui-input-block">
-                            <input type="text" class="layui-input" name="description" value='' title="" checked
-                                   lay-filter=''>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <div class="layui-colla-item">
-            <h2 class="layui-colla-title">钉钉群token</h2>
-            <div class="layui-colla-content">
-                <div class="layui-form-item">
-                    <label class="layui-form-label">token</label>
-                    <div class="layui-input-block">
-                        <input type="text" name="dingdingtoken" required lay-verify="required" placeholder="请输入token"
-                               autocomplete="off" class="layui-input">
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="layui-colla-item">
-            <h2 class="layui-colla-title">jenkins-jacoco配置</h2>
-            <div class="layui-colla-content">todo</div>
         </div>
     </div>
 
@@ -263,22 +313,22 @@
                         <div class="layui-form-item">
                             <form class="layui-form" action="">
                                 <div class="layui-input-inline">
-                                <select name="plan_log1" lay-filter="plan_log1" lay-verify="required"
-                                                    lay-search>
-                                                <option value=''>选择计划</option>
-                                            </select>
+                                    <select name="plan_log1" lay-filter="plan_log1" lay-verify="required"
+                                            lay-search>
+                                        <option value=''>选择计划</option>
+                                    </select>
                                 </div>
                                 <div class="layui-input-inline">
-                                     <div class="layui-input-inline">
+                                    <div class="layui-input-inline">
                                         <input type="text" class="layui-input" id="demotime1" placeholder="请选择时间！">
                                     </div>
                                 </div>
-                            <div class="layui-input-inline">
+                                <div class="layui-input-inline">
 
-                            </div>
+                                </div>
                             </form>
                         </div>
-                  </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -571,30 +621,34 @@
 
         $("#setplan").click(function () {
             var planid = $("[name='plan']").val().substr(5)
+            var productid=$("[name='product']").val()
             if (planid == '') {
                 layer.msg("请选择项目和计划！")
             } else {
                 layer.open({
-                    title: '报告配置',
+                    title: '设置'+'\t【报告通知配置匹配的是选择的任务；jacoco配置匹配的是选择的项目】',
                     type: 1,
-                    area: ['800px', '450px'],
+                    area: ['800px', '88%'],
                     content: $('#settings'),
                     btn: ['确定', '取消'],
                     success: function () {
                         $("#mailconfig")[0].reset()
                         layui.form.render()
-                        common.ajax('/manager/queryonemailconfig/', 'post', 'json', {id: planid}, function (ee) {
+                        //这里把通知配置和jenkins配置放一起完成了
+                        common.ajax('/manager/queryonemailconfig/', 'post', 'json', {id: planid,productid:productid}, function (ee) {
                             op = ''
                             if (typeof (ee) != 'string') {
                                 if (ee.code == 0) {
-                                    //赋值form
                                     op = '编辑'
-                                    console.log(ee.data)
                                     $("[name='color_scheme']").val(ee.data['color_scheme'])
                                     layui.form.render('select');
                                     $("[name='description']").val(ee.data['description'])
                                     $("[name='to_receive']").val(ee.data['to_receive'])
                                     $("[name='dingdingtoken']").val(ee.data['dingdingtoken'])
+                                    $("[name='jenkinsurl']").val(ee.jacocoset['jenkinsurl'])
+                                    $("[name='authname']").val(ee.jacocoset['authname'])
+                                    $("[name='authpwd']").val(ee.jacocoset['authpwd'])
+                                    $("[name='jobname']").val(ee.jacocoset['jobname'])
                                 }
                             } else {
                                 ee = JSON.parse(ee)
@@ -615,12 +669,19 @@
                             }
                         }
                         _post("/manager/editmailconfig/", {
-                            id: planid,
-                            color_scheme: $("[name='color_scheme']").val(),
-                            description: $("[name='description']").val(),
-                            to_receive: $("[name='to_receive']").val(),
-                            dingdingtoken: $("[name='dingdingtoken']").val(),
-                        }, success)
+                                id: planid,
+                                color_scheme: $("[name='color_scheme']").val(),
+                                description: $("[name='description']").val(),
+                                to_receive: $("[name='to_receive']").val(),
+                                dingdingtoken: $("[name='dingdingtoken']").val(),
+                                jenkinsurl: $("[name='jenkinsurl']").val(),
+                                authname: $("[name='authname']").val(),
+                                authpwd: $("[name='authpwd']").val(),
+                                jobname: $("[name='jobname']").val(),
+                                productid:productid
+                            },
+                            success
+                        )
                     }
                 });
             }
@@ -932,9 +993,9 @@
         function success_rate_count(rate, total) {
             plot.updateConfig({
                 "title": {
-                    "text": "项目共运行 " + total + " 次,通过率："+parseFloat(rate)+"%",
+                    "text": "项目共运行 " + total + " 次,通过率：" + parseFloat(rate) + "%",
                     "visible": true,
-                    "style": {'fontSize': '16','fontWeight':'10'}
+                    "style": {'fontSize': '16', 'fontWeight': '10'}
                 },
                 "width": 300,
                 "height": 160,

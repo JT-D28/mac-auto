@@ -14,6 +14,7 @@ from manager.core import *
 from manager.models import Product, Plan, ResultDetail, MailConfig, Order
 import json
 from .dealinfo import doDebugInfo
+from .models import Jacoco_report
 
 
 @csrf_exempt
@@ -263,36 +264,37 @@ def badresult(request):
 
 
 @csrf_exempt
-def jenkins_add(request):
+def jacocoreport(request):
     code, msg = 0, ''
     s = requests.session()
-    s.auth = ('tfp-test', 'tfp-test')
+    prodid=request.POST.get('prodid')
+    jacocoset =Jacoco_report.objects.values().filter(productid=5)
+    print(jacocoset[0]['authname'])
+    s.auth = (jacocoset[0]['authname'],jacocoset[0]['authpwd'])
     try:
-        jenkinsurl = request.POST.get('jenkinsurl')
-        servicename = request.POST.get('servicename')
-        jobname = request.POST.get('jobname')
-
-        jsond = json.loads(s.get(jenkinsurl + "/job/" + jobname + "/lastBuild/jacoco/api/python?pretty=true").text)
+        jenkinsurl = jacocoset[0]['jenkinsurl']
+        jsond = json.loads(s.get(jenkinsurl + "/job/" + jacocoset[0]['jobname'] + "/lastBuild/jacoco/api/python?pretty=true").text)
         del jsond["_class"]
         del jsond["previousResult"]
         print(jsond)
-        for kind in jsond:
-            con = Jacoco_report()
-            con.kind = kind
-            con.covered = jsond[kind]["covered"]
-            con.percentage = jsond[kind]["percentage"]
-            con.percentageFloat = jsond[kind]["percentageFloat"]
-            con.total = jsond[kind]["total"]
-            con.missed = jsond[kind]["missed"]
-            con.jenkinsurl = jenkinsurl
-            con.servicename = servicename
-            con.jobname = jobname
-            con.save()
-        msg = '添加成功'
     except:
         print(traceback.format_exc())
         code = 1
-        msg = '添加异常'
+        msg = '查询异常'
+
+#     for kind in jsond:
+#         con = Jacoco_report()
+    #         con.kind = kind
+    #         con.covered = jsond[kind]["covered"]
+    #         con.percentage = jsond[kind]["percentage"]
+    #         con.percentageFloat = jsond[kind]["percentageFloat"]
+    #         con.total = jsond[kind]["total"]
+    #         con.missed = jsond[kind]["missed"]
+    #         con.jenkinsurl = jenkinsurl
+    #         con.servicename = servicename
+    #         con.jobname = jobname
+    #         con.save()
+    #     msg = '添加成功'
     return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 

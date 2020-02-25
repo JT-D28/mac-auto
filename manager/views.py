@@ -1664,12 +1664,14 @@ def editmailconfig(request):
 			jacocoset.productid=request.POST.get('productid')
 			jacocoset.save()
 		else:
-			jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
-			jacocoset.jenkinsurl=request.POST.get('jenkinsurl')
-			jacocoset.authname=request.POST.get('authname')
-			jacocoset.authpwd=request.POST.get('authpwd')
-			jacocoset.jobname=request.POST.get('jobname')
-			jacocoset.save()
+			if re.search(r'(.*:.*(;)?)',request.POST.get('jobname')):
+				jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
+				jacocoset.jenkinsurl=request.POST.get('jenkinsurl')
+				jacocoset.authname=request.POST.get('authname')
+				jacocoset.authpwd=request.POST.get('authpwd')
+				jacocoset.jobname=request.POST.get('jobname')
+				jacocoset.save()
+			else:return JsonResponse(simplejson(code=1,msg='请检查jenkins配置是否填写正确'),safe=False)
 
 	except:
 		print(traceback.format_exc())

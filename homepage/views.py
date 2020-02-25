@@ -45,17 +45,35 @@ def queryproduct(request):
 @csrf_exempt
 def queryplan(request):
     code, msg = 0, ''
+    pid=request.POST.get('id')
     sql = '''
     SELECT COUNT(DISTINCT taskid) as 'total',sum(CASE WHEN r.result='success' THEN 1 ELSE 0 END) AS '成功数' ,count(*) as '总数'  
     FROM manager_resultdetail r WHERE r.plan_id IN (SELECT follow_id FROM manager_order WHERE main_id=%s) 
     AND r.result NOT IN ('omit') AND r.is_verify=1
     '''
     with connection.cursor() as cursor:
-        cursor.execute(sql, [request.POST.get('id')])
+        cursor.execute(sql, [pid])
         desc = cursor.description
         rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-    success_rate=rows[0]['成功数']/rows[0]['总数']*100 if rows[0]['总数']!=0 else 0
+    success_rate = rows[0]['成功数'] / rows[0]['总数'] * 100 if rows[0]['总数'] != 0 else 0
     total = rows[0]['total'] if rows[0]['total'] is not None else 0
+
+    jacocoset = Jacoco_report.objects.values().filter(productid=pid) if pid!='' else None
+    if jacocoset:
+        try:
+            jobdess=[]
+            jobnames=jacocoset[0]['jobname']
+            jobs = jobnames.split(";") if not jobnames.endswith(';') else jobnames.split(";")[:-1]
+            for job in jobs:
+                jobdess.append({
+                    'id': job.split(":")[1],
+                    'name': job.split(":")[0]
+                })
+        except:pass
+
+    else:
+        jobdess=''
+
     datanode = []
     try:
         plans = cm.getchild('product_plan', request.POST.get('id'))
@@ -64,7 +82,8 @@ def queryplan(request):
                 'id': 'plan_%s' % plan.id,
                 'name': '%s' % plan.description,
             })
-        return JsonResponse(simplejson(code=0, msg='操作成功', data=datanode,rate=str(success_rate)[0:5],total=total), safe=False)
+        return JsonResponse(simplejson(code=0, msg='操作成功', data=datanode, rate=str(success_rate)[0:5], total=total,jobname=jobdess),
+                            safe=False)
 
     except:
         print(traceback.format_exc())
@@ -81,7 +100,7 @@ def querytaskid(request):
     try:
         planid = request.POST.get('planid')
         plan = Plan.objects.get(id=planid)
-        taskids = list(ResultDetail.objects.values('taskid').filter(plan=plan,is_verify=1).order_by('-createtime'))
+        taskids = list(ResultDetail.objects.values('taskid').filter(plan=plan, is_verify=1).order_by('-createtime'))
         if taskids:
             taskids = taskids[0]["taskid"]
         else:
@@ -182,20 +201,20 @@ def sendreport(request):
     planid = request.POST.get('planid')
     plan = Plan.objects.get(id=planid)
     username = request.session.get("username", None)
-    detail = list(ResultDetail.objects.filter(plan=plan,is_verify=1).order_by('-createtime'))
+    detail = list(ResultDetail.objects.filter(plan=plan, is_verify=1).order_by('-createtime'))
     config_id = plan.mail_config_id
     if detail is None:
         msg = "任务还没有运行过！"
-    elif plan.is_running in ('1',1) :
+    elif plan.is_running in ('1', 1):
         msg = "任务运行中，请稍后！"
     else:
         taskid = detail[0].taskid
-        threading.Thread(target=sendmail, args=(config_id,username,taskid)).start()
-        msg='发送中...'
+        threading.Thread(target=sendmail, args=(config_id, username, taskid)).start()
+        msg = '发送中...'
     return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
-def sendmail(config_id,username,taskid):
+def sendmail(config_id, username, taskid):
     if config_id:
         mail_config = MailConfig.objects.get(id=config_id)
         user = User.objects.get(name=username)
@@ -267,35 +286,33 @@ def badresult(request):
 def jacocoreport(request):
     code, msg = 0, ''
     s = requests.session()
-    prodid=request.POST.get('prodid')
-    jacocoset =Jacoco_report.objects.values().filter(productid=5)
-    print(jacocoset[0]['authname'])
-    s.auth = (jacocoset[0]['authname'],jacocoset[0]['authpwd'])
-    try:
-        jenkinsurl = jacocoset[0]['jenkinsurl']
-        jsond = json.loads(s.get(jenkinsurl + "/job/" + jacocoset[0]['jobname'] + "/lastBuild/jacoco/api/python?pretty=true").text)
-        del jsond["_class"]
-        del jsond["previousResult"]
-        print(jsond)
-    except:
-        print(traceback.format_exc())
-        code = 1
-        msg = '查询异常'
-
-#     for kind in jsond:
-#         con = Jacoco_report()
-    #         con.kind = kind
-    #         con.covered = jsond[kind]["covered"]
-    #         con.percentage = jsond[kind]["percentage"]
-    #         con.percentageFloat = jsond[kind]["percentageFloat"]
-    #         con.total = jsond[kind]["total"]
-    #         con.missed = jsond[kind]["missed"]
-    #         con.jenkinsurl = jenkinsurl
-    #         con.servicename = servicename
-    #         con.jobname = jobname
-    #         con.save()
-    #     msg = '添加成功'
-    return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+    re=''
+    productid = request.POST.get('productid')
+    jobname=request.POST.get('jobname')
+    jacocoset = Jacoco_report.objects.values().filter(productid=productid)
+    if jacocoset:
+        authname, authpwd=jacocoset[0]['authpwd'],jacocoset[0]['authname']
+    else:
+        authname, authpwd ='',''
+    if len(authname)&len(authpwd)!=0 and jobname in jacocoset[0]['jobname']:
+        s.auth = (jacocoset[0]['authname'], jacocoset[0]['authpwd'])
+        try:
+            jenkinsurl = jacocoset[0]['jenkinsurl']
+            jsond = json.loads(s.get(jenkinsurl + "/job/" + jobname + "/lastBuild/jacoco/api/python?pretty=true").text)
+            re = {
+                'branchCoverage': jsond['branchCoverage']['percentage'],
+                'classCoverage': jsond['classCoverage']['percentage'],
+                'complexityScore': jsond['complexityScore']['percentage'],
+                'instructionCoverage': jsond['instructionCoverage']['percentage'],
+                'lineCoverage': jsond['lineCoverage']['percentage'],
+                'methodCoverage': jsond['methodCoverage']['percentage'],
+            }
+        except:
+            print(traceback.format_exc())
+            code = 1
+            msg = '查询异常'
+            re=''
+    return JsonResponse(simplejson(code=code, msg=msg,data=re), safe=False)
 
 
 @csrf_exempt
@@ -307,7 +324,7 @@ def plandebug(request):  # 调试日志
 @csrf_exempt
 def querybuglog(request):  # 历史缺陷
     productid = request.POST.get('productid')
-    res=[]
+    res = []
     sql = '''
     SELECT r.taskid as '任务id', r.plan_id,r.createtime, b.id AS bussiness_id,p.description AS '计划名',c.description AS '用例名',
     s.description AS '步骤名',s.headers AS headers,s.body AS body,s.url AS url,
@@ -326,10 +343,11 @@ def querybuglog(request):  # 历史缺陷
     for i in range(len(rows)):
         res.append(
             {'路径': rows[i - 1]['用例名'] + '-' + rows[i - 1]['步骤名'], '接口': rows[i - 1]['url'],
-             '测试点': rows[i - 1]['测试点'], '参数信息': rows[i - 1]['参数信息'], '失败原因': rows[i - 1]['失败原因'],'任务id':rows[i-1]['任务id']})
-    res,total=getpagedata(res,request.POST.get('page'),request.POST.get('limit'))
+             '测试点': rows[i - 1]['测试点'], '参数信息': rows[i - 1]['参数信息'], '失败原因': rows[i - 1]['失败原因'],
+             '任务id': rows[i - 1]['任务id']})
+    res, total = getpagedata(res, request.POST.get('page'), request.POST.get('limit'))
 
-    return JsonResponse({"code": 0,'count':total, "data": res})
+    return JsonResponse({"code": 0, 'count': total, "data": res})
 
 
 @csrf_exempt
@@ -350,19 +368,18 @@ def initbugcount(request):  # 缺陷统计
 
 @csrf_exempt
 def downloadlog(request):
-    logname='./logs/deal/'+request.POST.get('taskid')+'.log'
+    logname = './logs/deal/' + request.POST.get('taskid') + '.log'
     # file = open(logname, 'rb')
     with open(logname, 'r', encoding='utf-8') as f:
         log_text = f.read()
-    log_text=log_text.replace("<span style='color:#FF3399'>", '').replace("</xmp>", '').replace(
-                                    "<xmp style='color:#009999;'>", '').replace(
-                                    "<span class='layui-bg-green'>", '').replace("<span class='layui-bg-red'>", '').replace(
-                                    "<span class='layui-bg-orange'>", '').replace("</span>", '').replace(
-                                    "<span style='color:#009999;'>", '').replace('<br>', '').replace(
-                                    "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36', ",
-                                    '')
+    log_text = log_text.replace("<span style='color:#FF3399'>", '').replace("</xmp>", '').replace(
+        "<xmp style='color:#009999;'>", '').replace(
+        "<span class='layui-bg-green'>", '').replace("<span class='layui-bg-red'>", '').replace(
+        "<span class='layui-bg-orange'>", '').replace("</span>", '').replace(
+        "<span style='color:#009999;'>", '').replace('<br>', '').replace(
+        "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36', ",
+        '')
     response = HttpResponse(log_text)
     response['Content-Type'] = 'application/octet-stream'
-    response['Content-Disposition'] = 'attachment;filename=%s.log'%request.POST.get('taskid')
+    response['Content-Disposition'] = 'attachment;filename=%s.log' % request.POST.get('taskid')
     return response
-

@@ -18,14 +18,21 @@
             border: 1px solid #f2f2f2;
             border-radius: 5px;
         }
-
+        #echarts-records :first-child{
+            width: 99%!important;
+            margin: 0 auto!important;
+        }
         .layuimini-qiuck-module {
             text-align: center;
             margin-top: 10px
         }
-
+        .layui-tab-title >span{
+            display: none;
+        }
         .layui-tab-title li {
             min-width: 0;
+            padding: 0;
+            font-size: 12px;
         }
 
         .layuimini-qiuck-module a i {
@@ -90,7 +97,7 @@
 <div class="layuimini-main">
 
 
-    <div class="layui-row layui-col-space15">
+    <div class="layui-row layui-col-space10">
         <div class="layui-col-xs12 layui-col-md3">
             <div class="layui-col-md12">
                 <div class="layui-card">
@@ -160,7 +167,103 @@
             </div>
         </div>
         <div class="layui-col-xs12 layui-col-md9">
-            <div id="echarts-records" style="background-color:#f2f2f2;min-height:400px;padding: 10px;"></div>
+            <div class="layui-tab" >
+                <ul id="reporttab" style="display: none" class="layui-tab-title layui-col-md1 layui-col-sm2" style="height:100%;">
+                    <li class="layui-this">计划成功率</li>
+                    <li>代码覆盖率</li>
+                </ul>
+                <div class="layui-tab-content  layui-col-md11" style="padding: 0">
+                    <div class="layui-tab-item layui-show">
+                        <div id="echarts-records"
+                             style="background-color:#f2f2f2;min-height:400px;padding: 0;"></div>
+                    </div>
+                    <div class="layui-tab-item">
+                        <form class="layui-form" action="">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">服务</label>
+                                <div class="layui-input-block">
+                                    <select name="jobdes" lay-filter="jobdes" lay-verify="required"
+                                            lay-search>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                            <div class="layui-row">
+                                <div class="layui-col-md4">
+                                    <div class="layui-card">
+                                        <div class="layui-card-header">
+                                            branchCoverage
+                                        </div>
+                                        <div class="layui-card-body">
+                                            <div id="branchCoverage"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-col-md4">
+                                    <div class="layui-card">
+                                        <div class="layui-card-header">
+                                            classCoverage
+                                        </div>
+                                        <div class="layui-card-body">
+                                            <div id="classCoverage"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-col-md4">
+                                    <div class="layui-card">
+                                        <div class="layui-card-body">
+                                            <div class="layui-card-header">
+                                                complexityScore
+                                            </div>
+                                            <div class="layui-card-body">
+                                                <div id="complexityScore"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="layui-col-md4">
+                                <div class="layui-card">
+                                    <div class="layui-card-body">
+                                        <div class="layui-card-header">
+                                            instructionCoverage
+                                        </div>
+                                        <div class="layui-card-body">
+                                            <div id="instructionCoverage"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md4">
+                                <div class="layui-card">
+                                    <div class="layui-card-body">
+                                        <div class="layui-card-header">
+                                            lineCoverage
+                                        </div>
+                                        <div class="layui-card-body">
+                                            <div id="lineCoverage"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md4">
+                                <div class="layui-card">
+                                    <div class="layui-card-body">
+                                        <div class="layui-card-header">
+                                            methodCoverage
+                                        </div>
+                                        <div class="layui-card-body">
+                                            <div id="methodCoverage"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="layui-col-xs12 layui-col-md12">
             <table id="demo" lay-filter="test"></table>
@@ -324,7 +427,6 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'
                                     </div>
                                 </div>
                                 <div class="layui-input-inline">
-
                                 </div>
                             </form>
                         </div>
@@ -432,34 +534,41 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'
             common.ajax('/homepage/queryplan/', 'post', 'json', {
                     'id': id
                 }, function (data) {
-                    data = JSON.parse(data)
+                    data = JSON.parse(data);
                     if (data.code != '0') {
-                        $("[name='plan']").empty()
-                        $("[name='plan']").append("<option value=''>选择计划</option>")
+                        $("[name='plan']").empty();
+                        $("[name='plan']").append("<option value=''>选择计划</option>");
                         layui.form.render('select')
                     } else {
-                        success_rate_count(data.rate, data.total)
-                        data = data.data
-                        $("[name='plan']").empty()
-                        $("[name='plan_log").empty()
-                        $("[name='plan_log']").append("<option value=''>全部计划</option>")
-                        if (data.length != 0) {
-                            for (var index = 0; index < data.length; index++) {
-                                $("[name='plan']").append("<option value='" + data[index]['id'] + "'>" + data[index]['name'] + "</option>")
-                                $("[name='plan_log']").append("<option value='" + data[index]['id'] + "'>" + data[index]['name'] + "</option>")
+                        success_rate_count(data.rate, data.total);
+                        $("[name='plan']").empty();
+                        $("[name='plan_log").empty();
+                        $("[name='jobdes").empty();
+                        $("[name='plan_log']").append("<option value=''>全部计划</option>");
+                        if (data.data.length != 0) {
+                            for (var index = 0; index < data.data.length; index++) {
+                                $("[name='plan']").append("<option value='" + data.data[index]['id'] + "'>" + data.data[index]['name'] + "</option>")
+                                $("[name='plan_log']").append("<option value='" + data.data[index]['id'] + "'>" + data.data[index]['name'] + "</option>")
                             }
                         } else {
-                            $("[name='plan']").append("<option value=''>该项目下没有计划</option>")
+                            $("[name='plan']").append("<option value=''>该项目下没有计划</option>");
                             $("[name='plan_log']").append("<option value=''>该项目下没有计划</option>")
                         }
+                        if (data.jobname.length != 0) {
+                            for (var index = 0; index < data.jobname.length; index++) {
+                                $("[name='jobdes']").append("<option value='" + data.jobname[index]['id'] + "'>" + data.jobname[index]['name'] + "</option>")
+                            }
+                        } else {$("[name='jobdes']").append("<option value=''>该项目没有进行代码覆盖率相关配置或配置不正确</option>");}
+
                         common.ajax('/homepage/reportchart/', 'post', 'json', {
                             planid: $("[name='plan']").val().substr(5)
                         }, function (result) {
-                            result = JSON.parse(result)
+                            result = JSON.parse(result);
+                            $("#reporttab").css('display','inherit');
                             report(result.data, result.code)
-                        })
-
-                        layui.form.render('select')
+                        });
+                        queryjacoco();
+                        layui.form.render('select');
                         setTimeout(function () {
                             $("#success_rate_count").css('visibility', 'visible')
                         }, 300)
@@ -467,8 +576,23 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'
                 }
             )
         });
+
+        form.on('select(jobdes)', function () {
+            queryjacoco()
+        });
+
+        function queryjacoco() {
+            common.ajax('/homepage/jacocoreport/', 'post', 'json', {
+                productid: $("[name='product']").val(), jobname: $("[name='jobdes']").val()
+            }, function (result) {
+                result = JSON.parse(result);
+                jacocoReport(result.data)
+            });
+        }
+
+
         $('#runplan').click(function () {
-            var planid = $("[name='plan']").val().substr(5)
+            var planid = $("[name='plan']").val().substr(5);
             if (planid == '') {
                 layer.msg("请选择项目和计划！")
             } else {
@@ -536,7 +660,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'
 
         form.on('select(plan_log)', function () {
             queryoldbug($("[name='product']").val(), $('#demotime').val(), $("[name='plan_log']").val())
-        })
+        });
 
 
         $('#repoetplan').click(function () {
@@ -687,14 +811,19 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'
             }
         })
         $("#sendrepoet").click(function () {
-            common.ajax('/homepage/sendreport/', 'post', 'json', {'planid': $("[name='plan']").val().substr(5)}, function (data) {
-                data = JSON.parse(data)
-                if (data.code == 0) {
-                    layer.alert(data.msg, {icon: 1, time: 1550}, area = ['500px', '300px'])
-                } else {
-                    layer.alert(data.msg, {icon: 2, time: 1500})
-                }
-            })
+            var planid = $("[name='plan']").val().substr(5)
+            if (planid == '') {
+                layer.msg("请选择项目和计划！")
+            } else {
+                common.ajax('/homepage/sendreport/', 'post', 'json', {'planid': planid}, function (data) {
+                    data = JSON.parse(data)
+                    if (data.code == 0) {
+                        layer.alert(data.msg, {icon: 1, time: 1550}, area = ['500px', '300px'])
+                    } else {
+                        layer.alert(data.msg, {icon: 2, time: 1500})
+                    }
+                })
+            }
         })
 
 
@@ -747,11 +876,17 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'
             }
             var optionRecords = {
                 title: {
-                    text: title
+                    text: title,
+                    textStyle:{
+                        fontWeight:'normal',
+                    fontSize:15
+                    }
+
                 },
                 animation: false,
                 legend: {
                     left: 'center',
+                    top:'2%',
                     data: ['成功率', '成功数', '失败数', '错误数', '跳过数',]
                 },
                 tooltip: {
@@ -766,6 +901,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'
                     textStyle: {
                         color: '#000'
                     },
+                    width:'100px',
                     position: function (pos, params, el, elRect, size) {
                         var obj = {top: 10};
                         obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30;
@@ -798,15 +934,15 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'
                 },
                 grid: [
                     {
-                        left: '5%',
-                        right: '5%',
-                        height: '48%'
+                        left: '6%',
+                        right: '6%',
+                        height: '46%'
                     },
                     {
-                        left: '5%',
-                        right: '5%',
-                        bottom: '3%',
-                        height: '20%'
+                        left: '6%',
+                        right: '6%',
+                        bottom: '4%',
+                        height: '22%'
                     }
                 ],
                 xAxis: [
@@ -998,7 +1134,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'
                     "style": {'fontSize': '16', 'fontWeight': '10'}
                 },
                 "width": 300,
-                "height": 160,
+                "height": 140,
                 "min": 0,
                 "max": 100,
                 "value": parseFloat(rate),
@@ -1007,20 +1143,35 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'
         }
 
         const container = document.getElementById('success_rate_count');
-        const data = 332;
         let config = {
             "width": 374,
-            "height": 363,
+            "height": 160,
             "min": 0,
             "max": 100,
             "value": 0
         }
         const plot = new g2plot.Liquid(container, {
-            data,
+            data:1,
             ...config,
         });
         plot.render();
 
+
+        var coverlist = ['branchCoverage', 'classCoverage', 'instructionCoverage', 'complexityScore', 'lineCoverage', 'methodCoverage']
+        actjacoco = []
+        coverlist.forEach(function (item, index) {
+            actjacoco[index] = new g2plot.RingProgress(document.getElementById(item), {
+                percent: 0, width: 100, height: 100, padding: 'auto'
+            })
+            actjacoco[index].render()
+        });
+
+        function jacocoReport(result) {
+            coverlist.forEach(function (item, index) {
+                rate =result!=''?result[item]/100:0
+                actjacoco[index].update(rate)
+            });
+        }
     });
 </script>
 </body>

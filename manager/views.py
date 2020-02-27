@@ -5,6 +5,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from django.http import HttpResponse,JsonResponse,FileResponse
 
 from django.db.models import Q
+from homepage.models import Jacoco_report
 from manager.models import *
 from login.models import *
 from .core import *
@@ -1602,14 +1603,16 @@ def queryonemailconfig(request):
 
 	try:
 		id_=request.POST.get('id')
+		productid=request.POST.get('productid')
 		plan=Plan.objects.get(id=id_)
 		mail_config_id=plan.mail_config_id
-
+		jacocoset=list(Jacoco_report.objects.values('jenkinsurl','jobname','authname','authpwd').filter(productid=productid))
 		print('获取计划[%s]邮件配置=>%s'%(plan.description,mail_config_id))
 
 		if mail_config_id:
 			config=MailConfig.objects.get(id=mail_config_id)
 			jsonstr=json.dumps(config,cls=MailConfigEncoder)
+			jsonstr['jacocoset']=jacocoset[0] if jacocoset else ''
 			return JsonResponse(jsonstr,safe=True)
 		else:
 			print('heafdafd')
@@ -1651,6 +1654,24 @@ def editmailconfig(request):
 			plan.mail_config_id = config.id
 			plan.save()
 			msg = '新建成功'
+		#jacoco相关配置，和项目关联
+		if not Jacoco_report.objects.filter(productid=request.POST.get('productid')).exists():
+			jacocoset=Jacoco_report()
+			jacocoset.jenkinsurl=request.POST.get('jenkinsurl')
+			jacocoset.authname=request.POST.get('authname')
+			jacocoset.authpwd=request.POST.get('authpwd')
+			jacocoset.jobname=request.POST.get('jobname')
+			jacocoset.productid=request.POST.get('productid')
+			jacocoset.save()
+		else:
+			if re.search(r'(.*:.*(;)?)',request.POST.get('jobname')):
+				jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
+				jacocoset.jenkinsurl=request.POST.get('jenkinsurl')
+				jacocoset.authname=request.POST.get('authname')
+				jacocoset.authpwd=request.POST.get('authpwd')
+				jacocoset.jobname=request.POST.get('jobname')
+				jacocoset.save()
+			else:return JsonResponse(simplejson(code=1,msg='请检查jenkins配置是否填写正确'),safe=False)
 
 	except:
 		print(traceback.format_exc())

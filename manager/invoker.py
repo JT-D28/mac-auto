@@ -499,7 +499,7 @@ def _runcase(username,taskid,case0,plan,planresult,is_verify,kind):
 								detail.error=error
 								detail.spend=spend
 								detail.loop_id=1
-								detail.is_verify=1
+								detail.is_verify=is_verify
 								detail.save()
 
 								print('保存结果=>',detail)
@@ -1468,7 +1468,7 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 	except:
 		print(traceback.format_exc())
 		print('表达式等号两边加单引号后尝试判断..')
-
+		exp=exp.replace("<br>", '')
 		#return ('error','表达式[%s]计算异常[%s]'%(ourexpression,traceback.format_exc()))
 		try:
 			print('_op=>',_op)

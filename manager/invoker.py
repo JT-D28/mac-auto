@@ -1465,7 +1465,7 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 	except:
 		print(traceback.format_exc())
 		print('表达式等号两边加单引号后尝试判断..')
-
+		exp=exp.replace("<br>", '')
 		#return ('error','表达式[%s]计算异常[%s]'%(ourexpression,traceback.format_exc()))
 		try:
 			print('_op=>',_op)

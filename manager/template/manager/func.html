@@ -312,8 +312,17 @@ layui.use(['table','layer','code'], function(){
 </script>
 
 <script type="text/html" id="toolbar">
-  <i class="layui-icon layui-icon-form" lay-event="detail"></i>
+
+
+{% verbatim %}
+{{# if (d.kind=='用户定义') { }}
   <i class="layui-icon layui-icon-edit" lay-event="edit"></i>
+{{# }else if(d.last==''){}}
+  <i class="layui-icon layui-icon-edit" lay-event="edit" disabled></i>
+{{#} }}
+
+{% endverbatim %}
+
 
   
 </script>

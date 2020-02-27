@@ -150,8 +150,7 @@
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
 <script type="text/javascript">
-
-
+    add_var_prop_smart_inputs(['pre','post','itf_check','db_check','params'])
     layui.use(['table', 'element', 'form'], function () {
 
         var table = layui.table;

@@ -95,6 +95,9 @@ function add_var_prop_smart_inputs(elemIds){
 }
 function add_var_prop_smart_input(elemId){
 
+  console.log('监听属性变量快捷键')
+  console.log('id=>'+elemId)
+
   dom=document.getElementById(elemId)
   dom.removeEventListener('keydown',undefined)
   dom.onkeydown=function(e){

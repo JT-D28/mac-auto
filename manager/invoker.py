@@ -213,6 +213,7 @@ def gettaskresult(taskid):
 					matcher=[a for a in stepinst.url.split('/') if not a.__contains__("{{")]
 					businessobj['api']='/'+'/'.join(matcher)
 				else:
+					businessobj['stepname']=stepinst.description
 					businessobj['api']=stepinst.body.strip()
 
 
@@ -468,7 +469,7 @@ def _runcase(username,taskid,case0,plan,planresult,is_verify,kind):
 				else:
 					#步骤执行次数>0
 					for ldx in range(0,stepcount):
-						businessorderlist=list(Order.objects.filter(kind='step_business',main_id=stepid))
+						businessorderlist=ordered(list(Order.objects.filter(kind='step_business',main_id=stepid)))
 						# print('bbb=>',businessorderlist)
 						for order in businessorderlist:
 							groupid=order.value.split(".")[0]
@@ -756,6 +757,8 @@ def _step_process_check(callername,taskid,order,kind):
 		db_check=businessdata.db_check
 		itf_check=businessdata.itf_check
 		status,paraminfo=gettestdataparams(order.follow_id)
+
+		# print('bbid=>',businessdata.id)
 		status1,step=gettestdatastep(businessdata.id)
 
 		username=callername
@@ -2074,6 +2077,7 @@ class MainSender:
 			bodyhtml+="<tr><th>执行序号</th><th>结果</th><th>耗时(ms)</th><th>步骤名称</th><th>api</th><th>接口验证</th><th>数据验证</th><th>消息</th></tr>"
 			steps=case['steps']
 			for step in steps:
+				print('nnufa=>',step)
 				bodyhtml+='<tr>'
 				bodyhtml+='<td style="width:100px;">%s</td>'%step['num']
 				bodyhtml+='<td style="width:100px;" class="%s">%s</td>'%(step['result'],step['result'])
@@ -2137,8 +2141,8 @@ class MainSender:
 				error='属性替换异常 可用属性'
 
 
-
-			msg=MIMEText(cls.gethtmlcontent(taskid,rich_text),'html','utf-8')
+			htmlcontent=cls.gethtmlcontent(taskid,rich_text)
+			msg=MIMEText(htmlcontent,'html','utf-8')
 			msg['From']=formataddr([sender_nick,sender_name])  # 括号里的对应发件人邮箱昵称、发件人邮箱账号
 			msg['To']='%s'%','.join([cls._format_addr('<%s>'%to_addr) for to_addr in list(to_receive.split(','))])               # 括号里的对应收件人邮箱昵称、收件人邮箱账号
 			#msg['Subject']=cls.subject          # 邮件的主题，也可以说是标题
@@ -2147,15 +2151,27 @@ class MainSender:
 			server.login(sender_name,sender_pass)  # 括号中对应的是发件人邮箱账号、邮箱密码
 			server.sendmail(sender_name,list(to_receive.split(',')),msg.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
 			server.quit()  # 关闭连接
+
+			##本地报告
+			cls._gen_report(htmlcontent)
+
+			
+		
+
 		except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
 			print(traceback.format_exc())
 			ret=2
 			error=traceback.format_exc()
 
-		print("retret=",ret,error)
 
 
 		return cls._getdescrpition(mail_config.to_receive,ret,error)
+
+	@classmethod
+	def _gen_report(cls,htmlcontent):
+		print('==本地缓存测试报告')
+		with open('./local_reports','w') as f:
+			f.write(htmlcontent)
 
 	@classmethod
 	def _getdescrpition(cls,to_receive,send_result,error=None):
@@ -3284,7 +3300,7 @@ class DataMove:
 			c.append((str(step.id),ordervalue))
 			self._data['relation']['case_step'][str(case.id)]=list(set(c))
 
-			print('%s=>%s'%(step.description,step.step_type))
+			# print('%s=>%s'%(step.description,step.step_type))
 
 			businesslist=getchild('step_business',step.id)
 
@@ -3293,13 +3309,16 @@ class DataMove:
 				businessd={}
 				businessd['id']=business.id
 				businessd['businessname']=business.businessname
+
 				businessd['itf_check']=business.itf_check
 				businessd['db_check']=business.db_check
 				businessd['params']=business.params
 				varnames=re.findall('{{(.*?)}}',business.itf_check+business.db_check+business.params)
 				self._varkeys=self._varkeys+varnames
 
+				print('bname=>',businessd['businessname'])
 				busnamelist=[business.get('businessname') for business in self._data['entity']['businessdatas']]
+				##
 				if businessd['businessname'] not in busnamelist:
 					self._data['entity']['businessdatas'].append(businessd)
 					b=self._data['relation']['step_business'].get(str(step.id),[])

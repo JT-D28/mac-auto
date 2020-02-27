@@ -1207,7 +1207,7 @@
       expandCollapseNode: function (setting, node, expandFlag, animateFlag, callback) {
 
        // alert(1)
-        //console.log('expand node')
+        console.log('expand node')
         var root = data.getRoot(setting);
         var tmpCb, _callback;
         if (!node) {
@@ -1362,25 +1362,35 @@
           "'>", name, "</span>");
       },
       makeDOMNodeLine: function (html, setting, node) {
+      //console.log('【makedomnodeline】')
        //html.push("<span id='", node.tId, consts.id.SWITCH, "' title='' class='", view.makeNodeLineClass(setting, node), "' treeNode", consts.id.SWITCH, "></span>");
-       //console.log(node.open)
-       //console.log('【makedomnodeline】')
 
        if (node.type!='business'){
-
          if(node.open==true){
-          html.push("<span id='", node.tId, consts.id.SWITCH, "' title='' class='fa fa-minus' treenode_switch></span>");
+          html.push("<span id='", node.tId, consts.id.SWITCH, "' title='' class='fa fa-minus' switcher></span>");
             
          }else{
-          html.push("<span id='", node.tId, consts.id.SWITCH, "' title='' class='fa fa-plus' treenode_switch></span>");
+          html.push("<span id='", node.tId, consts.id.SWITCH, "' title='' class='fa fa-plus' switcher></span>");
            
          }
 
        }
        else{
-                  html.push("<span id='", node.tId, consts.id.SWITCH, "' title='' class='fa fa-minus' treenode_switch></span>");
-        
+          //html.push("<span id='", node.tId, consts.id.SWITCH, "' title='' class='fa fa-minus' treenode_switch></span>");
+          html.push("<span style='width:6em;'></span>")
        }
+
+       //
+      f=node.tId+consts.id.SWITCH
+      console.log("f=>"+f)
+      $("#"+f).click(function(){
+        console.log('hh click;')
+        node_a_id=$(this).attr('id').replace('switch','a')
+        //$('#'+node_a_id).click();
+      });
+
+
+      
 
 
       },
@@ -1678,6 +1688,8 @@
         obj.attr("class", tmpList.join("_"));
       },
       replaceSwitchClass: function (node, obj, newName) {
+
+        console.log(node,obj,newName)
         if (!obj) return;
         var tmpName = obj.attr("class");
         if (tmpName == undefined) return;

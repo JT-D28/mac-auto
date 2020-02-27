@@ -33,6 +33,7 @@ var tree={
 				}
 			},
 			callback: {
+				// onDblClick:this._onDblClick,
 				onClick:this._onClick,
 		    	beforeExpand:this._onBeforeExpand,
 	            beforeDrag: this._beforeDrag,
@@ -72,6 +73,15 @@ var tree={
 			// console.log(setting)
 
 			$.fn.zTree.init($("#case-manager"),setting,data.data);
+
+			//
+			$("[switcher]").click(function(){
+
+				node_a_id=$(this).attr('id').replace('switch','a')
+				//alert(node_a_id)
+				$("#"+node_a_id).click();
+
+			});
 
 		}
 
@@ -485,6 +495,7 @@ var tree={
 	,
 	_onClick:function(event,treeId,treeNode){
 		// alert(treeNode.html())
+		console.log(event)
 		console.log('onClick')
 
 		console.log('节点expand状态=>'+treeNode.open)
@@ -515,6 +526,11 @@ var tree={
 
 
 	},
+	// _onDblClick:function(event,treeId,treeNode){
+	// 	console.log('_onDblClick')
+	// 	this._onClick(event,treeId,treeNode)
+
+	// },
 	_beforeDrag:function(treeId, treeNodes) {
 
 		// if(treeNodes[0].type=='product'||treeNodes[0].type=='plan' )

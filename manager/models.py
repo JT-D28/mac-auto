@@ -172,7 +172,7 @@ class ResultDetail(models.Model):
 	createtime=models.DateTimeField(auto_now_add=True)
 	updatetime=models.DateTimeField(auto_now=True)
 
-	loop_id=models.IntegerField()
+	# loop_id=models.IntegerField()
 	is_verify=models.CharField(max_length=4,default=0)
 
 	# def __str__(self):

@@ -1376,6 +1376,18 @@ def del_node_force(request):
 		elif node_type=='step':
 			_del_step_force(idx)
 
+		##重排序
+		# _m={
+		# 'product':'Product',
+		# 'plan':'Plan',
+		# 'case':'Case',
+		# 'step':'Step',
+		# 'business':'Businessdata'
+
+		# }
+		# el=eval("%s.objects.get(id=%s)"%(_m.get(node_type),str(idx)))
+		# _regen_weight(request.session.get('username'),el,trigger='del_force')
+
 	return {
 	'status':'success',
 	'msg':'删除成功.'
@@ -1418,7 +1430,7 @@ def _del_plan_force(plan_id):
 		if len(plan_order_list)>0:
 			for o in plan_order_list:
 				#o.delete()
-				_del_case_force(o.follow_id,kind='plan_case')
+				_del_case_force(o.follow_id,up='plan_case')
 
 		plan.delete()
 	except:

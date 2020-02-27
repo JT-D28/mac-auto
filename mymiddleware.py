@@ -104,6 +104,7 @@ class Interceptor(MiddlewareMixin):
 			if request.session.get('username', None):
 				return True
 			else:
+				print('session校验不通过 跳到登陆页面')
 				return False
 
 		return True
@@ -124,7 +125,7 @@ class Interceptor(MiddlewareMixin):
 		session_check_result=self._session_check(request)
 		# repeat_check_result=self._repeat_check(request)
 		# field_common_check_result=self._field_common_check(request)
-
+		username=request.session.get('username')
 		if session_check_result==False:
 			return HttpResponseRedirect('/account/login/')
 

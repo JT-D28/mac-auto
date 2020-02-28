@@ -2073,23 +2073,28 @@ class MainSender:
 
 		for case in data['cases']:
 			bodyhtml+='<p style="text-indent:2em;" >用例名[%s]</p>'%(case['casename'])
-			bodyhtml+='<table>'
-			bodyhtml+="<tr><th>执行序号</th><th>结果</th><th>耗时(ms)</th><th>步骤名称</th><th>api</th><th>接口验证</th><th>数据验证</th><th>消息</th></tr>"
-			steps=case['steps']
-			for step in steps:
-				print('nnufa=>',step)
-				bodyhtml+='<tr>'
-				bodyhtml+='<td style="width:100px;">%s</td>'%step['num']
-				bodyhtml+='<td style="width:100px;" class="%s">%s</td>'%(step['result'],step['result'])
-				bodyhtml+='<td style="width:100px;">%s</td>'%step['spend']
-				bodyhtml+='<td style="width:200px;" title="%s">%s</td>'%(step['stepname'],step['stepname'])
-				bodyhtml+='<td style="width:200px;">%s</td>'%step['api']
-				bodyhtml+='<td style="width:100px;">%s</td>'%step['itf_check']
-				bodyhtml+='<td style="width:100px;">%s</td>'%step['db_check']
-				bodyhtml+='<td>%s</td>'%step['error']
-				bodyhtml+='</tr>'
+			# bodyhtml+='<table>'
+			# bodyhtml+="<tr><th>执行序号</th><th>结果</th><th>耗时(ms)</th><th>步骤名称</th><th>api</th><th>接口验证</th><th>数据验证</th><th>消息</th></tr>"
+			steps_iterator=case['steps']
+			for iter_index,vs in steps_iterator.items():
+				bodyhtml+='<p>第%s次迭代</p>'%iter_index
+					
+				bodyhtml+='<table>'
+				bodyhtml+="<tr><th>执行序号</th><th>结果</th><th>耗时(ms)</th><th>步骤名称</th><th>api</th><th>接口验证</th><th>数据验证</th><th>消息</th></tr>"
+				for step in vs:
+					print('nnufa=>',step)
+					bodyhtml+='<tr>'
+					bodyhtml+='<td style="width:100px;">%s</td>'%step['num']
+					bodyhtml+='<td style="width:100px;" class="%s">%s</td>'%(step['result'],step['result'])
+					bodyhtml+='<td style="width:100px;">%s</td>'%step['spend']
+					bodyhtml+='<td style="width:200px;" title="%s">%s</td>'%(step['stepname'],step['stepname'])
+					bodyhtml+='<td style="width:200px;">%s</td>'%step['api']
+					bodyhtml+='<td style="width:100px;">%s</td>'%step['itf_check']
+					bodyhtml+='<td style="width:100px;">%s</td>'%step['db_check']
+					bodyhtml+='<td>%s</td>'%step['error']
+					bodyhtml+='</tr>'
 
-			bodyhtml+='</table>'
+				bodyhtml+='</table>'
 
 		return cssstr+rich_text+'<br/>'+'-'*40+'<br/>'+bodyhtml
 

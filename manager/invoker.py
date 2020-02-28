@@ -2073,6 +2073,7 @@ class MainSender:
 
 		for case in data['cases']:
 			bodyhtml+='<p style="text-indent:2em;" >用例名[%s]</p>'%(case['casename'])
+
 			# bodyhtml+='<table>'
 			# bodyhtml+="<tr><th>执行序号</th><th>结果</th><th>耗时(ms)</th><th>步骤名称</th><th>api</th><th>接口验证</th><th>数据验证</th><th>消息</th></tr>"
 			steps_iterator=case['steps']
@@ -2082,6 +2083,7 @@ class MainSender:
 				bodyhtml+='<table>'
 				bodyhtml+="<tr><th>执行序号</th><th>结果</th><th>耗时(ms)</th><th>步骤名称</th><th>api</th><th>接口验证</th><th>数据验证</th><th>消息</th></tr>"
 				for step in vs:
+
 					print('nnufa=>',step)
 					bodyhtml+='<tr>'
 					bodyhtml+='<td style="width:100px;">%s</td>'%step['num']
@@ -2095,6 +2097,7 @@ class MainSender:
 					bodyhtml+='</tr>'
 
 				bodyhtml+='</table>'
+
 
 		return cssstr+rich_text+'<br/>'+'-'*40+'<br/>'+bodyhtml
 

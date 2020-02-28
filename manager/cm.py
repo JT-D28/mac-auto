@@ -792,6 +792,10 @@ def delrelation(kind,callername,main_id,follow_id):
 		print(traceback.format_exc())
 	# print('删除完毕')
 def getchild(kind,main_id):
+
+	'''
+	返回有序子项
+	'''
 	child=[]
 	orderlist=ordered(list(Order.objects.filter(kind=kind,main_id=main_id)))		
 	if kind=='product_plan':
@@ -809,8 +813,8 @@ def getchild(kind,main_id):
 			child.append(Case.objects.get(id=order.follow_id))
 	elif kind=='case_step':
 		for order in orderlist:
-			print('main=>',order.main_id)
-			print('folow=',order.follow_id)
+			print('main=>%s follow=>%s v=%s'%(order.main_id,order.follow_id,order.value))
+
 			child.append(Step.objects.get(id=order.follow_id))
 	elif kind=='step_business':
 		for order in orderlist:
@@ -831,6 +835,7 @@ def getchild(kind,main_id):
 
 			child.append(eval('%s.objects.get(id=%s)'%(ctype,order.follow_id)))
 	
+	print('ck=>',child)
 	return child
 
 
@@ -1031,6 +1036,33 @@ def _get_delete_node(src_uid,src_type,iscopy,del_nodes):
 			# del_nodes.append((order.kind.split('_')[1],nextid))
 			_get_delete_node(child.id, child_type,False, del_nodes)
 
+def _sort_by_weight(childs):
+	result=list()
+	_m={}
+	_len=len(childs)
+
+	if _len==1:
+		return childs
+
+	elif _len>1:
+		for c in childs:
+			node_type=c.__class__.__name__.lower()
+			if node_type=='businessdata':
+				node_type='business'
+			parent_type,parent_id=_get_node_parent_info(node_type,c.id)
+			kind='%s_%s'%(parent_type,node_type)
+			print('o info=>%s %s %s'%(kind,parent_id,c.id))
+			ov=Order.objects.get(kind=kind,main_id=parent_id,follow_id=c.id).value
+			_m[str(ov)]=c
+		###
+		for key in sorted(_m.keys()):
+			result.append(_m.get(str(key)))
+
+		return result
+
+	else:
+		return []
+
 def _build_node(kind,src_uid,target_uid,move_type,user,build_nodes):
 	target_type=kind.split('_')[0]
 	target_type_upper=target_type[0].upper()+target_type[1:]
@@ -1103,6 +1135,10 @@ def _build_node(kind,src_uid,target_uid,move_type,user,build_nodes):
 
 	##子节点存在情况
 	childs=getchild('',src_uid)
+	childs=_sort_by_weight(childs)
+	print('cha=>',childs)
+
+
 	if len(childs)>0:
 		print('==构建新节点下子节点数据')
 	for child in childs:
@@ -1409,7 +1445,7 @@ def _get_node_parent_info(node_type,node_id):
 		return _get_case_parent_info(node_id)
 	else:
 		o=Order.objects.get(Q(follow_id=node_id)&Q(kind__contains='_%s'%node_type))
-		return (o.value.split('_')[0],o.main_id)
+		return (o.kind.split('_')[0],o.main_id)
 
 
 

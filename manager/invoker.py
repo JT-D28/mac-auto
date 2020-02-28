@@ -142,7 +142,8 @@ def gettaskresult(taskid):
 
 	caseids=list(set([ r.case.id for r in list(res)]))
 	cases=[Case.objects.get(id=caseid) for caseid in caseids]
-
+	report_url='http://%s/static/report_%s.html'%(configs.ME2_URL,taskid)
+	detail['local_report_address']=report_url
 	detail['planname']=planname
 	detail['planid']=planid
 	detail['taskid']=taskid
@@ -595,6 +596,9 @@ def runplan(callername,taskid,planid,is_verify,kind=None):
 		##产生内置属性
 
 		_save_builtin_property(taskid,username)
+
+		##生成本地报告
+		MainSender.gen_report(taskid,MainSender.gethtmlcontent(taskid,''))
 		##发送报告
 		config_id=plan.mail_config_id
 		if config_id:
@@ -2161,8 +2165,7 @@ class MainSender:
 			server.sendmail(sender_name,list(to_receive.split(',')),msg.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
 			server.quit()  # 关闭连接
 
-			##本地报告
-			cls._gen_report(taskid,htmlcontent)
+
 
 			
 		
@@ -2177,7 +2180,7 @@ class MainSender:
 		return cls._getdescrpition(mail_config.to_receive,ret,error)
 
 	@classmethod
-	def _gen_report(cls,taskid,htmlcontent):
+	def gen_report(cls,taskid,htmlcontent):
 		print('==本地缓存测试报告')
 		with open('./local_reports/report_%s.html'%taskid,'w') as f:
 			f.write(htmlcontent)

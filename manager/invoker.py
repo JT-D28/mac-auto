@@ -552,10 +552,12 @@ def runplan(callername,taskid,planid,is_verify,kind=None):
 	username=callername
 	try:
 		plan=Plan.objects.get(id=planid)
+		print('plan=>',plan)
 		plan.is_running=1
 		plan.save()
 		dbid=plan.db_id
 		if dbid:
+			print('plan dbid=>',dbid)
 			desp=DBCon.objects.get(id=int(dbid)).description
 			set_top_common_config(taskid, desp,src='plan')
 
@@ -1222,9 +1224,9 @@ def _compute(taskid,user,checkexpression,type=None,target=None,kind=None,parse_t
 				print('ress1=>',ress)
 
 				if ress[0] is 'success':
-					viewcache(taskid,user.name,None,"判断表达式[%s] 结果[%s]"%(old,ress[0]))
+					viewcache(taskid,user.name,None,"校验表达式[<span style='color:#009999;'>%s</span>] 结果[<span style='color:#009999;'>%s</span>]"%(old,ress[0]))
 				else:
-					viewcache(taskid,user.name,None,"判断表达式[%s] 结果[%s] 原因[%s]"%(old,ress[0],ress[1]))
+					viewcache(taskid,user.name,None,"校验表达式[<span style='color:#FF6666;'>%s</span>] 结果[<span style='color:#FF6666;'>%s</span>] 原因[校验表达式[<span style='color:#FF6666;'>%s</span>]"%(old,ress[0],ress[1]))
 
 				resultlist.append(ress)
 
@@ -1237,12 +1239,12 @@ def _compute(taskid,user,checkexpression,type=None,target=None,kind=None,parse_t
 				ress=_eval_expression(user,item,need_chain_handle=True,data=target,taskid=taskid,parse_type=parse_type,rps_header=rps_header)
 				print('ress2=>',ress)
 				if ress[0] is 'success':
-					viewcache(taskid,user.name,None,"判断表达式[%s] 结果[%s]"%(old,ress[0]))
+					viewcache(taskid,user.name,None,"校验表达式[<span style='color:#009999;'>%s</span>] 结果[<span style='color:#009999;'>%s</span>]"%(old,ress[0]))
 				else:
 					msg=ress[1]
 					if msg is False:
 						msg='表达式不成立'
-					viewcache(taskid,user.name,None,"判断表达式[%s] 结果[%s] 原因[%s]"%(old,ress[0],msg))
+					viewcache(taskid,user.name,None,"校验表达式[<span style='color:#FF6666;'>%s</span>] 结果[<span style='color:#FF6666;'>%s</span>] 原因[<span style='color:#FF6666;'>%s</span>]"%(old,ress[0],msg))
 
 
 				resultlist.append(ress)
@@ -1489,11 +1491,11 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 						res= eval("'%s'.__contains__('%s')"%(str(key).replace('\n','').replace('\r',''),str(value)))
 
 					elif op=='>=':
-						res= eval("'%s'%s'%s'"%(str(key),'>=',str(value)))
+						res= eval('''"%s"%s"%s"'''%(str(key),'>=',str(value)))
 					elif op=='<=':
-						res= eval("'%s'%s'%s'"%(str(key),'<=',str(value)))
+						res= eval('''"%s"%s"%s"'''%(str(key),'<=',str(value)))
 					else:
-						res= eval("'%s'%s'%s'"%(str(key),op,str(value)))
+						res= eval('''"%s"%s"%s"'''%(str(key),op,str(value)))
 
 					print('判断结果=>',res)
 					if res is True:

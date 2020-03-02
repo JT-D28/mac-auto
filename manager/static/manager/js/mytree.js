@@ -95,7 +95,7 @@ var tree={
 	},
 
 	_showLog:function(msg){
-		console.log(msg)
+		//console.log(msg)
 
 	},
 	_getTime:function(a=1){

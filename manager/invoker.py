@@ -1391,7 +1391,7 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 					else:
 						return('fail','表达式%s校验失败'%ourexpression)
 			elif k.startswith('response.header'):
-			
+
 				ak=k.split('.')[-1].lower()
 				hk=_get_hearder_key(ak)
 				rh=rps_header[hk]
@@ -1751,7 +1751,7 @@ def _replace_property(user,str_):
 			if v is None:
 				#raise RuntimeError('没有定义属性$%s 请先定义'%it)
 				pass
-			old=old.replace(r"${%s}"%it,v)
+			old=old.replace(r"${%s}"%it,str(v))
 
 		#print('属性替换=》',old)
 
@@ -2084,7 +2084,7 @@ class MainSender:
 			steps_iterator=case['steps']
 			for iter_index,vs in steps_iterator.items():
 				bodyhtml+='<p>第%s次迭代</p>'%iter_index
-					
+
 				bodyhtml+='<table>'
 				bodyhtml+="<tr><th>执行序号</th><th>结果</th><th>耗时(ms)</th><th>步骤名称</th><th>api</th><th>接口验证</th><th>数据验证</th><th>消息</th></tr>"
 				for step in vs:
@@ -2121,20 +2121,18 @@ class MainSender:
 			sender_pass=configs.EMAIL_HOST_PASSWORD
 			to_receive=mail_config.to_receive
 
-			rich_text = ''
-
-			# rich_text_rp=_replace_property(user,mail_config.rich_text)
-			# rich_text=''
-			# if rich_text_rp[0] is 'success':
-			# 	rich_text_rv=_replace_variable(user,rich_text_rp[1],taskid=taskid)
-			# 	if rich_text_rv[0] is 'success':
-			# 		rich_text=rich_text_rv[1]
-			# 	else:
-			# 		ret=1
-			# 		error='变量替换异常,检查变量是否已定义'
-			# else:
-			# 	ret=1
-			# 	error='属性替换异常 可用属性'
+			rich_text_rp=_replace_property(user,mail_config.rich_text)
+			rich_text=''
+			if rich_text_rp[0] is 'success':
+				rich_text_rv=_replace_variable(user,rich_text_rp[1],taskid=taskid)
+				if rich_text_rv[0] is 'success':
+					rich_text=rich_text_rv[1]
+				else:
+					ret=1
+					error='变量替换异常,检查变量是否已定义'
+			else:
+				ret=1
+				error='属性替换异常 可用属性'
 
 			smtp_host=configs.EMAIL_HOST		#"smtp.qq.com"
 			smtp_port=configs.EMAIL_PORT			#465
@@ -2167,8 +2165,8 @@ class MainSender:
 
 
 
-			
-		
+
+
 
 		except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
 			print(traceback.format_exc())

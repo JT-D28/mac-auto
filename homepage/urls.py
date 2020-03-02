@@ -36,4 +36,7 @@ urlpatterns = [
     path('initbugcount/',views.initbugcount),
     path('downloadlog/',views.downloadlog),
     path('jacocoreport/',views.jacocoreport),
+    path('queryProductSet/',views.queryProductSet),
+    path('editProductSet/',views.editProductSet),
+    path('downloadReport/',views.downloadReport)
 ]

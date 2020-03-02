@@ -375,6 +375,19 @@ function _post(url,data,success){
 
 
 
+//没有遮罩动画的
+
+function _post_nl(url,data,success){
+     layui.use(['layer'], function() {
+         var ajaxobj = $.ajax({
+             type: 'POST',
+             url: http_base + url,
+             data: data,
+             success: success,
+             dataType: 'json'
+         });
+     });
+};
 
 
 

@@ -10,239 +10,280 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layui.css' %}" media="all">
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layuimini.css' %}" media="all">
-    <script src="https://cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
-    <script type="text/javascript" src="https://assets.pyecharts.org/assets/echarts.min.js"></script>
+    <script src="{% static 'manager/js/jquery.min.js' %}"></script>
     <link rel="stylesheet" href="{% static 'homepage/layui/css/public.css' %}" media="all">
+    <script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <style>
+        .layui-card {
+            border: 1px solid #f2f2f2;
+            border-radius: 5px;
+        }
+
+        .el-dialog__body {
+            padding-top: 0;
+        }
+
+        #echarts-records :first-child {
+            width: 99% !important;
+            margin: 0 auto !important;
+        }
+
+        .layuimini-qiuck-module {
+            text-align: center;
+            margin-top: 10px
+        }
+
+        .layui-tab-title > span {
+            display: none;
+        }
+
+        .layui-tab-title li {
+            min-width: 0;
+            padding: 0;
+            font-size: 12px;
+        }
+
+        .layuimini-qiuck-module a i {
+            display: inline-block;
+            width: 100%;
+            height: 60px;
+            line-height: 60px;
+            text-align: center;
+            border-radius: 2px;
+            font-size: 30px;
+            background-color: #F8F8F8;
+            color: #333;
+            transition: all .3s;
+            -webkit-transition: all .3s;
+        }
+
+        .layuimini-qiuck-module a cite {
+            position: relative;
+            top: 2px;
+            display: block;
+            color: #666;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .welcome-module {
+            width: 100%;
+            height: 210px;
+        }
+
+        #planHistory > .el-dialog {
+            height: 94%;
+        }
+    </style>
 </head>
 
-
 <style>
-    .layui-card {
-        border: 1px solid #f2f2f2;
-        border-radius: 5px;
-    }
-    .layuimini-qiuck-module {
-        text-align: center;
-        margin-top: 10px
+    .layui-tab-title {
+        border-bottom: none;
     }
 
-    .layuimini-qiuck-module a i {
-        display: inline-block;
-        width: 100%;
-        height: 60px;
-        line-height: 60px;
-        text-align: center;
-        border-radius: 2px;
-        font-size: 30px;
-        background-color: #F8F8F8;
-        color: #333;
-        transition: all .3s;
-        -webkit-transition: all .3s;
+    /* 重置 - 去掉下划线 */
+    .layui-tab-title .layui-this {
+        background: #81ffd9;
     }
 
-    .layuimini-qiuck-module a cite {
-        position: relative;
-        top: 2px;
-        display: block;
-        color: #666;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        white-space: nowrap;
-        font-size: 14px;
+    /* 增加背景 */
+    .layui-tab-title .layui-this:after {
+        border: none;
     }
 
-    .welcome-module {
-        width: 100%;
-        height: 210px;
+    /* 重置 -this无边框 */
+    .layui-tab-title li {
+        display: list-item;
     }
 
-
-    .main_btn > p {
-        height: 40px;
+    /* 重置 -纵向显示 */
+    .demo-table-expand {
+        font-size: 0;
     }
 
+    .demo-table-expand label {
+        width: 90px;
+        color: #99a9bf;
+    }
 
+    .demo-table-expand .el-form-item {
+        margin-right: 0;
+        margin-bottom: 0;
+        width: 50%;
+    }
 </style>
+<script src="{% static 'manager/js/utils.js' %}" charset="utf-8"></script>
 
 
 <body>
-<div class="layuimini-container">
-    <div class="layuimini-main">
-        <div class="layui-row layui-col-space15">
-            <div class="layui-col-md9">
-                <div class="layui-row layui-col-space15">
-                    <div class="layui-col-md5">
-                        <div class="layui-card">
-                            <div class="layui-card-header">
-                                <form class="layui-form" action="">
-                                    <div class="layui-form-item">
-                                        <div class="layui-input-inline" style="width: 40%;margin-right: 10px">
-                                            <select id='product' name="product" lay-filter="product"
-                                                    lay-verify="required" lay-search>
-                                                <option value=''>选择项目</option>
-                                            </select>
-                                        </div>
-                                        <div class="layui-input-inline" style="width: 52%;margin-right: 0px">
-                                            <select name="plan" lay-filter="plan" lay-verify="required" lay-search>
-                                                <option value=''>选择计划</option>
-                                            </select>
-                                        </div>
+<div class="layuimini-main">
+
+    <div id='app'>
+        <div class="layui-row layui-col-space10">
+            <div class="layui-col-xs12 layui-col-md3">
+                <div class="layui-col-md12">
+                    <div class="layui-card">
+                        <div class="layui-card-header" style="padding: 0 0">
+                            <el-form :inline="true" :model="form" class="demo-form-inline">
+                                <el-select v-model="form.product" filterable placeholder="选择项目" style="width: 49%"
+                                           @change="selectProduct">
+                                    <el-option v-for="product in products" :key="product.id"
+                                               :label="product.description"
+                                               :value="product.id">
+                                    </el-option>
+                                </el-select>
+                                <el-select v-model="form.plan" filterable placeholder="选择计划" style="width: 49%">
+                                    <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
+                                               :value="plan.id">
+                                    </el-option>
+                                </el-select>
+                            </el-form>
+                        </div>
+                        <div class="layui-card-body">
+                            <div class="welcome-module">
+                                <div class="layui-row layui-col-space10 layuimini-qiuck">
+                                    <div class="layui-col-xs4 layuimini-qiuck-module">
+                                        <a @click="runplan" href="javascript:;" title="这里是验证用例，调试去用例管理！">
+                                            <i class="layui-icon layui-icon-play"></i>
+                                            <cite>验证</cite>
+                                        </a>
                                     </div>
-                                </form>
-                            </div>
-                            <div class="layui-card-body">
-                                <div class="welcome-module">
-                                    <div class="layui-row layui-col-space10 layuimini-qiuck">
-                                        <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/menu.html" data-title="菜单管理"
-                                               data-icon="fa fa-window-maximize">
-                                                <i id='runplan' class="layui-icon layui-icon-play"></i>
-                                                <cite>运行计划</cite>
-                                            </a>
-                                        </div>
-                                        <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/setting.html" data-title="系统设置"
-                                               data-icon="fa fa-gears">
-                                                <i id='setplan' class="layui-icon layui-icon-set"></i>
-                                                <cite>项目设置</cite>
-                                            </a>
-                                        </div>
-                                        <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/table.html" data-title="表格示例"
-                                               data-icon="fa fa-file-text">
-                                                <i id='editplan' class="layui-icon layui-icon-code-circle"></i>
-                                                <cite>跳转编辑</cite>
-                                            </a>
-                                        </div>
-                                        <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
-                                               data-icon="fa fa-dot-circle-o">
-                                                <i id='repoetplan' class="layui-icon layui-icon-chart-screen"></i>
-                                                <cite>最新报告</cite>
-                                            </a>
-                                        </div>
-                                        <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
-                                               data-icon="fa fa-dot-circle-o">
-                                                <i id='sendrepoet' class="layui-icon layui-icon-picture"></i>
-                                                <cite>发送报告</cite>
-                                            </a>
-                                        </div>
-                                        <div class="layui-col-xs4 layuimini-qiuck-module">
-                                            <a href="javascript:;" data-iframe-tab="page/icon.html" data-title="图标列表"
-                                               data-icon="fa fa-dot-circle-o">
-                                                <i id='process' class="layui-icon layui-icon-log"></i>
-                                                <cite>运行日志</cite>
-                                            </a>
-                                        </div>
+                                    <div class="layui-col-xs4 layuimini-qiuck-module">
+                                        <a @click="setplan" href="javascript:;">
+                                            <i class="layui-icon layui-icon-set"></i>
+                                            <cite>项目设置</cite>
+                                        </a>
+                                    </div>
+                                    <div class="layui-col-xs4 layuimini-qiuck-module">
+                                        <a @click="planHistory" href="javascript:;">
+                                            <i class="layui-icon layui-icon-survey"></i>
+                                            <cite>历史记录</cite>
+                                        </a>
+                                    </div>
+                                    <div class="layui-col-xs4 layuimini-qiuck-module">
+                                        <a @click="newRepoet" @contextmenu.prevent="downloadReport" href="javascript:;">
+                                            <i class="layui-icon layui-icon-chart-screen"></i>
+                                            <cite>最新报告</cite>
+                                        </a>
+                                    </div>
+                                    <div class="layui-col-xs4 layuimini-qiuck-module">
+                                        <a @click="setPlanNotice" href="javascript:;">
+                                            <i class="layui-icon layui-icon-notice"></i>
+                                            <cite>报告通知</cite>
+                                        </a>
+                                    </div>
+                                    <div class="layui-col-xs4 layuimini-qiuck-module">
+                                        <a @click="seeprocess" @contextmenu.prevent="downloadRunlog"
+                                           href="javascript:;">
+                                            <i class="layui-icon layui-icon-log"></i>
+                                            <cite>运行日志</cite>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="layui-col-md7">
-                        <div id="bar" style="width:600px; height:400px;"></div>
+                </div>
+            </div>
+            <div class="layui-col-xs12 layui-col-md9">
+                <div class="layui-tab-content  layui-col-md12" style="padding: 0">
+                    <div class="layui-tab-item layui-show">
+                        <div id="echarts-records"
+                             style="background-color:#f2f2f2;min-height:400px;padding: 10px;"></div>
                     </div>
                 </div>
             </div>
+            <div class="layui-col-xs12 layui-col-md12">
+                <table id="demo" lay-filter="test"></table>
+            </div>
         </div>
-    </div>
-</div>
 
-<div class="layui-collapse " lay-accordion hidden id="settings">
-    <div class="layui-colla-item">
-        <h2 class="layui-colla-title ">邮箱配置</h2>
-        <div class="layui-colla-content">
-            <form id='mailconfig' enctype=multipart/form-data method=POST class="layui-form" style="padding: 10px;">
-                <div class="layui-form-item">
-                    <label class="layui-form-label">配色方案</label>
-                    <div class="layui-input-block">
-                        <select name="color_scheme" lay-verify="">
-                            <option value="">请选择</option>
-                            <option value="blue">blue</option>
-                            <option value="red">red</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <label class="layui-form-label">收件人</label>
-                    <div class="layui-input-block">
-                        <input type="text" class="layui-input" name="to_receive" value="" title="" checked
-                               lay-filter=''>
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <label class="layui-form-label">抄送</label>
-                    <div class="layui-input-block">
-                        <input type="text" class="layui-input" name="cc_receive" value="" title="" checked
-                               lay-filter='e'>
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <label class="layui-form-label">标题</label>
-                    <div class="layui-input-block">
-                        <input type="text" class="layui-input" name="description" value='' title="" checked
-                               lay-filter=''>
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <label class="layui-form-label">富文本</label>
-                    <div class="layui-input-block">
-                        <textarea type="text" class="layui-textarea" id='rich_text' name="rich_text" value="" title=""
-                                  checked lay-filter=''></textarea>
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <label class="layui-form-label">smtp主机</label>
-                    <div class="layui-input-block">
-                        <input type="text" class="layui-input" name="smtp_host" value='' title="" checked lay-filter=''>
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <label class="layui-form-label">smtp端口</label>
-                    <div class="layui-input-block">
-                        <input type="text" class="layui-input" name="smtp_port" value='' title="" checked lay-filter=''>
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <label class="layui-form-label">发送账号</label>
-                    <div class="layui-input-block">
-                        <input type="text" class="layui-input" name="sender_name" value='' title="" checked
-                               lay-filter=''>
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <label class="layui-form-label">发送昵称</label>
-                    <div class="layui-input-block">
-                        <input type="text" class="layui-input" name="sender_nick" value='' title="" checked
-                               lay-filter=''>
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <label class="layui-form-label">发送密码</label>
-                    <div class="layui-input-block">
-                        <input type="text" class="layui-input" name="sender_pass" value='' title="" checked
-                               lay-filter=''>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-    <div class="layui-colla-item">
-        <h2 class="layui-colla-title">钉钉群token</h2>
-        <div class="layui-colla-content">
-            <div class="layui-form-item">
-                <label class="layui-form-label">token</label>
-                <div class="layui-input-block">
-                    <input type="text" name="dingdingtoken" required lay-verify="required" placeholder="请输入token"
-                           autocomplete="off" class="layui-input">
-                </div>
+
+        <el-dialog title='项目设置' :visible.sync="productSetVisible" width="70%" style="height: 100%">
+            <el-tabs :tab-position="productsetposition">
+                <el-tab-pane label="jacoco配置">
+                    <el-form :label-position="productsetposition" label-width="15%" :model="form">
+                        <el-form-item label="jenkins地址">
+                            <el-input v-model="form.productset.jenkinsurl"></el-input>
+                        </el-form-item>
+
+                        <el-form :inline="true" :model="form" class="demo-form-inline">
+                            <el-form-item label="用户名" style="width: 47%" label-width="32%">
+                                <el-input v-model="form.productset.authname"></el-input>
+                            </el-form-item>
+                            <el-form-item label="密码" style="width: 47%" label-width="32%">
+                                <el-input v-model="form.productset.authpwd"></el-input>
+                            </el-form-item>
+                        </el-form>
+                        <el-form-item label="服务名和任务名">
+                            <el-input type="textarea" v-model="form.productset.jobname" placeholder='填入内容为描述/服务名称和jenkins中对应的任务名，格式示例：
+settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></el-input>
+                        </el-form-item>
+                    </el-form>
+                    <el-button type="primary" @click="jacocoSetSave">保存</el-button>
+                    <el-button @click="productSetVisible = false">取消</el-button>
+                </el-tab-pane>
+            </el-tabs>
+        </el-dialog>
+        <el-dialog title="通知配置" :visible.sync="noticeSetVisible" width="70%" top="3vh" style="height: 100%">
+            <el-form :model="form">
+                <el-form-item label="配色方案" :label-width="form.formLabelWidth">
+                    <el-select v-model="form.reportNoticeSet.color" placeholder="请选择配色方案">
+                        <el-option label="red" value="red"></el-option>
+                        <el-option label="blue" value="blue"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-tooltip class="item" effect="dark" content="多收件人请用,分隔" placement="bottom">
+                    <el-form-item label="收件人" :label-width="form.formLabelWidth">
+                        <el-input v-model="form.reportNoticeSet.to_receive" autocomplete="off"></el-input>
+                    </el-form-item>
+                </el-tooltip>
+                <el-form-item label="标题" :label-width="form.formLabelWidth">
+                    <el-input v-model="form.reportNoticeSet.description" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-tooltip class="item" effect="dark" content="内容中如果有参数，只会在任务运行完成后替换，手动发送报告不生效" placement="bottom">
+                    <el-form-item label="邮件内容" :label-width="form.formLabelWidth">
+                        <el-input type="textarea" v-model="form.reportNoticeSet.text" autocomplete="off"></el-input>
+                    </el-form-item>
+                </el-tooltip>
+                <el-form-item label="钉钉机器人token" :label-width="form.formLabelWidth" style="margin-top: 3rem">
+                    <el-input v-model="form.reportNoticeSet.dingdingtoken" autocomplete="off"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button type="success" round @click="sendRepoet">发送最新报告</el-button>
+                <el-button type="primary" @click="savenoticeSet(0)">保 存</el-button>
+                <el-button @click="noticeSetVisible = false">关 闭</el-button>
             </div>
-        </div>
-    </div>
-    <div class="layui-colla-item">
-        <h2 class="layui-colla-title">jenkins-jacoco配置</h2>
-        <div class="layui-colla-content">tode</div>
+        </el-dialog>
+        <el-dialog id="planHistory" title='历史记录' :visible.sync="planHistoryVisible" width="90%" top="3vh"
+                   style="height: 100%">
+            <el-tabs :tab-position="productsetposition" style="min-height: 320px;">
+                <el-tab-pane label="历史缺陷">
+                    <el-date-picker
+                            v-model="historytime"
+                            type="daterange"
+                            align="right"
+                            @change="queryOldBug('omit')"
+                            unlink-panels
+                            range-separator=" - "
+                            value-format="yyyy-MM-dd"
+                            start-placeholder="开始日期"
+                            end-placeholder="结束日期"
+                            :picker-options="pickerOptions">
+                    </el-date-picker>
+                    <table id="oldbugtable" lay-size='sm' lay-filter="oldbugtable" style="height: 100%"></table>
+                </el-tab-pane>
+            </el-tabs>
+        </el-dialog>
     </div>
 </div>
 
@@ -255,90 +296,125 @@
     </div>
 </div>
 
-
 <script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
-<script src="{% static 'manager/js/utils.js' %}" charset="utf-8"></script>
 <script src="{% static 'homepage/layui/lay-config.js' %}" charset="utf-8"></script>
+
 <script>
-    layui.use(['common', 'form', 'jquery', 'layer', 'element', 'layedit'], function () {
-        var common = layui.common;
-        var element = layui.element;
-        var $ = layui.jquery;
-        var form = layui.form;
-        var layedit = layui.layedit;
-        var le = layedit.build('rich_text'); //建立编辑器
-        var layer = layui.layer;
-        var username = $("#username").text()
-        common.ajax('/homepage/queryproduct/', 'post', 'json', {},
-            function (data) {
-                console.log('项目名称=>' + data)
-                data = JSON.parse(data)
-                data = data.data
-                console.log(data)
-                for (var index = 0; index < data.length; index++) {
-                    $("[name='product']").append("<option value='" + data[index]['id'] + "'>" + data[index]['description'] + "</option>")
-                }
-                layui.form.render('select')
-            }
-        );
-
-
-        form.on('select(product)', function (data) {
-            var id = $("[name='product']").val()
-            common.ajax('/homepage/queryplan/', 'post', 'json', {
-                    'id': id
-                }, function (data) {
-                    data = JSON.parse(data)
-                    if (data.code != '0') {
-                        $("[name='plan']").empty()
-                        $("[name='plan']").append("<option value=''>选择计划</option>")
-                        layui.form.render('select')
-                    } else {
-                        data = data.data
-                        $("[name='plan']").empty()
-                        if (data.length != 0) {
-                            for (var index = 0; index < data.length; index++) {
-                                $("[name='plan']").append("<option value='" + data[index]['id'] + "'>" + data[index]['name'] + "</option>")
-                            }
-                        } else {
-                            $("[name='plan']").append("<option value=''>该项目下没有计划</option>")
+    var app = new Vue({
+        el: '#app',
+        delimiters: ['${', '}'],
+        data() {
+            var vue = this;
+            return {
+                historytime: '',
+                timeDefaultShow: '',
+                pickerOptions: {
+                    shortcuts: [{
+                        text: '最近3天',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 3);
+                            picker.$emit('pick', [start, end]);
                         }
-                        chart = echarts.init(document.getElementById('bar'), 'white', {renderer: 'canvas'});
-                        fetchData(chart)
-                        layui.form.render('select')
+                    }, {
+                        text: '最近一周',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }, {
+                        text: '最近一个月',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }, {
+                        text: '最近三个月',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }],
+                    disabledDate(time) {
+                        return time.getTime() > Date.now();
+                    }, onPick(time) {
+                        if (time.minDate && !time.maxDate) {
+                            vue.timeOptionRange = time.minDate;
+                        }
+                        if (time.maxDate) {
+                            vue.timeOptionRange = null;
+                        }
                     }
-                }
-            )
-        });
-
-        form.on('select(plan)', function (data) {
-            planid = $("[name='plan']").val().substr(5);
-            fetchData(chart)
-        });
-
-        function fetchData() {  //获取图表
-            planid = $("[name='plan']").val().substr(5)
-            if (planid != '') {
-                common.ajax('/homepage/reportchart/', 'post', 'json', {
-                    planid: $("[name='plan']").val().substr(5)
-                }, function (result) {
-                    chart.setOption(result.data);
-                })
+                },
+                oldBugData: [{
+                    路径: '',
+                    接口: '',
+                    测试点: '',
+                    参数信息: '',
+                    失败原因: '',
+                    任务id: '',
+                }],
+                mailcolors: [{id: 1, color: 'blue'}, {id: 2, color: 'red'}],
+                products: [],
+                plans: [],
+                runVisible: false,
+                productSetVisible: false,
+                productsetposition: 'left',
+                noticeSetVisible: false,
+                planHistoryVisible: false,
+                form: {
+                    formLabelWidth: '120px',
+                    product: '',
+                    plan: '',
+                    mailcolor: '',
+                    productset: {
+                        jenkinsurl: '',
+                        authname: '',
+                        authpwd: '',
+                        jobname: '',
+                    },
+                    reportNoticeSet: {
+                        color: '',
+                        to_receive: '',
+                        description: '',
+                        text: '',
+                        dingdingtoken: ''
+                    }
+                },
             }
-        }
-
-
-        $('#runplan').click(function () {
-            var planid = $("[name='plan']").val().substr(5)
-            if (planid == '') {
-                layer.msg("请选择项目和计划！")
-            } else {
-                common.ajax('/manager/runplan', 'post', 'json', {ids: planid},
-                    function (data) {
+        },
+        methods: {
+            getproduct() {
+                var that = this;
+                _post_nl('/homepage/queryproduct/', {}, function (data) {
+                    var data = JSON.parse(data);
+                    that.products = data.data
+                })
+            },
+            selectProduct() {
+                var that = this;
+                this.form.plan = '';
+                _post_nl('/homepage/queryplan/', {id: this.form.product}, function (data) {
+                    data = JSON.parse(data)
+                    that.plans = data.data
+                    that.form.plan = that.plans[0] != null ? that.plans[0].id : ''
+                })
+            },
+            runplan() {
+                var that = this;
+                planid = that.form.plan.substr(5);
+                if (planid != '') {
+                    _post_nl('/manager/runplan', {ids: planid, is_verify: '1'}, function (data) {
                         data = JSON.parse(data)
                         if (data.code == 0) {
-                            var mes = "你的任务正在运行中..."
-                            layer.msg(mes, {
+                            layer.msg(data.msg, {
                                 time: 30000, //20s后自动关闭
                                 shade: 0.2,
                                 shadeClose: true,
@@ -348,196 +424,586 @@
                                     layer.close(index)
                                 }
                             });
+                        } else layer.msg(data.msg)
+                    })
+                } else {
+                    this.$message({
+                        message: '请选择项目和计划',
+                        type: 'error', center: true
+                    });
+                }
+            },
+            setplan() {
+                var that = this;
+                var productid = that.form.product;
+                if (productid == '') {
+                    this.$message({
+                        message: '请选择项目',
+                        type: 'error', center: true
+                    });
+                } else {
+                    _post_nl('/homepage/queryProductSet/', {productid: productid}, function (data) {
+                        if (data.code == 0) {
+                            that.form.productset.jenkinsurl = data.data.jenkinsurl;
+                            that.form.productset.authname = data.data.authname
+                            that.form.productset.authpwd = data.data.authpwd
+                            that.form.productset.jobname = data.data.jobname
+                            that.productSetVisible = true;
+                        } else {
+                            layer.msg(data.msg)
                         }
                     })
-            }
-        })
-
-
-        $('#editplan').click(function () {
-            var planid = $("[name='plan']").val().substr(5)
-            if (planid == '') {
-                layer.msg("请选择项目和计划！")
-            } else {
-                window.top.document.getElementById("tree").click()
-            }
-        });//没啥用
-
-
-        $('#repoetplan').click(function () {
-            var planid = $("[name='plan']").val().substr(5)
-            if (planid == '') {
-                layer.msg("请选择项目和计划！")
-            } else {
-                common.ajax('/homepage/querytaskid/', 'post', 'json', {
-                    'planid': planid
-                }, function (data) {
-                    data = JSON.parse(data)
-                    taskid = data.data
-                    if (data.code != 0) {
-                        layer.msg(data.msg);
-                    } else {
-                        var resulturl = '/manager/querytaskdetail/?taskid=' + taskid
-                        //window.open(resulturl)
-                        layer.open({
-                            type: 2,
-                            title: false,
-                            shade: [0],
-                            area: ['90%', '90%'],
-                            anim: 2,
-                            shadeClose: true,
-                            content: [resulturl, 'yes'], //iframe的url，no代表不显示滚动条
-                        });
-                    }
-                })
-            }
-        })
-
-
-        $("#process").click(function () {
-            var planid = $("[name='plan']").val().substr(5)
-            if (planid == '') {
-                layer.msg("请选择项目和计划！")
-            } else {
-                common.ajax('/homepage/querytaskid/', 'post', 'json', {
-                    'planid': planid
-                }, function (data) {
-                    data = JSON.parse(data)
-                    taskid = data.data
-                    if (data.code != 0) {
-                        layer.msg(data.msg);
-                    } else {
-                        layer.open({
-                            type: 1,
-                            id: "log-process",
-                            title: false,
-                            shade: [0],
-                            area: ['90%', '90%'],
-                            anim: 2,
-                            shadeClose: true,
-                            content: $("#seeprocess"),
-                            success: function () {
-                                showlog(taskid)
-                            }
-                        });
-                    }
-                })
-            }
-        })
-
-        function showlog(taskid) {
-            $.ajax({
-                url: '/homepage/process/',
-                type: 'POST',
-                dataType: 'json',
-                data: {'taskid': taskid},
-                success: function (res) {
-                    res = JSON.parse(res)
-                    var log_text = res.data
-                    var is_done = res.msg
-                    $("#log_text").html(log_text);
-                    var ta = document.getElementById('log-process');
-                    ta.scrollTop = ta.scrollHeight;//定位到最后
-                    if (is_done != 'yes') {
-                        window.setTimeout(showlog(taskid), 500);
-                    }
-                    return false;
                 }
-            });
-        }
-
-
-        $("#setplan").click(function () {
-            var planid = $("[name='plan']").val().substr(5)
-            if (planid == '') {
-                layer.msg("请选择项目和计划！")
-            } else {
-                layer.open({
-                    title: '报告通知配置',
-                    type: 1,
-                    area: ['800px', '450px'],
-                    content: $('#settings'),
-                    btn: ['确定', '取消'],
-                    success: function () {
-                        $("#mailconfig")[0].reset()
-                        layui.form.render()
-                        common.ajax('/manager/queryonemailconfig/', 'post', 'json', {id: planid}, function (ee) {
-                            op = ''
-                            if (typeof (ee) != 'string') {
-                                if (ee.code == 0) {
-                                    //赋值form
-                                    op = '编辑'
-                                    console.log(ee.data)
-                                    $("[name='color_scheme']").val(ee.data['color_scheme'])
-                                    layui.form.render('select');
-                                    $("[name='description']").val(ee.data['description'])
-                                    $("[name='rich_text']").val(ee.data['rich_text'])
-                                    $("[name='to_receive']").val(ee.data['to_receive'])
-                                    $("[name='cc_receive']").val(ee.data['cc_receive'])
-                                    $("[name='sender_name']").val(ee.data['sender_name'])
-                                    $("[name='sender_nick']").val(ee.data['sender_nick'])
-                                    $("[name='sender_pass']").val(ee.data['sender_pass'])
-                                    $("[name='smtp_host']").val(ee.data['smtp_host'])
-                                    $("[name='smtp_port']").val(ee.data['smtp_port'])
-                                    $("[name='dingdingtoken']").val(ee.data['dingdingtoken'])
-                                }
-                            } else {
-                                ee = JSON.parse(ee)
-                                if (ee.code == 1) {
-                                    op = '新建'
-                                    console.log('还未关联邮件 新建一个')
-                                }
-                            }
-                        })
-                    },
-                    yes: function (index, layero) {
-                        success = function (data) {
-                            data = JSON.parse(data)
-                            if (data.code == 0) {
-                                layer.close(index)
-                                layer.alert(data.msg, {icon: 1, time: 1500})
-                            } else {
-                                layer.alert(data.msg, {icon: 2, time: 2000})
-                            }
+            },
+            jacocoSetSave() {
+                var that = this;
+                var jenkinsurl = that.form.productset.jenkinsurl;
+                var authname = that.form.productset.authname;
+                var authpwd = that.form.productset.authpwd;
+                var jobname = that.form.productset.jobname;
+                var productid = that.form.product;
+                _post_nl('/homepage/editProductSet/', {
+                    productid: productid, jenkinsurl: jenkinsurl,
+                    authname: authname, authpwd: authpwd, jobname: jobname
+                }, function (data) {
+                    if (data.code == 0) {
+                        layer.msg(data.msg);
+                        that.productSetVisible = false;
+                    } else lay.msg(data.msg)
+                })
+            },
+            planHistory() {
+                var that = this;
+                planid = that.form.plan.substr(5);
+                if (planid != '') {
+                    const start = new Date().toJSON().substr(0, 10);
+                    const end = new Date().toJSON().substr(0, 10);
+                    this.historytime = [start, end];
+                    this.queryOldBug('omit');
+                    this.planHistoryVisible = true
+                } else this.$message({
+                    message: '请选择项目',
+                    type: 'error', center: true
+                });
+            },
+            newRepoet() {
+                var that = this;
+                planid = that.form.plan.substr(5)
+                if (planid == '') {
+                    this.$message({
+                        message: '请选择项目和计划',
+                        type: 'error', center: true
+                    });
+                } else {
+                    _post_nl('/homepage/querytaskid/', {'planid': planid}, function (data) {
+                        data = JSON.parse(data)
+                        taskid = data.data
+                        if (data.code != 0) {
+                            layer.msg(data.msg);
+                        } else {
+                            var resulturl = '/manager/querytaskdetail/?taskid=' + taskid
+                            //window.open(resulturl)
+                            layer.open({
+                                type: 2,
+                                title: false,
+                                shade: [0],
+                                area: ['90%', '90%'],
+                                anim: 2,
+                                shadeClose: true,
+                                content: [resulturl, 'yes'], //iframe的url，no代表不显示滚动条
+                            });
                         }
-                        _post("/manager/editmailconfig/", {
-                            id: planid,
-                            color_scheme: $("[name='color_scheme']").val(),
-                            description: $("[name='description']").val(),
-                            // rich_text:$("[name='rich_text']").val(),
-                            rich_text: layedit.getContent(le),
-                            to_receive: $("[name='to_receive']").val(),
-                            cc_receive: $("[name='cc_receive']").val(),
-                            sender_name: $("[name='sender_name']").val(),
-                            sender_nick: $("[name='sender_nick']").val(),
-                            sender_pass: $("[name='sender_pass']").val(),
-                            smtp_port: $("[name='smtp_port']").val(),
-                            smtp_host: $("[name='smtp_host']").val(),
-                            dingdingtoken: $("[name='dingdingtoken']").val(),
-                            // is_send_mail:$("[name=apply]").attr('checked')==false?'close':'open',
-                        }, success)
+                    })
+                }
+            },
+            setPlanNotice() {
+                var that = this;
+                var planid = that.form.plan.substr(5);
+                if (planid == '') {
+                    this.$message({
+                        message: '请选择计划',
+                        type: 'error', center: true
+                    });
+                } else {
+                    _post_nl('/manager/queryonemailconfig/', {id: planid}, function (data) {
+                        if (data.code == 0) {
+                            that.form.reportNoticeSet.color = data.data.color_scheme;
+                            that.form.reportNoticeSet.to_receive = data.data.to_receive
+                            that.form.reportNoticeSet.description = data.data.description
+                            that.form.reportNoticeSet.text = data.data.rich_text
+                            that.noticeSetVisible = true;
+                        } else {
+                            layer.msg(data.msg)
+                        }
+                    })
+                }
+            },
+            savenoticeSet(ss) {
+                var that = this;
+                var planid = that.form.plan.substr(5);
+                _post_nl("/manager/editmailconfig/", {
+                    id: planid,
+                    color_scheme: that.form.reportNoticeSet.color,
+                    description: that.form.reportNoticeSet.description,
+                    to_receive: that.form.reportNoticeSet.to_receive,
+                    rich_text: that.form.reportNoticeSet.text,
+                }, function (data) {
+                    data = JSON.parse(data);
+                    if (data.code == 0 && ss == 0) {
+                        that.noticeSetVisible = false;
+                        layer.msg(data.msg)
+                    } else if (data.code == 0 && ss == 1) {
+                        return
+                    } else layer.alert(data.msg, {icon: 2, time: 2000})
+                })
+            },
+            sendRepoet() {
+                var that = this;
+                that.savenoticeSet(1);
+                planid = that.form.plan.substr(5);
+                _post_nl('/homepage/sendreport/', {'planid': planid}, function (data) {
+                    data = JSON.parse(data)
+                    if (data.code == 0) {
+                        layer.alert(data.msg, {icon: 1, time: 1500}, area = ['500px', '300px'])
+                        that.noticeSetVisible = false;
+                    } else {
+                        layer.alert(data.msg, {icon: 2, time: 1500})
+                    }
+                })
+            },
+            seeprocess() {
+                var that = this;
+                planid = that.form.plan.substr(5);
+                if (planid == '') {
+                    this.$message({
+                        message: '请选择项目和计划',
+                        type: 'error', center: true
+                    });
+                } else {
+                    _post_nl('/homepage/querytaskid/', {planid: planid}, function (data) {
+                        data = JSON.parse(data)
+                        taskid = data.data
+                        if (data.code != 0) {
+                            layer.msg(data.msg);
+                        } else {
+                            layer.open({
+                                type: 1,
+                                id: "log-process",
+                                title: false,
+                                shade: [0],
+                                area: ['90%', '90%'],
+                                anim: 2,
+                                shadeClose: true,
+                                content: $("#seeprocess"),
+                                success: function () {
+                                    that.showlog(taskid)
+                                }
+                            });
+                        }
+                    })
+                }
+            },
+            showlog(taskid) {
+                $.ajax({
+                    url: '/homepage/process/',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {'taskid': taskid},
+                    success: function (res) {
+                        res = JSON.parse(res)
+                        var log_text = res.data
+                        var is_done = res.msg
+                        $("#log_text").html(log_text);
+                        var ta = document.getElementById('log-process');
+                        ta.scrollTop = ta.scrollHeight;//定位到最后
+                        if (is_done != 'yes') {
+                            window.setTimeout(showlog(taskid), 500);
+                        }
+                        return false;
                     }
                 });
-            }
-        })
-
-
-        $("#sendrepoet").click(function () {
-            common.ajax('/homepage/sendreport/', 'post', 'json', {'planid': $("[name='plan']").val().substr(5)}, function (date) {
-                date = JSON.parse(data)
-                if (data.code == 0) {
-                    layer.alert("发送成功！", {icon: 1, time: 1500})
+            },
+            report(data, code) {
+                x = [];
+                success = [];
+                total = [];
+                fail = [];
+                skip = [];
+                error = [];
+                success_rate = []
+                hundred = [];
+                taskids = [];
+                if (code == 0) {
+                    title = data[0][1]
+                    for (let i = data.length - 1; i >= 0; i--) {
+                        x.push(data[i][7])
+                        success.push(data[i][2])
+                        total.push(data[i][5])
+                        fail.push(data[i][3])
+                        skip.push(data[i][4])
+                        error.push(data[i][9])
+                        //mysql  success_rate.push(data[i][8].substr(0, 5))
+                        success_rate.push(data[i][8])
+                        taskids.push(data[i][6])
+                        hundred.push(100)
+                    }
+                    totalmax = total.map(function (e) {
+                        return Math.max.apply(null, total) + 2
+                    });
                 } else {
-                    layer.alert(data.msg, {icon: 2, time: 2000})
+                    title = data
+                    totalmax = 1
                 }
-            })
-        })
+                var optionRecords = {
+                    title: {
+                        text: title,
+                    },
+                    animation: false,
+                    legend: {
+                        left: 'center',
+                        top: '2%',
+                        data: ['成功率', '成功数', '失败数', '错误数', '跳过数',]
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross'
+                        },
+                        backgroundColor: 'rgba(245, 245, 245, 0.8)',
+                        borderWidth: 1,
+                        borderColor: '#ccc',
+                        padding: 10,
+                        textStyle: {
+                            color: '#000'
+                        },
+                        width: '100px',
+                        position: function (pos, params, el, elRect, size) {
+                            var obj = {top: 10};
+                            obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30;
+                            return obj;
+                        },
+                        extraCssText: 'width: 100px'
+                    },
+                    axisPointer: {
+                        link: {xAxisIndex: 'all'},
+                        label: {
+                            backgroundColor: '#777'
+                        }
+                    },
+                    toolbox: {
+                        feature: {
+                            dataZoom: {
+                                yAxisIndex: false
+                            },
+                            brush: {
+                                type: ['lineX', 'clear']
+                            }
+                        }
+                    },
+                    brush: {
+                        xAxisIndex: 'all',
+                        brushLink: 'all',
+                        outOfBrush: {
+                            colorAlpha: 0.1
+                        }
+                    },
+                    grid: [
+                        {
+                            left: '5%',
+                            right: '5%',
+                            height: '48%'
+                        },
+                        {
+                            left: '5%',
+                            right: '5%',
+                            bottom: '3%',
+                            height: '20%'
+                        }
+                    ],
+                    xAxis: [
+                        {
+                            type: 'category',
+                            data: x,
+                            scale: true,
+                            boundaryGap: false,
+                            axisLine: {onZero: false},
+                            splitLine: {show: false},
+                            splitNumber: 20,
+                            min: 'dataMin',
+                            max: 'dataMax',
+                            axisPointer: {
+                                z: 100
+                            }
+                        },
+                        {
+                            type: 'category',
+                            gridIndex: 1,
+                            data: x,
+                            scale: true,
+                            boundaryGap: false,
+                            axisLine: {onZero: false},
+                            axisTick: {show: false},
+                            splitLine: {show: false},
+                            axisLabel: {show: false},
+                            splitNumber: 20,
+                            min: 'dataMin',
+                            max: 'dataMax',
+                            axisPointer: {
+                                label: {
+                                    show: false
+                                }
+                            },
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            scale: true,
+                            name: '用例数',
+                            splitArea: {
+                                show: true
+                            },
+                            min: 0,
+                            max: totalmax[0]
+                        },
+                        {
+                            scale: true,
+                            name: '成功率',
+                            gridIndex: 1,
+                            splitNumber: 2,
+                            axisLabel: {show: true, formatter: '{value}%'},
+                            axisLine: {show: true},
+                            axisTick: {show: false},
+                            splitLine: {show: false},
+                            min: 0,
+                            max: 100,
+                            axisPointer: {
+                                label: {
+                                    show: false
+                                }
+                            },
+                        }
+                    ],
 
-
+                    series: [
+                        {
+                            name: ' 总数 ',
+                            axisPointer: {show: false},
+                            type: 'bar',
+                            itemStyle: {
+                                normal: {
+                                    color: 'rgba(0,0,0,0)',
+                                }
+                            },
+                            data: totalmax
+                        },
+                        {
+                            name: '成功数',
+                            type: 'line',
+                            areaStyle: {},
+                            stack: '总量',
+                            data: success,
+                            smooth: true,
+                            lineStyle: {
+                                normal: {opacity: 0.5}
+                            }
+                        },
+                        {
+                            name: '失败数',
+                            stack: '总量',
+                            areaStyle: {},
+                            type: 'line',
+                            data: fail,
+                            smooth: true,
+                            lineStyle: {
+                                normal: {opacity: 0.5}
+                            }
+                        },
+                        {
+                            name: '跳过数',
+                            stack: '总量',
+                            areaStyle: {},
+                            type: 'line',
+                            data: skip,
+                            smooth: true,
+                            lineStyle: {
+                                normal: {opacity: 0.5}
+                            }
+                        },
+                        {
+                            name: '错误数',
+                            stack: '总量',
+                            areaStyle: {},
+                            type: 'line',
+                            data: error,
+                            smooth: true,
+                            lineStyle: {
+                                normal: {opacity: 0.5}
+                            }
+                        },
+                        {
+                            type: 'bar',
+                            axisPointer: {show: false},
+                            xAxisIndex: 1,
+                            itemStyle: {
+                                normal: {
+                                    color: 'rgba(201,155,237,0)',
+                                }
+                            },
+                            yAxisIndex: 1,
+                            data: hundred
+                        },
+                        {
+                            name: '成功率',
+                            type: 'line',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'top',
+                                    color: 'black'
+                                }
+                            },
+                            barWidth: 10,
+                            areaStyle: {},
+                            xAxisIndex: 1,
+                            yAxisIndex: 1,
+                            data: success_rate
+                        },
+                    ]
+                };
+                $("#echarts-records").css('background-color', 'white')
+                return optionRecords;
+            },
+            queryOldBug(taskid) {
+                var that = this;
+                layui.use('table', function () {
+                    layui.table.render({
+                        elem: '#oldbugtable',
+                        method: 'POST',
+                        page: true,
+                        limit: 10,
+                        height:'full-170',
+                        url: '/homepage/buglog/', //数据接口,
+                        where: {
+                            time: that.historytime[0] + ';' + that.historytime[1],
+                            planid: that.form.plan,
+                            taskid: taskid
+                        },
+                        cols: [[ //表头
+                            {field: '路径', title: '用例-步骤', width: "25%", align: "left"}
+                            , {field: '接口', title: '接口', width: "40%", align: "left"}
+                            , {field: '测试点', title: '测试点', width: "13%", align: "left"}
+                            , {field: '参数信息', title: '参数信息', width: "15%", align: "left"}
+                            , {field: '失败原因', title: '失败原因', width: "15%", align: "left"}
+                            , {field: '任务id', title: '任务id', width: "25%", align: "left"}
+                        ]],
+                        text: {
+                            none: '该期间无缺陷记录！'
+                        }
+                    });
+                })
+            },
+            downloadReport() {
+                var that = this;
+                planid = that.form.plan.substr(5);
+                if (planid == '') {
+                    this.$message({
+                        message: '请选择项目和计划',
+                        type: 'error', center: true
+                    });
+                } else {
+                    _post_nl('/homepage/querytaskid/', {planid: planid}, function (data) {
+                        var res = JSON.parse(data);
+                        if (res.code == 0) {
+                            const req = new XMLHttpRequest();
+                            req.open('POST', '/homepage/downloadReport/', true);
+                            req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                            req.responseType = 'blob';
+                            req.send("taskid=" + res.data); //输入参数
+                            req.onload = function () {
+                                console.log(this.response.size)
+                                if (this.status === 200 & this.response.size > 20) {
+                                    const data = req.response;
+                                    const blob = new Blob([data]);
+                                    var a = document.createElement('a');
+                                    a.download = res.data + '.html';
+                                    a.href = window.URL.createObjectURL(blob);
+                                    a.click();
+                                } else {
+                                    layer.msg("没有找到报告记录")
+                                }
+                            };
+                        } else layer.msg(res.msg)
+                    })
+                }
+            },
+            downloadRunlog() {
+                var that = this;
+                _post_nl('/homepage/querytaskid/', {planid: that.form.plan.substr(5)}, function (data) {
+                    var res = JSON.parse(data);
+                    if (res.code == 0) {
+                        const req = new XMLHttpRequest();
+                        req.open('POST', '/homepage/downloadlog/', true);
+                        req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                        req.responseType = 'blob';
+                        req.send("taskid=" + res.data); //输入参数
+                        req.onload = function () {
+                            console.log(this.response.size)
+                            if (this.status === 200 & this.response.size > 20) {
+                                const data = req.response;
+                                const blob = new Blob([data]);
+                                var a = document.createElement('a');
+                                a.download = res.data + '.html';
+                                a.href = window.URL.createObjectURL(blob);
+                                a.click();
+                            } else {
+                                layer.msg("没有找到运行日志")
+                            }
+                        };
+                    } else layer.msg(res.msg)
+                })
+            },
+        },
+        created: function () {
+            this.getproduct();
+            layui.use(['echarts'], function () {
+                echartsRecords = echarts.init(document.getElementById('echarts-records'), 'walden');
+            });
+        },
+        watch: {
+            'form.plan': function (planid) {
+                var that = this;
+                if (planid == '') {
+                    return
+                } else {
+                    layui.use(['echarts'], function () {
+                        var echarts = layui.echarts;
+                        _post_nl('/homepage/reportchart/', {planid: planid.substr(5)}, function (result) {
+                            result = JSON.parse(result);
+                            config = that.report(result.data, result.code);
+                            echartsRecords.setOption(config);
+                            echartsRecords.on('click', function (params) {
+                                if (success_rate[params.dataIndex] != 100) {
+                                    taskid = taskids[params.dataIndex];
+                                    that.queryOldBug(taskid);
+                                    that.planHistoryVisible = true;
+                                } else {
+                                    that.$message({
+                                        message: '该次执行全部通过',
+                                        type: 'success', center: true
+                                    });
+                                }
+                            });
+                        })
+                    })
+                }
+            },
+        },
     });
+
+    // echarts 窗口缩放自适应
+    window.onresize = function () {
+        echartsRecords.resize();
+    }
 </script>
-
-
 </body>
 </html>
-

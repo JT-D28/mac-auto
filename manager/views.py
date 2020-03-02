@@ -1634,6 +1634,7 @@ def editmailconfig(request):
 
 		to_receive = request.POST.get('to_receive')
 		description = request.POST.get('description')
+		rich_text = request.POST.get('rich_text')
 		dingdingtoken = request.POST.get('dingdingtoken')
 		if mail_config_id:
 			config=MailConfig.objects.get(id=mail_config_id)
@@ -1641,6 +1642,7 @@ def editmailconfig(request):
 			config.color_scheme=request.POST.get('color_scheme')
 			config.description=description
 			config.dingdingtoken = dingdingtoken
+			config.rich_text=rich_text
 			config.save()
 			msg='编辑成功'
 		else:
@@ -1649,6 +1651,7 @@ def editmailconfig(request):
 			config.color_scheme = request.POST.get('color_scheme')
 			config.description = description
 			config.dingdingtoken = dingdingtoken
+			config.rich_text=rich_text
 			author = md.User.objects.get(name=request.session.get('username'))
 			config.author = author
 			config.save()

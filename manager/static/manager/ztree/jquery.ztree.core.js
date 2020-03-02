@@ -1207,7 +1207,7 @@
       expandCollapseNode: function (setting, node, expandFlag, animateFlag, callback) {
 
        // alert(1)
-        console.log('expand node')
+       // console.log('expand node')
         var root = data.getRoot(setting);
         var tmpCb, _callback;
         if (!node) {
@@ -1381,16 +1381,13 @@
        }
 
        //
-      f=node.tId+consts.id.SWITCH
-      console.log("f=>"+f)
-      $("#"+f).click(function(){
-        console.log('hh click;')
-        node_a_id=$(this).attr('id').replace('switch','a')
-        //$('#'+node_a_id).click();
-      });
-
-
-      
+      // f=node.tId+consts.id.SWITCH
+      // btn=$('#'+f)
+      // if(btn){
+      //   btn.click(function(){
+      //     console.log('111')
+      //   });
+      // }
 
 
       },
@@ -1894,7 +1891,7 @@
         },
         expandNode: function (node, expandFlag, sonSign, focus, callbackFlag) {
 
-          console.log('expand node')
+          //console.log('expand node')
           if (!node || !data.nodeIsParent(setting, node)) return null;
           if (expandFlag !== true && expandFlag !== false) {
             expandFlag = !node.open;

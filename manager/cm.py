@@ -835,7 +835,7 @@ def getchild(kind,main_id):
 
 			child.append(eval('%s.objects.get(id=%s)'%(ctype,order.follow_id)))
 	
-	print('ck=>',child)
+	#print('ck=>',child)
 	return child
 
 
@@ -1055,7 +1055,11 @@ def _sort_by_weight(childs):
 			ov=Order.objects.get(kind=kind,main_id=parent_id,follow_id=c.id).value
 			_m[str(ov)]=c
 		###
-		for key in sorted(_m.keys()):
+		akeys=[int(k.replace('1.','')) for k in _m.keys()]
+		bkeys=sorted(akeys)
+		ckeys=['1.'+str(k) for k in bkeys]
+	
+		for key in ckeys:
 			result.append(_m.get(str(key)))
 
 		return result

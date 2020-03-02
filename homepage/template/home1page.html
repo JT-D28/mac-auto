@@ -235,7 +235,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     <el-button type="primary" @click="jacocoSetSave">保存</el-button>
                     <el-button @click="productSetVisible = false">取消</el-button>
                 </el-tab-pane>
-                <el-tab-pane label='强制停止'>
+                <el-tab-pane label='解除运行状态'>
                     <el-form :inline="true" :model="form" class="demo-form-inline">
                         <el-select v-model="form.forceStopPlans" filterable placeholder="选择计划" style="width: 49%">
                             <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
@@ -345,8 +345,8 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
             return {
                 noticeSetVisible: false,
                 runningState: '',
-                debug_url: '1',
-                is_verify_url: '2',
+                debug_url: '',
+                is_verify_url: '',
                 historytime: '',
                 timeDefaultShow: '',
                 pickerOptions: {

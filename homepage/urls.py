@@ -38,5 +38,8 @@ urlpatterns = [
     path('jacocoreport/',views.jacocoreport),
     path('queryProductSet/',views.queryProductSet),
     path('editProductSet/',views.editProductSet),
-    path('downloadReport/',views.downloadReport)
+    path('downloadReport/',views.downloadReport),
+    path('queryPlanState/',views.queryPlanState),
+    path('planforceStop/',views.planforceStop),
+    path('query_third_call/',views.query_third_call)
 ]

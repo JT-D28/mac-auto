@@ -699,16 +699,21 @@ def transform(request):
 
 def third_party_call(request):
 	res=decrypt_third_invoke_url_params(request.GET.get('v'))
-
-	taskid=res['taskid']
+	taskid = gettaskid()
+	#taskid=res['taskid']
 	clear_task_before(taskid)
 	callername=res['callername']
 	planid=request.GET.get('planid')
+	is_verify=request.GET.get('is_verify')
+
+	plan = Plan.objects.get(id=planid)
+	if plan.is_running in (1, '1'):
+		return JsonResponse(simplejson(code=1,msg="调用失败，任务正在运行中，稍后再试！"),safe=False)
 
 	print('调用方=>',callername)
 	print('调用计划=>',planid)
 
-	runplans(callername,taskid,[planid],'1')
+	runplans(callername,taskid,[planid],is_verify)
 	return JsonResponse(simplejson(code=0,msg="调用成功",taskid=taskid),safe=False)
 
 

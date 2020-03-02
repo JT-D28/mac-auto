@@ -456,3 +456,31 @@ def downloadReport(request):
         response['Content-Disposition'] = 'attachment;filename=%s.html' % request.POST.get('taskid')
         return response
     else:return JsonResponse({'msg': ''})
+
+@csrf_exempt
+def queryPlanState(request):
+    planid=request.POST.get('id')[5:]
+    plan=Plan.objects.get(id=planid)
+    return JsonResponse({'data':plan.is_running})
+
+@csrf_exempt
+def planforceStop(request):
+    planid=request.POST.get('id')[5:]
+    plan=Plan.objects.get(id=planid)
+    try:
+        plan.is_running=0
+        code=0
+        msg='success'
+    except:
+        code = 1
+        msg='stop_error'
+    return JsonResponse({'code':code,'msg':msg})
+
+@csrf_exempt
+def query_third_call(request):
+    planid = request.POST.get('planid')
+    callername = models.Plan.objects.get(id=planid).author.name
+    mwstr = 'callername=%s&taskid=%s' % (callername,planid)
+    is_verify_url='%s/manager/third_party_call/?v=%s&is_verify=%s&planid=%s' % (settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 1,planid)
+    debug_url='%s/manager/third_party_call/?v=%s&is_verify=%s&planid=%s' % (settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 0,planid)
+    return JsonResponse({'is_verify_url':is_verify_url,'debug_url':debug_url})

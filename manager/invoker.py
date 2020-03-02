@@ -300,7 +300,7 @@ def runplans(username,taskid,planids,is_verify,kind=None):
 	if kind is not None:
 		kindmsg=kind
 		#print("kindmsg=>",kindmsg,username,taskid)
-	verifymsg = '调试' if is_verify in ('0',None,'') else '验证'
+	verifymsg = '调试' if is_verify in ('0',None,'',0) else '验证'
 
 	viewcache(taskid,username,kind,"=======开始%s%s任务【<span style='color:#FF3399'>%s</span>】===="%(kindmsg,verifymsg,taskid))
 	for planid in planids:

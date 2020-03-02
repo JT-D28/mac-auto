@@ -20,7 +20,7 @@ from . import views
 
 urlpatterns = [
 
-    
+    path('help/',views.help),
 	path('index/',views.index),
     path('datamove/',views.datamove),
     path('upload/',views.upload),

@@ -142,7 +142,8 @@ def gettaskresult(taskid):
 
 	caseids=list(set([ r.case.id for r in list(res)]))
 	cases=[Case.objects.get(id=caseid) for caseid in caseids]
-
+	report_url='http://%s/static/report_%s.html'%(configs.ME2_URL,taskid)
+	detail['local_report_address']=report_url
 	detail['planname']=planname
 	detail['planid']=planid
 	detail['taskid']=taskid
@@ -198,8 +199,6 @@ def gettaskresult(taskid):
 				error=x.error
 				businessobj['businessname']=x.businessdata.businessname
 
-
-
 				##
 				businessobj['result']=result
 				businessobj['error']=error
@@ -210,8 +209,11 @@ def gettaskresult(taskid):
 
 					print('%s=>%s,%s'%(business.id,error,stepinst))
 					businessobj['stepname']=stepinst.description
-					matcher=[a for a in stepinst.url.split('/') if not a.__contains__("{{")]
-					businessobj['api']='/'+'/'.join(matcher)
+					matcher=[a for a in stepinst.url.split('/') if not a.__contains__("{{") and not a.__contains__(':')]
+					api='/'.join(matcher)
+					if not  api.startswith('/'):
+						api='/'+api
+					businessobj['api']=api
 				else:
 					businessobj['stepname']=stepinst.description
 					businessobj['api']=stepinst.body.strip()
@@ -591,9 +593,12 @@ def runplan(callername,taskid,planid,is_verify,kind=None):
 
 		##清除请求session
 		clear_task_session('%s_%s'%(taskid,callername))
-		##
+		##产生内置属性
 
 		_save_builtin_property(taskid,username)
+
+		##生成本地报告
+		MainSender.gen_report(taskid,MainSender.gethtmlcontent(taskid,''))
 		##发送报告
 		config_id=plan.mail_config_id
 		if config_id:
@@ -2064,8 +2069,8 @@ class MainSender:
 		#cls.subject='%s自动化测试报告-%s'%(data['planname'],str(datetime.datetime.now())[0:10])
 		cls.subject='%s自动化测试报告-%s'%(data['planname'],'2019-10-31')
 		cssstr='<style type="text/css">body{font-family:Microsoft YaHei}.success{color:#093}.fail{color:#f03}.skip{color:#f90}.error{color:#f0f}table{width:95%;margin:auto}th{background-color:#39c;color:#fff}td{background-color:#eee;text-align:center}</style>'
-
-		bodyhtml='<span style="float:right;font-size:1px;font-color:#eee;">%s-%s</span>'%(data['taskid'],data['planid'])
+		bodyhtml=''
+		#bodyhtml='<span style="float:right;font-size:1px;font-color:#eee;">%s-%s</span>'%(data['taskid'],data['planid'])
 		bodyhtml+='<h2 style="text-align: center;">[%s]接口测试报告</h2>'%data['planname']
 		bodyhtml+="<p class='attribute'><strong>测试结果</strong></p>"
 		bodyhtml+="<table><tr><th>#Samples</th><th>Failures</th><th>Success Rate</th><th>Average Time</th><th>Min Time</th><th>Max Time</th></tr><tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr></table>"%(data['total'],data['fail'],data['success_rate'],data['average'],data['min'],data['max'])
@@ -2099,7 +2104,7 @@ class MainSender:
 				bodyhtml+='</table>'
 
 
-		return cssstr+rich_text+'<br/>'+'-'*40+'<br/>'+bodyhtml
+		return cssstr+rich_text+'<br/>'+bodyhtml
 
 
 
@@ -2160,8 +2165,7 @@ class MainSender:
 			server.sendmail(sender_name,list(to_receive.split(',')),msg.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
 			server.quit()  # 关闭连接
 
-			##本地报告
-			cls._gen_report(htmlcontent)
+
 
 			
 		
@@ -2176,9 +2180,9 @@ class MainSender:
 		return cls._getdescrpition(mail_config.to_receive,ret,error)
 
 	@classmethod
-	def _gen_report(cls,htmlcontent):
+	def gen_report(cls,taskid,htmlcontent):
 		print('==本地缓存测试报告')
-		with open('./local_reports','w') as f:
+		with open('./local_reports/report_%s.html'%taskid,'w') as f:
 			f.write(htmlcontent)
 
 	@classmethod

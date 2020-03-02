@@ -6,6 +6,8 @@ from django.http import HttpResponse,JsonResponse,FileResponse
 
 from django.db.models import Q
 from manager.models import *
+
+from django.conf import settings
 from login.models import *
 from .core import *
 from .invoker import *
@@ -25,7 +27,8 @@ def index(request):
 
 
 def help(request):
-	return render(request, 'manager/help.html')
+	#return render(request, 'manager/help.html')
+	return redirect(settings.HELP_DOC_URL)
 
 @csrf_exempt
 def testjson(request):

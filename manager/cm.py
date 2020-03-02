@@ -792,6 +792,10 @@ def delrelation(kind,callername,main_id,follow_id):
 		print(traceback.format_exc())
 	# print('删除完毕')
 def getchild(kind,main_id):
+
+	'''
+	返回有序子项
+	'''
 	child=[]
 	orderlist=ordered(list(Order.objects.filter(kind=kind,main_id=main_id)))		
 	if kind=='product_plan':
@@ -809,8 +813,8 @@ def getchild(kind,main_id):
 			child.append(Case.objects.get(id=order.follow_id))
 	elif kind=='case_step':
 		for order in orderlist:
-			print('main=>',order.main_id)
-			print('folow=',order.follow_id)
+			print('main=>%s follow=>%s v=%s'%(order.main_id,order.follow_id,order.value))
+
 			child.append(Step.objects.get(id=order.follow_id))
 	elif kind=='step_business':
 		for order in orderlist:
@@ -831,6 +835,7 @@ def getchild(kind,main_id):
 
 			child.append(eval('%s.objects.get(id=%s)'%(ctype,order.follow_id)))
 	
+	print('ck=>',child)
 	return child
 
 
@@ -877,6 +882,31 @@ def ordered(iterator,key='value',time_asc=True):
 		print(traceback.format_exc())
 	finally:
 		return iterator
+
+
+def _regen_weight_force(parent_type,parent_id,ignore_id=None):
+	'''
+	重排父级权重
+	'''
+	print('==强制删除后兄弟节点权重调整')
+	try:
+		kind=''
+		ol=ordered(list(Order.objects.filter(Q(kind__contains='%s_'%parent_type)&Q(main_id=parent_id))))
+		mx=len(ol)
+		cur=0
+		for idx in range(1,mx+1):
+
+			if str(ol[idx-1].follow_id)==str(ignore_id):
+				pass
+			else:
+				cur=cur+1
+
+				ol[idx-1].value='1.%s'%cur
+				ol[idx-1].save()
+	except:
+		print('强制删除后兄弟节点权重调整异常=>',traceback.format_exc())
+
+
 
 def _regen_weight(callername,element,trigger='prev',target_id=None):
 	'''
@@ -1006,6 +1036,33 @@ def _get_delete_node(src_uid,src_type,iscopy,del_nodes):
 			# del_nodes.append((order.kind.split('_')[1],nextid))
 			_get_delete_node(child.id, child_type,False, del_nodes)
 
+def _sort_by_weight(childs):
+	result=list()
+	_m={}
+	_len=len(childs)
+
+	if _len==1:
+		return childs
+
+	elif _len>1:
+		for c in childs:
+			node_type=c.__class__.__name__.lower()
+			if node_type=='businessdata':
+				node_type='business'
+			parent_type,parent_id=_get_node_parent_info(node_type,c.id)
+			kind='%s_%s'%(parent_type,node_type)
+			print('o info=>%s %s %s'%(kind,parent_id,c.id))
+			ov=Order.objects.get(kind=kind,main_id=parent_id,follow_id=c.id).value
+			_m[str(ov)]=c
+		###
+		for key in sorted(_m.keys()):
+			result.append(_m.get(str(key)))
+
+		return result
+
+	else:
+		return []
+
 def _build_node(kind,src_uid,target_uid,move_type,user,build_nodes):
 	target_type=kind.split('_')[0]
 	target_type_upper=target_type[0].upper()+target_type[1:]
@@ -1078,6 +1135,10 @@ def _build_node(kind,src_uid,target_uid,move_type,user,build_nodes):
 
 	##子节点存在情况
 	childs=getchild('',src_uid)
+	childs=_sort_by_weight(childs)
+	print('cha=>',childs)
+
+
 	if len(childs)>0:
 		print('==构建新节点下子节点数据')
 	for child in childs:
@@ -1157,13 +1218,7 @@ def _resort(orderlist,movetype,src_uid,target_uid):
 	elif movetype=='next':
 		orderlist.insert(indexb+1,a)
 
-
 	return orderlist
-
-
-
-
-
 
 
 def get_search_match(searchvalue):
@@ -1297,11 +1352,6 @@ def _get_child_info(node):
 	pass
 
 
-
-
-
-
-
 def _first_word_up(text):
 	if len(text)==1:
 		return text.upper()
@@ -1355,7 +1405,8 @@ def _status_decorate(decoratename,text):
 def del_node_force(request):
 	'''强制递归删除节点
 	'''
-	print('强制del_node_force删除数据')
+
+	print('=强制del_node_force删除数据')
 	id_=request.POST.get('ids')
 	ids=id_.split(',')
 	for i in ids:
@@ -1365,41 +1416,47 @@ def del_node_force(request):
 		# print('node_type=>',node_type)
 		# print('idx=>',idx)
 
+		##重排序
+		parent_type,parent_id=_get_node_parent_info(node_type, idx)
+		_regen_weight_force(parent_type, parent_id,ignore_id=idx)
+
+		#
+
 		if node_type=='product':
 			_del_product_force(idx)
 
 		elif node_type=='plan':
 			_del_plan_force(idx)
 		elif node_type=='case':
-			up=_get_case_up_level_kind(idx)
+			up=_get_case_parent_info(idx)[0]
 			_del_case_force(idx,up='%s_case'%up)
 		elif node_type=='step':
 			_del_step_force(idx)
 
-		##重排序
-		# _m={
-		# 'product':'Product',
-		# 'plan':'Plan',
-		# 'case':'Case',
-		# 'step':'Step',
-		# 'business':'Businessdata'
-
-		# }
-		# el=eval("%s.objects.get(id=%s)"%(_m.get(node_type),str(idx)))
-		# _regen_weight(request.session.get('username'),el,trigger='del_force')
 
 	return {
 	'status':'success',
 	'msg':'删除成功.'
 	}
 
-def _get_case_up_level_kind(case_id):
+
+def _get_node_parent_info(node_type,node_id):
+	if node_type=='case':
+		return _get_case_parent_info(node_id)
+	else:
+		o=Order.objects.get(Q(follow_id=node_id)&Q(kind__contains='_%s'%node_type))
+		return (o.kind.split('_')[0],o.main_id)
+
+
+
+def _get_case_parent_info(case_id):
+	#print('del case id=>',case_id)
 	case_desp=Case.objects.get(id=case_id).description
 	o=list(Order.objects.filter(Q(kind__contains='_case')&Q(follow_id=case_id)))[0]
 	# print('order=>',o)
 	kind=o.kind.split('_')[0]
 	# print('获得文件夹[%s]上层节点类型=>%s'%(case_desp,kind))
-	return kind
+	return (kind,o.main_id)
 
 			
 def _del_product_force(product_id):
@@ -1421,8 +1478,6 @@ def _del_plan_force(plan_id):
 		Order.objects.get(kind='product_plan',follow_id=plan_id).delete()
 	except:
 		print('取消上层依赖异常.')
-
-
 	try:
 		plan=Plan.objects.get(id=plan_id)
 		plan_order_list=list(Order.objects.filter(kind='plan_case',main_id=plan_id))
@@ -1437,18 +1492,12 @@ def _del_plan_force(plan_id):
 		print(traceback.format_exc())
 
 
-
-
-
 def _del_case_force(case_id,up='plan_case'):
-
 	#取消上层依赖
-	
 	try:
 		Order.objects.get(kind=up,follow_id=case_id).delete()
 	except:
 		print('取消上层依赖异常.case_id=%s type=%s'%(case_id,up))
-
 
 	case=Case.objects.get(id=case_id)
 	case_order_list=list(Order.objects.filter(kind='case_step',main_id=case_id))
@@ -1463,18 +1512,13 @@ def _del_case_force(case_id,up='plan_case'):
 	#处理case->case
 	for o in case_order_list_2:
 		c=Case.objects.get(id=o.follow_id)
-		
 		_del_case_force(c.id,up='case_case')
 		#c.delete()
 		#o.delete()
-		
 	#
 	case.delete()
 
-
-
 def _del_step_force(step_id):
-
 	#取消上层依赖
 	try:
 		Order.objects.get(kind='case_step',follow_id=step_id).delete()

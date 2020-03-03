@@ -5,7 +5,6 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from django.http import HttpResponse,JsonResponse,FileResponse
 
 from django.db.models import Q
-from homepage.models import Jacoco_report
 from manager.models import *
 
 from django.conf import settings
@@ -700,16 +699,21 @@ def transform(request):
 
 def third_party_call(request):
 	res=decrypt_third_invoke_url_params(request.GET.get('v'))
-
-	taskid=res['taskid']
+	taskid = gettaskid()
+	#taskid=res['taskid']
 	clear_task_before(taskid)
 	callername=res['callername']
 	planid=request.GET.get('planid')
+	is_verify=request.GET.get('is_verify')
+
+	plan = Plan.objects.get(id=planid)
+	if plan.is_running in (1, '1'):
+		return JsonResponse(simplejson(code=1,msg="调用失败，任务正在运行中，稍后再试！"),safe=False)
 
 	print('调用方=>',callername)
 	print('调用计划=>',planid)
 
-	runplans(callername,taskid,[planid],'1')
+	runplans(callername,taskid,[planid],is_verify)
 	return JsonResponse(simplejson(code=0,msg="调用成功",taskid=taskid),safe=False)
 
 
@@ -1606,20 +1610,19 @@ def queryonemailconfig(request):
 
 	try:
 		id_=request.POST.get('id')
-		productid=request.POST.get('productid')
 		plan=Plan.objects.get(id=id_)
 		mail_config_id=plan.mail_config_id
-		jacocoset=list(Jacoco_report.objects.values('jenkinsurl','jobname','authname','authpwd').filter(productid=productid))
+
 		print('获取计划[%s]邮件配置=>%s'%(plan.description,mail_config_id))
 
 		if mail_config_id:
 			config=MailConfig.objects.get(id=mail_config_id)
 			jsonstr=json.dumps(config,cls=MailConfigEncoder)
-			jsonstr['jacocoset']=jacocoset[0] if jacocoset else ''
 			return JsonResponse(jsonstr,safe=True)
 		else:
-			print('heafdafd')
-			return JsonResponse(simplejson(code=1,msg='计划[%s]还未关联邮件'%plan.description),safe=False)
+			jsonstr=json.dumps('',cls=MailConfigEncoder)
+			return JsonResponse(jsonstr,safe=True)
+			# return JsonResponse(simplejson(code=1,msg='计划[%s]还未关联邮件'%plan.description),safe=False)
 	except:
 		print(traceback.format_exc())
 		return JsonResponse(simplejson(code=2,msg='查询异常[%s]'%traceback.format_exc()),safe=False)
@@ -1636,6 +1639,7 @@ def editmailconfig(request):
 
 		to_receive = request.POST.get('to_receive')
 		description = request.POST.get('description')
+		rich_text = request.POST.get('rich_text')
 		dingdingtoken = request.POST.get('dingdingtoken')
 		if mail_config_id:
 			config=MailConfig.objects.get(id=mail_config_id)
@@ -1643,6 +1647,7 @@ def editmailconfig(request):
 			config.color_scheme=request.POST.get('color_scheme')
 			config.description=description
 			config.dingdingtoken = dingdingtoken
+			config.rich_text=rich_text
 			config.save()
 			msg='编辑成功'
 		else:
@@ -1651,30 +1656,13 @@ def editmailconfig(request):
 			config.color_scheme = request.POST.get('color_scheme')
 			config.description = description
 			config.dingdingtoken = dingdingtoken
+			config.rich_text=rich_text
 			author = md.User.objects.get(name=request.session.get('username'))
 			config.author = author
 			config.save()
 			plan.mail_config_id = config.id
 			plan.save()
 			msg = '新建成功'
-		#jacoco相关配置，和项目关联
-		if not Jacoco_report.objects.filter(productid=request.POST.get('productid')).exists():
-			jacocoset=Jacoco_report()
-			jacocoset.jenkinsurl=request.POST.get('jenkinsurl')
-			jacocoset.authname=request.POST.get('authname')
-			jacocoset.authpwd=request.POST.get('authpwd')
-			jacocoset.jobname=request.POST.get('jobname')
-			jacocoset.productid=request.POST.get('productid')
-			jacocoset.save()
-		else:
-			if re.search(r'(.*:.*(;)?)',request.POST.get('jobname')):
-				jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
-				jacocoset.jenkinsurl=request.POST.get('jenkinsurl')
-				jacocoset.authname=request.POST.get('authname')
-				jacocoset.authpwd=request.POST.get('authpwd')
-				jacocoset.jobname=request.POST.get('jobname')
-				jacocoset.save()
-			else:return JsonResponse(simplejson(code=1,msg='请检查jenkins配置是否填写正确'),safe=False)
 
 	except:
 		print(traceback.format_exc())

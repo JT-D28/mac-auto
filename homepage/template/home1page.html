@@ -646,9 +646,11 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                     }
                                     logSocket.onmessage = function (e) {
                                         text = JSON.parse(e.data)
-                                        that.log_text += text.message
-                                        var ta = document.getElementById('log-process');
-                                        ta.scrollTop = ta.scrollHeight;//定位到最后
+                                        if (text.message.indexOf("结束计划") == -1) {
+                                            that.log_text += text.message
+                                            var ta = document.getElementById('log-process');
+                                            ta.scrollTop = ta.scrollHeight;//定位到最后
+                                        } else logSocket.close()
                                     }
                                     logSocket.onclose = function () {
                                         console.log("结束获取日志..")

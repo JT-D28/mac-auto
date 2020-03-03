@@ -149,14 +149,13 @@ class logConsumer(WebsocketConsumer):
         if os.path.exists(logname):
             f = open(logname, 'r', encoding='UTF-8')
             while True:
-                line = f.readlines()  # 表示一次读取一行
+                line = f.readline()  # 表示一次读取一行
                 if done_msg in line:
-                    print("213")
                     break
                 self.send(text_data=json.dumps({
                     'message': line
                 }))
-                time.sleep(0.01)
+                time.sleep(0.05)
             f.close()
 
     def receive(self, text_data):

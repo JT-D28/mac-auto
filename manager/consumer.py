@@ -87,7 +87,7 @@ class ConsoleConsumer(WebsocketConsumer):
                     break
 
                 while  True:
-                    time.sleep(0.1)
+                    time.sleep(0.01)
 
                     if self._flag==True:
                         break

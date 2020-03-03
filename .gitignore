@@ -11,3 +11,4 @@
 /logs/deal/*.log
 /login/__pycache__/
 /login/migrations/__pycache__/
+/local_reports/

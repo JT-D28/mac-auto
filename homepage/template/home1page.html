@@ -10,14 +10,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layui.css' %}" media="all">
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layuimini.css' %}" media="all">
-    <script src="{% static 'manager/js/jquery.min.js' %}"></script>
     <link rel="stylesheet" href="{% static 'homepage/layui/css/public.css' %}" media="all">
-    <script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-    <!-- 引入样式 -->
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
-    <!-- 引入组件库 -->
-    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="{% static 'homepage/eleui/index.js' %}"></script>
     <style>
         .layui-card {
             border: 1px solid #f2f2f2;
@@ -218,7 +214,6 @@
                         <el-form-item label="jenkins地址">
                             <el-input v-model="form.productset.jenkinsurl"></el-input>
                         </el-form-item>
-
                         <el-form :inline="true" :model="form" class="demo-form-inline">
                             <el-form-item label="用户名" style="width: 47%" label-width="32%">
                                 <el-input v-model="form.productset.authname"></el-input>
@@ -255,18 +250,25 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                    :value="plan.id">
                         </el-option>
                     </el-select>
+
                     <div style="margin-top: 15px;">
-                        <el-input placeholder="" v-model="is_verify_url" readonly="readonly">
+                        <el-input placeholder="验证地址" v-model="form.is_verify_url">
                             <template slot="prepend">验证地址</template>
+                            <template slot="append">
+                                <el-button type="primary" icon="el-icon-copy-document" plain
+                                           @click="copyUrl(form.is_verify_url)"></el-button>
+                            </template>
                         </el-input>
                     </div>
-                    <el-button type="primary" plain @click="copyUrl(is_verify_url)">复制链接</el-button>
                     <div style="margin-top: 15px;">
-                        <el-input placeholder="" v-model="debug_url" readonly="readonly">
+                        <el-input placeholder="调试地址" v-model="form.is_verify_url">
                             <template slot="prepend">调试地址</template>
+                            <template slot="append">
+                                <el-button type="primary" icon="el-icon-copy-document" plain
+                                           @click="copyUrl(form.debug_url)"></el-button>
+                            </template>
                         </el-input>
                     </div>
-                    <el-button type="primary" plain @click="copyUrl(debug_url)">复制链接</el-button>
                 </el-tab-pane>
             </el-tabs>
         </el-dialog>
@@ -335,7 +337,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
 
 <script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
 <script src="{% static 'homepage/layui/lay-config.js' %}" charset="utf-8"></script>
-
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script>
     var app = new Vue({
         el: '#app',
@@ -345,8 +347,6 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
             return {
                 noticeSetVisible: false,
                 runningState: '',
-                debug_url: '',
-                is_verify_url: '',
                 historytime: '',
                 timeDefaultShow: '',
                 pickerOptions: {
@@ -410,6 +410,8 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 productsetposition: 'left',
                 planHistoryVisible: false,
                 form: {
+                    debug_url: '',
+                    is_verify_url: '',
                     formLabelWidth: '120px',
                     product: '',
                     third_plan: '',
@@ -967,7 +969,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                     const data = req.response;
                                     const blob = new Blob([data]);
                                     var a = document.createElement('a');
-                                    a.download = res.data + '.html';
+                                    a.download = '报告_' + res.data + '.html';
                                     a.href = window.URL.createObjectURL(blob);
                                     a.click();
                                 } else {
@@ -994,7 +996,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                 const data = req.response;
                                 const blob = new Blob([data]);
                                 var a = document.createElement('a');
-                                a.download = res.data + '.html';
+                                a.download = '日志_' + res.data + '.log';
                                 a.href = window.URL.createObjectURL(blob);
                                 a.click();
                             } else {
@@ -1075,8 +1077,8 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
             'form.third_plan': function (id) {
                 var that = this;
                 _post_nl('/homepage/query_third_call/', {planid: id.substr(5)}, function (data) {
-                    that.is_verify_url = data.is_verify_url
-                    that.debug_url = data.debug_url
+                    that.form.is_verify_url = data.is_verify_url
+                    that.form.debug_url = data.debug_url
                 })
             }
         },

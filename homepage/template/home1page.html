@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="{% static 'homepage/eleui/index.js' %}"></script>
+    <script src="https://gw.alipayobjects.com/os/lib/antv/g2plot/0.11.3/dist/g2plot.js"></script>
     <style>
         .layui-card {
             border: 1px solid #f2f2f2;
@@ -22,6 +23,10 @@
 
         .el-dialog__body {
             padding-top: 0;
+        }
+
+        .el-card__header {
+            padding: 6px 20px;
         }
 
         #echarts-records :first-child {
@@ -194,13 +199,83 @@
                 </div>
             </div>
             <div class="layui-col-xs12 layui-col-md9">
-                <div class="layui-tab-content  layui-col-md12" style="padding: 0">
-                    <div class="layui-tab-item layui-show">
+                <el-tabs :tab-position="productsetposition" style="height: 420px;">
+                    <el-tab-pane label="计划成功率">
                         <div id="echarts-records"
                              style="background-color:#f2f2f2;min-height:400px;padding: 10px;"></div>
-                    </div>
-                </div>
+                    </el-tab-pane>
+                    <el-tab-pane label="代码覆盖率">
+                        <el-card class="box-card" style="min-height: 400px">
+                            <div slot="header" class="clearfix">
+                                <span>选择服务</span>
+                            </div>
+                            <div class="text item">
+                                <div class="layui-col-md4">
+                                    <div class="layui-card">
+                                        <div class="layui-card-header">
+                                            branchCoverage
+                                        </div>
+                                        <div class="layui-card-body">
+                                            <div id="branchCoverage"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-col-md4">
+                                    <div class="layui-card">
+                                        <div class="layui-card-header">
+                                            classCoverage
+                                        </div>
+                                        <div class="layui-card-body">
+                                            <div id="classCoverage"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-col-md4">
+                                    <div class="layui-card">
+                                        <div class="layui-card-header">
+                                            instructionCoverage
+                                        </div>
+                                        <div class="layui-card-body">
+                                            <div id="instructionCoverage"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-col-md4">
+                                    <div class="layui-card">
+                                        <div class="layui-card-header">
+                                            complexityScore
+                                        </div>
+                                        <div class="layui-card-body">
+                                            <div id="complexityScore"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-col-md4">
+                                    <div class="layui-card">
+                                        <div class="layui-card-header">
+                                            lineCoverage
+                                        </div>
+                                        <div class="layui-card-body">
+                                            <div id="lineCoverage"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-col-md4">
+                                    <div class="layui-card">
+                                        <div class="layui-card-header">
+                                            methodCoverage
+                                        </div>
+                                        <div class="layui-card-body">
+                                            <div id="methodCoverage"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </el-card>
+                    </el-tab-pane>
+                </el-tabs>
             </div>
+
             <div class="layui-col-xs12 layui-col-md12">
                 <table id="demo" lay-filter="test"></table>
             </div>
@@ -331,6 +406,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
             </div>
         </div>
     </div>
+
 </div>
 
 
@@ -405,6 +481,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 mailcolors: [{id: 1, color: 'blue'}, {id: 2, color: 'red'}],
                 products: [],
                 plans: [],
+                services:[],
                 runVisible: false,
                 productSetVisible: false,
                 productsetposition: 'left',
@@ -417,6 +494,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     third_plan: '',
                     forceStopPlans: '',
                     plan: '',
+                    service:'',
                     mailcolor: '',
                     productset: {
                         jenkinsurl: '',
@@ -448,6 +526,8 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 _post_nl('/homepage/queryplan/', {id: this.form.product}, function (data) {
                     data = JSON.parse(data)
                     that.plans = data.data;
+                    that.services=data.service;
+                    console.log(data.service)
                     that.form.plan = that.plans[0] != null ? that.plans[0].id : ''
                 })
             },
@@ -591,6 +671,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     description: that.form.reportNoticeSet.description,
                     to_receive: that.form.reportNoticeSet.to_receive,
                     rich_text: that.form.reportNoticeSet.text,
+                    dingdingtoken: that.form.reportNoticeSet.dingdingtoken,
                 }, function (data) {
                     data = JSON.parse(data);
                     if (data.code == 0 && ss == 0) {
@@ -1032,6 +1113,14 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
             this.getproduct();
             layui.use(['echarts'], function () {
                 echartsRecords = echarts.init(document.getElementById('echarts-records'), 'walden');
+            });
+            var coverlist = ['branchCoverage', 'classCoverage', 'instructionCoverage', 'complexityScore', 'lineCoverage', 'methodCoverage']
+            actjacoco = []
+            coverlist.forEach(function (item, index) {
+                actjacoco[index] = new g2plot.RingProgress(document.getElementById(item), {
+                    percent: 0.1, width: 100, height: 100, padding: 'auto',color:'black'
+                });
+                actjacoco[index].render()
             });
         },
         watch: {

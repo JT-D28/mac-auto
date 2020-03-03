@@ -120,18 +120,17 @@ def _get_full_case_name(case_id,curent_case_name):
 
 def gettaskresult(taskid):
 	from .cm import getchild
-
-
+	print("==gettaskresult==")
 	##区分迭代次数
 	bset=set()
 	bmap={}
-
-
 	##
 
 	detail={}
 	spend_total=0
-	res=ResultDetail.objects.filter(taskid=taskid)
+	res=ResultDetail.objects.filter(taskid=taskid).order_by('createtime')
+
+	print(res)
 	reslist=list(res)
 	if len(reslist)==0:
 		return detail
@@ -140,8 +139,25 @@ def gettaskresult(taskid):
 	planname=plan.description
 	planid=plan.id
 
-	caseids=list(set([ r.case.id for r in list(res)]))
+	has_=[]
+
+	caseids=[]
+
+	for r in list(res):
+		if r.case.id not in has_:
+			has_.append(r.case.id)
+			caseids.append(r.case.id)
+
+		else:
+			pass
+
+	##修复set乱序
+
+
 	cases=[Case.objects.get(id=caseid) for caseid in caseids]
+
+	print('cases=>')
+	print(cases)
 	report_url='http://%s/static/report_%s.html'%(configs.ME2_URL,taskid)
 	detail['local_report_address']=report_url
 	detail['planname']=planname
@@ -273,9 +289,15 @@ def gettaskresult(taskid):
 		detail['success_rate']='-1'
 	detail["reporttime"]=time.strftime("%m-%d %H:%M", time.localtime())
 
+
+	##
 	print('报告数据=>',detail)
-	# with open('d:/1.txt','w') as f:
-	# 	f.write(str(detail))
+
+	with open('d:/1.txt','w') as f:
+		f.write(str(detail))
+
+
+	###
 
 	return detail
 

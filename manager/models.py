@@ -109,7 +109,8 @@ class Step(models.Model):
 
 
 	def __str__(self):
-		return "[%s]%s"%(self.id,self.description)
+		#return "[%s]%s"%(self.id,self.description)
+		return ''
 
 class Case(models.Model):
 
@@ -125,7 +126,8 @@ class Case(models.Model):
 
 
 	def __str__(self):
-		return '[%s]%s'%(self.id,self.description)
+		#return '[%s]%s'%(self.id,self.description)
+		return '%s'%self.id
 
 
 class Plan(models.Model):
@@ -175,8 +177,8 @@ class ResultDetail(models.Model):
 	# loop_id=models.IntegerField()
 	is_verify=models.CharField(max_length=4,default=0)
 
-	# def __str__(self):
-	# 	return "%s[%s]"%(self.case,self.step)
+	def __str__(self):
+		return "%s,%s"%(self.case,self.step)
 
 
 class Variable(models.Model):

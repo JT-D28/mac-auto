@@ -59,7 +59,7 @@ def queryplan(request):
     total = rows[0]['total'] if rows[0]['total'] is not None else 0
 
     jacocoset = Jacoco_report.objects.values().filter(productid=pid) if pid != '' else None
-    service = [{'id':0,'name':'查看平均'}]
+    service = [{'id':0,'name':'平均'}]
     if jacocoset:
         try:
             jobnames = jacocoset[0]['jobname']
@@ -263,9 +263,8 @@ def jacocoreport(request):
     code, msg = 0, ''
     s = requests.session()
     re = ''
-    productid = request.POST.get('productid')
     jobname = request.POST.get('jobname')
-    jacocoset = Jacoco_report.objects.values().filter(productid=productid)
+    jacocoset = Jacoco_report.objects.values().filter(productid=request.POST.get('productid'))
     if jacocoset:
         authname, authpwd = jacocoset[0]['authpwd'], jacocoset[0]['authname']
     else:

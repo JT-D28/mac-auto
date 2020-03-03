@@ -208,6 +208,14 @@
                         <el-card class="box-card" style="min-height: 400px">
                             <div slot="header" class="clearfix">
                                 <span>选择服务</span>
+                                <el-select filterable  v-model="form.service" multiple style="width: 90%" >
+                                    <el-option
+                                            v-for="i in services"
+                                            :key="i.id"
+                                            :label="i.name"
+                                            :value="i.id">
+                                    </el-option>
+                                </el-select>
                             </div>
                             <div class="text item">
                                 <div class="layui-col-md4">
@@ -274,10 +282,6 @@
                         </el-card>
                     </el-tab-pane>
                 </el-tabs>
-            </div>
-
-            <div class="layui-col-xs12 layui-col-md12">
-                <table id="demo" lay-filter="test"></table>
             </div>
         </div>
 
@@ -481,7 +485,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 mailcolors: [{id: 1, color: 'blue'}, {id: 2, color: 'red'}],
                 products: [],
                 plans: [],
-                services:[],
+                services: [],
                 runVisible: false,
                 productSetVisible: false,
                 productsetposition: 'left',
@@ -494,7 +498,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     third_plan: '',
                     forceStopPlans: '',
                     plan: '',
-                    service:'',
+                    service: '',
                     mailcolor: '',
                     productset: {
                         jenkinsurl: '',
@@ -526,9 +530,9 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 _post_nl('/homepage/queryplan/', {id: this.form.product}, function (data) {
                     data = JSON.parse(data)
                     that.plans = data.data;
-                    that.services=data.service;
-                    console.log(data.service)
+                    that.services = data.service;
                     that.form.plan = that.plans[0] != null ? that.plans[0].id : ''
+                    that.form.service = that.services[0] != null ? that.services[0].id : ''
                 })
             },
             runplan() {
@@ -1114,14 +1118,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
             layui.use(['echarts'], function () {
                 echartsRecords = echarts.init(document.getElementById('echarts-records'), 'walden');
             });
-            var coverlist = ['branchCoverage', 'classCoverage', 'instructionCoverage', 'complexityScore', 'lineCoverage', 'methodCoverage']
-            actjacoco = []
-            coverlist.forEach(function (item, index) {
-                actjacoco[index] = new g2plot.RingProgress(document.getElementById(item), {
-                    percent: 0.1, width: 100, height: 100, padding: 'auto',color:'black'
-                });
-                actjacoco[index].render()
-            });
+
         },
         watch: {
             'form.plan': function (planid) {
@@ -1164,6 +1161,16 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     that.form.debug_url = data.debug_url
                 })
             },
+            'form.service': function (jobname) {
+                var that = this;
+                _post_nl('/homepage/jacocoreport/', {productid: that.form.product, jobname: jobname}, function (data) {
+                    data = JSON.parse(data)
+                    coverlist.forEach(function (item, index) {
+                        rate = data.data != '' ? data.data[item] / 100 : 0
+                        actjacoco[index].update(rate)
+                    });
+                })
+            },
             'log_text': function () {
                 setTimeout(function () {
                     //设置滚动条到最底部
@@ -1171,6 +1178,15 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 }, 100);
             }
         },
+    });
+
+    coverlist = ['branchCoverage', 'classCoverage', 'instructionCoverage', 'complexityScore', 'lineCoverage', 'methodCoverage']
+    actjacoco = [];
+    coverlist.forEach(function (item, index) {
+        actjacoco[index] = new g2plot.RingProgress(document.getElementById(item), {
+            percent: 0, width: 100, height: 100, padding: 'auto'
+        });
+        actjacoco[index].render()
     });
 
     // echarts 窗口缩放自适应

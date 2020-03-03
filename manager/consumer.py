@@ -143,27 +143,35 @@ class logConsumer(WebsocketConsumer):
     def __init__(self, args):
         super(logConsumer, self).__init__(args)
 
-    def sendmsg(self, taskid):
+    def sendmsg(self, taskid, is_running):
         logname = "./logs/" + taskid + ".log"
         done_msg = '结束计划'
         if os.path.exists(logname):
-            f = open(logname, 'r', encoding='UTF-8')
-            while True:
-                line = f.readline()  # 表示一次读取一行
-                if done_msg in line:
-                    break
-                self.send(text_data=json.dumps({
-                    'message': line
-                }))
-                time.sleep(0.05)
-            f.close()
+            with open(logname, 'r', encoding='utf-8') as f:
+                if is_running in (0, '0'):
+                    log_text = f.read()
+                    self.send(text_data=json.dumps({
+                        'message': log_text
+                    }))
+                else:
+                    while True:
+                        lines = f.readlines()
+                        line = ''.join(x for x in lines)
+                        self.send(text_data=json.dumps({
+                            'message': line
+                        }))
+                        if done_msg in line:
+                            break
+                        time.sleep(0.3)
 
     def receive(self, text_data):
+        self.is_running = text_data.split("::")[0]
         self.taskid = text_data.split("::")[1]
         print("receive=>", self.taskid)
-        self.thread = threading.Thread(target=self.sendmsg, args=(self.taskid,))
+        print("receive=>", self.is_running)
+        self.thread = threading.Thread(target=self.sendmsg, args=(self.taskid, self.is_running))
         self.thread.setDaemon(True)
         self.thread.start()
 
-    def disconnect(self, code):
-         print("%s 的日志打印结束" % self.taskid)
+    def disconnect(self, code=None):
+        print("%s 的日志打印结束" % self.taskid)

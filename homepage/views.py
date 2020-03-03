@@ -443,9 +443,10 @@ def queryPlanState(request):
 @csrf_exempt
 def planforceStop(request):
     planid=request.POST.get('id')[5:]
-    plan=Plan.objects.get(id=planid)
+    plan = Plan.objects.get(id=planid)
     try:
         plan.is_running=0
+        plan.save()
         code=0
         msg='success'
     except:

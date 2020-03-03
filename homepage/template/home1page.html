@@ -323,17 +323,16 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 </el-tab-pane>
             </el-tabs>
         </el-dialog>
-    </div>
-</div>
-
-
-<div id="seeprocess" hidden>
-    <div class="layui-table">
-        <div class="layui-card-body">
-            <div id="log_text"></div>
+        <div id="seeprocess" hidden>
+            <div class="layui-table">
+                <div class="layui-card-body">
+                    <div v-html="log_text"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
 
 <script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
 <script src="{% static 'homepage/layui/lay-config.js' %}" charset="utf-8"></script>
@@ -347,6 +346,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
             return {
                 noticeSetVisible: false,
                 runningState: '',
+                log_text: '',
                 historytime: '',
                 timeDefaultShow: '',
                 pickerOptions: {
@@ -630,6 +630,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                         if (data.code != 0) {
                             layer.msg(data.msg);
                         } else {
+                            var logSocket = new WebSocket("ws://" + host + "/ws/runlog/");
                             layer.open({
                                 type: 1,
                                 id: "log-process",
@@ -640,32 +641,26 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                 shadeClose: true,
                                 content: $("#seeprocess"),
                                 success: function () {
-                                    that.showlog(taskid)
+                                    logSocket.onopen = function () {
+                                        logSocket.send('read::' + taskid)
+                                    }
+                                    logSocket.onmessage = function (e) {
+                                        text = JSON.parse(e.data)
+                                        that.log_text += text.message
+                                        var ta = document.getElementById('log-process');
+                                        ta.scrollTop = ta.scrollHeight;//定位到最后
+                                    }
+                                    logSocket.onclose = function () {
+                                        console.log("结束获取日志..")
+                                    }
+                                }, end: function () {
+                                    logSocket.close()
+                                    that.log_text = ''
                                 }
                             });
                         }
                     })
                 }
-            },
-            showlog(taskid) {
-                $.ajax({
-                    url: '/homepage/process/',
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {'taskid': taskid},
-                    success: function (res) {
-                        res = JSON.parse(res)
-                        var log_text = res.data
-                        var is_done = res.msg
-                        $("#log_text").html(log_text);
-                        var ta = document.getElementById('log-process');
-                        ta.scrollTop = ta.scrollHeight;//定位到最后
-                        if (is_done != 'yes') {
-                            window.setTimeout(showlog(taskid), 500);
-                        }
-                        return false;
-                    }
-                });
             },
             report(data, code) {
                 x = [];

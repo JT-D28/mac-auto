@@ -113,28 +113,6 @@ def querytaskid(request):  # 查询验证任务最新id
 
     return JsonResponse(simplejson(code=code, msg=msg, data=taskids), safe=False)
 
-
-@csrf_exempt
-def process(request):
-    taskid = request.POST.get('taskid')
-    code = 0
-    log_text = ''
-    is_done = 'no'
-    done_msg = '结束计划'
-    logname = "./logs/" + taskid + ".log"
-    try:
-        if os.path.exists(logname):
-            with open(logname, 'r', encoding='utf-8') as f:
-                log_text = f.read()
-        if done_msg in log_text:
-            is_done = 'yes'
-            print('日志执行结束', is_done)
-    except:
-        code = 1
-        msg = "出错了！"
-    return JsonResponse(simplejson(code=code, msg=is_done, data=log_text), safe=False)
-
-
 @csrf_exempt
 def globalsetting(request):
     code = 0

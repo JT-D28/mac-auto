@@ -58,22 +58,22 @@ def queryplan(request):
     success_rate = rows[0]['成功数'] / rows[0]['总数'] * 100 if rows[0]['总数'] != 0 else 0
     total = rows[0]['total'] if rows[0]['total'] is not None else 0
 
-    jacocoset = Jacoco_report.objects.values().filter(productid=pid) if pid != '' else None
-    if jacocoset:
-        try:
-            jobdess = []
-            jobnames = jacocoset[0]['jobname']
-            jobs = jobnames.split(";") if not jobnames.endswith(';') else jobnames.split(";")[:-1]
-            for job in jobs:
-                jobdess.append({
-                    'id': job.split(":")[1],
-                    'name': job.split(":")[0]
-                })
-        except:
-            pass
+    # jacocoset = Jacoco_report.objects.values().filter(productid=pid) if pid != '' else None
+    # if jacocoset:
+    #     try:
+    #         jobdess = []
+    #         jobnames = jacocoset[0]['jobname']
+    #         jobs = jobnames.split(";") if not jobnames.endswith(';') else jobnames.split(";")[:-1]
+    #         for job in jobs:
+    #             jobdess.append({
+    #                 'id': job.split(":")[1],
+    #                 'name': job.split(":")[0]
+    #             })
+    #     except:
+    #         pass
 
-    else:
-        jobdess = ''
+    # else:
+    #     jobdess = ''
 
     datanode = []
     try:
@@ -84,8 +84,7 @@ def queryplan(request):
                 'name': '%s' % plan.description,
             })
         return JsonResponse(
-            simplejson(code=0, msg='操作成功', data=datanode, rate=str(success_rate)[0:5], total=total, jobname=jobdess),
-            safe=False)
+            simplejson(code=0, msg='操作成功', data=datanode, rate=str(success_rate)[0:5], total=total), safe=False)
 
     except:
         print(traceback.format_exc())

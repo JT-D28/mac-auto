@@ -627,6 +627,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     _post_nl('/homepage/querytaskid/', {planid: planid}, function (data) {
                         data = JSON.parse(data)
                         taskid = data.data
+                        is_running = data.is_running
                         if (data.code != 0) {
                             layer.msg(data.msg);
                         } else {
@@ -642,15 +643,11 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                 content: $("#seeprocess"),
                                 success: function () {
                                     logSocket.onopen = function () {
-                                        logSocket.send('read::' + taskid)
-                                    }
+                                        logSocket.send(is_running + '::' + taskid)
+                                    };
                                     logSocket.onmessage = function (e) {
                                         text = JSON.parse(e.data)
-                                        if (text.message.indexOf("结束计划") == -1) {
-                                            that.log_text += text.message
-                                            var ta = document.getElementById('log-process');
-                                            ta.scrollTop = ta.scrollHeight;//定位到最后
-                                        } else logSocket.close()
+                                        that.log_text += text.message
                                     }
                                     logSocket.onclose = function () {
                                         console.log("结束获取日志..")
@@ -1077,6 +1074,12 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     that.form.is_verify_url = data.is_verify_url
                     that.form.debug_url = data.debug_url
                 })
+            },
+            'log_text': function () {
+                setTimeout(function () {
+                    //设置滚动条到最底部
+                    document.getElementById('log-process').scrollTop = document.getElementById('log-process').scrollHeight;
+                }, 100);
             }
         },
     });

@@ -101,6 +101,7 @@ def querytaskid(request):  # 查询验证任务最新id
     try:
         planid = request.POST.get('planid')
         plan = Plan.objects.get(id=planid)
+        is_running=plan.is_running
         taskids = list(ResultDetail.objects.values('taskid').filter(plan=plan, is_verify=1).order_by('-createtime'))
         if taskids:
             taskids = taskids[0]["taskid"]
@@ -111,7 +112,7 @@ def querytaskid(request):  # 查询验证任务最新id
         code = 1
         msg = "出错了！"
 
-    return JsonResponse(simplejson(code=code, msg=msg, data=taskids), safe=False)
+    return JsonResponse(simplejson(code=code, msg=msg, data=taskids,is_running=is_running), safe=False)
 
 @csrf_exempt
 def globalsetting(request):

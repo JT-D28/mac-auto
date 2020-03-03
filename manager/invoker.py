@@ -292,9 +292,9 @@ def gettaskresult(taskid):
 
 	##
 	print('报告数据=>',detail)
-
-	with open('d:/1.txt','w') as f:
-		f.write(str(detail))
+	#
+	# with open('d:/1.txt','w') as f:
+	# 	f.write(str(detail))
 
 
 	###

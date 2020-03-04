@@ -1145,10 +1145,6 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
         },
         created: function () {
             this.getproduct();
-            /**   layui.use(['echarts'], function () {
-                echartsRecords = echarts.init(document.getElementById('echarts-records'), 'walden');
-            });
-             **/
         },
         watch: {
             'form.plan': function (planid) {
@@ -1156,44 +1152,12 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 if (planid == '') {
                     return
                 } else {
-                    /**layui.use(['echarts'], function () {
-                        var echarts = layui.echarts;
-                        _post_nl('/homepage/reportchart/', {planid: planid.substr(5)}, function (result) {
-                            result = JSON.parse(result);
-                            config = that.report(result.data, result.code);
-                            echartsRecords.setOption(config);
-                            echartsRecords.on('click', function (params) {
-                                if (success_rate[params.dataIndex] != 100) {
-                                    taskid = taskids[params.dataIndex];
-                                    that.queryOldBug(taskid);
-                                    that.planHistoryVisible = true;
-                                } else {
-                                    that.$message({
-                                        message: '该次执行全部通过',
-                                        type: 'success', center: true
-                                    });
-                                }
-                            });
-                        })
-                    })**/
                     _post_nl('/homepage/reportchart/', {planid: planid.substr(5)}, function (result) {
                         result = JSON.parse(result);
-                        config = that.report(result.data, result.code);
                         echartsRecords.resize();
-                        echartsRecords.setOption(config);
-                        echartsRecords.on('click', function (params) {
-                            if (success_rate[params.dataIndex] != 100) {
-                                taskid = taskids[params.dataIndex];
-                                that.queryOldBug(taskid);
-                                that.planHistoryVisible = true;
-                            } else {
-                                that.$message({
-                                    message: '该次执行全部通过',
-                                    type: 'success', center: true
-                                });
-                            }
-                        });
-                    })
+                        echartsRecords.setOption(that.report(result.data, result.code));
+
+                    });
 
                 }
             },
@@ -1227,12 +1191,24 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
         });
         actjacoco[index].render()
     });
-
-
     // echarts 窗口缩放自适应
     window.onresize = function () {
         echartsRecords.resize();
     }
+
+    echartsRecords.on('click', function (params) {
+        if (success_rate[params.dataIndex] != 100) {
+            taskid = taskids[params.dataIndex];
+            app.queryOldBug(taskid);
+            app.planHistoryVisible = true;
+        } else {
+            app.$message({
+                message: '该次执行全部通过',
+                type: 'success', center: true
+            });
+        }
+    });
+
 </script>
 </body>
 </html>

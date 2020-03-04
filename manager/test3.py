@@ -1,57 +1,24 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# @Date    : 2019-08-29 08:43:52
-# @Author  : Blackstone
-# @to      :
-
-import re
-
-def md5_encrypt(str_):
-	from hashlib import md5
-	return md5(str_.encode('utf-8')).hexdigest()
-
-# print(md5_encrypt('1'))
-def _is_function_call(call_str):
-	'''
-	判断获取方式类别
-	1.是否有空格
-	2.是否带()
-	'''
-	try:
-		m=re.findall("\((.*?)\)",call_str)
-		for _ in m[0].split(','):
-			try:
-				eval(_)
-
-			except:
-				return False
-
-				
-
-		call_str=call_str.replace(m[0],'')
-		prefix=call_str.split("()")[0]
-
-		if prefix.__contains__(' '):
-			return False
-
-		call_str=call_str.replace(prefix, 'a')
-		return True if 'a()'==call_str else False
-	except:
-		return False
-
-L=[
-'a()',
-'a({{vv}})',
-"a(1,2)",
-"a(1,{{v}})",
-"a('1',{{v}})",
-"a('1')",
-
-"a(k)"
-"a k(1)",
-"select id from A",
-"select a.id from A a left join(select * from B)b on a.id=b.id"
-]
-
-for _ in L:
-	print(_is_function_call(_))
+import psycopg2 as pg2
+ 
+# 返回数据库PostgreSQL连接
+def get_db_conn():
+    # 创建连接
+    return pg2.connect(database='luna_test', user='luna_test', password='luna_test', host='10.60.44.229', port=5432)
+ 
+ 
+# 操作数据库PostgreSQL，返回一条结果
+def db_fetchone(sql):
+    try:
+        conn = get_db_conn()
+        cur = conn.cursor()
+        cur.execute(sql)
+        rows = cur.fetchone()  # 返回一条结果，返回多条结果使用rows = cur.fetchall()
+ 
+        return rows[0]
+    except pg2.DatabaseError as e:
+        print('Error $s' % e)
+ 
+    finally:
+        conn.commit()
+        cur.close()
+        conn.close()

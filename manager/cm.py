@@ -1199,14 +1199,16 @@ def _build_node(kind,src_uid,target_uid,move_type,user,build_nodes):
 	childs=_sort_by_weight(childs)
 	#print('排序结果=>',childs)
 
+	# if child_type=='businessdata':
+	# 	continue;
 
+	
 	if len(childs)>0:
 		print('==构建新节点下子节点数据')
 	for child in childs:
 		child_type=child.__class__.__name__.lower()###?
 		src_type=src.__class__.__name__.lower()
-		if child_type=='businessdata':
-			continue;
+
 		_build_node('%s_%s'%(src_type,child_type),child.id, src.id,'inner',user,build_nodes)
 
 

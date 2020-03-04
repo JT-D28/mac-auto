@@ -3,9 +3,10 @@
 # @Date    : 2019-08-30 15:07:14
 # @Author  : Blackstone
 # @to      :
+import os
 
 from channels.generic.websocket import WebsocketConsumer
-import json,time,threading,time
+import json, threading, time
 import redis
 from django.conf import settings
 
@@ -70,11 +71,11 @@ class ConsoleConsumer(WebsocketConsumer):
         self.keys.sort()
         self.send("[key-value]"+",".join(self.keys))
 
-        
+
         print("查询到的任务id(%s)=>%s"%(len(self.keys),self.keys))
         ##
         while True:
- 
+
             if self._flag==True:
                 print('='*40)
                 print("================结束向用户[%s]控制台发送消息==============="%username)
@@ -86,7 +87,7 @@ class ConsoleConsumer(WebsocketConsumer):
                     break
 
                 while  True:
-                    time.sleep(0.1)
+                    time.sleep(0.01)
 
                     if self._flag==True:
                         break
@@ -98,7 +99,7 @@ class ConsoleConsumer(WebsocketConsumer):
                     sep=self.con.rpop(key)
                     if sep is not None:
                         self.send(sep)
-                            
+
 
 
     def connect(self):
@@ -108,7 +109,7 @@ class ConsoleConsumer(WebsocketConsumer):
         self.con= redis.Redis(connection_pool=pool)
         #print("connect=>",self.con)
        # print('consolemsg 连接.=>',self.con.keys("console.msg::%s*"%self.username))
-  
+
 
 
     def disconnect(self, code):
@@ -123,7 +124,7 @@ class ConsoleConsumer(WebsocketConsumer):
     def receive(self, text_data=None, bytes_data=None):
         # 收到消息后触发
         # self.username=text_data
-    
+
         if text_data.startswith("console.msg::read"):
             self.reset()
             self.username=text_data.split("::")[2]
@@ -138,8 +139,39 @@ class ConsoleConsumer(WebsocketConsumer):
             self.next()
 
 
+class logConsumer(WebsocketConsumer):
+    def __init__(self, args):
+        super(logConsumer, self).__init__(args)
 
+    def sendmsg(self, taskid, is_running):
+        logname = "./logs/" + taskid + ".log"
+        done_msg = '结束计划'
+        if os.path.exists(logname):
+            with open(logname, 'r', encoding='utf-8') as f:
+                if is_running in (0, '0'):
+                    log_text = f.read()
+                    self.send(text_data=json.dumps({
+                        'message': log_text
+                    }))
+                else:
+                    while True:
+                        lines = f.readlines()
+                        line = ''.join(x for x in lines)
+                        self.send(text_data=json.dumps({
+                            'message': line
+                        }))
+                        if done_msg in line:
+                            break
+                        time.sleep(0.3)
 
+    def receive(self, text_data):
+        self.is_running = text_data.split("::")[0]
+        self.taskid = text_data.split("::")[1]
+        print("receive=>", self.taskid)
+        print("receive=>", self.is_running)
+        self.thread = threading.Thread(target=self.sendmsg, args=(self.taskid, self.is_running))
+        self.thread.setDaemon(True)
+        self.thread.start()
 
-       
-
+    def disconnect(self, code=None):
+        print("%s 的日志打印结束" % self.taskid)

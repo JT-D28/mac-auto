@@ -58,23 +58,19 @@ def queryplan(request):
     success_rate = rows[0]['成功数'] / rows[0]['总数'] * 100 if rows[0]['总数'] != 0 else 0
     total = rows[0]['total'] if rows[0]['total'] is not None else 0
 
-    # jacocoset = Jacoco_report.objects.values().filter(productid=pid) if pid != '' else None
-    # if jacocoset:
-    #     try:
-    #         jobdess = []
-    #         jobnames = jacocoset[0]['jobname']
-    #         jobs = jobnames.split(";") if not jobnames.endswith(';') else jobnames.split(";")[:-1]
-    #         for job in jobs:
-    #             jobdess.append({
-    #                 'id': job.split(":")[1],
-    #                 'name': job.split(":")[0]
-    #             })
-    #     except:
-    #         pass
-
-    # else:
-    #     jobdess = ''
-
+    jacocoset = Jacoco_report.objects.values().filter(productid=pid) if pid != '' else None
+    service = [{'id':0,'name':'平均'}]
+    if jacocoset:
+        try:
+            jobnames = jacocoset[0]['jobname']
+            jobs = jobnames.split(";") if not jobnames.endswith(';') else jobnames.split(";")[:-1]
+            for job in jobs:
+                service.append({
+                    'id': job.split(":")[1],
+                    'name': job.split(":")[0]
+                })
+        except:
+            pass
     datanode = []
     try:
         plans = cm.getchild('product_plan', pid)
@@ -84,7 +80,7 @@ def queryplan(request):
                 'name': '%s' % plan.description,
             })
         return JsonResponse(
-            simplejson(code=0, msg='操作成功', data=datanode, rate=str(success_rate)[0:5], total=total), safe=False)
+            simplejson(code=0, msg='操作成功', data=datanode, rate=str(success_rate)[0:5], total=total,service=service), safe=False)
 
     except:
         print(traceback.format_exc())
@@ -101,6 +97,7 @@ def querytaskid(request):  # 查询验证任务最新id
     try:
         planid = request.POST.get('planid')
         plan = Plan.objects.get(id=planid)
+        is_running=plan.is_running
         taskids = list(ResultDetail.objects.values('taskid').filter(plan=plan, is_verify=1).order_by('-createtime'))
         if taskids:
             taskids = taskids[0]["taskid"]
@@ -111,29 +108,7 @@ def querytaskid(request):  # 查询验证任务最新id
         code = 1
         msg = "出错了！"
 
-    return JsonResponse(simplejson(code=code, msg=msg, data=taskids), safe=False)
-
-
-@csrf_exempt
-def process(request):
-    taskid = request.POST.get('taskid')
-    code = 0
-    log_text = ''
-    is_done = 'no'
-    done_msg = '结束计划'
-    logname = "./logs/" + taskid + ".log"
-    try:
-        if os.path.exists(logname):
-            with open(logname, 'r', encoding='utf-8') as f:
-                log_text = f.read()
-        if done_msg in log_text:
-            is_done = 'yes'
-            print('日志执行结束', is_done)
-    except:
-        code = 1
-        msg = "出错了！"
-    return JsonResponse(simplejson(code=code, msg=is_done, data=log_text), safe=False)
-
+    return JsonResponse(simplejson(code=code, msg=msg, data=taskids,is_running=is_running), safe=False)
 
 @csrf_exempt
 def globalsetting(request):
@@ -288,9 +263,8 @@ def jacocoreport(request):
     code, msg = 0, ''
     s = requests.session()
     re = ''
-    productid = request.POST.get('productid')
     jobname = request.POST.get('jobname')
-    jacocoset = Jacoco_report.objects.values().filter(productid=productid)
+    jacocoset = Jacoco_report.objects.values().filter(productid=request.POST.get('productid'))
     if jacocoset:
         authname, authpwd = jacocoset[0]['authpwd'], jacocoset[0]['authname']
     else:
@@ -465,9 +439,10 @@ def queryPlanState(request):
 @csrf_exempt
 def planforceStop(request):
     planid=request.POST.get('id')[5:]
-    plan=Plan.objects.get(id=planid)
+    plan = Plan.objects.get(id=planid)
     try:
         plan.is_running=0
+        plan.save()
         code=0
         msg='success'
     except:

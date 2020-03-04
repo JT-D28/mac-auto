@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="{% static 'homepage/eleui/index.js' %}"></script>
+    <script src="https://gw.alipayobjects.com/os/lib/antv/g2plot/0.11.3/dist/g2plot.js"></script>
     <style>
         .layui-card {
             border: 1px solid #f2f2f2;
@@ -22,6 +23,10 @@
 
         .el-dialog__body {
             padding-top: 0;
+        }
+
+        .el-card__header {
+            padding: 6px 20px;
         }
 
         #echarts-records :first-child {
@@ -194,15 +199,89 @@
                 </div>
             </div>
             <div class="layui-col-xs12 layui-col-md9">
-                <div class="layui-tab-content  layui-col-md12" style="padding: 0">
-                    <div class="layui-tab-item layui-show">
+                <el-tabs :tab-position="productsetposition" style="height: 420px;">
+                    <el-tab-pane label="计划成功率">
                         <div id="echarts-records"
                              style="background-color:#f2f2f2;min-height:400px;padding: 10px;"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="layui-col-xs12 layui-col-md12">
-                <table id="demo" lay-filter="test"></table>
+                    </el-tab-pane>
+                    <el-tab-pane label="代码覆盖率">
+                        <el-card class="box-card" style="min-height: 400px">
+                            <div slot="header" class="clearfix">
+                                <span>选择服务</span>
+                                <el-select filterable  v-model="form.service" multiple style="width: 90%" >
+                                    <el-option
+                                            v-for="i in services"
+                                            :key="i.id"
+                                            :label="i.name"
+                                            :value="i.id">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                            <div class="text item">
+                                <div class="layui-col-md4">
+                                    <div class="layui-card">
+                                        <div class="layui-card-header">
+                                            branchCoverage
+                                        </div>
+                                        <div class="layui-card-body">
+                                            <div id="branchCoverage"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-col-md4">
+                                    <div class="layui-card">
+                                        <div class="layui-card-header">
+                                            classCoverage
+                                        </div>
+                                        <div class="layui-card-body">
+                                            <div id="classCoverage"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-col-md4">
+                                    <div class="layui-card">
+                                        <div class="layui-card-header">
+                                            instructionCoverage
+                                        </div>
+                                        <div class="layui-card-body">
+                                            <div id="instructionCoverage"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-col-md4">
+                                    <div class="layui-card">
+                                        <div class="layui-card-header">
+                                            complexityScore
+                                        </div>
+                                        <div class="layui-card-body">
+                                            <div id="complexityScore"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-col-md4">
+                                    <div class="layui-card">
+                                        <div class="layui-card-header">
+                                            lineCoverage
+                                        </div>
+                                        <div class="layui-card-body">
+                                            <div id="lineCoverage"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-col-md4">
+                                    <div class="layui-card">
+                                        <div class="layui-card-header">
+                                            methodCoverage
+                                        </div>
+                                        <div class="layui-card-body">
+                                            <div id="methodCoverage"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </el-card>
+                    </el-tab-pane>
+                </el-tabs>
             </div>
         </div>
 
@@ -323,17 +402,17 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 </el-tab-pane>
             </el-tabs>
         </el-dialog>
-    </div>
-</div>
-
-
-<div id="seeprocess" hidden>
-    <div class="layui-table">
-        <div class="layui-card-body">
-            <div id="log_text"></div>
+        <div id="seeprocess" hidden>
+            <div class="layui-table">
+                <div class="layui-card-body">
+                    <div v-html="log_text"></div>
+                </div>
+            </div>
         </div>
     </div>
+
 </div>
+
 
 <script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
 <script src="{% static 'homepage/layui/lay-config.js' %}" charset="utf-8"></script>
@@ -347,6 +426,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
             return {
                 noticeSetVisible: false,
                 runningState: '',
+                log_text: '',
                 historytime: '',
                 timeDefaultShow: '',
                 pickerOptions: {
@@ -405,6 +485,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 mailcolors: [{id: 1, color: 'blue'}, {id: 2, color: 'red'}],
                 products: [],
                 plans: [],
+                services: [],
                 runVisible: false,
                 productSetVisible: false,
                 productsetposition: 'left',
@@ -417,6 +498,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     third_plan: '',
                     forceStopPlans: '',
                     plan: '',
+                    service: '',
                     mailcolor: '',
                     productset: {
                         jenkinsurl: '',
@@ -448,7 +530,9 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 _post_nl('/homepage/queryplan/', {id: this.form.product}, function (data) {
                     data = JSON.parse(data)
                     that.plans = data.data;
+                    that.services = data.service;
                     that.form.plan = that.plans[0] != null ? that.plans[0].id : ''
+                    that.form.service = that.services[0] != null ? that.services[0].id : ''
                 })
             },
             runplan() {
@@ -591,6 +675,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     description: that.form.reportNoticeSet.description,
                     to_receive: that.form.reportNoticeSet.to_receive,
                     rich_text: that.form.reportNoticeSet.text,
+                    dingdingtoken: that.form.reportNoticeSet.dingdingtoken,
                 }, function (data) {
                     data = JSON.parse(data);
                     if (data.code == 0 && ss == 0) {
@@ -627,9 +712,11 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     _post_nl('/homepage/querytaskid/', {planid: planid}, function (data) {
                         data = JSON.parse(data)
                         taskid = data.data
+                        is_running = data.is_running
                         if (data.code != 0) {
                             layer.msg(data.msg);
                         } else {
+                            var logSocket = new WebSocket("ws://" + host + "/ws/runlog/");
                             layer.open({
                                 type: 1,
                                 id: "log-process",
@@ -640,32 +727,24 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                 shadeClose: true,
                                 content: $("#seeprocess"),
                                 success: function () {
-                                    that.showlog(taskid)
+                                    logSocket.onopen = function () {
+                                        logSocket.send(is_running + '::' + taskid)
+                                    };
+                                    logSocket.onmessage = function (e) {
+                                        text = JSON.parse(e.data)
+                                        that.log_text += text.message
+                                    }
+                                    logSocket.onclose = function () {
+                                        console.log("结束获取日志..")
+                                    }
+                                }, end: function () {
+                                    logSocket.close()
+                                    that.log_text = ''
                                 }
                             });
                         }
                     })
                 }
-            },
-            showlog(taskid) {
-                $.ajax({
-                    url: '/homepage/process/',
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {'taskid': taskid},
-                    success: function (res) {
-                        res = JSON.parse(res)
-                        var log_text = res.data
-                        var is_done = res.msg
-                        $("#log_text").html(log_text);
-                        var ta = document.getElementById('log-process');
-                        ta.scrollTop = ta.scrollHeight;//定位到最后
-                        if (is_done != 'yes') {
-                            window.setTimeout(showlog(taskid), 500);
-                        }
-                        return false;
-                    }
-                });
             },
             report(data, code) {
                 x = [];
@@ -1039,6 +1118,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
             layui.use(['echarts'], function () {
                 echartsRecords = echarts.init(document.getElementById('echarts-records'), 'walden');
             });
+
         },
         watch: {
             'form.plan': function (planid) {
@@ -1080,8 +1160,33 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     that.form.is_verify_url = data.is_verify_url
                     that.form.debug_url = data.debug_url
                 })
+            },
+            'form.service': function (jobname) {
+                var that = this;
+                _post_nl('/homepage/jacocoreport/', {productid: that.form.product, jobname: jobname}, function (data) {
+                    data = JSON.parse(data)
+                    coverlist.forEach(function (item, index) {
+                        rate = data.data != '' ? data.data[item] / 100 : 0
+                        actjacoco[index].update(rate)
+                    });
+                })
+            },
+            'log_text': function () {
+                setTimeout(function () {
+                    //设置滚动条到最底部
+                    document.getElementById('log-process').scrollTop = document.getElementById('log-process').scrollHeight;
+                }, 100);
             }
         },
+    });
+
+    coverlist = ['branchCoverage', 'classCoverage', 'instructionCoverage', 'complexityScore', 'lineCoverage', 'methodCoverage']
+    actjacoco = [];
+    coverlist.forEach(function (item, index) {
+        actjacoco[index] = new g2plot.RingProgress(document.getElementById(item), {
+            percent: 0, width: 100, height: 100, padding: 'auto'
+        });
+        actjacoco[index].render()
     });
 
     // echarts 窗口缩放自适应

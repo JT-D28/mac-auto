@@ -90,6 +90,10 @@ class Mysqloper:
                                                    host=self.host, 
                                                    database=self.dbname)
 
+                elif self.dbtype.lower()=='pgsql':
+                    import psycopg2 as pg2
+                    conn=pg2.connect(database=self.dbname, user=self.user, password=self.pwd, host=self.host, port=int(self.port))
+
                 print("连接成功！")
                 #:
                 Mysqloper._pool[str(conname)]=conn

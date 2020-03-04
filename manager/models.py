@@ -54,6 +54,17 @@ class Tag(models.Model):
 	def __str__(self):
 		return self.name
 
+
+class Scheme(models.Model):
+	name=models.CharField(max_length=18)
+	description=models.CharField(max_length=64)
+	t1=models.IntegerField()
+	t2=models.IntegerField()
+
+
+
+
+
 '''
 业务数据定义
 '''

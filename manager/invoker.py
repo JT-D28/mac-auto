@@ -21,7 +21,7 @@ from email.utils import formataddr,parseaddr
 from email.header import Header
 
 try:
-    import xml.etree.cElementTree as ET涩
+    import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
 
@@ -130,7 +130,7 @@ def gettaskresult(taskid):
 	spend_total=0
 	res=ResultDetail.objects.filter(taskid=taskid).order_by('createtime')
 
-	print(res)
+	# print(res)
 	reslist=list(res)
 	if len(reslist)==0:
 		return detail
@@ -156,8 +156,8 @@ def gettaskresult(taskid):
 
 	cases=[Case.objects.get(id=caseid) for caseid in caseids]
 
-	print('cases=>')
-	print(cases)
+	# print('cases=>')
+	# print(cases)
 	report_url='http://%s/static/report_%s.html'%(configs.ME2_URL,taskid)
 	detail['local_report_address']=report_url
 	detail['planname']=planname
@@ -182,7 +182,7 @@ def gettaskresult(taskid):
 		if caseobj.get("steps",None) is None:
 			caseobj['steps']={}
 		caseid=case.id
-		print('taskid=>%s case_id=>%s'%(taskid,case))
+		# print('taskid=>%s case_id=>%s'%(taskid,case))
 		step_query=list(ResultDetail.objects.filter(taskid=taskid,case=case))
 		##case_step
 		for x in step_query:
@@ -223,7 +223,7 @@ def gettaskresult(taskid):
 				error,stepinst=gettestdatastep(business.id)
 				if stepinst.url:
 
-					print('%s=>%s,%s'%(business.id,error,stepinst))
+					#print('%s=>%s,%s'%(business.id,error,stepinst))
 					businessobj['stepname']=stepinst.description
 					matcher=[a for a in stepinst.url.split('/') if not a.__contains__("{{") and not a.__contains__(':')]
 					api='/'.join(matcher)
@@ -293,8 +293,8 @@ def gettaskresult(taskid):
 	##
 	print('报告数据=>',detail)
 
-	with open('d:/1.txt','w') as f:
-		f.write(str(detail))
+	# with open('d:/1.txt','w') as f:
+	# 	f.write(str(detail))
 
 
 	###
@@ -2606,6 +2606,7 @@ class Transformer:
 
 					params=(str(params)).replace('"',"'")
 					business.params=self._replace_var(params)
+
 					business.save()
 					print('==添加接口业务数据[%s]'%business)
 					self._businessid_cache['%s:%s'%(sheetname,rowindex+1)]=business.id
@@ -3003,7 +3004,9 @@ class Transformer:
 	def add_step_bussiness_relation2(self,step_id,workbook,paramfieldvalue):
 		'''
 		通过参数列定位业务数据
+
 		'''
+		from .cm import getnextvalue
 
 		step=Step.objects.get(id=step_id)
 		sheetname=paramfieldvalue.split('：')[0]
@@ -3043,6 +3046,7 @@ class Transformer:
 			order.main_id=step.id
 			order.follow_id=business.id
 			order.author=User.objects.get(name=self.callername)
+			order.value=getnextvalue(order.kind,order.main_id)
 			order.save()
 
 			print('==步骤关联测试点[%s]'%order)
@@ -3931,6 +3935,10 @@ class DataMove:
 				order.main_id=step.id
 				order.follow_id=business.id
 				order.value=ordervalue
+	
+				# if not ordervalue:
+				# 	order.value='1.1'
+
 				try:
 					author=User.objects.get(name=callername)
 					order.author=author

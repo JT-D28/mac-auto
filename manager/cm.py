@@ -558,7 +558,18 @@ def delstep(request):
 		'status':'success',
 		'msg':"删除失败[%s]"%traceback.format_exc()
 		}
-		
+
+
+def _check_params(param_value):
+	if param_value.startswith('{') or param_value.endswith('}'):
+		try:
+			eval(param_value)
+			return True
+		except:
+			return False
+	else:
+		return True
+
 ##
 def addbusiness(request):
 	from .core import getbuiltin,Fu
@@ -571,6 +582,15 @@ def addbusiness(request):
 		b.itf_check=request.POST.get('itf_check')
 		b.db_check=request.POST.get('db_check')
 		b.params=request.POST.get('params')
+
+		check_result=_check_params(b.params)
+		if not check_result:
+			return{
+			'status':'error',
+			'msg':'参数json格式异常，请检查！'
+			}
+
+
 		b.postposition=request.POST.get('postposition')
 		b.preposition=request.POST.get('preposition')
 		b.count=int(request.POST.get('count').strip()) if request.POST.get('count') !='' else int(1)
@@ -650,6 +670,16 @@ def editbusiness(request):
 		b.postposition=request.POST.get('postposition')
 		b.preposition=request.POST.get('preposition')
 		b.count=int(request.POST.get('count').strip()) if request.POST.get('count') !='' else int(1)
+
+
+		#check params
+		check_result=_check_params(b.params)
+		if not check_result:
+			return{
+			'status':'error',
+			'msg':'参数json格式异常，请检查！'
+			}
+
 
 		if b.count==0:
 			bname='<s>%s</s>'%bname
@@ -823,15 +853,18 @@ def getchild(kind,main_id):
 		for order in orderlist:
 			child.append(Case.objects.get(id=order.follow_id))
 
-	elif kind=='':
-		orderlist=list(Order.objects.filter(main_id=main_id))
+	else:
+		orderlist=list(Order.objects.filter(Q(main_id=main_id)&Q(kind__contains=kind)))
 		for order in orderlist:
 			kind=order.kind
 			ctype=kind.split('_')[1]
-			if ctype=='business':
+			#print('old ctype=>',ctype)
+			if ctype in('business','businessdata'):
 				ctype="BusinessData"
 			else:
 				ctype=ctype[0].upper()+ctype[1:]
+
+			#print('last ctype=>',ctype)
 
 			child.append(eval('%s.objects.get(id=%s)'%(ctype,order.follow_id)))
 	
@@ -924,8 +957,9 @@ def _regen_weight(callername,element,trigger='prev',target_id=None):
 		text='%s_'%parentkind
 
 		delrelation(order.kind, callername, parentid,element.id)
-		element.delete()
+		
 		print('==删除节点[%s]'%element)
+		element.delete()
 		print('==删除后重新生成权重')
 		orderlist=ordered(list(Order.objects.filter(Q(kind__contains=text)&Q(main_id=parentid))))
 		
@@ -1024,16 +1058,17 @@ def _get_delete_node(src_uid,src_type,iscopy,del_nodes):
 	if iscopy=='true':
 		print('==复制操作 略过添加待删除源数据')
 	else:
-		print('==添加待删除源数据==')
+		print('==计算待删除源数据==')
 		del_nodes.append((src_type,str(src_uid)))
-		childs=getchild('', src_uid)
-		#print(childs)
+		parent_type,parent_id=_get_node_parent_info(src_type, src_uid)
+		
+		# kind='%s_%s'%(parent_type,src_type)
+
+		# print('k1=>',kind)
+		childs=getchild('%s_'%src_type, src_uid)##??
+		#print('childs=>',childs)
 		for child in childs:
 			child_type=child.__class__.__name__.lower()
-			# # child.delete()
-			# order=Order.objects.get(main_id=child.id)
-			# nextid=order.follow_id
-			# del_nodes.append((order.kind.split('_')[1],nextid))
 			_get_delete_node(child.id, child_type,False, del_nodes)
 
 def _sort_by_weight(childs):
@@ -1049,7 +1084,20 @@ def _sort_by_weight(childs):
 			node_type=c.__class__.__name__.lower()
 			if node_type=='businessdata':
 				node_type='business'
+
+			descp=''
+			try:
+				desp=c.description
+			except:
+				desp=c.businessname
+			print('desp=>',descp)
 			parent_type,parent_id=_get_node_parent_info(node_type,c.id)
+
+			# if parent_id==-1:
+			# 	return childs
+
+			print('p=>',node_type,c.id)
+			print('res=>',parent_type,parent_id)
 			kind='%s_%s'%(parent_type,node_type)
 			print('o info=>%s %s %s'%(kind,parent_id,c.id))
 			ov=Order.objects.get(kind=kind,main_id=parent_id,follow_id=c.id).value
@@ -1108,7 +1156,12 @@ def _build_node(kind,src_uid,target_uid,move_type,user,build_nodes):
 		print('inner 构建完成[%s]'%order)
 		order.save()
 	else:
-		parent_order=Order.objects.get(follow_id=target_uid)
+		kindlike='%s_'%target_type
+
+		print('kindlike=>',kindlike)##error
+		print('targetid=>',target_uid)
+
+		parent_order=Order.objects.get(Q(kind__contains=kindlike)&Q(follow_id=target_uid))
 		parent_type=parent_order.kind.split('_')[0]
 		##不可能为business
 		parent_type_upper=parent_type.split('_')[0][0].upper()+parent_type.split('_')[0][1:]
@@ -1116,7 +1169,7 @@ def _build_node(kind,src_uid,target_uid,move_type,user,build_nodes):
 
 		order=Order()
 		order.author=user
-		order.kind='%s_%s'%(parent_type,src_type)
+		order.kind='%s_%s'%(parent_type,src_type)###?
 		order.main_id=parent.id
 		order.follow_id=src.id
 
@@ -1138,16 +1191,22 @@ def _build_node(kind,src_uid,target_uid,move_type,user,build_nodes):
 		order.save()
 
 	##子节点存在情况
-	childs=getchild('',src_uid)
+	# parent_type,parent_id=_get_node_parent_info(src_type,src_uid)
+	#k2='%s_%s'%('',src_type)
+	# print('k2=>',k2)
+	childs=getchild('%s_'%src_type,src_uid)##???
+	#print('==兄弟节点排序=>',childs)
 	childs=_sort_by_weight(childs)
-	print('cha=>',childs)
+	#print('排序结果=>',childs)
 
 
 	if len(childs)>0:
 		print('==构建新节点下子节点数据')
 	for child in childs:
-		child_type=child.__class__.__name__.lower()###????
+		child_type=child.__class__.__name__.lower()###?
 		src_type=src.__class__.__name__.lower()
+		if child_type=='businessdata':
+			continue;
 		_build_node('%s_%s'%(src_type,child_type),child.id, src.id,'inner',user,build_nodes)
 
 
@@ -1170,9 +1229,13 @@ def _build_all(src_id,target_id,move_type,user,is_copy,callername):
 	element=eval("%s.objects.get(id=%s)"%(elementclass,elementid))
 	##
 	if move_type!='inner':
-		order=Order.objects.get(follow_id=target_uid)
-		parenttype=order.kind.split('_')[0]
-		kind='%s_%s'%(parenttype,src_type)
+
+		print('targetid=>',target_uid)
+		# order=Order.objects.get(follow_id=target_uid)
+		# parenttype=order.kind.split('_')[0]
+		# kind='%s_%s'%(parenttype,src_type)
+		parent_type,parent_id=_get_node_parent_info(src_type, src_uid)
+		kind='%s_%s'%(parent_type,src_type)
 
 	build_nodes=[]
 	_build_node(kind,src_uid,target_uid,move_type,user,build_nodes)
@@ -1422,6 +1485,8 @@ def del_node_force(request):
 
 		##重排序
 		parent_type,parent_id=_get_node_parent_info(node_type, idx)
+
+
 		_regen_weight_force(parent_type, parent_id,ignore_id=idx)
 
 		#
@@ -1447,8 +1512,15 @@ def del_node_force(request):
 def _get_node_parent_info(node_type,node_id):
 	if node_type=='case':
 		return _get_case_parent_info(node_id)
+	elif node_type=='product':
+		return('root',-1)
 	else:
-		o=Order.objects.get(Q(follow_id=node_id)&Q(kind__contains='_%s'%node_type))
+		if node_type in('businessdata'):
+			node_type='business'
+
+		kindlike='_%s'%node_type
+		print('fid=>%s kind like=>%s'%(node_id,kindlike))
+		o=Order.objects.get(Q(kind__contains=kindlike)&Q(follow_id=node_id))
 		return (o.kind.split('_')[0],o.main_id)
 
 

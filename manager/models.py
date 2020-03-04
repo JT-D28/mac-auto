@@ -109,8 +109,8 @@ class Step(models.Model):
 
 
 	def __str__(self):
-		#return "[%s]%s"%(self.id,self.description)
-		return ''
+		return "[%s]%s"%(self.id,self.description)
+
 
 class Case(models.Model):
 

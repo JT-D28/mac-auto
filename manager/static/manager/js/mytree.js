@@ -136,7 +136,7 @@ var tree={
 		_m1={
 			'root':['add'],
 			'product':['add','edit','del','mimport'],
-			'plan':['add','edit','del','run','mexport','logs'],
+			'plan':['add','edit','del','run','mexport','logs','config'],
 			'case':['add','edit','del'],
 			'step':['add','edit','del'],
 			'business':['edit','del']
@@ -152,7 +152,8 @@ var tree={
 			'add':"<span class='fa fa-plus-circle' id='add_#tid#' title='增加' onfocus='this.blur();'></span>",
 			'del':"<span class='fa fa-trash' id='del_#tid#' title='删除' onfocus='this.blur();'></span>",
 			'logs':"<span class='fa fa-bug' id='logs_#tid#' title='调试日志' onfocus='this.blur();'></span>",
-		}
+			'config':"<span class='fa fa-cog' id='config_#tid#' title='高级配置' onfocus='this.blur();'></span>",
+			}
 
 		var type=treeNode.type
 		// alert(type)
@@ -190,6 +191,7 @@ var tree={
 		if($("#mimport_"+treeNode.tId).length>0)return
 		if($("#mexport_"+treeNode.tId).length>0)return
 		if($("#logs_"+treeNode.tId).length>0)return
+		if($("#config_"+treeNode.tId).length>0)return
 
 		sObj.after(btnstr);
 
@@ -246,6 +248,18 @@ var tree={
 		    			layer.alert(e.msg,{icon:1,time:2000})
 		    		}
 		    		else{
+		    			if(treeNode.type=='product'){
+
+		    				layer.open({
+		    					title:'信息',
+		    					icon:2,
+		    					type:0,
+		    					content:e.msg,
+		    				});
+
+
+
+		    			}else{
 
 		    			layer.open(
 					      {
@@ -267,9 +281,17 @@ var tree={
 
 					        	}
 
+					        	if(treeNode.type=='product'){
+					        		layer.alert('不允许强制删除')
+					        	}
+
 					        	_post('/manager/treecontrol/',{'action':'del_node_force','ids':treeNode.id},success)
 					        }
 					    });
+
+
+
+		    			}
 		    		}
 
 		    	};
@@ -353,6 +375,15 @@ var tree={
 				})
 				return false;
 			});
+			//数据映射
+			config_btn=$("#config_"+treeNode.tId)
+			if(config_btn)config_btn.bind('click',function(){
+
+
+				alert('高级配置！')
+			})
+
+			//日志
 
 			logs_btn = $("#logs_" + treeNode.tId)
 			if (logs_btn) logs_btn.bind("click", function () {
@@ -494,6 +525,7 @@ var tree={
 	    $("#mexport_"+treeNode.tId).unbind().remove();
 	    $("#run_"+treeNode.tId).unbind().remove();
 		$("#logs_"+treeNode.tId).unbind().remove();
+		$("#config_"+treeNode.tId).unbind().remove();
 	},
 
 	_onBeforeExpand:function(e,treeId,treeNode){
@@ -605,6 +637,8 @@ var tree={
     	}else{
     		var treeObj = $.fn.zTree.getZTreeObj(treeId);
     		var parent=targetNode.getParentNode();
+    		//console.log('type=>',parent)
+    		if(!parent)return false;
     	    if(expected.indexOf(parent.type)==-1){
     			layer.alert(warn,{icon:2,time:2000})
     			return false;

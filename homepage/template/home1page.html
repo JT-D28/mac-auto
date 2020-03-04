@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layuimini.css' %}" media="all">
     <link rel="stylesheet" href="{% static 'homepage/layui/css/public.css' %}" media="all">
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="{% static 'homepage/vue.js' %}"></script>
     <script src="{% static 'homepage/eleui/index.js' %}"></script>
     <script src="https://gw.alipayobjects.com/os/lib/antv/g2plot/0.11.3/dist/g2plot.js"></script>
     <style>
@@ -27,6 +27,10 @@
 
         .el-card__header {
             padding: 6px 20px;
+        }
+
+        #coverage > .el-card__body {
+            padding: 0px !important;
         }
 
         #echarts-records :first-child {
@@ -205,10 +209,11 @@
                              style="background-color:#f2f2f2;min-height:400px;padding: 10px;"></div>
                     </el-tab-pane>
                     <el-tab-pane label="代码覆盖率">
-                        <el-card class="box-card" style="min-height: 400px">
+                        <el-card id="coverage" class="box-card" style="min-height: 400px">
                             <div slot="header" class="clearfix">
                                 <span>选择服务</span>
-                                <el-select filterable  v-model="form.service" multiple style="width: 90%" >
+                                <el-select @change="serviceChange" clearable collapse-tags filterable
+                                           v-model="form.service" multiple style="width: 60%">
                                     <el-option
                                             v-for="i in services"
                                             :key="i.id"
@@ -216,6 +221,8 @@
                                             :value="i.id">
                                     </el-option>
                                 </el-select>
+                                <el-button type="success" @click="jacocoReFlash">${synchronize}
+                                </el-button>
                             </div>
                             <div class="text item">
                                 <div class="layui-col-md4">
@@ -413,9 +420,9 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
 
 </div>
 
-
+<script src="{% static 'homepage/echarts.common.min.js' %}" charset="utf-8"></script>
+<script src="{% static 'homepage/echartsTheme.js' %}" charset="utf-8"></script>
 <script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
-<script src="{% static 'homepage/layui/lay-config.js' %}" charset="utf-8"></script>
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script>
     var app = new Vue({
@@ -427,6 +434,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 noticeSetVisible: false,
                 runningState: '',
                 log_text: '',
+                synchronize: '获取',
                 historytime: '',
                 timeDefaultShow: '',
                 pickerOptions: {
@@ -532,7 +540,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     that.plans = data.data;
                     that.services = data.service;
                     that.form.plan = that.plans[0] != null ? that.plans[0].id : ''
-                    that.form.service = that.services[0] != null ? that.services[0].id : ''
+                    that.form.service = that.services[0] != null ? [that.services[0].id] : []
                 })
             },
             runplan() {
@@ -811,16 +819,6 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                         link: {xAxisIndex: 'all'},
                         label: {
                             backgroundColor: '#777'
-                        }
-                    },
-                    toolbox: {
-                        feature: {
-                            dataZoom: {
-                                yAxisIndex: false
-                            },
-                            brush: {
-                                type: ['lineX', 'clear']
-                            }
                         }
                     },
                     brush: {
@@ -1112,13 +1110,45 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 });
                 oInput.remove()
             },
+            jacocoReFlash() {
+                var that = this;
+                productid = that.form.product;
+                jobname = that.form.service
+                if (productid != '' & jobname != '') {
+                    that.synchronize = '获取中'
+                    _post_nl('/homepage/jacocoreport/', {
+                        productid: productid,
+                        jobname: jobname
+                    }, function (data) {
+                        data = JSON.parse(data)
+                        coverlist.forEach(function (item, index) {
+                            rate = data.data != '' ? data.data[item] / 100 : 0
+                            actjacoco[index].update(rate)
+                        });
+                        that.synchronize = '获取'
+                    })
+                } else return
+            },
+            serviceChange(curdata) {
+                if (curdata.indexOf(0) != -1) {
+                    if (curdata[curdata.length - 1] == 0) {
+                        this.form.service = [0]
+                    } else {
+                        curdata.splice(curdata.indexOf(0), 1)
+                        this.form.service = curdata
+                    }
+                } else if (curdata[0] == 0) {
+                    this.form.service = curdata.shift()
+                }
+                this.jacocoReFlash()
+            }
         },
         created: function () {
             this.getproduct();
-            layui.use(['echarts'], function () {
+            /**   layui.use(['echarts'], function () {
                 echartsRecords = echarts.init(document.getElementById('echarts-records'), 'walden');
             });
-
+             **/
         },
         watch: {
             'form.plan': function (planid) {
@@ -1126,7 +1156,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 if (planid == '') {
                     return
                 } else {
-                    layui.use(['echarts'], function () {
+                    /**layui.use(['echarts'], function () {
                         var echarts = layui.echarts;
                         _post_nl('/homepage/reportchart/', {planid: planid.substr(5)}, function (result) {
                             result = JSON.parse(result);
@@ -1145,7 +1175,26 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                 }
                             });
                         })
+                    })**/
+                    _post_nl('/homepage/reportchart/', {planid: planid.substr(5)}, function (result) {
+                        result = JSON.parse(result);
+                        config = that.report(result.data, result.code);
+                        echartsRecords.resize();
+                        echartsRecords.setOption(config);
+                        echartsRecords.on('click', function (params) {
+                            if (success_rate[params.dataIndex] != 100) {
+                                taskid = taskids[params.dataIndex];
+                                that.queryOldBug(taskid);
+                                that.planHistoryVisible = true;
+                            } else {
+                                that.$message({
+                                    message: '该次执行全部通过',
+                                    type: 'success', center: true
+                                });
+                            }
+                        });
                     })
+
                 }
             },
             'form.forceStopPlans': function (id) {
@@ -1161,16 +1210,6 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     that.form.debug_url = data.debug_url
                 })
             },
-            'form.service': function (jobname) {
-                var that = this;
-                _post_nl('/homepage/jacocoreport/', {productid: that.form.product, jobname: jobname}, function (data) {
-                    data = JSON.parse(data)
-                    coverlist.forEach(function (item, index) {
-                        rate = data.data != '' ? data.data[item] / 100 : 0
-                        actjacoco[index].update(rate)
-                    });
-                })
-            },
             'log_text': function () {
                 setTimeout(function () {
                     //设置滚动条到最底部
@@ -1179,15 +1218,16 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
             }
         },
     });
-
+    echartsRecords = echarts.init(document.getElementById('echarts-records'), 'me2');
     coverlist = ['branchCoverage', 'classCoverage', 'instructionCoverage', 'complexityScore', 'lineCoverage', 'methodCoverage']
     actjacoco = [];
     coverlist.forEach(function (item, index) {
         actjacoco[index] = new g2plot.RingProgress(document.getElementById(item), {
-            percent: 0, width: 100, height: 100, padding: 'auto'
+            percent: 0, width: 100, height: 100, padding: 'auto', angleField: "data",
         });
         actjacoco[index].render()
     });
+
 
     // echarts 窗口缩放自适应
     window.onresize = function () {

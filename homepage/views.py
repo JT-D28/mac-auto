@@ -45,7 +45,7 @@ def queryproduct(request):
 @csrf_exempt
 def queryplan(request):
     code, msg = 0, ''
-    pid=request.POST.get('id')
+    pid = request.POST.get('id')
     sql = '''
     SELECT COUNT(DISTINCT taskid) as 'total',sum(CASE WHEN r.result='success' THEN 1 ELSE 0 END) AS '成功数' ,count(*) as '总数'  
     FROM manager_resultdetail r WHERE r.plan_id IN (SELECT follow_id FROM manager_order WHERE main_id=%s) 
@@ -59,7 +59,7 @@ def queryplan(request):
     total = rows[0]['total'] if rows[0]['total'] is not None else 0
 
     jacocoset = Jacoco_report.objects.values().filter(productid=pid) if pid != '' else None
-    service = [{'id':0,'name':'平均'}]
+    service = [{'id': 0, 'name': '平均'}]
     if jacocoset:
         try:
             jobnames = jacocoset[0]['jobname']
@@ -80,7 +80,8 @@ def queryplan(request):
                 'name': '%s' % plan.description,
             })
         return JsonResponse(
-            simplejson(code=0, msg='操作成功', data=datanode, rate=str(success_rate)[0:5], total=total,service=service), safe=False)
+            simplejson(code=0, msg='操作成功', data=datanode, rate=str(success_rate)[0:5], total=total, service=service),
+            safe=False)
 
     except:
         print(traceback.format_exc())
@@ -97,7 +98,7 @@ def querytaskid(request):  # 查询验证任务最新id
     try:
         planid = request.POST.get('planid')
         plan = Plan.objects.get(id=planid)
-        is_running=plan.is_running
+        is_running = plan.is_running
         taskids = list(ResultDetail.objects.values('taskid').filter(plan=plan, is_verify=1).order_by('-createtime'))
         if taskids:
             taskids = taskids[0]["taskid"]
@@ -108,7 +109,8 @@ def querytaskid(request):  # 查询验证任务最新id
         code = 1
         msg = "出错了！"
 
-    return JsonResponse(simplejson(code=code, msg=msg, data=taskids,is_running=is_running), safe=False)
+    return JsonResponse(simplejson(code=code, msg=msg, data=taskids, is_running=is_running), safe=False)
+
 
 @csrf_exempt
 def globalsetting(request):
@@ -261,33 +263,38 @@ def badresult(request):
 @csrf_exempt
 def jacocoreport(request):
     code, msg = 0, ''
-    s = requests.session()
-    re = ''
-    jobname = request.POST.get('jobname')
-    jacocoset = Jacoco_report.objects.values().filter(productid=request.POST.get('productid'))
+    jobnames = []
+    res = {'branchCoverage': 0, 'classCoverage': 0, 'complexityScore': 0, 'instructionCoverage': 0, 'lineCoverage': 0,
+           'methodCoverage': 0}
+    jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
     if jacocoset:
-        authname, authpwd = jacocoset[0]['authpwd'], jacocoset[0]['authname']
-    else:
-        authname, authpwd = '', ''
-    if len(authname) & len(authpwd) != 0 and jobname in jacocoset[0]['jobname']:
-        s.auth = (jacocoset[0]['authname'], jacocoset[0]['authpwd'])
-        try:
-            jenkinsurl = jacocoset[0]['jenkinsurl']
-            jsond = json.loads(s.get(jenkinsurl + "/job/" + jobname + "/lastBuild/jacoco/api/python?pretty=true").text)
-            re = {
-                'branchCoverage': jsond['branchCoverage']['percentage'],
-                'classCoverage': jsond['classCoverage']['percentage'],
-                'complexityScore': jsond['complexityScore']['percentage'],
-                'instructionCoverage': jsond['instructionCoverage']['percentage'],
-                'lineCoverage': jsond['lineCoverage']['percentage'],
-                'methodCoverage': jsond['methodCoverage']['percentage'],
-            }
-        except:
-            print(traceback.format_exc())
-            code = 1
-            msg = '查询异常'
-            re = ''
-    return JsonResponse(simplejson(code=code, msg=msg, data=re), safe=False)
+        authname, authpwd, jenkinsurl = jacocoset.authname, jacocoset.authname, jacocoset.jenkinsurl
+        if '0' in request.POST.getlist('jobname[]'):
+            jobs = jacocoset.jobname.split(";")[:-1] if jacocoset.jobname.endswith(";") else jacocoset.jobname.split(
+                ";")
+            for i in jobs:
+                jobnames.append(i.split(":")[1])
+        else:
+            jobnames = [x for x in request.POST.getlist('jobname[]')]
+        jobnum= len(jobnames)
+        if len(authname) & len(authpwd) != 0:
+            s = requests.session()
+            s.auth = (authname, authpwd)
+            for index, jobname in enumerate(jobnames):
+                try:
+                    url = jenkinsurl + "/job/" + jobname + "/lastBuild/jacoco/api/python?pretty=true"
+                    jsond = json.loads(s.get(url).text)
+                    res['branchCoverage'] += jsond['branchCoverage']['percentage']/jobnum
+                    res['classCoverage'] += jsond['classCoverage']['percentage']/jobnum
+                    res['complexityScore'] += jsond['complexityScore']['percentage']/jobnum
+                    res['instructionCoverage'] += jsond['instructionCoverage']['percentage']/jobnum
+                    res['lineCoverage'] += jsond['lineCoverage']['percentage']/jobnum
+                    res['methodCoverage'] += jsond['methodCoverage']['percentage']/jobnum
+                except:
+                    print(traceback.format_exc())
+                    code = 1
+                    msg = '查询异常'
+    return JsonResponse(simplejson(code=code, msg=msg, data=res), safe=False)
 
 
 @csrf_exempt
@@ -301,10 +308,10 @@ def querybuglog(request):  # 历史缺陷
     gettime = request.POST.get("time")
     timestart = gettime.split(";")[0];
     timeend = gettime.split(";")[1];
-    taskid=request.POST.get('taskid')
+    taskid = request.POST.get('taskid')
     res = []
-    if taskid=='omit':
-        #根据日期和任务id查询
+    if taskid == 'omit':
+        # 根据日期和任务id查询
         sql = '''
         SELECT r.taskid as '任务id', r.plan_id,r.createtime, b.id AS bussiness_id,p.description AS '计划名',c.description AS '用例名',
         s.description AS '步骤名',s.headers AS headers,s.body AS body,s.url AS url,
@@ -313,13 +320,14 @@ def querybuglog(request):  # 历史缺陷
         manager_businessdata b WHERE r.result IN ('error','fail') AND r.is_verify=1 AND r.plan_id=p.id AND r.case_id=c.id AND r.step_id=s.id
         AND r.businessdata_id=b.id AND  r.createtime  BETWEEN %s and %s 
         '''
-        sql = sql if request.POST.get('planid') == '' else sql + 'and r.plan_id=' + request.POST.get('planid').split("_")[1]
+        sql = sql if request.POST.get('planid') == '' else sql + 'and r.plan_id=' + \
+                                                           request.POST.get('planid').split("_")[1]
         with connection.cursor() as cursor:
             cursor.execute(sql, [timestart, timeend + '23:59:59'])
             desc = cursor.description
             rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
     else:
-        #根据taskid查找
+        # 根据taskid查找
         sql = '''
         select * from (SELECT r.taskid AS '任务id',r.plan_id,r.createtime,b.id AS bussiness_id,p.description AS '计划名',
         c.description AS '用例名',s.description AS '步骤名',s.headers AS headers,s.body AS body,s.url AS url,b.businessname 
@@ -334,7 +342,7 @@ def querybuglog(request):  # 历史缺陷
             rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
     for i in range(len(rows)):
         res.append(
-            {'createtime':rows[i]['createtime'],'路径': rows[i]['用例名'] + '-' + rows[i]['步骤名'], '接口': rows[i]['url'],
+            {'createtime': rows[i]['createtime'], '路径': rows[i]['用例名'] + '-' + rows[i]['步骤名'], '接口': rows[i]['url'],
              '测试点': rows[i]['测试点'], '参数信息': rows[i]['参数信息'], '失败原因': rows[i]['失败原因'],
              '任务id': rows[i]['任务id']})
     res, total = getpagedata(res, request.POST.get('page'), request.POST.get('limit'))
@@ -428,33 +436,39 @@ def downloadReport(request):
         response['Content-Type'] = 'application/octet-stream'
         response['Content-Disposition'] = 'attachment;filename=%s.html' % request.POST.get('taskid')
         return response
-    else:return JsonResponse({'msg': ''})
+    else:
+        return JsonResponse({'msg': ''})
+
 
 @csrf_exempt
 def queryPlanState(request):
-    planid=request.POST.get('id')[5:]
-    plan=Plan.objects.get(id=planid)
-    return JsonResponse({'data':plan.is_running})
+    planid = request.POST.get('id')[5:]
+    plan = Plan.objects.get(id=planid)
+    return JsonResponse({'data': plan.is_running})
+
 
 @csrf_exempt
 def planforceStop(request):
-    planid=request.POST.get('id')[5:]
+    planid = request.POST.get('id')[5:]
     plan = Plan.objects.get(id=planid)
     try:
-        plan.is_running=0
+        plan.is_running = 0
         plan.save()
-        code=0
-        msg='success'
+        code = 0
+        msg = 'success'
     except:
         code = 1
-        msg='stop_error'
-    return JsonResponse({'code':code,'msg':msg})
+        msg = 'stop_error'
+    return JsonResponse({'code': code, 'msg': msg})
+
 
 @csrf_exempt
 def query_third_call(request):
     planid = request.POST.get('planid')
     callername = models.Plan.objects.get(id=planid).author.name
-    mwstr = 'callername=%s&taskid=%s' % (callername,planid)
-    is_verify_url='%s/manager/third_party_call/?v=%s&is_verify=%s&planid=%s' % (settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 1,planid)
-    debug_url='%s/manager/third_party_call/?v=%s&is_verify=%s&planid=%s' % (settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 0,planid)
-    return JsonResponse({'is_verify_url':is_verify_url,'debug_url':debug_url})
+    mwstr = 'callername=%s&taskid=%s' % (callername, planid)
+    is_verify_url = '%s/manager/third_party_call/?v=%s&is_verify=%s&planid=%s' % (
+        settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 1, planid)
+    debug_url = '%s/manager/third_party_call/?v=%s&is_verify=%s&planid=%s' % (
+        settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 0, planid)
+    return JsonResponse({'is_verify_url': is_verify_url, 'debug_url': debug_url})

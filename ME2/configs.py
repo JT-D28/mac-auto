@@ -2,7 +2,7 @@
 dbtype = 'sqlite3'
 
 # ME2 url地址
-ME2_URL = '127.0.0.1:8000'
+ME2_URL = '127.0.0.1:8001'
 
 # 环境数据库配置
 # mysql

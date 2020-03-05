@@ -261,8 +261,13 @@ def badresult(request):
 def jacocoreport(request):
     code, msg = 0, ''
     jobnames = []
-    res = {'branchCoverage': 0, 'classCoverage': 0, 'complexityScore': 0, 'instructionCoverage': 0, 'lineCoverage': 0,
-           'methodCoverage': 0}
+    res = {}
+    coveragelist = ['branchCoverage', 'classCoverage', 'complexityScore', 'instructionCoverage', 'lineCoverage',
+                    'methodCoverage']
+    items = ['covered', 'missed', 'percentage', 'percentageFloat', 'total']
+    for i in coveragelist:
+        res[i] = {'covered': 0, 'missed': 0, 'percentage': 0, 'percentageFloat': 0, 'total': 0}
+
     jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
     if jacocoset:
         authname, authpwd, jenkinsurl = jacocoset.authname, jacocoset.authname, jacocoset.jenkinsurl
@@ -277,7 +282,6 @@ def jacocoreport(request):
         if len(authname) & len(authpwd) != 0:
             # 先判断下任务有没有在运行
             server = jenkins.Jenkins(jacocoset.jenkinsurl, username=jacocoset.authname, password=jacocoset.authpwd)
-            runningjobs=server.get_running_builds()
             for job in jobnames:
                 buildinfo=server.get_build_info(job, server.get_job_info(job)['lastBuild']['number'])
                 if buildinfo['building']:
@@ -293,16 +297,21 @@ def jacocoreport(request):
                 try:
                     url = jenkinsurl + "/job/" + jobname + "/lastBuild/jacoco/api/python?pretty=true"
                     jsond = json.loads(s.get(url).text)
-                    res['branchCoverage'] += jsond['branchCoverage']['percentage']/jobnum
-                    res['classCoverage'] += jsond['classCoverage']['percentage']/jobnum
-                    res['complexityScore'] += jsond['complexityScore']['percentage']/jobnum
-                    res['instructionCoverage'] += jsond['instructionCoverage']['percentage']/jobnum
-                    res['lineCoverage'] += jsond['lineCoverage']['percentage']/jobnum
-                    res['methodCoverage'] += jsond['methodCoverage']['percentage']/jobnum
+                    del jsond['_class'];
+                    del jsond['previousResult']
+                    print(jsond)
+                    for i in coveragelist:
+                        for k in items:
+                            if k in ['percentage', 'percentageFloat']:
+                                jsond[i][k] = res[i][k] + jsond[i][k] / jobnum
+                            else:
+                                jsond[i][k] = res[i][k] + jsond[i][k]
+                    res = jsond.copy()
                 except:
                     print(traceback.format_exc())
                     code = 1
                     msg = '查询异常'
+            print("fin", res)
     return JsonResponse(simplejson(code=code, msg=msg, data=res), safe=False)
 
 
@@ -421,14 +430,13 @@ def editProductSet(request):
             jacocoset.save()
             msg = '保存成功'
         else:
-            if re.search(r'(.*:.*(;)?)', request.POST.get('jobname')):
-                jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
-                jacocoset.jenkinsurl = request.POST.get('jenkinsurl')
-                jacocoset.authname = request.POST.get('authname')
-                jacocoset.authpwd = request.POST.get('authpwd')
-                jacocoset.jobname = request.POST.get('jobname')
-                jacocoset.save()
-            msg = '编辑成功'
+            jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
+            jacocoset.jenkinsurl = request.POST.get('jenkinsurl')
+            jacocoset.authname = request.POST.get('authname')
+            jacocoset.authpwd = request.POST.get('authpwd')
+            jacocoset.jobname = request.POST.get('jobname')
+            jacocoset.save()
+        msg = '编辑成功'
         return JsonResponse({'code': '0', 'msg': '保存成功'})
     except:
         print(traceback.format_exc())

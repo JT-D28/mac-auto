@@ -1141,8 +1141,8 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                         data = JSON.parse(data)
                         if (data.code == 0) {
                             coverlist.forEach(function (item, index) {
-                                rate = data.data != '' ? data.data[item] / 100 : 0
-                                actjacoco[index].update(rate)
+                               // rate = data.data != '' ? data.data[item] / 100 : 0
+                               // actjacoco[index].update(rate)
                             });
                         } else {
                             that.$notify({

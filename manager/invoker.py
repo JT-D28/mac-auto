@@ -90,6 +90,11 @@ def db_connect(config):
 	                                    password=pwd,
 	                                    charset='utf8mb4')
 
+        elif dbtype.lower()=='pgsql':
+            import psycopg2 as pg2
+            conn=pg2.connect(database=dbname, user=user, password=pwd, host=host, port=int(port))
+
+
         else:
             return ('fail','连接类型不支持')
 

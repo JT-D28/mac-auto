@@ -222,8 +222,8 @@
                                             :value="i.id">
                                     </el-option>
                                 </el-select>
-                                <el-button type="success" @click="jacocoReFlash">${synchronize}
-                                </el-button>
+                                <el-button type="success" @click="jacocoReFlash">${synchronize}</el-button>
+                                <el-button type="success" @click="jacocoRun">${jacocoRunstate}</el-button>
                             </div>
                             <div class="text item">
                                 <div class="layui-col-md4">
@@ -232,7 +232,12 @@
                                             branchCoverage
                                         </div>
                                         <div class="layui-card-body">
-                                            <div id="branchCoverage"></div>
+                                            <div class="layui-row">
+                                                <div id="branchCoverage" class="layui-col-md4" style="width: 100px"></div>
+                                                <div class="layui-col-md5 layui-col-md-offset1">
+
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -437,6 +442,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 log_text: '',
                 synchronize: '获取',
                 historytime: '',
+                jacocoRunstate: '运行',
                 timeDefaultShow: '',
                 pickerOptions: {
                     shortcuts: [{
@@ -563,8 +569,13 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                 }
                             });
                             setTimeout(function () {
-                                _post_nl('/homepage/queryPlanState/', {id: that.form.plan,refresh:1}, function (data) {
-                                    if (data.data == 1){that.getReportChart()}
+                                _post_nl('/homepage/queryPlanState/', {
+                                    id: that.form.plan,
+                                    refresh: 1
+                                }, function (data) {
+                                    if (data.data == 1) {
+                                        that.getReportChart()
+                                    }
                                 })
                             }, 2000)
                         } else layer.msg(data.msg)
@@ -1128,10 +1139,21 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                         jobname: jobname
                     }, function (data) {
                         data = JSON.parse(data)
-                        coverlist.forEach(function (item, index) {
-                            rate = data.data != '' ? data.data[item] / 100 : 0
-                            actjacoco[index].update(rate)
-                        });
+                        if (data.code == 0) {
+                            coverlist.forEach(function (item, index) {
+                                rate = data.data != '' ? data.data[item] / 100 : 0
+                                actjacoco[index].update(rate)
+                            });
+                        } else {
+                            that.$notify({
+                                title: '获取结果',
+                                message: data.msg,
+                                type: 'warning',
+                                dangerouslyUseHTMLString: true,
+                                duration: 2000,
+                                position: 'bottom-left'
+                            });
+                        }
                         that.synchronize = '获取'
                     })
                 } else return
@@ -1166,6 +1188,23 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 if (!obj && this.form.plan != '') {
                     this.getReportChart()
                 }
+            },
+            jacocoRun() {
+                var that = this;
+                that.jacocoRunstate = '请等待';
+                _post_nl('/homepage/jenkinsJobRun/', {
+                    productid: that.form.product, jobnames: that.form.service, action: 'jacoco'
+                }, function (data) {
+                    that.$notify({
+                        title: '运行结果',
+                        dangerouslyUseHTMLString: true,
+                        message: data.data,
+                        duration: 2000,
+                        type: 'success',
+                        position: 'bottom-left'
+                    });
+                    that.jacocoRunstate = '运行';
+                })
             },
         },
         created: function () {

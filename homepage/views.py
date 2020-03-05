@@ -4,7 +4,7 @@ from django.db import connection
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
+import jenkins
 from ME2 import configs
 from manager.invoker import gettaskresult, MainSender
 from manager import cm
@@ -147,7 +147,6 @@ def globalsetting(request):
         except:
             code = 1
             msg = '出错了！'
-        print(type(configtext))
         return JsonResponse(simplejson(code=code, msg=msg, data=json.loads(configtext)), safe=False)
 
 
@@ -165,7 +164,6 @@ def restart(request):
                 f.close()
         if done_msg in log_text:
             is_done = 'yes'
-            print('日志执行结束', is_done)
     except:
         code = 1
         msg = "出错了！"
@@ -234,7 +232,6 @@ def reportchart(request):
         with connection.cursor() as cursor:
             cursor.execute(sql, [planid])
             row = cursor.fetchall()
-        print(row)
         return JsonResponse(simplejson(code=code, data=row), safe=False)
     else:
         return JsonResponse(simplejson(code=1, data="任务还没有运行过！"), safe=False)
@@ -276,8 +273,20 @@ def jacocoreport(request):
                 jobnames.append(i.split(":")[1])
         else:
             jobnames = [x for x in request.POST.getlist('jobname[]')]
-        jobnum= len(jobnames)
+        jobnum = len(jobnames)
         if len(authname) & len(authpwd) != 0:
+            # 先判断下任务有没有在运行
+            server = jenkins.Jenkins(jacocoset.jenkinsurl, username=jacocoset.authname, password=jacocoset.authpwd)
+            runningjobs=server.get_running_builds()
+            for job in jobnames:
+                buildinfo=server.get_build_info(job, server.get_job_info(job)['lastBuild']['number'])
+                if buildinfo['building']:
+                    msg += '%s:正在运行<br>'%(job)
+                elif buildinfo['result']!='SUCCESS':
+                    msg += '%s:上次构建失败<br>' % (job)
+            if msg != '':
+                return JsonResponse(simplejson(code=1, msg=msg), safe=False)
+
             s = requests.session()
             s.auth = (authname, authpwd)
             for index, jobname in enumerate(jobnames):
@@ -477,3 +486,36 @@ def query_third_call(request):
     debug_url = '%s/manager/third_party_call/?v=%s&is_verify=%s&planid=%s' % (
         settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 0, planid)
     return JsonResponse({'is_verify_url': is_verify_url, 'debug_url': debug_url})
+
+
+@csrf_exempt
+def jenkinsJobRun(request):
+    jobs = request.POST.getlist('jobnames[]')
+    action = request.POST.get('action')
+    jobnames = []
+    res = ''
+    if action == 'jacoco':
+        jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
+        if '0' in jobs:
+            jobs = jacocoset.jobname.split(";")[:-1] if jacocoset.jobname.endswith(";") else jacocoset.jobname.split(
+                ";")
+            for i in jobs:
+                jobnames.append(i.split(":")[1])
+        else:
+            jobnames = [x for x in request.POST.getlist('jobnames[]')]
+        server = jenkins.Jenkins(jacocoset.jenkinsurl, username=jacocoset.authname, password=jacocoset.authpwd)
+
+        buildnumber0 = {}
+        buildnumber1 = {}
+        for index, job in enumerate(jobnames):
+            buildnumber0[index] = server.get_job_info(job)['lastBuild']['number']  # 上次构建号
+            server.build_job(job)
+        while True:
+            for index, job in enumerate(jobnames):
+                buildnumber1[index] = server.get_job_info(job)['lastBuild']['number']
+                if buildnumber1[index] == buildnumber0[index] + 1:
+                    x = "构建中" if server.get_build_info(job, buildnumber1[index])['building'] else "启动失败"
+                    res += '%s:%s<br>' % (job, x)
+                if len(res.split("<br>"))-1 == len(jobnames):
+                    return JsonResponse({'code': 0, 'data': res})
+                time.sleep(1.5)

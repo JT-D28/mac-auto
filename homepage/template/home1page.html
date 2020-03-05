@@ -149,7 +149,8 @@
                                                :value="product.id">
                                     </el-option>
                                 </el-select>
-                                <el-select v-model="form.plan" filterable placeholder="选择计划" style="width: 49%">
+                                <el-select v-model="form.plan" @visible-change="selectPlanVisible($event)" filterable
+                                           placeholder="选择计划" style="width: 49%">
                                     <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
                                                :value="plan.id">
                                     </el-option>
@@ -203,7 +204,7 @@
                 </div>
             </div>
             <div class="layui-col-xs12 layui-col-md9">
-                <el-tabs :tab-position="productsetposition" style="height: 420px;">
+                <el-tabs @tab-click="reportChartCilck" :tab-position="productsetposition" style="height: 420px;">
                     <el-tab-pane label="计划成功率">
                         <div id="echarts-records"
                              style="background-color:#f2f2f2;min-height:400px;padding: 10px;"></div>
@@ -541,6 +542,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     that.services = data.service;
                     that.form.plan = that.plans[0] != null ? that.plans[0].id : ''
                     that.form.service = that.services[0] != null ? [that.services[0].id] : []
+                    that.getReportChart()
                 })
             },
             runplan() {
@@ -551,7 +553,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                         data = JSON.parse(data)
                         if (data.code == 0) {
                             layer.msg(data.msg, {
-                                time: 30000, //20s后自动关闭
+                                time: 30000,
                                 shade: 0.2,
                                 shadeClose: true,
                                 btn: ['火速围观', '残忍拒绝'],
@@ -560,6 +562,11 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                     layer.close(index)
                                 }
                             });
+                            setTimeout(function () {
+                                _post_nl('/homepage/queryPlanState/', {id: that.form.plan,refresh:1}, function (data) {
+                                    if (data.data == 1){that.getReportChart()}
+                                })
+                            }, 2000)
                         } else layer.msg(data.msg)
                     })
                 } else {
@@ -1141,26 +1148,30 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     this.form.service = curdata.shift()
                 }
                 this.jacocoReFlash()
-            }
+            },
+            getReportChart() {
+                var that = this;
+                _post_nl('/homepage/reportchart/', {planid: that.form.plan.substr(5)}, function (result) {
+                    result = JSON.parse(result);
+                    echartsRecords.resize();
+                    echartsRecords.setOption(that.report(result.data, result.code));
+                });
+            },
+            reportChartCilck(obj) {
+                if (obj.$el.id == 'pane-0') {
+                    this.getReportChart()
+                }
+            },
+            selectPlanVisible(obj) {
+                if (!obj && this.form.plan != '') {
+                    this.getReportChart()
+                }
+            },
         },
         created: function () {
             this.getproduct();
         },
         watch: {
-            'form.plan': function (planid) {
-                var that = this;
-                if (planid == '') {
-                    return
-                } else {
-                    _post_nl('/homepage/reportchart/', {planid: planid.substr(5)}, function (result) {
-                        result = JSON.parse(result);
-                        echartsRecords.resize();
-                        echartsRecords.setOption(that.report(result.data, result.code));
-
-                    });
-
-                }
-            },
             'form.forceStopPlans': function (id) {
                 var that = this;
                 _post_nl('/homepage/queryPlanState/', {id: id}, function (data) {
@@ -1194,7 +1205,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
     // echarts 窗口缩放自适应
     window.onresize = function () {
         echartsRecords.resize();
-    }
+    };
 
     echartsRecords.on('click', function (params) {
         if (success_rate[params.dataIndex] != 100) {

@@ -444,6 +444,11 @@ def downloadReport(request):
 def queryPlanState(request):
     planid = request.POST.get('id')[5:]
     plan = Plan.objects.get(id=planid)
+    if request.POST.get('refresh'):
+        while 1:
+            plan = Plan.objects.get(id=planid)
+            if plan.is_running in (0,'0'):
+                return JsonResponse({'data': 1})
     return JsonResponse({'data': plan.is_running})
 
 

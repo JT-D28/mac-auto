@@ -402,7 +402,6 @@ def editProductSet(request):
     productid = request.POST.get('productid')
     msg = ''
     try:
-        # jacoco相关配置，和项目关联
         if not Jacoco_report.objects.filter(productid=request.POST.get('productid')).exists():
             jacocoset = Jacoco_report()
             jacocoset.jenkinsurl = request.POST.get('jenkinsurl')
@@ -423,7 +422,8 @@ def editProductSet(request):
             msg = '编辑成功'
         return JsonResponse({'code': '0', 'msg': '保存成功'})
     except:
-        return JsonResponse({'code': '1', 'msg': '查询设置出错'})
+        print(traceback.format_exc())
+        return JsonResponse({'code': '1', 'msg': traceback.format_exc()})
 
 
 @csrf_exempt

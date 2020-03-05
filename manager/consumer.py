@@ -87,7 +87,7 @@ class ConsoleConsumer(WebsocketConsumer):
                     break
 
                 while  True:
-                    time.sleep(0.01)
+                    time.sleep(0.05)
 
                     if self._flag==True:
                         break
@@ -155,14 +155,13 @@ class logConsumer(WebsocketConsumer):
                     }))
                 else:
                     while True:
-                        lines = f.readlines()
-                        line = ''.join(x for x in lines)
+                        line = f.readlines()
                         self.send(text_data=json.dumps({
                             'message': line
                         }))
                         if done_msg in line:
                             break
-                        time.sleep(0.3)
+                        time.sleep(0.05)
 
     def receive(self, text_data):
         self.is_running = text_data.split("::")[0]

@@ -28,7 +28,10 @@
         .el-card__header {
             padding: 6px 20px;
         }
-
+        .jacocofontsize{
+            font-size: 12px;
+            padding-left: 5px;
+        }
         #coverage > .el-card__body {
             padding: 0px !important;
         }
@@ -233,9 +236,13 @@
                                         </div>
                                         <div class="layui-card-body">
                                             <div class="layui-row">
-                                                <div id="branchCoverage" class="layui-col-md4" style="width: 100px"></div>
-                                                <div class="layui-col-md5 layui-col-md-offset1">
-
+                                                <div id="branchCoverage" class="layui-col-md4"
+                                                     style="width: 100px"></div>
+                                                <div class="layui-col-md6 jacocofontsize">
+                                                    覆盖率：${Coverage.branchCoverage.percentageFloat}%<br>
+                                                    覆盖数：${Coverage.branchCoverage.covered}<br>
+                                                    缺失数：${Coverage.branchCoverage.missed}<br>
+                                                    总  数：${Coverage.branchCoverage.total}<br>
                                                 </div>
                                             </div>
                                         </div>
@@ -247,7 +254,16 @@
                                             classCoverage
                                         </div>
                                         <div class="layui-card-body">
-                                            <div id="classCoverage"></div>
+                                            <div class="layui-row">
+                                                <div id="classCoverage" class="layui-col-md4"
+                                                     style="width: 100px"></div>
+                                                <div class="layui-col-md6 jacocofontsize">
+                                                    覆盖率：${Coverage.classCoverage.percentageFloat}%<br>
+                                                    覆盖数：${Coverage.classCoverage.covered}<br>
+                                                    缺失数：${Coverage.classCoverage.missed}<br>
+                                                    总  数：${Coverage.classCoverage.total}<br>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -257,7 +273,16 @@
                                             instructionCoverage
                                         </div>
                                         <div class="layui-card-body">
-                                            <div id="instructionCoverage"></div>
+                                            <div class="layui-row">
+                                                <div id="instructionCoverage" class="layui-col-md4"
+                                                     style="width: 100px"></div>
+                                                <div class="layui-col-md6 jacocofontsize">
+                                                    覆盖率：${Coverage.instructionCoverage.percentageFloat}%<br>
+                                                    覆盖数：${Coverage.instructionCoverage.covered}<br>
+                                                    缺失数：${Coverage.instructionCoverage.missed}<br>
+                                                    总  数：${Coverage.instructionCoverage.total}<br>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -267,7 +292,16 @@
                                             complexityScore
                                         </div>
                                         <div class="layui-card-body">
-                                            <div id="complexityScore"></div>
+                                            <div class="layui-row">
+                                                <div id="complexityScore" class="layui-col-md4"
+                                                     style="width: 100px"></div>
+                                                <div class="layui-col-md6 jacocofontsize">
+                                                    覆盖率：${Coverage.complexityScore.percentageFloat}%<br>
+                                                    覆盖数：${Coverage.complexityScore.covered}<br>
+                                                    缺失数：${Coverage.complexityScore.missed}<br>
+                                                    总  数：${Coverage.complexityScore.total}<br>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -277,7 +311,16 @@
                                             lineCoverage
                                         </div>
                                         <div class="layui-card-body">
-                                            <div id="lineCoverage"></div>
+                                            <div class="layui-row">
+                                                <div id="lineCoverage" class="layui-col-md4"
+                                                     style="width: 100px"></div>
+                                                <div class="layui-col-md6 jacocofontsize">
+                                                    覆盖率：${Coverage.lineCoverage.percentageFloat}%<br>
+                                                    覆盖数：${Coverage.lineCoverage.covered}<br>
+                                                    缺失数：${Coverage.lineCoverage.missed}<br>
+                                                    总  数：${Coverage.lineCoverage.total}<br>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -287,7 +330,16 @@
                                             methodCoverage
                                         </div>
                                         <div class="layui-card-body">
-                                            <div id="methodCoverage"></div>
+                                            <div class="layui-row">
+                                                <div id="methodCoverage" class="layui-col-md4"
+                                                     style="width: 100px"></div>
+                                                <div class="layui-col-md6 jacocofontsize">
+                                                    覆盖率：${Coverage.methodCoverage.percentageFloat}%<br>
+                                                    覆盖数：${Coverage.methodCoverage.covered}<br>
+                                                    缺失数：${Coverage.methodCoverage.missed}<br>
+                                                    总  数：${Coverage.methodCoverage.total}<br>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -441,6 +493,44 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 runningState: '',
                 log_text: '',
                 synchronize: '获取',
+                Coverage: {
+                    branchCoverage: {
+                        "covered": 0,
+                        "missed": 0,
+                        "percentageFloat": 0,
+                        "total": 0
+                    },
+                    classCoverage: {
+                        "covered": 0,
+                        "missed": 0,
+                        "percentageFloat": 0,
+                        "total": 0
+                    },
+                    complexityScore: {
+                        "covered": 0,
+                        "missed": 0,
+                        "percentageFloat": 0,
+                        "total": 0
+                    },
+                    instructionCoverage: {
+                        "covered": 0,
+                        "missed": 0,
+                        "percentageFloat": 0,
+                        "total": 0
+                    },
+                    lineCoverage: {
+                        "covered": 0,
+                        "missed": 0,
+                        "percentageFloat": 0,
+                        "total": 0
+                    },
+                    methodCoverage: {
+                        "covered": 0,
+                        "missed": 0,
+                        "percentageFloat": 0,
+                        "total": 0
+                    }
+                },
                 historytime: '',
                 jacocoRunstate: '运行',
                 timeDefaultShow: '',
@@ -1141,9 +1231,10 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                         data = JSON.parse(data)
                         if (data.code == 0) {
                             coverlist.forEach(function (item, index) {
-                               // rate = data.data != '' ? data.data[item] / 100 : 0
-                               // actjacoco[index].update(rate)
+                                rate = data.data[item]['percentageFloat'] != '' ? data.data[item]['percentageFloat'] / 100 : 0
+                                actjacoco[index].update(rate)
                             });
+                            that.Coverage = data.data
                         } else {
                             that.$notify({
                                 title: '获取结果',
@@ -1229,7 +1320,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     //设置滚动条到最底部
                     document.getElementById('log-process').scrollTop = document.getElementById('log-process').scrollHeight;
                 }, 100);
-            }
+            },
         },
     });
     echartsRecords = echarts.init(document.getElementById('echarts-records'), 'me2');
@@ -1237,7 +1328,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
     actjacoco = [];
     coverlist.forEach(function (item, index) {
         actjacoco[index] = new g2plot.RingProgress(document.getElementById(item), {
-            percent: 0, width: 100, height: 100, padding: 'auto', angleField: "data",
+            percent: 0, width: 90, height: 100, padding: 'auto', angleField: "data",
         });
         actjacoco[index].render()
     });

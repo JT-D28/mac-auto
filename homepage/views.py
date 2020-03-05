@@ -299,11 +299,10 @@ def jacocoreport(request):
                     jsond = json.loads(s.get(url).text)
                     del jsond['_class'];
                     del jsond['previousResult']
-                    print(jsond)
                     for i in coveragelist:
                         for k in items:
                             if k in ['percentage', 'percentageFloat']:
-                                jsond[i][k] = res[i][k] + jsond[i][k] / jobnum
+                                jsond[i][k] =round(res[i][k] + jsond[i][k] / jobnum,2)
                             else:
                                 jsond[i][k] = res[i][k] + jsond[i][k]
                     res = jsond.copy()
@@ -311,7 +310,6 @@ def jacocoreport(request):
                     print(traceback.format_exc())
                     code = 1
                     msg = '查询异常'
-            print("fin", res)
     return JsonResponse(simplejson(code=code, msg=msg, data=res), safe=False)
 
 

@@ -161,7 +161,7 @@ class logConsumer(WebsocketConsumer):
                         }))
                         if done_msg in line:
                             break
-                        time.sleep(0.05)
+                        time.sleep(0.08)
 
     def receive(self, text_data):
         self.is_running = text_data.split("::")[0]

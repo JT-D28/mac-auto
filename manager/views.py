@@ -1663,7 +1663,7 @@ def editmailconfig(request):
 		description = request.POST.get('description') if request.POST.get('description') is not None else ''
 		rich_text = request.POST.get('rich_text') if request.POST.get('rich_text') is not None else ''
 		color_scheme = request.POST.get('color_scheme') if request.POST.get('color_scheme') is not None else 'red'
-		dingdingtoken = request.POST.get('dingdingtoken')
+		dingdingtoken = request.POST.get('dingdingtoken') if request.POST.get('dingdingtoken') is not None else ''
 		if mail_config_id:
 			config = MailConfig.objects.get(id=mail_config_id)
 			config.to_receive = to_receive

@@ -206,8 +206,8 @@ def reportchart(request):
 	if taskids:
 		sql1 = '''
         SELECT x.plan_id,m.description,CONCAT(success),CONCAT(FAIL),CONCAT(skip),CONCAT(total),x.taskid,DATE_FORMAT(TIME,'%%m-%%d %%H:%%i') AS time,
-        CONCAT(success*100/total) ,CONCAT(error) FROM (
-        SELECT DISTINCT manager_resultdetail.taskid,plan_id FROM manager_resultdetail) AS x JOIN (
+        ROUND(CONCAT(success*100/total),1) ,CONCAT(error) FROM (
+        SELECT DISTINCT manager_resultdetail.taskid,plan_id,is_verify FROM manager_resultdetail) AS x JOIN (
         SELECT taskid,sum(CASE WHEN result="success" THEN 1 ELSE 0 END) AS success,
         sum(CASE WHEN result="fail" THEN 1 ELSE 0 END) AS FAIL,
         sum(CASE WHEN result="error" THEN 1 ELSE 0 END) AS error,
@@ -227,7 +227,7 @@ def reportchart(request):
         manager_plan ON manager_resultdetail.plan_id=manager_plan.id WHERE plan_id=%s and is_verify=1 GROUP BY taskid) AS m ORDER BY time DESC LIMIT 10
         '''
 
-		sql = sql2 if configs.dbtype == 'sqlite' else sql2
+		sql = sql2 if configs.dbtype == 'sqlite3' else sql1
 
 		with connection.cursor() as cursor:
 			cursor.execute(sql, [planid])
@@ -334,7 +334,7 @@ def querybuglog(request):  # 历史缺陷
         b.businessname AS '测试点',b.itf_check AS '接口校验',b.db_check AS 'db校验',b.params AS '参数信息',
         r.error AS '失败原因' FROM manager_resultdetail r,manager_plan p,manager_case c,manager_step s,
         manager_businessdata b WHERE r.result IN ('error','fail') AND r.is_verify=1 AND r.plan_id=p.id AND r.case_id=c.id AND r.step_id=s.id
-        AND r.businessdata_id=b.id AND  r.createtime  BETWEEN %s and %s 
+        AND r.businessdata_id=b.id AND  date_format(r.createtime,'%%Y-%%m-%%d')  BETWEEN %s and %s 
         '''
 		sql = sql if request.POST.get('planid') == '' else sql + 'and r.plan_id=' + \
 		                                                   request.POST.get('planid').split("_")[1]
@@ -350,7 +350,7 @@ def querybuglog(request):  # 历史缺陷
         AS '测试点',b.itf_check AS '接口校验',b.db_check AS 'db校验',b.params AS '参数信息',r.error AS '失败原因' FROM 
         manager_resultdetail r,manager_plan p,manager_case c,manager_step s,manager_businessdata b WHERE r.result 
         IN ('error','fail') AND r.is_verify=1 AND r.plan_id=p.id AND r.case_id=c.id AND r.step_id=s.id AND 
-        r.businessdata_id=b.id AND r.taskid=%s) ORDER BY createtime
+        r.businessdata_id=b.id AND r.taskid=%s)  as k ORDER BY createtime
         '''
 		with connection.cursor() as cursor:
 			cursor.execute(sql, [taskid])

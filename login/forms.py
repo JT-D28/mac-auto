@@ -5,12 +5,10 @@
 # @to      :
 
 from django import forms
-from captcha.fields import CaptchaField
 
 class UserForm(forms.Form):
     username=forms.CharField(label='Username',widget=forms.TextInput(attrs={'autocomplete':"off"}))
     password=forms.CharField(label='Password',widget=forms.PasswordInput(attrs={'autocomplete':"off"}))
-    captcha = CaptchaField(label='验证码')
 
 class RegisterForm(forms.Form):
     gender = (
@@ -22,4 +20,3 @@ class RegisterForm(forms.Form):
     password2 = forms.CharField(label="确认密码", max_length=256, widget=forms.PasswordInput(attrs={'class': 'form-control'}))
     email = forms.EmailField(label="邮箱地址", widget=forms.EmailInput(attrs={'class': 'form-control'}))
     sex = forms.ChoiceField(label='性别', choices=gender)
-    captcha = CaptchaField(label='验证码')

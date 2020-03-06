@@ -115,23 +115,10 @@
     <!-- 右侧内容 -->
     <div class="layui-body layui-form" style="bottom:0px">
         <div class="layui-tab mag0" lay-filter="bodyTab" id="top_tabs_box" style="margin-top: 0px">
-            <ul class="layui-tab-title top_tab" id="top_tabs">
+            <ul class="layui-tab-title top_tab" id="top_tabs"  hidden>
                 <li class="layui-this" lay-id=""><i class="layui-icon">&#xe68e;</i> <cite>首页</cite></li>
             </ul>
-            <ul class="layui-nav closeBox">
-                <li class="layui-nav-item">
-                    <a href="javascript:;"><i class="layui-icon caozuo" style="margin-right: 5px">&#xe643;</i> 页面操作</a>
-                    <dl class="layui-nav-child">
-                        <dd><a href="javascript:;" class="refresh refreshThis"><i
-                                class="layui-icon layui-icon-refresh"></i> 刷新当前</a></dd>
-                        <dd><a href="javascript:;" class="closePageOther"><i class=" layui-icon layui-icon-layer"></i>
-                            关闭其他</a></dd>
-                        <dd><a href="javascript:;" class="closePageAll"><i class=" layui-icon   layui-icon-close"></i>
-                            关闭全部</a></dd>
-                    </dl>
-                </li>
-            </ul>
-            <div class="layui-tab-content clildFrame">
+            <div class="layui-tab-content clildFrame" style="top:0">
                 <div class="layui-tab-item layui-show">
                     <iframe id='iframe' src="/homepage/"></iframe>
                 </div>

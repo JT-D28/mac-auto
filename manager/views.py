@@ -1,3 +1,4 @@
+from django.db import connection
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
@@ -2206,11 +2207,18 @@ def queryonebusiness(request):
 	msg = ''
 	try:
 		callername = request.session.get('username')
-		vid = request.POST.get('vid').split('_')[1]
-		business = BusinessData.objects.get(id=vid)
-		print('business=>', business)
-		jsonstr = json.dumps(business, cls=BusinessDataEncoder)
-		return JsonResponse(jsonstr, safe=False)
+		# vid = request.POST.get('vid').split('_')[1]
+		# business = BusinessData.objects.get(id=vid)
+		# print('business=>', business)
+		# jsonstr = json.dumps(business, cls=BusinessDataEncoder)
+		sql = 'SELECT * FROM manager_businessdata  WHERE id=%s'
+		with connection.cursor() as cursor:
+			cursor.execute(sql, [request.POST.get('vid').split('_')[1]])
+			desc = cursor.description
+			row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+			print(row)
+		return JsonResponse({'code':0,'data':row})
+		# return JsonResponse(jsonstr, safe=False)
 	except:
 		code = 4
 		msg = '查询异常[%s]' % traceback.format_exc()

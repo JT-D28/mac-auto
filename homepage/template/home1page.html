@@ -23,15 +23,18 @@
 
         .el-dialog__body {
             padding-top: 0;
+            padding-bottom: 10px;
         }
 
         .el-card__header {
             padding: 6px 20px;
         }
-        .jacocofontsize{
+
+        .jacocofontsize {
             font-size: 12px;
             padding-left: 5px;
         }
+
         #coverage > .el-card__body {
             padding: 0px !important;
         }
@@ -91,7 +94,7 @@
         }
 
         #productSet > .el-dialog {
-            height: 70%;
+            height: 80%;
         }
     </style>
 </head>
@@ -242,7 +245,7 @@
                                                     覆盖率：${Coverage.branchCoverage.percentageFloat}%<br>
                                                     覆盖数：${Coverage.branchCoverage.covered}<br>
                                                     缺失数：${Coverage.branchCoverage.missed}<br>
-                                                    总  数：${Coverage.branchCoverage.total}<br>
+                                                    总 数：${Coverage.branchCoverage.total}<br>
                                                 </div>
                                             </div>
                                         </div>
@@ -261,7 +264,7 @@
                                                     覆盖率：${Coverage.classCoverage.percentageFloat}%<br>
                                                     覆盖数：${Coverage.classCoverage.covered}<br>
                                                     缺失数：${Coverage.classCoverage.missed}<br>
-                                                    总  数：${Coverage.classCoverage.total}<br>
+                                                    总 数：${Coverage.classCoverage.total}<br>
                                                 </div>
                                             </div>
                                         </div>
@@ -280,7 +283,7 @@
                                                     覆盖率：${Coverage.instructionCoverage.percentageFloat}%<br>
                                                     覆盖数：${Coverage.instructionCoverage.covered}<br>
                                                     缺失数：${Coverage.instructionCoverage.missed}<br>
-                                                    总  数：${Coverage.instructionCoverage.total}<br>
+                                                    总 数：${Coverage.instructionCoverage.total}<br>
                                                 </div>
                                             </div>
                                         </div>
@@ -299,7 +302,7 @@
                                                     覆盖率：${Coverage.complexityScore.percentageFloat}%<br>
                                                     覆盖数：${Coverage.complexityScore.covered}<br>
                                                     缺失数：${Coverage.complexityScore.missed}<br>
-                                                    总  数：${Coverage.complexityScore.total}<br>
+                                                    总 数：${Coverage.complexityScore.total}<br>
                                                 </div>
                                             </div>
                                         </div>
@@ -318,7 +321,7 @@
                                                     覆盖率：${Coverage.lineCoverage.percentageFloat}%<br>
                                                     覆盖数：${Coverage.lineCoverage.covered}<br>
                                                     缺失数：${Coverage.lineCoverage.missed}<br>
-                                                    总  数：${Coverage.lineCoverage.total}<br>
+                                                    总 数：${Coverage.lineCoverage.total}<br>
                                                 </div>
                                             </div>
                                         </div>
@@ -337,7 +340,7 @@
                                                     覆盖率：${Coverage.methodCoverage.percentageFloat}%<br>
                                                     覆盖数：${Coverage.methodCoverage.covered}<br>
                                                     缺失数：${Coverage.methodCoverage.missed}<br>
-                                                    总  数：${Coverage.methodCoverage.total}<br>
+                                                    总 数：${Coverage.methodCoverage.total}<br>
                                                 </div>
                                             </div>
                                         </div>
@@ -351,7 +354,7 @@
         </div>
 
 
-        <el-dialog id='productSet' title='项目设置' :visible.sync="productSetVisible" width="70%" style="height: 100%">
+        <el-dialog id='productSet' title='项目设置' :visible.sync="productSetVisible" width="70%"  top="3vh"  style="height: 100%">
             <el-tabs :tab-position="productsetposition">
                 <el-tab-pane label="jacoco配置">
                     <el-form :label-position="productsetposition" label-width="15%" :model="form">
@@ -437,7 +440,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                         <el-input type="textarea" v-model="form.reportNoticeSet.text" autocomplete="off"></el-input>
                     </el-form-item>
                 </el-tooltip>
-                <el-form-item label="钉钉机器人token" :label-width="form.formLabelWidth" style="margin-top: 3rem">
+                <el-form-item label="钉钉机器人token" :label-width="form.formLabelWidth" style="margin-top: 2rem">
                     <el-input v-model="form.reportNoticeSet.dingdingtoken" autocomplete="off"></el-input>
                 </el-form-item>
             </el-form>
@@ -772,9 +775,9 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     _post_nl('/manager/queryonemailconfig/', {id: planid}, function (data) {
                         if (data.code == 0) {
                             that.form.reportNoticeSet.color = data.data.color_scheme;
-                            that.form.reportNoticeSet.to_receive = data.data.to_receive
-                            that.form.reportNoticeSet.description = data.data.description
-                            that.form.reportNoticeSet.text = data.data.rich_text
+                            that.form.reportNoticeSet.to_receive = data.data.to_receive;
+                            that.form.reportNoticeSet.description = data.data.description;
+                            that.form.reportNoticeSet.text = data.data.rich_text;
                             that.noticeSetVisible = true;
                         } else {
                             layer.msg(data.msg)
@@ -804,6 +807,9 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
             },
             sendRepoet() {
                 var that = this;
+                if (that.form.reportNoticeSet.to_receive == undefined) {
+                    layer.alert("请检查内容！", {icon: 2, time: 1500})
+                }
                 that.savenoticeSet(1);
                 planid = that.form.plan.substr(5);
                 _post_nl('/homepage/sendreport/', {'planid': planid}, function (data) {

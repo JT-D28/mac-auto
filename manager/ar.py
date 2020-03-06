@@ -30,7 +30,7 @@ def user_operation_intercept(request):
 
 
 
-def web_el_intercept(request)
+def web_el_intercept(request):
 	'''
 	页面元素拦截
 	'''

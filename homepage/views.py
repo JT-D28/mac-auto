@@ -59,7 +59,7 @@ def queryplan(request):
 	total = rows[0]['total'] if rows[0]['total'] is not None else 0
 
 	jacocoset = Jacoco_report.objects.values().filter(productid=pid) if pid != '' else None
-	service = [{'id': 0, 'name': '平均'}]
+	service = [{'id': 0, 'name': '总计'}]
 	if jacocoset:
 		try:
 			jobnames = jacocoset[0]['jobname']

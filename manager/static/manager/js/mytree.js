@@ -461,7 +461,7 @@ var tree={
 			}
 
 			function querydebug(id, type, taskid) {
-				_post('/homepage/plandebug/', {
+				_post_nl('/homepage/plandebug/', {
 					'id': id,
 					'type': type,
 					'taskid': taskid
@@ -496,7 +496,7 @@ var tree={
 							elem: '#demo3', id: 'demo3', data: data.data, accordion: true, showLine: true,
 							click: function (obj) {
 								$("#debuginfo").css('display','inherit');
-								_post('/homepage/plandebug/', {
+								_post_nl('/homepage/plandebug/', {
 									'id': obj.data.title+";"+obj.data.casename+";"+obj.data.stepname,
 									'type': 'bussiness',
 									'taskid':  data.taskid

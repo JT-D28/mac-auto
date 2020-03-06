@@ -11,19 +11,20 @@ def doDebugInfo(request):
 
 	if type == 'info':
 		sql = '''
-        SELECT description as planname,max(manager_resultdetail.createtime) as time,taskid,is_running FROM manager_resultdetail 
-        LEFT JOIN manager_plan on manager_plan.id=manager_resultdetail.plan_id where plan_id=%s
-        '''
+		SELECT p.description AS planname ,max(r.createtime) as time ,taskid,is_running from manager_plan p,
+		manager_resultdetail r where p.id=r.plan_id and r.plan_id=%s GROUP BY taskid ORDER BY time desc limit 1
+		'''
 		with connection.cursor() as cursor:
 			cursor.execute(sql, [id])
 			desc = cursor.description
 			row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-		return row, 'info', '',row[0]['is_running']
+		return row, 'info', '', row[0]['is_running']
+
 	if type == 'plan':
 		sql2 = '''
-        SELECT description as title,case_id as id FROM manager_resultdetail r LEFT JOIN manager_case c on r.case_id=c.id 
-        where plan_id=%s and taskid=%s and result in ('fail','error')
-        '''
+		SELECT description as title,case_id as id FROM manager_resultdetail r LEFT JOIN manager_case c on r.case_id=c.id 
+		where plan_id=%s and taskid=%s and result in ('fail','error')
+		'''
 		with connection.cursor() as cursor:
 			cursor.execute(sql2, [id, taskid])
 			desc = cursor.description
@@ -32,7 +33,7 @@ def doDebugInfo(request):
 		for i in list(row):
 			if i not in case_row:
 				case_row.append(i)
-		return case_row, 'case', taskid,0
+		return case_row, 'case', taskid, 0
 	if type == 'case':
 		sql2 = '''
         SELECT description as title,step_id as id FROM manager_resultdetail r LEFT JOIN manager_step s 
@@ -46,7 +47,7 @@ def doDebugInfo(request):
 		for i in list(row):
 			if i not in step_row:
 				step_row.append(i)
-		return step_row, 'step', taskid,0
+		return step_row, 'step', taskid, 0
 	if type == 'step':
 		sql2 = '''
         SELECT businessname as title,businessdata_id AS id ,c.description as casename,s.description as stepname 
@@ -62,7 +63,7 @@ def doDebugInfo(request):
 		for i in list(row):
 			if i not in businessdata_row:
 				businessdata_row.append(i)
-		return businessdata_row, 'bussiness', taskid,0
+		return businessdata_row, 'bussiness', taskid, 0
 	# if type == 'bussiness':
 	#     res = ''
 	#     sql2 = '''
@@ -153,15 +154,15 @@ def doDebugInfo(request):
 			with open(logname, 'r', encoding='utf-8') as f:
 				res = f.read()
 			ress = res.split("========")
-			pattern = re.compile('开始执行步骤.*?'+id.split(';')[2]+'.*?测试点\[.*?'+id.split(';')[0]+'.*?<br>')
+			pattern = re.compile('开始执行步骤.*?' + id.split(';')[2] + '.*?测试点\[.*?' + id.split(';')[0] + '.*?<br>')
 			for i in ress:
 				if pattern.search(i):
-					return i, 'debuginfo', '',0
+					return i, 'debuginfo', '', 0
 				else:
-					res='未匹配到日志记录，你可以试试下载并且查看完整日志！'
+					res = '未匹配到日志记录，你可以试试下载并且查看完整日志！'
 		else:
 			res = '请稍等！'
-		return res, 'debuginfo', '',0
+		return res, 'debuginfo', '', 0
 
 
 def dealDeBuginfo(taskid):
@@ -194,4 +195,3 @@ def dealDeBuginfo(taskid):
 					with open(dealogname, 'a', encoding='UTF-8') as f:
 						f.write(step.replace("        ", '\n') + '\n========\n')
 			print('处理日志完成------')
-

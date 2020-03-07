@@ -855,19 +855,27 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                         logSocket.send(is_running + '::' + taskid)
                                     };
                                     logSocket.onmessage = function (e) {
-                                        console.time("get")
                                         e = JSON.parse(e.data);
                                         setTimeout(() => {
                                             const total = e.count;
-                                            const once = is_running === 1 ? 200 : total / 10;
+                                            const once = is_running === 1 ? 200 : 5000;
                                             const loopCount = total / once;
                                             let countOfRender = 0;
                                             let ul = document.getElementById("log_text");
+
                                             function add() {
+                                                console.time('get')
                                                 const fragment = document.createDocumentFragment();
-                                                const li = document.createElement("li");
-                                                li.innerHTML = ArraytoString(e.data.slice(once * countOfRender, once * (countOfRender + 1)));
-                                                fragment.appendChild(li);
+                                                for (let i = 0; i < once; i++) {
+                                                    const li = document.createElement("li");
+                                                    li.innerHTML = e.data[once * countOfRender + i] != undefined ? e.data[once * countOfRender + i] : ''
+                                                    fragment.appendChild(li);
+                                                }
+                                                console.timeEnd('get')
+
+                                                //   const li = document.createElement("li");
+                                                //    li.innerHTML = ArraytoString(e.data.slice(once * countOfRender, once * (countOfRender + 1)));
+                                                ///    fragment.appendChild(li);
                                                 ul.appendChild(fragment);
                                                 countOfRender += 1;
                                                 loop();
@@ -883,13 +891,13 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                             }
                                             loop();
                                         }, 100);
-                                        console.timeEnd("get")
                                     };
                                     logSocket.onclose = function () {
                                         console.log("结束获取日志..")
                                     }
                                 }, end: function () {
                                     logSocket.close();
+                                    $("#log_text").html('')
                                 }
                             });
                         }

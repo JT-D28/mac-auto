@@ -854,8 +854,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                         logSocket.send(is_running + '::' + taskid)
                                     };
                                     logSocket.onmessage = function (e) {
-                                        text = JSON.parse(e.data)
-                                        $("#log_text").append("<p class='console-line-msg'>" + text.message + "</p>");
+                                        $("#log_text").append("<p class='console-line-msg'>" + e.data + "</p>");
                                         if (is_running == 1) {
                                             document.getElementById('log-process').scrollTop = document.getElementById('log-process').scrollHeight;
                                         }

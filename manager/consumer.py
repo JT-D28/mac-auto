@@ -150,15 +150,13 @@ class logConsumer(WebsocketConsumer):
 			with open(logname, 'r', encoding='utf-8') as f:
 				if is_running in (0, '0'):
 					log_text = f.read()
-					self.send(text_data=json.dumps({
-						'message': log_text
-					}))
+					z=time.time()
+					self.send(text_data=log_text)
 				else:
 					while True:
 						line = f.readlines()
-						self.send(text_data=json.dumps({
-							'message': line
-						}))
+						for i in line:
+							self.send(text_data=i)
 						if done_msg in line:
 							break
 						time.sleep(0.08)

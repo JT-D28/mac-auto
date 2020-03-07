@@ -850,26 +850,31 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                 shadeClose: true,
                                 content: $("#seeprocess"),
                                 success: function () {
+                                    $("#log_text").html('')
                                     logSocket.onopen = function () {
                                         logSocket.send(is_running + '::' + taskid)
                                     };
                                     logSocket.onmessage = function (e) {
-                                        e = JSON.parse(e.data)
+                                        console.time("get")
+                                        e = JSON.parse(e.data);
                                         setTimeout(() => {
                                             const total = e.count;
-                                            const once = 200;
+                                            const once = is_running === 1 ? 200 : total / 10;
                                             const loopCount = total / once;
                                             let countOfRender = 0;
                                             let ul = document.getElementById("log_text");
                                             function add() {
                                                 const fragment = document.createDocumentFragment();
                                                 const li = document.createElement("li");
-                                                li.innerHTML = e.data.slice(once * countOfRender, once);
+                                                li.innerHTML = ArraytoString(e.data.slice(once * countOfRender, once * (countOfRender + 1)));
                                                 fragment.appendChild(li);
                                                 ul.appendChild(fragment);
                                                 countOfRender += 1;
                                                 loop();
-                                                document.getElementById('log-process').scrollTop = document.getElementById('log-process').scrollHeight;
+                                                var exits = document.getElementById('log-process');
+                                                if (is_running === '1' && exits != null) {
+                                                    exits.scrollTop = exits.scrollHeight;
+                                                }
                                             }
                                             function loop() {
                                                 if (countOfRender < loopCount) {
@@ -878,13 +883,13 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                             }
                                             loop();
                                         }, 100);
-                                    }
+                                        console.timeEnd("get")
+                                    };
                                     logSocket.onclose = function () {
                                         console.log("结束获取日志..")
                                     }
                                 }, end: function () {
-                                    logSocket.close()
-                                    $("#log_text").html('')
+                                    logSocket.close();
                                 }
                             });
                         }
@@ -1334,7 +1339,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
             'form.forceStopPlans': function (id) {
                 var that = this;
                 _post_nl('/homepage/queryPlanState/', {id: id}, function (data) {
-                    that.runningState = data.data == 1 ? '运行' : '未运行'
+                    that.runningState = data.data === 1 ? '运行' : '未运行'
                 })
             },
             'form.third_plan': function (id) {
@@ -1366,8 +1371,17 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
         echartsRecords.resize();
     };
 
+    function ArraytoString(input) {
+        let r = "";
+        input.forEach(function (e) {
+            r += " " + e;
+        });
+        return r.substr(1);
+    }
+
+
     echartsRecords.on('click', function (params) {
-        if (success_rate[params.dataIndex] != 100) {
+        if (success_rate[params.dataIndex] !== 100) {
             taskid = taskids[params.dataIndex];
             app.queryOldBug(taskid);
             app.planHistoryVisible = true;

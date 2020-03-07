@@ -149,17 +149,19 @@ class logConsumer(WebsocketConsumer):
 		if os.path.exists(logname):
 			with open(logname, 'r', encoding='utf-8') as f:
 				if is_running in (0, '0'):
-					log_text = f.read()
-					z=time.time()
-					self.send(text_data=log_text)
+					log_text = f.readlines()
+					count= len(log_text)
+					self.send(text_data=json.dumps({'data':log_text,'count':count}))
+					self.disconnect()
 				else:
 					while True:
-						line = f.readlines()
-						for i in line:
-							self.send(text_data=i)
-						if done_msg in line:
-							break
-						time.sleep(0.08)
+						log_text = f.readlines()
+						count= len(log_text)
+						self.send(text_data=json.dumps({'data': log_text, 'count': count}))
+						for i in log_text:
+							if done_msg in i:
+								return
+						time.sleep(0.1)
 
 	def receive(self, text_data):
 		self.is_running = text_data.split("::")[0]

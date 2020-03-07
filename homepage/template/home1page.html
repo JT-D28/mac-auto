@@ -778,7 +778,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                             that.form.reportNoticeSet.to_receive = data.data.to_receive;
                             that.form.reportNoticeSet.description = data.data.description;
                             that.form.reportNoticeSet.text = data.data.rich_text;
-                            that.form.reportNoticeSet.dingdingtoken=data.data.dingdingtoken
+                            that.form.reportNoticeSet.dingdingtoken = data.data.dingdingtoken
                             that.noticeSetVisible = true;
                         } else {
                             layer.msg(data.msg)
@@ -854,17 +854,37 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                         logSocket.send(is_running + '::' + taskid)
                                     };
                                     logSocket.onmessage = function (e) {
-                                        $("#log_text").append("<p class='console-line-msg'>" + e.data + "</p>");
-                                        if (is_running == 1) {
-                                            document.getElementById('log-process').scrollTop = document.getElementById('log-process').scrollHeight;
-                                        }
+                                        e = JSON.parse(e.data)
+                                        setTimeout(() => {
+                                            const total = e.count;
+                                            const once = 200;
+                                            const loopCount = total / once;
+                                            let countOfRender = 0;
+                                            let ul = document.getElementById("log_text");
+                                            function add() {
+                                                const fragment = document.createDocumentFragment();
+                                                const li = document.createElement("li");
+                                                li.innerHTML = e.data.slice(once * countOfRender, once);
+                                                fragment.appendChild(li);
+                                                ul.appendChild(fragment);
+                                                countOfRender += 1;
+                                                loop();
+                                                document.getElementById('log-process').scrollTop = document.getElementById('log-process').scrollHeight;
+                                            }
+                                            function loop() {
+                                                if (countOfRender < loopCount) {
+                                                    window.requestAnimationFrame(add);
+                                                }
+                                            }
+                                            loop();
+                                        }, 100);
                                     }
                                     logSocket.onclose = function () {
                                         console.log("结束获取日志..")
                                     }
                                 }, end: function () {
                                     logSocket.close()
-                                    that.log_text = ''
+                                    $("#log_text").html('')
                                 }
                             });
                         }

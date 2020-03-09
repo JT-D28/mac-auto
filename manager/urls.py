@@ -113,6 +113,13 @@ urlpatterns = [
     path('queryonebusinessdata/',views.queryonebusinessdata),
     path('querybusinessdatalist/',views.querybusinessdatalist),
 
+    #
+    path('tag/',views.tag),
+    path('querytaglist/',views.querytaglist),
+    path('addtag/',views.addtag),
+    path('deltag/',views.deltag),
+    path('querytag/',views.querytag),
+
     
     path('queryoneproduct/',views.queryoneproduct),
     path('tree/',views.treetest),

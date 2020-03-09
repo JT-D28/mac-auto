@@ -1528,75 +1528,7 @@ def querystep(request):
 	return JsonResponse(jsonstr,safe=False)
 
 
-"""
-标签相关
-"""
-# @csrf_exempt
-# def tag(request):
-# 	return render(request, "manager/tag.html")
 
-
-# @csrf_exempt
-# def querytag(request):
-
-# 	searchvalue=request.GET.get('searchvalue')
-# 	print("searchvalue=>",searchvalue)
-# 	res=None
-# 	if searchvalue:
-# 		print("变量查询条件=>")
-# 		res=list(Tag.objects.filter(Q(description__icontains=searchvalue)|Q(key__icontains=searchvalue)|Q(value__icontains=searchvalue)))
-# 	else:
-# 		res=list(Tag.objects.all())
-
-# 	limit=request.GET.get('limit')
-# 	page=request.GET.get('page')
-# 	res,total=getpagedata(res, page, limit)
-
-# 	jsonstr=json.dumps(res,cls=TagEncoder,total=total)
-# 	return JsonResponse(jsonstr,safe=False)
-
-# @csrf_exempt
-# def deltag(request):
-# 	id_=request.POST.get('id')
-# 	code=0
-# 	msg=''
-# 	try:
-# 		Tag.objects.get(id=id_).delete()
-# 	except:
-# 		code=1
-# 		msg="删除失败"
-		
-# 	finally:
-# 		return JsonResponse(simplejson(code=code,msg=""))
-
-# @csrf_exempt
-# def edittag(request):
-# 	id_=request.POST.get('id')
-# 	code=0
-# 	msg=''
-# 	try:
-# 		Tag.objects.get(id=id_).update()
-# 	except:
-# 		code=1
-# 		msg="编辑失败"
-		
-# 	finally:
-# 		return JsonResponse(simplejson(code=code,msg=""))
-
-# @csrf_exempt
-# def addtag(request):
-# 	code=0
-# 	msg=''
-# 	try:
-# 		tag=Tag()
-# 		tag.author=request.POST.get("author")
-# 		tag.name=request.POST.get("name")
-
-# 		tag.save()
-# 	except:
-# 		code=1
-# 		msg='新增失败'
-# 	return JsonResponse(simplejson(code=code,msg=""))
 
 """邮件配置相关
 """
@@ -2392,9 +2324,78 @@ def treetest(request):
 
 
 
+"""
+标签管理
+"""
+
+def tag(request):
+	return render(request, 'manager/tag.html')
+
+@csrf_exempt
+def addtag(request):
+	t=Tag()
+	try:
+		
+		all_name=[_.name for _ in list(Tag.objects.all())]
+		t.name=request.POST.get('name')
+		if t.name in all_name:
+			return JsonResponse(pkg(code=3,msg='标签[%s]已存在'%t.name))
+		t.author=User.objects.get(name=request.session.get('username'))
+		t.save()
+		return JsonResponse(pkg(code=0,msg='添加标签[%s]'%t.name,data={'id':t.id,'name':t.name}))
+	except:
+		return JsonResponse(pkg(code=4,msg='添加标签[%s]异常'%t.name))
+
+@csrf_exempt
+def deltag(request):
+	try:
+
+		ids=[int(_) for _ in request.POST.get('ids').split(',')]
+		for id_ in ids:
+			Tag.objects.get(id=id_).delete()
+
+		return JsonResponse(pkg(code=0,msg='删除成功.'))		
+	except:
+		return JsonResponse(pkg(code=4,msg='删除标签异常'))		
+
+def edittag(request):
+	pass
 
 
+@csrf_exempt
+def querytaglist(request):
+	namelist=[]
+	try:
+		for _ in list(Tag.objects.all()):
+			namelist.append({
+				'id':_.id,
+				'name':_.name,
+				})
 
+	except:
+		print('==获取标签列表异常')
+	finally:
+		return JsonResponse(pkg(code=0,data=namelist))
+
+
+@csrf_exempt
+def querytag(request):
+	searchvalue=request.GET.get('searchvalue')
+	
+	if searchvalue:
+		print("变量查询条件=>",searchvalue)
+		res=list(Tag.objects.filter(Q(name__icontains=searchvalue)))
+		
+	else:
+		res=list(Tag.objects.all())
+
+	limit=request.GET.get('limit')
+	page=request.GET.get('page')
+	res,total=getpagedata(res, page, limit)
+
+
+	jsonstr=json.dumps(res,cls=TagEncoder,total=total)
+	return JsonResponse(jsonstr,safe=False)
 
 """
 测试接口

@@ -1,25 +1,5 @@
-from collections import OrderedDict
-from urllib3 import encode_multipart_formdata
-import requests
+a='''Traceback (most recent call last): File "/data/python/lib/python3.7/site-packages/pymysql/connections.py", line 583, in connect **kwargs) File "/data/python/lib/python3.7/socket.py", line 727, in create_connection raise err File "/data/python/lib/python3.7/socket.py", line 716, in create_connection sock.connect(sa) ConnectionRefusedError: [Errno 111] Connection refused During handling of the above exception, another exception occurred: Traceback (most recent call last): File "/data/me2_7777/manager/invoker.py", line 91, in db_connect charset='utf8mb4') File "/data/python/lib/python3.7/site-packages/pymysql/__init__.py", line 94, in Connect return Connection(*args, **kwargs) File "/data/python/lib/python3.7/site-packages/pymysql/connections.py", line 325, in __init__ self.connect() File "/data/python/lib/python3.7/site-packages/pymysql/connections.py", line 630, in connect raise exc pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on '172.18.12.64' ([Errno 111] Connection refused)")'''
 
-def test():
-    files = OrderedDict([("upload", (None, open("test.txt", 'rb').read(), 'application/octet-stream'))])
-    boundary='----WebKitFormBoundaryKPjN0GYtWEjAni5F'
-    m = encode_multipart_formdata(files, boundary=boundary)
-    print("0", m[0])
-    params = {'path': 'test.txt',
-              'token': '123456',
-              'num': 0,
-              'offset': 0,
-              'limit': 8}
-    response = requests.post('http://httpbin.org/post',
-                              params=params,
-                              data=m[0],
-                              headers={'Content-Type': "multipart/form-data; "+boundary})
 
-    print("1: ", response.text)
-    print("2: ", response.request.body)
-    print("3: ", response.request.headers)
-
-if __name__ == '__main__':
-    test()
+b="pymysql.err.OperationalError: (2003"
+print(a.__contains__(b))

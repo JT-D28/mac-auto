@@ -94,6 +94,12 @@
                     <li class="layui-nav-item">
 						<a href="javascript:;" data-url="/manager/datamove/"><i class="fa fa-paper-plane-o icon" data-icon=""></i><cite>数据迁移</cite></a>
 					</li>
+                {% if request.session.username == 'admin' %}
+                    <li class="layui-nav-item">
+                        <a href="javascript:;" data-url="/manager/tag/"><i class="fa fa-tags icon" data-icon=""></i><cite>标签管理</cite></a>
+                    </li>
+                 {%endif%}
+
                     <li class="layui-nav-item">
 						<a href="javascript:;" data-url="/manager/help/"><i class="fa fa-question-circle icon" data-icon=""></i><cite>帮助文档</cite></a>
 					</li>

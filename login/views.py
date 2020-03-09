@@ -2,8 +2,8 @@ from django.shortcuts import render,redirect,render_to_response
 from django.conf import settings
 from ME2 import configs
 from . import forms
-from manager import models
-from login import models as md
+from manager.models import *
+from login.models import *
 
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse,JsonResponse
@@ -48,7 +48,7 @@ def login(request):
         password = request.POST.get('password')
 
         try:
-            user=md.User.objects.get(name=username)
+            user=User.objects.get(name=username)
         except:
             message='用户不存在'
             return render(request, 'login/login.html',locals())
@@ -90,9 +90,9 @@ def queryaccount(request):
     res=None
     if searchvalue:
         print("变量查询条件=>")
-        res=list(md.User.objects.filter(Q(name__icontains=searchvalue)))
+        res=list(User.objects.filter(Q(name__icontains=searchvalue)))
     else:
-        res=list(md.User.objects.all())
+        res=list(User.objects.all())
 
     limit=request.GET.get('limit')
     page=request.GET.get('page')
@@ -107,7 +107,7 @@ def addaccount(request):
     code,msg=0,''
     try:
 
-        user=md.User()
+        user=User()
         user.name=request.POST.get('username')
         user.password=EncryptUtils.md5_encrypt(request.POST.get('password'))
         user.save()
@@ -127,7 +127,7 @@ def delaccount(request):
     try:
         ids=request.POST.get('ids').split(',')
         for id_ in ids:
-            user=md.User.objects.get(id=id_)
+            user=User.objects.get(id=id_)
             user.delete()
 
         msg='操作成功'
@@ -145,7 +145,7 @@ def queryoneaccount(request):
     code,msg=0,''
     try:
         id_=request.POST.get('uid')
-        user=md.User.objects.get(id=id_)
+        user=User.objects.get(id=id_)
         jsonstr=json.dumps(user,cls=UserEncoder)
         return JsonResponse(jsonstr,safe=False)
 
@@ -159,7 +159,7 @@ def queryoneaccount(request):
 def editaccount(request):
     code,msg=0,''
     try:
-        user=md.User.objects.get(id=request.POST.get('uid'))
+        user=User.objects.get(id=request.POST.get('uid'))
         user.name=request.POST.get('username')
         user.password=request.POST.get('password')
         user.save()

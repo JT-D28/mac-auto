@@ -13,7 +13,7 @@ from login.models import *
 from manager.models import *
 from .core import ordered, Fu, getbuiltin, EncryptUtils, genorder, simplejson
 from .db import Mysqloper
-from .context import set_top_common_config,viewcache,gettestdatastep,gettestdataparams,get_task_session,clear_task_session
+from .context import set_top_common_config,viewcache,gettestdatastep,gettestdataparams,get_task_session,clear_task_session,get_friendly_msg
 import re,traceback,redis,time,threading,smtplib, requests,json,warnings,datetime,socket
 import copy,base64,datetime,xlrd
 from email.mime.text import MIMEText
@@ -45,65 +45,62 @@ _taskmap=dict()
 
 
 def db_connect(config):
-    '''
-    测试数据库连接
-    '''
-    print('==测试数据库连接===')
+	'''
+	测试数据库连接
+	'''
+	print('==测试数据库连接===')
 
-    conn=None
+	conn=None
 
-    try:
+	try:
 
-        # print(len(conname),len(conname.strip()))
-        description=config['description']
-        dbtype=config['dbtype']
-        dbname=config['dbname']
-        #oracle不需要这两项
-        host=config['host']
-        port=config['port']
-        #
-        user=config['username']
-        pwd=config['password']
+		# print(len(conname),len(conname.strip()))
+		description=config['description']
+		dbtype=config['dbtype']
+		dbname=config['dbname']
+		#oracle不需要这两项
+		host=config['host']
+		port=config['port']
+		#
+		user=config['username']
+		pwd=config['password']
 
-        # print("=>没查到可用配置,准备新配一个")
-        print("数据库类型=>",dbtype)
-        print("数据库名(服务名|SID)=>",dbname)
-        print("数据库地址=>",host,port)
-        print("数据库账号=>",user,pwd)
+		# print("=>没查到可用配置,准备新配一个")
+		print("数据库类型=>",dbtype)
+		print("数据库名(服务名|SID)=>",dbname)
+		print("数据库地址=>",host,port)
+		print("数据库账号=>",user,pwd)
 
-        if dbtype.lower()=='oracle_servicename':
-            import cx_Oracle
+		if dbtype.lower()=='oracle_servicename':
+			import cx_Oracle
 
-            dsn=cx_Oracle.makedsn(host,int(port),service_name=dbname)
-            conn=cx_Oracle.connect(user,pwd,dsn)
+			dsn=cx_Oracle.makedsn(host,int(port),service_name=dbname)
+			conn=cx_Oracle.connect(user,pwd,dsn)
 
-        elif dbtype.lower()=='oracle_sid':
-            import cx_Oracle
-            dsn=cx_Oracle.makedsn(host,int(port),sid=dbname)
-            conn=cx_Oracle.connect(user,pwd,dsn)
+		elif dbtype.lower()=='oracle_sid':
+			import cx_Oracle
+			dsn=cx_Oracle.makedsn(host,int(port),sid=dbname)
+			conn=cx_Oracle.connect(user,pwd,dsn)
 
-        elif dbtype.lower()=='mysql':
-        	import pymysql
-	        conn = pymysql.connect(db=dbname, host=host,
-	                                    port=int(port),
-	                                    user=user,
-	                                    password=pwd,
-	                                    charset='utf8mb4')
+		elif dbtype.lower()=='mysql':
+			import pymysql
+			conn = pymysql.connect(db=dbname, host=host,port=int(port),user=user,password=pwd,charset='utf8mb4')
 
-        elif dbtype.lower()=='pgsql':
-            import psycopg2 as pg2
-            conn=pg2.connect(database=dbname, user=user, password=pwd, host=host, port=int(port))
+		elif dbtype.lower()=='pgsql':
+			import psycopg2 as pg2
+			conn=pg2.connect(database=dbname, user=user, password=pwd, host=host, port=int(port))
 
 
-        else:
-            return ('fail','连接类型不支持')
+		else:
+			return ('fail','连接类型不支持')
 
-        return ('success','数据库[%s]连接成功!.'%description)
+		return ('success','数据库[%s]连接成功!.'%description)
 
 
-    except Exception as e:
-        error=traceback.format_exc()
-        return ('error','连接异常->%s'%error)
+	except:
+		error=traceback.format_exc()
+		print('error=>',error)
+		return ('error','连接异常->%s'%get_friendly_msg(error))
 
 
 def _get_full_case_name(case_id,curent_case_name):

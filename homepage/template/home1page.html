@@ -354,7 +354,8 @@
         </div>
 
 
-        <el-dialog id='productSet' title='项目设置' :visible.sync="productSetVisible" width="70%"  top="3vh"  style="height: 100%">
+        <el-dialog id='productSet' title='项目设置' :visible.sync="productSetVisible" width="70%" top="3vh"
+                   style="height: 100%">
             <el-tabs :tab-position="productsetposition">
                 <el-tab-pane label="jacoco配置">
                     <el-form :label-position="productsetposition" label-width="15%" :model="form">
@@ -864,18 +865,18 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                             let ul = document.getElementById("log_text");
 
                                             function add() {
-                                                console.time('get')
+                                                //   console.time('get')
                                                 const fragment = document.createDocumentFragment();
-                                                for (let i = 0; i < once; i++) {
-                                                    const li = document.createElement("li");
-                                                    li.innerHTML = e.data[once * countOfRender + i] != undefined ? e.data[once * countOfRender + i] : ''
-                                                    fragment.appendChild(li);
-                                                }
-                                                console.timeEnd('get')
+                                                // for (let i = 0; i < once; i++) {
+                                                //     const li = document.createElement("li");
+                                                //      li.innerHTML = e.data[once * countOfRender + i] != undefined ? e.data[once * countOfRender + i] : '';
+                                                //       fragment.appendChild(li);
+                                                //    }
+                                                //   console.timeEnd('get')
 
-                                                //   const li = document.createElement("li");
-                                                //    li.innerHTML = ArraytoString(e.data.slice(once * countOfRender, once * (countOfRender + 1)));
-                                                ///    fragment.appendChild(li);
+                                                const li = document.createElement("li");
+                                                li.innerHTML = ArraytoString(e.data.slice(once * countOfRender, once * (countOfRender + 1)));
+                                                fragment.appendChild(li);
                                                 ul.appendChild(fragment);
                                                 countOfRender += 1;
                                                 loop();
@@ -884,11 +885,13 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                                     exits.scrollTop = exits.scrollHeight;
                                                 }
                                             }
+
                                             function loop() {
                                                 if (countOfRender < loopCount) {
                                                     window.requestAnimationFrame(add);
                                                 }
                                             }
+
                                             loop();
                                         }, 100);
                                     };

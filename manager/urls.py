@@ -20,8 +20,9 @@ from . import views
 
 urlpatterns = [
 
-    path('help/',views.help),
+	path('help/',views.help),
 	path('index/',views.index),
+
     path('datamove/',views.datamove),
     path('upload/',views.upload),
     path('querymovedata/',views.querymovedata),
@@ -130,6 +131,7 @@ urlpatterns = [
     path('addsteprelation/',views.addsteprelation),
     path('getfulltree/',views.getfulltree),
     path('update/',views.update),
+
 
 
 ]

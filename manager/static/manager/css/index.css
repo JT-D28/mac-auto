@@ -88,8 +88,8 @@ iframe{ position:absolute; height:100%; width:100%; border:none;}
 .component dl dd.layui-select-tips{ color:#999 !important;}
 
 /*layui-body*/
-.layui-body{overflow:hidden; border-top:5px solid #1AA094;border-left:2px solid #1AA094; background:#fff;}
-#top_tabs_box{ padding-right:138px; height:40px; border-bottom:1px solid #e2e2e2; }
+.layui-body{overflow:hidden; border-top:0px solid #1AA094;border-left:2px solid #1AA094; background:#fff;}
+#top_tabs_box{ padding-right:138px; height:40px; border-bottom:0px solid #e2e2e2; }
 #top_tabs{ position: absolute; border-bottom:none;}
 .layui-tab-title .layui-this{ background-color:#1AA094; color:#fff; }
 .layui-tab-title .layui-this:after{ border:none; }

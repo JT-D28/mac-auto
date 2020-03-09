@@ -689,7 +689,7 @@ class TagEncoder(XJsonEncoder):
 		super(TagEncoder,self).__init__(['id','author','name','createtime','updatetime'],**args)
 class MailConfigEncoder(XJsonEncoder):
 	def __init__(self,**args):
-		super(MailConfigEncoder,self).__init__(['id','author','smtp_host','smtp_port','sender_name','sender_nick','sender_pass','is_send_mail','createtime','updatetime','description','to_receive','cc_receive','color_scheme','rich_text'],**args)
+		super(MailConfigEncoder,self).__init__(['id','author','smtp_host','smtp_port','sender_name','sender_nick','sender_pass','is_send_mail','createtime','updatetime','description','to_receive','cc_receive','color_scheme','rich_text','dingdingtoken'],**args)
 
 
 

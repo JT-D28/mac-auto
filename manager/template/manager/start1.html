@@ -1,0 +1,303 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ME2.0_web版本</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <meta name="viewport"
+          content="width=device-width,height=device-height,initial-scale=0.8, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/css/index.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/css/toast.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+    <style type="text/css">
+
+
+        #msgview {
+            padding: 20px;
+        }
+
+        .console-line-msg {
+            margin-top: 12px;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .fail {
+            color: red;
+        }
+
+        .skip {
+            color: #000000;
+        }
+
+        .icon {
+            margin-right: 10px;
+            margin-left: 10px;
+            width: 14px;
+        }
+    </style>
+</head>
+<body class="main_body" zoom:0.8>
+<div class="layui-layout layui-layout-admin">
+    <!-- 顶部 -->
+    <div class="layui-header header">
+        <div class="layui-main mag0">
+            <a href="#" class="logo">ME2 V2.0</a>
+            <!-- 显示/隐藏菜单 -->
+            <a href="javascript:;" class="seraph hideMenu layui-icon layui-icon-align-left"></a>
+            <!-- 顶部右侧菜单 -->
+            <ul class="layui-nav top_menu">
+                <li class="layui-nav-item">
+                    <img src="{% static 'manager/image/me.jpg' %}" class="layui-nav-img">
+                    <i id='username'>{{ request.session.username }}</i>
+                </li>
+                {% if request.session.username == 'admin' %}
+                <li class="layui-nav-item"><a href="#" id='globalsetting'>全局设置</a></li>
+                {% endif %}
+                <li class="layui-nav-item" pc>
+                <li class="layui-nav-item"><a href="#" id='console'>控制台</a></li>
+                </li>
+                <li class="layui-nav-item"><a href="{{ BASE_URL }}/account/logout/">退出</a></li>
+            </ul>
+        </div>
+    </div>
+    <!-- 左侧导航 -->
+    <div class="layui-side layui-bg-black">
+        <div class="navBar layui-side-scroll" id="navBar">
+            <ul class="layui-nav layui-nav-tree">
+                <li class="layui-nav-item layui-this">
+                    <a href="javascript:;" data-url="/homepage/"><i class="fa fa-home icon"
+                                                                    data-icon=""></i><cite>首页</cite></a>
+                </li>
+                {% if request.session.username == 'admin' %}
+                <li class="layui-nav-item">
+                    <a href="javascript:;" data-url="/account/user/"><i class="fa fa-user icon"
+                                                                        data-icon=""></i><cite>用户管理</cite></a>
+                </li>
+                {% endif %}
+                <li class="layui-nav-item">
+                    <a id='tree' href="javascript:;" data-url="/manager/tree/"><i class="fa fa-list icon"
+                                                                                  data-icon=""></i><cite>用例管理</cite></a>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;" data-url="/manager/dbcon/"><i class="fa fa-database icon"
+                                                                         data-icon=""></i><cite>数据连接</cite></a>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;" data-url="/manager/var/"><i class="fa fa-btc icon" data-icon=""></i><cite>变量管理</cite></a>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;" data-url="/manager/function/"><i class="fa fa-facebook icon"
+                                                                            data-icon=""></i><cite>函数定义</cite></a>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;" data-url="/manager/datamove/"><i class="fa fa-paper-plane-o icon"
+                                                                            data-icon=""></i><cite>数据迁移</cite></a>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;" data-url="/manager/help/"><i class="fa fa-question-circle icon"
+                                                                        data-icon=""></i><cite>帮助文档</cite></a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <!-- 右侧内容 -->
+    <div class="layui-body layui-form" style="bottom:0px">
+        <div class="layui-tab mag0" lay-filter="bodyTab" id="top_tabs_box" style="margin-top: 0px">
+            <ul class="layui-tab-title top_tab" id="top_tabs">
+                <li class="layui-this" lay-id=""><i class="layui-icon">&#xe68e;</i> <cite>首页</cite></li>
+            </ul>
+            <ul class="layui-nav closeBox">
+                <li class="layui-nav-item">
+                    <a href="javascript:;"><i class="layui-icon caozuo" style="margin-right: 5px">&#xe643;</i> 页面操作</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="javascript:;" class="refresh refreshThis"><i
+                                class="layui-icon layui-icon-refresh"></i> 刷新当前</a></dd>
+                        <dd><a href="javascript:;" class="closePageOther"><i class=" layui-icon layui-icon-layer"></i>
+                            关闭其他</a></dd>
+                        <dd><a href="javascript:;" class="closePageAll"><i class=" layui-icon   layui-icon-close"></i>
+                            关闭全部</a></dd>
+                    </dl>
+                </li>
+            </ul>
+            <div class="layui-tab-content clildFrame">
+                <div class="layui-tab-item layui-show">
+                    <iframe id='iframe' src="/homepage/"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id='addsetting' hidden style="padding:10px;">
+    <div class="layui-form-item">
+        <label class="layui-form-label">me2地址：</label>
+        <div class="layui-input-block">
+            <input type="text" name="me2url" placeholder="请输入工具当前地址，类似：10.60.44.54:9999" autocomplete="off"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">redis地址：</label>
+        <div class="layui-input-block">
+            <input type="text" name="redisurl" placeholder="请输入redis的地址和端口，类似：10.60.44.54:6379" autocomplete="off"
+                   class="layui-input">
+        </div>
+    </div>
+</form>
+
+<div id='consoleview'>
+    <div id="msgview" style="padding:10px;"></div>
+</div>
+<!-- 移动导航 -->
+<div class="site-tree-mobile"><i class="layui-icon">&#xe602;</i></div>
+<div class="site-mobile-shade"></div>
+
+
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+<script src="{% static 'manager/js/index.js' %}"></script>
+<script src="{% static 'manager/js/toast.js' %}"></script>
+
+
+<script type="text/javascript">
+    layui.use(['layer'], function () {
+        var $ = layui.$;
+        var layer = layui.layer;
+        //控制台弹出
+        var consoleSocket = undefined
+        var username = $("#username").text()
+        var taskkeys = []
+        var curtaskindex = 0
+
+        $("#console").click(function () {
+            let consoleSocket = new WebSocket("ws://" + host + "/ws/consolemsg/");
+            consoleSocket.onopen = function () {
+                // var username=$("#username").text()
+                console.log("开始获取" + username + "控制台消息..")
+                consoleSocket.send('console.msg::read::' + username)
+            }
+            consoleSocket.onmessage = function (e) {
+                console.log(e.data);
+                if (e.data.indexOf("[key-value]") === -1)
+                    $("#msgview").append("<p class='console-line-msg'>" + e.data + "</p>")
+                else {
+                    //$("#taskids").text(e.data)
+                    taskkeys = e.data.split('[key-value]')[1].split(",")
+                    console.log("设置taskkeys=>", taskkeys)
+                }
+            }
+            consoleSocket.onclose = function () {
+                console.log("结束获取控制台消息..")
+            }
+            var o = layer.open({
+                title: '运行消息',
+                type: 1,
+                content: $('#consoleview'),
+                btn: ['next'],
+                area: ["750px", "450px"],
+                maxmin: true,
+                yes: function (index, layero) {
+
+                    console.log("next..")
+                    consoleSocket.send("console.msg::next")
+
+                },
+                cancel: function (index, layero) {
+                    consoleSocket.close()
+                    $("#msgview").empty()
+                },
+            });
+            layer.full(o);
+        });
+
+
+        $('#globalsetting').click(
+                function () {
+                    layer.open({
+                        type: 1,
+                        title: "全局设置",
+                        content: $('#addsetting'),
+                        area: ['600px', '260px'],
+                        offset: 'auto',
+                        shade: [0.1, '#393D49'],
+                        shadeClose: true,
+                        btn: ['确认后请手动重启服务', '取消'],
+                        success: function () {
+                            $.ajax({
+                                url: '/homepage/globalsetting/',
+                                type: 'GET',
+                                dataType: 'json',
+                                success: function (res) {
+                                    res = JSON.parse(res)
+                                    $("[name='me2url']").val(res.data['me2url']),
+                                            $("[name='redisurl']").val(res.data['redisip'] + ":" + res.data['redisport'])
+                                }
+                            })
+                        },
+                        yes: function (index, layero) {
+                            $.ajax({
+                                url: '/homepage/globalsetting/',
+                                type: 'POST',
+                                dataType: 'json',
+                                data: {
+                                    'me2url': $("[name='me2url']").val(),
+                                    'redisurl': $("[name='redisurl']").val()
+                                },
+                                success: function (res) {
+                                    res = JSON.parse(res)
+                                    if (res.code == 0) {
+                                        layer.close(index)
+                                        layer.alert("重启后，请重新加载页面！", {icon: 1, time: 3000})
+                                    } else {
+                                        layer.alert(res.msg, {icon: 5, time: 3000})
+                                    }
+                                }
+                            })
+                        },
+                        btn2: function (index, layero) {
+                            layer.close(index)
+                        },
+                        cancel: function (index, layero) {
+                            layer.close(index)
+                        }
+                    })
+                }
+        );
+
+
+        function setIframeHeight(iframe) {
+            if (iframe) {
+                var iframeWin = iframe.contentWindow || iframe.contentDocument.parentWindow;
+                if (iframeWin.document.body) {
+                    iframe.height = iframeWin.document.documentElement.scrollHeight || iframeWin.document.body.scrollHeight;
+                    console.log(iframe.height)
+                }
+            }
+        };
+        window.onload = function () {
+            setIframeHeight(document.getElementById('iframe'));
+        };
+
+    });
+
+    $(document).ready(function () {
+        connect_on();
+    });
+
+</script>
+
+</body>
+</html>

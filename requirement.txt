@@ -58,3 +58,4 @@ service_identity
 pymysql
 mysqlclient
 pyecharts
+python-jenkins==1.6.0

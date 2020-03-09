@@ -561,7 +561,7 @@ def delstep(request):
 
 
 def _check_params(param_value):
-	if param_value.startswith('{') or param_value.endswith('}'):
+	if param_value.startswith('{') or param_value.endswith('}') and param_value.endswith('}}')==False :
 		try:
 			eval(param_value)
 			return True

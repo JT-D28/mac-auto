@@ -65,47 +65,22 @@
                 {% if request.session.username == 'admin' %}
                     <li class="layui-nav-item"><a href="#" id='globalsetting'>全局设置</a></li>
 
-                    {%endif%}
-					<li class="layui-nav-item" pc>
-                        <li class="layui-nav-item"><a href="#" id='console'>控制台</a></li>
-					</li>
-                    <li class="layui-nav-item"><a href="{{BASE_URL}}/account/logout/">退出</a></li>
-				</ul>
-			</div>
-		</div>
-		<!-- 左侧导航 -->
-		<div class="layui-side layui-bg-black" >
-			<div class="navBar layui-side-scroll" id="navBar">
-				<ul class="layui-nav layui-nav-tree">
-					<li class="layui-nav-item layui-this">
-						<a href="javascript:;" data-url="/homepage/"><i class="fa fa-home icon"  data-icon=""></i><cite>首页</cite></a>
-					</li>
-                            {% if request.session.username == 'admin' %}
-                    <li class="layui-nav-item">
-						<a href="javascript:;" data-url="/account/user/"><i class="fa fa-user icon"  data-icon=""></i><cite>用户管理</cite></a>
-					</li>
-                            {%endif%}
-                    <li class="layui-nav-item">
-						<a  id='tree' href="javascript:;" data-url="/manager/tree/"><i class="fa fa-list icon" data-icon=""></i><cite>用例管理</cite></a>
-					</li>
-                    <li class="layui-nav-item">
-						<a href="javascript:;" data-url="/manager/dbcon/"><i class="fa fa-database icon" data-icon=""></i><cite>数据连接</cite></a>
-					</li>
-                    <li class="layui-nav-item">
-						<a href="javascript:;" data-url="/manager/var/"><i class="fa fa-btc icon" data-icon=""></i><cite>变量管理</cite></a>
-					</li>
-                    <li class="layui-nav-item">
-						<a href="javascript:;" data-url="/manager/function/"><i class="fa fa-facebook icon" data-icon=""></i><cite>函数定义</cite></a>
-					</li>
-                    <li class="layui-nav-item">
-						<a href="javascript:;" data-url="/manager/datamove/"><i class="fa fa-paper-plane-o icon" data-icon=""></i><cite>数据迁移</cite></a>
-					</li>
-                {% if request.session.username == 'admin' %}
-                    <li class="layui-nav-item">
-                        <a href="javascript:;" data-url="/manager/tag/"><i class="fa fa-tags icon" data-icon=""></i><cite>标签管理</cite></a>
-                    </li>
-                 {%endif%}
-
+                {% endif %}
+                <li class="layui-nav-item" pc>
+                <li class="layui-nav-item"><a href="#" id='console'>控制台</a></li>
+                </li>
+                <li class="layui-nav-item"><a href="{{ BASE_URL }}/account/logout/">退出</a></li>
+            </ul>
+        </div>
+    </div>
+    <!-- 左侧导航 -->
+    <div class="layui-side layui-bg-black">
+        <div class="navBar layui-side-scroll" id="navBar">
+            <ul class="layui-nav layui-nav-tree">
+                <li class="layui-nav-item layui-this">
+                    <a href="javascript:;" data-url="/homepage/"><i class="fa fa-home icon"
+                                                                    data-icon=""></i><cite>首页</cite></a>
+                </li>
                 {% if request.session.username == 'admin' %}
                     <li class="layui-nav-item">
                         <a href="javascript:;" data-url="/account/user/"><i class="fa fa-user icon"
@@ -131,6 +106,7 @@
                     <a href="javascript:;" data-url="/manager/datamove/"><i class="fa fa-paper-plane-o icon"
                                                                             data-icon=""></i><cite>数据迁移</cite></a>
                 </li>
+
                 <li class="layui-nav-item">
                     <a href="javascript:;" data-url="/manager/help/"><i class="fa fa-question-circle icon"
                                                                         data-icon=""></i><cite>帮助文档</cite></a>
@@ -141,7 +117,7 @@
     <!-- 右侧内容 -->
     <div class="layui-body layui-form" style="bottom:0px">
         <div class="layui-tab mag0" lay-filter="bodyTab" id="top_tabs_box" style="margin-top: 0px">
-            <ul class="layui-tab-title top_tab" id="top_tabs"  hidden>
+            <ul class="layui-tab-title top_tab" id="top_tabs" hidden>
                 <li class="layui-this" lay-id=""><i class="layui-icon">&#xe68e;</i> <cite>首页</cite></li>
             </ul>
             <div class="layui-tab-content clildFrame" style="top:0">

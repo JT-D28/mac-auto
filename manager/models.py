@@ -18,31 +18,31 @@ class Function(models.Model):
 		return self.name
 
 
-class Interface(models.Model):
-	author=models.ForeignKey(User, on_delete=models.CASCADE)
-	name=models.CharField(max_length=64)
-	headers=models.CharField(max_length=128)
-	url=models.CharField(max_length=128)
-	method=models.CharField(max_length=128)
-	content_type=models.CharField(max_length=128)
-	version=models.CharField(max_length=10)
-	body=models.CharField(max_length=500)
+# class Interface(models.Model):
+# 	author=models.ForeignKey(User, on_delete=models.CASCADE)
+# 	name=models.CharField(max_length=64)
+# 	headers=models.CharField(max_length=128)
+# 	url=models.CharField(max_length=128)
+# 	method=models.CharField(max_length=128)
+# 	content_type=models.CharField(max_length=128)
+# 	version=models.CharField(max_length=10)
+# 	body=models.CharField(max_length=500)
+#
+# 	createtime=models.DateTimeField(auto_now_add=True)
+# 	updatetime=models.DateTimeField(auto_now=True)
+#
+# 	class Meta:
+# 		unique_together=('url','version')
+#
+# 	def __str__(self):
+# 		return '%s[%s]'%(self.url,self.version)
 
-	createtime=models.DateTimeField(auto_now_add=True)
-	updatetime=models.DateTimeField(auto_now=True)
-
-	class Meta:
-		unique_together=('url','version')
-
-	def __str__(self):
-		return '%s[%s]'%(self.url,self.version)
-
-class InterfaceGen(models.Model):
-	interface=models.ForeignKey(Interface,on_delete=models.CASCADE)
-	kind=models.CharField(choices=(('step','测试步骤'),('record','录制'),('direct','直接新增接口')),max_length=16)
-	by=models.IntegerField()##
-	createtime=models.DateTimeField(auto_now_add=True)
-	updatetime=models.DateTimeField(auto_now=True)
+# class InterfaceGen(models.Model):
+# 	interface=models.ForeignKey(Interface,on_delete=models.CASCADE)
+# 	kind=models.CharField(choices=(('step','测试步骤'),('record','录制'),('direct','直接新增接口')),max_length=16)
+# 	by=models.IntegerField()##
+# 	createtime=models.DateTimeField(auto_now_add=True)
+# 	updatetime=models.DateTimeField(auto_now=True)
 
 
 class Tag(models.Model):
@@ -200,7 +200,7 @@ class ResultDetail(models.Model):
 class Variable(models.Model):
 	author=models.ForeignKey(User, on_delete=models.CASCADE)
 	description=models.CharField(max_length=128)
-	tag_id=models.IntegerField()
+	tag_id=models.IntegerField(null=True)
 	key=models.CharField(max_length=64,unique=True)
 	value=models.TextField(blank=True)
 	gain=models.TextField(blank=True)

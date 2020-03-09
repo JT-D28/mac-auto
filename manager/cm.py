@@ -1186,7 +1186,7 @@ def _build_node(kind,src_uid,target_uid,move_type,user,build_nodes):
 		parent_type_upper=parent_type.split('_')[0][0].upper()+parent_type.split('_')[0][1:]
 		parent=eval("mm.%s.objects.get(id=%s)"%(parent_type_upper,parent_order.main_id))
 
-		order=Order()
+		order=mm.Order()
 		order.author=user
 		order.kind='%s_%s'%(parent_type,src_type)###?
 		order.main_id=parent.id

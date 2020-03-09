@@ -19,31 +19,31 @@ class Function(Model):
 
 
 
-class Interface(Model):
-	author=ForeignKey(User, on_delete=CASCADE)
-	name=CharField(max_length=64)
-	headers=CharField(max_length=128)
-	url=CharField(max_length=128)
-	method=CharField(max_length=128)
-	content_type=CharField(max_length=128)
-	version=CharField(max_length=10)
-	body=CharField(max_length=500)
-
-	createtime=DateTimeField(auto_now_add=True)
-	updatetime=DateTimeField(auto_now=True)
-
-	class Meta:
-		unique_together=('url','version')
-
-	def __str__(self):
-		return '%s[%s]'%(self.url,self.version)
-
-class InterfaceGen(Model):
-	interface=ForeignKey(Interface,on_delete=CASCADE)
-	kind=CharField(choices=(('step','测试步骤'),('record','录制'),('direct','直接新增接口')),max_length=16)
-	by=IntegerField()##
-	createtime=DateTimeField(auto_now_add=True)
-	updatetime=DateTimeField(auto_now=True)
+# class Interface(Model):
+# 	author=ForeignKey(User, on_delete=CASCADE)
+# 	name=CharField(max_length=64)
+# 	headers=CharField(max_length=128)
+# 	url=CharField(max_length=128)
+# 	method=CharField(max_length=128)
+# 	content_type=CharField(max_length=128)
+# 	version=CharField(max_length=10)
+# 	body=CharField(max_length=500)
+#
+# 	createtime=DateTimeField(auto_now_add=True)
+# 	updatetime=DateTimeField(auto_now=True)
+#
+# 	class Meta:
+# 		unique_together=('url','version')
+#
+# 	def __str__(self):
+# 		return '%s[%s]'%(self.url,self.version)
+#
+# class InterfaceGen(Model):
+# 	interface=ForeignKey(Interface,on_delete=CASCADE)
+# 	kind=CharField(choices=(('step','测试步骤'),('record','录制'),('direct','直接新增接口')),max_length=16)
+# 	by=IntegerField()##
+# 	createtime=DateTimeField(auto_now_add=True)
+# 	updatetime=DateTimeField(auto_now=True)
 
 
 
@@ -182,7 +182,7 @@ class ResultDetail(Model):
 	taskid=CharField(max_length=64)
 	plan=ForeignKey(Plan, on_delete=CASCADE)
 	case=ForeignKey(Case, on_delete=CASCADE)
-	step=ForeignKey(Step, on_delete=CASCADE)
+	step=ForeignKey(Step, on_delete=CASCADE,null=True)
 
 	businessdata=ForeignKey(BusinessData, on_delete=CASCADE)
 	result=TextField(choices=choice,max_length=12)
@@ -193,7 +193,7 @@ class ResultDetail(Model):
 	updatetime=DateTimeField(auto_now=True)
 
 	loop_id=IntegerField(null=True)
-	is_verify=CharField(max_length=4,default=0)
+	is_verify=CharField(max_length=4,default=0,null=True)
 
 	def __str__(self):
 		return "%s,%s"%(self.case,self.step)
@@ -241,7 +241,7 @@ class Order(Model):
 	"""
 	main_id=IntegerField()
 	follow_id=IntegerField()
-	kind=CharField(choices=(('plan','计划'),('case','用例')),max_length=16)
+	kind=CharField(choices=(('plan','计划'),('case','用例')),max_length=32)
 	value=CharField(max_length=64,blank=True)
 
 	author=ForeignKey(User, on_delete=CASCADE)
@@ -294,7 +294,7 @@ class Menu(Model):
 
 
 class DBCon(Model):
-	kind=CharField(choices=(('oracle','Oracle'),('mysql',"Mysql"),('db2','DB2')),max_length=10)
+	kind=CharField(choices=(('oracle','Oracle'),('mysql',"Mysql"),('db2','DB2')),max_length=32)
 	dbname=CharField(max_length=15)
 	host=CharField(max_length=15,blank=True)
 	port=CharField(max_length=5,blank=True)

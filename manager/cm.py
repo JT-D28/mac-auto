@@ -413,7 +413,7 @@ def addstep(request):
 		step.db_check=db_check
 		step.itf_check=itf_check
 		step.temp=tmp
-		step.author=md.User.objects.get(name=author)
+		step.author=User.objects.get(name=author)
 		step.db_id=dbid
 		step.save()
 		# mounttestdata(author,step.id)

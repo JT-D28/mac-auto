@@ -201,16 +201,16 @@ class ResultDetail(Model):
 
 
 class Variable(Model):
-	author=models.ForeignKey(User, on_delete=models.CASCADE)
-	description=models.CharField(max_length=128)
-	tag_id=models.CharField(max_length=24,null=True)
-	key=models.CharField(max_length=255,unique=True)
-	value=models.TextField(blank=True,null=True)
-	gain=models.TextField(blank=True,null=True)
-	is_cache=models.BooleanField(default=True)
-	# is_default=models.BooleanField(default=True)
-	createtime=models.DateTimeField(auto_now_add=True)
-	updatetime=models.DateTimeField(auto_now=True)
+	author=ForeignKey(User, on_delete=CASCADE)
+	description=CharField(max_length=128)
+	tag_id=CharField(max_length=24,null=True)
+	key=CharField(max_length=255,unique=True)
+	value=TextField(blank=True,null=True)
+	gain=TextField(blank=True,null=True)
+	is_cache=BooleanField(default=True)
+	# is_default=BooleanField(default=True)
+	createtime=DateTimeField(auto_now_add=True)
+	updatetime=DateTimeField(auto_now=True)
 
 
 

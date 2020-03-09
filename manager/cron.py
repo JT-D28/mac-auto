@@ -105,7 +105,7 @@ class Cron(object):
 
 	@classmethod
 	def _getcronmanager(cls):
-		__lock.acquire()
+		cls.__lock.acquire()
 		from apscheduler.schedulers.background import BackgroundScheduler
 
 		if cls.__cronmanager is None:
@@ -115,7 +115,7 @@ class Cron(object):
 				print("新建任务调度器并开启..")
 
 
-		__lock.release()
+		cls.__lock.release()
 
 		return cls.__cronmanager
 
@@ -152,9 +152,10 @@ class Cron(object):
 				id=taskid
 			)
 
-			print('添加定时任务[id=%s fun=%s]'%(id_,func.__name__))
+			#print('添加定时任务[id=%s fun=%s]'%(id_,func.__name__))
 		except:
-			print("添加定时任务[id=%s]失败"%id_)
+			#print("添加定时任务[id=%s]失败"%id_)
+			pass
 
 
 	@classmethod

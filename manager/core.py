@@ -794,34 +794,34 @@ def gettaskid():
 
 
 def getbuiltin(searchvalue=None, filename='builtin.py'):
-    """
-    获取内置函数列表 model.Function形式组装
+	"""
+	获取内置函数列表 model.Function形式组装
 	"""
 
-    path = os.path.join(os.path.dirname(__file__), filename)
-    list_ = []
-    with open(path, encoding='utf-8') as f:
-        content = f.read()
-        # print(content)
-        methodnames = re.findall("def\s+(.*?)\(", content)
-        if searchvalue is None:
-            for methodname in methodnames:
-                f = Function()
-                f.name = methodname
-                f.description = eval(methodname).__doc__.strip()
-                f.kind = '内置函数'
-                f.createtime = f.updatetime = '*'
-                list_.append(f)
-        else:
-            for methodname in methodnames:
-                if (searchvalue in methodname) or (searchvalue in eval(methodname).__doc__.strip()):
-                    f = Function()
-                    f.name = methodname
-                    f.description = eval(methodname).__doc__.strip()
-                    f.kind = '内置函数'
-                    f.createtime = f.updatetime = '*'
-                    list_.append(f)
-    return list_
+	path = os.path.join(os.path.dirname(__file__), filename)
+	list_ = []
+	with open(path, encoding='utf-8') as f:
+		content = f.read()
+		# print(content)
+		methodnames = re.findall("def\s+(.*?)\(", content)
+		if searchvalue is None:
+			for methodname in methodnames:
+				f = Function()
+				f.name = methodname
+				f.description = eval(methodname).__doc__.strip()
+				f.kind = '内置函数'
+				f.createtime = f.updatetime = '*'
+				list_.append(f)
+		else:
+			for methodname in methodnames:
+				if (searchvalue in methodname) or (searchvalue in eval(methodname).__doc__.strip()):
+					f = Function()
+					f.name = methodname
+					f.description = eval(methodname).__doc__.strip()
+					f.kind = '内置函数'
+					f.createtime = f.updatetime = '*'
+					list_.append(f)
+	return list_
 """
 自定义函数管理
 """

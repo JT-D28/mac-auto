@@ -454,7 +454,7 @@ def addvar(request):
 		# print('gain=>',var.gain.__contains__('\n'))
 		##gain为sql时格式验证
 
-		if is_valid_where_sql(var) is False:
+		if is_valid_where_sql(var.gain) is False:
 			return JsonResponse(simplejson(code=2, msg='获取方式输入可能有错误 请检查.'), safe=False)
 
 		###gain&value 单输入验证
@@ -699,7 +699,7 @@ def transform(request):
 
 		if FILE_COUNT != 2:
 			return JsonResponse(simplejson(code=101, msg='转换需要配置文件(Config.xlsx)和用例文件 实际上传%s个文件' % FILE_COUNT),
-			                    safe=False)
+								safe=False)
 
 		t = T.Transformer(config_wb, data_wb)
 		t.transform()

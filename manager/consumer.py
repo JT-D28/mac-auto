@@ -149,10 +149,13 @@ class logConsumer(WebsocketConsumer):
 		if os.path.exists(logname):
 			with open(logname, 'r', encoding='utf-8') as f:
 				if is_running in (0, '0'):
+					s=time.time()
 					log_text = f.readlines()
+					e = time.time()
 					count= len(log_text)
 					self.send(text_data=json.dumps({'data':log_text,'count':count}))
 					self.disconnect()
+					print(e-s)
 				else:
 					while True:
 						log_text = f.readlines()

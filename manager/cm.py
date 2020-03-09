@@ -23,6 +23,7 @@ def addproduct(request):
 		product=mm.Product()
 		product.description=request.POST.get('description')
 		product.author=lm.User.objects.get(name=request.session.get('username'))
+
 		product.save()
 
 		return {
@@ -102,7 +103,9 @@ def addplan(request):
 		plan=mm.Plan()
 		plan.description=request.POST.get('description')
 		plan.db_id=request.POST.get('dbid')
+
 		plan.author=lm.User.objects.get(name=request.session.get('username',None))
+
 		plan.run_type=request.POST.get('run_type')
 		plan.save()
 
@@ -280,8 +283,10 @@ def importplan(request):
 def addcase(request):
 	msg=''
 	try:
+
 		case=mm.Case()
 		case.author=lm.User.objects.get(name=request.session.get('username',None))
+
 		case.description=request.POST.get('description')
 		case.db_id=request.POST.get('dbid')
 		case.save()
@@ -383,7 +388,9 @@ def addstep(request):
 		if step_type=='dir':
 			case=mm.Case()
 			case.description=request.POST.get('description')
+
 			case.author=lm.User.objects.get(name=request.session.get('username'))
+
 			case.db_id=request.POST.get('dbid')
 			case.save()
 
@@ -415,7 +422,9 @@ def addstep(request):
 		step.db_check=db_check
 		step.itf_check=itf_check
 		step.temp=tmp
+
 		step.author=lm.User.objects.get(name=author)
+
 		step.db_id=dbid
 		step.save()
 		# mounttestdata(author,step.id)
@@ -486,6 +495,7 @@ def editstep(request):
 		tmp=request.POST.get('tmp')
 		username=request.session.get('username')
 		author=lm.User.objects.get(name=username)
+
 
 		step=mm.Step.objects.get(id=id_)
 		if step.step_type!=step_type:
@@ -801,6 +811,7 @@ def addrelation(kind,callername,main_id,follow_id):
 	order.follow_id=follow_id
 	order.value=getnextvalue(kind, main_id)
 	order.author=lm.User.objects.get(name=callername)
+
 	order.save()
 
 

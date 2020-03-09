@@ -18,6 +18,7 @@ class Function(Model):
 		return self.name
 
 
+
 class Interface(Model):
 	author=ForeignKey(User, on_delete=CASCADE)
 	name=CharField(max_length=64)
@@ -43,6 +44,7 @@ class InterfaceGen(Model):
 	by=IntegerField()##
 	createtime=DateTimeField(auto_now_add=True)
 	updatetime=DateTimeField(auto_now=True)
+
 
 
 class Tag(Model):
@@ -197,17 +199,19 @@ class ResultDetail(Model):
 		return "%s,%s"%(self.case,self.step)
 
 
+
 class Variable(Model):
-	author=ForeignKey(User, on_delete=CASCADE)
-	description=CharField(max_length=128)
-	tag_id=IntegerField()
-	key=CharField(max_length=64,unique=True)
-	value=TextField(blank=True)
-	gain=TextField(blank=True)
-	is_cache=BooleanField(default=True)
-	# is_default=BooleanField(default=True)
-	createtime=DateTimeField(auto_now_add=True)
-	updatetime=DateTimeField(auto_now=True)
+	author=models.ForeignKey(User, on_delete=models.CASCADE)
+	description=models.CharField(max_length=128)
+	tag_id=models.CharField(max_length=24,null=True)
+	key=models.CharField(max_length=255,unique=True)
+	value=models.TextField(blank=True,null=True)
+	gain=models.TextField(blank=True,null=True)
+	is_cache=models.BooleanField(default=True)
+	# is_default=models.BooleanField(default=True)
+	createtime=models.DateTimeField(auto_now_add=True)
+	updatetime=models.DateTimeField(auto_now=True)
+
 
 
 	def __str__(self):
@@ -285,6 +289,7 @@ class Menu(Model):
 	url=CharField(max_length=64)
 	icon=CharField(max_length=64)
 	parentid=CharField(max_length=128)
+
 
 
 

@@ -1,6 +1,5 @@
 from django.db import models
 from  login.models import *
-from manager.models import *
 
 # Create your models here.
 
@@ -96,7 +95,7 @@ class Step(models.Model):
 	count=models.IntegerField(default=1)
 
 
-	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
+	author=models.ForeignKey(User, on_delete=models.CASCADE)
 	step_type=models.CharField(choices=choice,max_length=12,null=True)
 
 	##如果是接口类型 这个字段暂时无用
@@ -183,7 +182,7 @@ class ResultDetail(models.Model):
 	case=models.ForeignKey(Case, on_delete=models.CASCADE)
 	step=models.ForeignKey(Step, on_delete=models.CASCADE)
 
-	businessdata=models.ForeignKey(mmd.BusinessData, on_delete=models.CASCADE)
+	businessdata=models.ForeignKey(BusinessData, on_delete=models.CASCADE)
 	result=models.TextField(choices=choice,max_length=12)
 	spend=models.CharField(max_length=64,null=True)
 	error=models.TextField(blank=True)
@@ -259,7 +258,7 @@ class Order(models.Model):
 # 	related_id=models.IntegerField()
 # 	tag_id=models.IntegerField()
 #
-# 	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
+# 	author=models.ForeignKey(User, on_delete=models.CASCADE)
 # 	createtime=models.DateTimeField(auto_now_add=True)
 # 	updatetime=models.DateTimeField(auto_now=True)
 
@@ -333,7 +332,7 @@ class MailConfig(models.Model):
 	is_send_dingding=models.CharField(max_length=125,default='close')
 
 	dingdingtoken=models.CharField(max_length=64,blank=True,null=True)
-	author=models.ForeignKey(md.User, on_delete=models.CASCADE,null=True)
+	author=models.ForeignKey(User, on_delete=models.CASCADE,null=True)
 	createtime=models.DateTimeField(auto_now_add=True,null=True)
 	updatetime=models.DateTimeField(auto_now=True,null=True)
 
@@ -346,7 +345,7 @@ class MailConfig(models.Model):
 # 	username=models.CharField(max_length=32,blank=True)
 # 	password=models.CharField(max_length=32,blank=True)
 #
-# 	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
+# 	author=models.ForeignKey(User, on_delete=models.CASCADE)
 # 	createtime=models.DateTimeField(auto_now_add=True)
 # 	updatetime=models.DateTimeField(auto_now=True)
 

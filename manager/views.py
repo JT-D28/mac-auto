@@ -454,7 +454,7 @@ def addvar(request):
 		# print('gain=>',var.gain.__contains__('\n'))
 		##gain为sql时格式验证
 
-		if is_valid_where_sql(var.gain) is False:
+		if is_valid_where_sql(var) is False:
 			return JsonResponse(simplejson(code=2, msg='获取方式输入可能有错误 请检查.'), safe=False)
 
 		###gain&value 单输入验证
@@ -2341,8 +2341,6 @@ def treetest(request):
 	return render(request, 'manager/tree.html')
 
 
-<<<<<<< HEAD
-
 """
 标签管理
 """
@@ -2416,8 +2414,7 @@ def querytag(request):
 	jsonstr=json.dumps(res,cls=TagEncoder,total=total)
 	return JsonResponse(jsonstr,safe=False)
 
-=======
->>>>>>> 4f0c76c44b95ccc2eea5b13534c40c4c21b72255
+
 """
 测试接口
 """

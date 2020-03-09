@@ -106,7 +106,7 @@
                     </li>
                  {%endif%}
 
-
+                {% if request.session.username == 'admin' %}
                     <li class="layui-nav-item">
                         <a href="javascript:;" data-url="/account/user/"><i class="fa fa-user icon"
                                                                             data-icon=""></i><cite>用户管理</cite></a>

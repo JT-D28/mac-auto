@@ -1,13 +1,12 @@
 from django.db import models
-from  login import models as md
-from manager import models as mmd
+from  login.models import *
 
 # Create your models here.
 
 class Function(models.Model):
 
 	kind=models.CharField(max_length=12,default='用户定义')
-	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
+	author=models.ForeignKey(User, on_delete=models.CASCADE)
 	name=models.CharField(max_length=64)
 	description=models.CharField(max_length=128)
 	flag=models.CharField(max_length=32)
@@ -18,36 +17,38 @@ class Function(models.Model):
 	def __str__(self):
 		return self.name
 
-# class Interface(models.Model):
-# 	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
-# 	name=models.CharField(max_length=64)
-# 	headers=models.CharField(max_length=128)
-# 	url=models.CharField(max_length=128)
-# 	method=models.CharField(max_length=128)
-# 	content_type=models.CharField(max_length=128)
-# 	version=models.CharField(max_length=10)
-# 	body=models.CharField(max_length=500)
-#
-# 	createtime=models.DateTimeField(auto_now_add=True)
-# 	updatetime=models.DateTimeField(auto_now=True)
-#
-# 	class Meta:
-# 		unique_together=('url','version')
-#
-# 	def __str__(self):
-# 		return '%s[%s]'%(self.url,self.version)
 
-# class InterfaceGen(models.Model):
-# 	interface=models.ForeignKey(mmd.Interface,on_delete=models.CASCADE)
-# 	kind=models.CharField(choices=(('step','测试步骤'),('record','录制'),('direct','直接新增接口')),max_length=16)
-# 	by=models.IntegerField()##
-# 	createtime=models.DateTimeField(auto_now_add=True)
-# 	updatetime=models.DateTimeField(auto_now=True)
+class Interface(models.Model):
+	author=models.ForeignKey(User, on_delete=models.CASCADE)
+	name=models.CharField(max_length=64)
+	headers=models.CharField(max_length=128)
+	url=models.CharField(max_length=128)
+	method=models.CharField(max_length=128)
+	content_type=models.CharField(max_length=128)
+	version=models.CharField(max_length=10)
+	body=models.CharField(max_length=500)
+
+	createtime=models.DateTimeField(auto_now_add=True)
+	updatetime=models.DateTimeField(auto_now=True)
+
+	class Meta:
+		unique_together=('url','version')
+
+	def __str__(self):
+		return '%s[%s]'%(self.url,self.version)
+
+class InterfaceGen(models.Model):
+	interface=models.ForeignKey(Interface,on_delete=models.CASCADE)
+	kind=models.CharField(choices=(('step','测试步骤'),('record','录制'),('direct','直接新增接口')),max_length=16)
+	by=models.IntegerField()##
+	createtime=models.DateTimeField(auto_now_add=True)
+	updatetime=models.DateTimeField(auto_now=True)
+
 
 class Tag(models.Model):
 	name=models.CharField(max_length=16)
 
-	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
+	author=models.ForeignKey(User, on_delete=models.CASCADE)
 	createtime=models.DateTimeField(auto_now_add=True)
 	updatetime=models.DateTimeField(auto_now=True)
 
@@ -93,8 +94,10 @@ class Step(models.Model):
 	choice=(('interface','接口'),('function','函数'))
 	count=models.IntegerField(default=1)
 
-	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
+
+	author=models.ForeignKey(User, on_delete=models.CASCADE)
 	step_type=models.CharField(choices=choice,max_length=12,null=True)
+
 	##如果是接口类型 这个字段暂时无用
 	related_id=models.CharField(max_length=32,blank=True,null=True)
 
@@ -126,7 +129,7 @@ class Step(models.Model):
 class Case(models.Model):
 
 	count=models.IntegerField(default=1)
-	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
+	author=models.ForeignKey(User, on_delete=models.CASCADE)
 	# priority=models.CharField(max_length=32)
 	description=models.CharField(max_length=128)
 	businessdatainfo=models.ManyToManyField(BusinessData,blank=True)
@@ -142,7 +145,7 @@ class Case(models.Model):
 
 
 class Plan(models.Model):
-	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
+	author=models.ForeignKey(User, on_delete=models.CASCADE)
 	description=models.CharField(max_length=128)
 	cases=models.ManyToManyField(Case,blank=True)
 	db_id=models.CharField(max_length=20,blank=True,null=True)
@@ -163,7 +166,7 @@ class Plan(models.Model):
 
 # class Result(models.Model):
 
-# 	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
+# 	author=models.ForeignKey(User, on_delete=models.CASCADE)
 # 	case=models.ForeignKey(Case, on_delete=models.CASCADE)
 # 	success=models.CharField(max_length=16)
 # 	fail=models.CharField(max_length=16)
@@ -175,13 +178,15 @@ class Plan(models.Model):
 class ResultDetail(models.Model):
 	choice=(('success','success'),('fail','fail'))
 	taskid=models.CharField(max_length=64)
-	plan=models.ForeignKey(mmd.Plan, on_delete=models.CASCADE)
-	case=models.ForeignKey(mmd.Case, on_delete=models.CASCADE)
+	plan=models.ForeignKey(Plan, on_delete=models.CASCADE)
+	case=models.ForeignKey(Case, on_delete=models.CASCADE)
 	step=models.ForeignKey(Step, on_delete=models.CASCADE)
-	businessdata=models.ForeignKey(mmd.BusinessData, on_delete=models.CASCADE)
+
+	businessdata=models.ForeignKey(BusinessData, on_delete=models.CASCADE)
 	result=models.TextField(choices=choice,max_length=12)
 	spend=models.CharField(max_length=64,null=True)
 	error=models.TextField(blank=True)
+
 	createtime=models.DateTimeField(auto_now_add=True)
 	updatetime=models.DateTimeField(auto_now=True)
 
@@ -193,9 +198,9 @@ class ResultDetail(models.Model):
 
 
 class Variable(models.Model):
-	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
+	author=models.ForeignKey(User, on_delete=models.CASCADE)
 	description=models.CharField(max_length=128)
-	tag=models.CharField(max_length=64,blank=True)#
+	tag_id=models.IntegerField()
 	key=models.CharField(max_length=64,unique=True)
 	value=models.TextField(blank=True)
 	gain=models.TextField(blank=True)
@@ -206,10 +211,9 @@ class Variable(models.Model):
 
 
 	def __str__(self):
-		if len(self.tag)==0:
-			return "%s_%s"%(self.author,self.key)
-		else:
-			return "%s_%s[%s]"%(self.author,self.key,self.tag)
+
+		return "%s_%s"%(self.author,self.key)
+
 
 
 # class priority(models.Model):
@@ -221,7 +225,7 @@ class Variable(models.Model):
 # 	kind=models.CharField(choices=(('plan','计划'),('case','用例')),max_length=16)
 # 	value=models.IntegerField()
 
-# 	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
+# 	author=models.ForeignKey(User, on_delete=models.CASCADE)
 # 	createtime=models.DateTimeField(auto_now_add=True)
 # 	updatetime=models.DateTimeField(auto_now=True)
 
@@ -236,12 +240,13 @@ class Order(models.Model):
 	kind=models.CharField(choices=(('plan','计划'),('case','用例')),max_length=16)
 	value=models.CharField(max_length=64,blank=True)
 
-	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
+	author=models.ForeignKey(User, on_delete=models.CASCADE)
 	createtime=models.DateTimeField(auto_now_add=True)
 	updatetime=models.DateTimeField(auto_now=True)
 
 	def __str__(self):
 		return 'kind=%s,main=%s,follow=%s,value=%s'%(self.kind,self.main_id,self.follow_id,self.value)
+
 
 
 
@@ -253,9 +258,10 @@ class Order(models.Model):
 # 	related_id=models.IntegerField()
 # 	tag_id=models.IntegerField()
 #
-# 	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
+# 	author=models.ForeignKey(User, on_delete=models.CASCADE)
 # 	createtime=models.DateTimeField(auto_now_add=True)
 # 	updatetime=models.DateTimeField(auto_now=True)
+
 
 
 #
@@ -291,7 +297,7 @@ class DBCon(models.Model):
 	password=models.CharField(max_length=15)
 	description=models.CharField(max_length=32)
 
-	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
+	author=models.ForeignKey(User, on_delete=models.CASCADE)
 	createtime=models.DateTimeField(auto_now_add=True)
 	updatetime=models.DateTimeField(auto_now=True)
 
@@ -299,13 +305,13 @@ class DBCon(models.Model):
 
 class Crontab(models.Model):
 	taskid=models.CharField(max_length=32)
-	plan=models.ForeignKey(mmd.Plan, on_delete=models.CASCADE)
+	plan=models.ForeignKey(Plan, on_delete=models.CASCADE)
 	###2019 12 23 12 23 45#######
 	value=models.CharField(max_length=32)
 	ext=models.CharField(max_length=32,blank=True,null=True)
 	status=models.CharField(choices=(('close','关闭'),('open','开启')),max_length=12,default='close')
 	
-	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
+	author=models.ForeignKey(User, on_delete=models.CASCADE)
 	createtime=models.DateTimeField(auto_now_add=True)
 	updatetime=models.DateTimeField(auto_now=True)
 
@@ -324,8 +330,9 @@ class MailConfig(models.Model):
 	smtp_port=models.CharField(max_length=32,blank=True,null=True)
 	is_send_mail=models.CharField(max_length=125,default='close')
 	is_send_dingding=models.CharField(max_length=125,default='close')
+
 	dingdingtoken=models.CharField(max_length=64,blank=True,null=True)
-	author=models.ForeignKey(md.User, on_delete=models.CASCADE,null=True)
+	author=models.ForeignKey(User, on_delete=models.CASCADE,null=True)
 	createtime=models.DateTimeField(auto_now_add=True,null=True)
 	updatetime=models.DateTimeField(auto_now=True,null=True)
 
@@ -338,9 +345,10 @@ class MailConfig(models.Model):
 # 	username=models.CharField(max_length=32,blank=True)
 # 	password=models.CharField(max_length=32,blank=True)
 #
-# 	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
+# 	author=models.ForeignKey(User, on_delete=models.CASCADE)
 # 	createtime=models.DateTimeField(auto_now_add=True)
 # 	updatetime=models.DateTimeField(auto_now=True)
+
 
 
 class Product(models.Model):
@@ -349,7 +357,7 @@ class Product(models.Model):
 	'''
 	# plans=models.ManyToManyField(Plan,blank=True)
 	description=models.CharField(max_length=64)
-	author=models.ForeignKey(md.User, on_delete=models.CASCADE)
+	author=models.ForeignKey(User, on_delete=models.CASCADE)
 	createtime=models.DateTimeField(auto_now_add=True)
 	updatetime=models.DateTimeField(auto_now=True)
 
@@ -374,7 +382,7 @@ class Product(models.Model):
 # 	数据迁移记录
 # 	'''
 # 	description=models.CharField(max_length=64)
-# 	operator=models.ForeignKey(md.User, on_delete=models.CASCADE)
+# 	operator=models.ForeignKey(User, on_delete=models.CASCADE)
 # 	kind=models.CharField(max_length=64)
 # 	createtime=models.DateTimeField(auto_now_add=True)
 # 	updatetime=models.DateTimeField(auto_now=True)

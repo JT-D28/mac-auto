@@ -8,6 +8,45 @@ from django.conf import settings
 from manager import models
 from hashlib import md5
 
+
+'''
+提示优化
+
+'''
+
+_friendly_map={
+'db':{
+    'ORA-01017':'[oracle]账号密码错误',
+    'DPI-1047':'[oracle]没装instantclient工具,请联系开发',
+    'ORA-12505':'[oracle]SID无法识别',
+    'RA-12545':'[oracle]host错误',
+    'RA-12541':'[oracle]端口号错误',
+    'psycopg2.OperationalError':'[pqsql]连接配置错误,请自检字段',
+    'pymysql.err.OperationalError: (1044':'[mysql]库名错误',
+    'pymysql.err.OperationalError: (2003':'[mysql]host/port错误',
+    'pymysql.err.OperationalError: (1045':'[mysql]账号密码错误',
+    }
+}
+
+def get_friendly_msg(msg0,kind='all'):
+    '''
+    '''
+    if 'all'==kind:
+        for k1,v1 in _friendly_map.items():
+            for k2,v2 in v1.items():
+                print('msg0=>',msg0)
+                if msg0.__contains__(k2):
+                    return v2
+        return msg0
+    else:
+        for k1,v1 in _friendly_map.items():
+            if kind==k1:
+                for k2,v2 in v1.items():
+                    if msg0.__contains__(k2):
+                        return v2
+                return msg0
+
+
 '''
 请求session保持
 '''

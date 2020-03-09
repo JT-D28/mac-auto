@@ -7,77 +7,50 @@
 
     <title>标签管理</title>
 
+
 </head>
 <body>
 <div class="layui-inline"> 
-	<div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="名称|键|值" class="layui-input"></div>
+	<div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="标签名" class="layui-input"></div>
 	<button class="layui-btn" id='querybtn'>查询</button>
   <button class="layui-btn" id='addbtn'>新增</button>
   <button class="layui-btn layui-btn-danger" id='delbtn'>删除</button>
 
 </div>
 
-<table id='table-case' class="layui-table" lay-data="{height:400, cellMinWidth: 80, page: true, limit:10, url:'{{BASE_URL}}/manager/querytag/'}" lay-filter='target'>
+<table id='table-tag' class="layui-table" lay-data="{height:400, cellMinWidth: 80, page: true, limit:10, url:'{{BASE_URL}}/manager/querytag/'}" lay-filter='target'>
   <thead>
     <tr>
       <th lay-data="{type:'checkbox'}"></th>
       <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
-      <th lay-data="{field: 'author',width:160, sort: true}">创建者</th>
-      <th lay-data="{field: 'name',width:160, sort: true}">名称</th>
-      <th lay-data="{field: 'createtime', width:160,sort:true}">创建时间</th>
-      <th lay-data="{field: 'updatetime', width:160}">更改时间</th>
-      <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar'}">操作</th>
+      <th lay-data="{field: 'name', sort: true}">名称</th>
+      <th lay-data="{field: 'author', sort: true}">创建者</th>
+      <th lay-data="{field: 'createtime',sort:true}">创建时间</th>
+      <th lay-data="{field: 'updatetime',sort:true}">更新时间</th>
+      
  
     </tr>
   </thead>
 </table>
 
-<div id='addcase' hidden=true class="layui-form">
+<div id='addtag' hidden=true class="layui-form">
   <div class="layui-form-item">
     <label class="layui-form-label">名称</label>
     <div class="layui-input-block">
       <input type="text" name="" placeholder="请输入" autocomplete="off" class="layui-input">
     </div>
   </div>
-  <div class="layui-form-item">
-    <label class="layui-form-label">优先级</label>
-    <div class="layui-input-block">
-      <input type="text" name="" placeholder="请输入" autocomplete="off" class="layui-input">
-    </div>
-  </div>
 
-  <div class="layui-form-item">
-    <label class="layui-form-label">作者</label>
-    <div class="layui-input-block">
-      <input type="text" name="" placeholder="请输入" autocomplete="off" class="layui-input">
-    </div>
 
-  </div>
 </div>
 
 
-
-  <table id='table-tag' class="layui-table" lay-data="{height:400, cellMinWidth: 80, page: true, limit:10, url:'http://127.0.0.1:8000/manager/querytag/'}" lay-filter='target'>
-    <thead>
-      <tr>
-        <th lay-data="{type:'checkbox'}"></th>
-        <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
-        <th lay-data="{field: 'priority',width:120}">执行序号</th>
-        <th lay-data="{field: 'description',width:160, sort: true}">名称</th>
-        <th lay-data="{field: 'step_type',width:160, sort: true}">类型</th>
-        <th lay-data="{field: 'db_check', width:160}">数据校验</th>
-        <th lay-data="{field: 'itf_check', width:160}">接口校验</th>
-        <th lay-data="{field: 'createtime', width:160,sort:true}">创建时间</th>
-        <th lay-data="{field: 'updatetime', width:160}">更改时间</th>
-        <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar'}">操作</th>
-   
-      </tr>
-    </thead>
-  </table>
 </div>
 </body>
 
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/layui/layui.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
 
 <script type="text/javascript">
 layui.use(['table','layer','transfer'], function(){
@@ -117,7 +90,7 @@ layui.use(['table','layer','transfer'], function(){
   $("#querybtn").click(function(e){
 
     console.log('query case');
-    table.reload('table-case',{
+    table.reload('table-tag',{
       page:{
         curr:1
       },
@@ -134,42 +107,95 @@ layui.use(['table','layer','transfer'], function(){
 //删除功能
   $("#delbtn").click(function(e){
 
-    layer.confirm('确认删除么?',function(index){
-      layer.close(index);
-      layer.alert('删除成功',{icon:1,time:1000})
 
-    })
+    var checkStatus = table.checkStatus("table-tag");
+    data = checkStatus.data; //获取选中的数据
+
+    if(data.length==0){
+      layer.alert('你有选择删除的变量么?',{icon:3,time:1500})
+      return
+
+    };
+
+    layer.confirm('确认删除么?',{
+    btn1:function(index,layero){
+      layer.close(index)
+      success=function(e){
+
+        if(e.code==0){
+          table.reload('table-tag',{
+              page:{
+                curr:1
+              },
+              where:{
+                searchvalue:$("#search-value").val()
+
+              }
+
+            });
+          layer.alert(e.msg,{icon:1,time:1500})
+        }
+        else
+          layer.alert(e.msg,{icon:2})
+
+      }
+
+      ids=[]
+      for(var index=0;index<data.length;index++){
+        ids.splice(0,0,data[index]['id'])
+
+      }
+  
+      _post('/manager/deltag/',{'ids':ids.join()},success)
+
+
+    },
+
+  });
+
+
 
   });
 
 //新增功能
 
   $("#addbtn").click(function(e){
-    layer.open(
-      {
-        title:'新增用例',
-        type:1,
-        content:$('#addcase'),
-        btn:['提交','取消','分配步骤'],
-        // area:["500px","500px"],
+    layer.prompt({
+      title:'添加标签',
+      maxlength:10,
+      value:''
+    
+    },function(value, index, elem){
 
+      
 
-        yes: function(index, layero){
-          //按钮【按钮一】的回调
-          layer.alert('确定')
-        },
-        btn2: function(index, layero){
-          //按钮【按钮二】的回调
-          //return false 开启该代码可禁止点击该按钮关闭
-          layer.alert('取消')
-        },
-        btn3:function(index,layero){
-          layer.alert('分配步骤')
+      layer.close(index);
+      _post('/manager/addtag/',{'name':value},function(e){
 
+        //console.log(e)
+        if(e.code==0){
+          table.reload('table-tag',{
+              page:{
+                curr:1
+              },
+              where:{
+                searchvalue:$("#search-value").val()
+
+              }
+
+            });
+
+          layer.alert(e.msg,{icon:1,time:1500})
         }
+        else
+          layer.alert(e.msg,{icon:2})
+
+      })
 
 
-    });
+
+
+    })
 
   });
 
@@ -178,7 +204,7 @@ layui.use(['table','layer','transfer'], function(){
     console.log(e.event);
 
 
-    var checkStatus = table.checkStatus("table-case");
+    var checkStatus = table.checkStatus("table-tag");
     data = checkStatus.data; //获取选中的数据
     
     if(e.event=='edit'){
@@ -224,7 +250,5 @@ layui.use(['table','layer','transfer'], function(){
 // });
 </script>
 
-<script type="text/html" id="toolbar">
-  <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
-</script>
+
 </html>

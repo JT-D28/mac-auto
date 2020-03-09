@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
     <title>变量管理</title>
     <style type="text/css">
       .layui-icon:hover{
@@ -27,6 +28,11 @@
 /*      #dblist li:hover{background:#5FB878;cursor:pointer;}*/
       #dblist .active{background:#5FB878;cursor:pointer;}
 
+      #addtag:hover{
+        cursor:pointer;
+
+
+      }
 
     </style>
 </head>
@@ -44,8 +50,8 @@
     <tr>
       <th lay-data="{type:'checkbox',width:'5%'}"></th>
       <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
-      <th lay-data="{field: 'description',width:'10%', sort: true}">名称</th>
       <th lay-data="{field: 'key',width:'15%', sort: true}">键名</th>
+      <th lay-data="{field: 'description',width:'10%', sort: true}">描述</th>
       <th lay-data="{field: 'value',width:'25%'}">值</th>
       <th lay-data="{field: 'gain', width:'25%'}">获取方式</th>
       <th lay-data="{field: 'author',width:'8%', sort: true}">创建者</th>
@@ -85,38 +91,24 @@
   </div>
 
 
-  <div class="layui-form-item">
-    <label class="layui-form-label">方案选择</label>
-    <div class="layui-input-block">
-      <select name="scheme_id" lay-verify="">
-<!--         <option value="">请选择</option>
-        <option value="">mysql</option> -->
-      </select> 
+  <div class="layui-form-item" id='tag'>
+    <div class="layui-inline" style="width:25%;">
+      <label class="layui-form-label">标签</label>
+      <div class="layui-input-block">
+        <select name="tag_id" lay-search>
+
+
+        </select> 
+      </div>
     </div>
-    <button class="fa fa-plus-circle">11</button>
+    <div class="layui-inline" style="width: 30%;color:#009688;">
+          <i class="fa fa-plus-circle" id="addtag"></i>
+    </div>
+
   </div>
 
 
 
-<!--   <div>
-    <select name="db_id" style="position: fixed;bottom:-20px;z-index:2;">
-        <option value="">请选择</option></select>
-  </div> -->
-
-    <!-- <label class="layui-form-label">DB选择</label> -->
-<!--   <div id='show' style="width:300px;position:absolute;z-index:20;display:none;">
-      <select name="db_id" lay-filter="test" id='dblist'>
-
-      </select>
-  </div> -->
-
-  <div class="layui-form-item" hidden>
-    <label class="layui-form-label">tag</label>
-    <div class="layui-input-block">
-      <select name='tag'></select>
-      
-    </div>
-  </div>
   <div class="layui-form-item">
     <label class="layui-form-label">缓存</label>
     <div class="layui-input-block">
@@ -141,6 +133,26 @@ layui.use(['table','layer'], function(){
   var layer=layui.layer;
   var form=layui.form;
 //
+
+
+
+//TAG功能
+$("#addtag").click(function(){
+
+  layer.prompt({
+    // formType: 1,
+    value: '',
+    title: '添加标签',
+    maxlength:10,
+    // area: ['800px', '350px'] //自定义文本域宽高
+  }, function(value, index, elem){
+    alert(value); //得到value
+    layer.close(index);
+  });
+
+});
+
+
 
 //查询功能
   $("#querybtn").click(function(e){
@@ -218,7 +230,72 @@ layui.use(['table','layer'], function(){
 
 //新增功能
 
-  $("#addbtn").click(function(e){
+  function tagrender(){
+
+    _post('/manager/querytaglist/',{},function(e){
+      //
+      $("#tag select").empty()
+
+      if(e.code==0){
+        for(var i=0;i<e.data.length;i++){
+          $("#tag select").append('<option value='+e.data[i]['id']+'>'+e.data[i]['name']+'</option>')
+        }
+
+      }
+
+      layui.form.render('select')
+
+    })
+    
+  };
+
+  $("#addbtn").click(function(){
+
+    //标签列表加载
+    tagrender()
+
+
+    //添加标签
+    $("#addtag").click(function(){
+      var i1=layer.prompt({
+        title:'添加标签',
+        maxlength:10,
+        value:'',
+      
+      },function(value, index1, elem){
+        _post('/manager/addtag/',{'name':value},function(e){
+
+          //layer.close(layer.index)
+
+          // var index = parent.layer.getFrameIndex(window.name);  
+          // parent.layer.close(index); 
+          
+          // if(e.code==0){
+          //   layer.alert(e.msg,{icon:1,time:1500})
+          // }
+          // else{
+          //   layer.alert(e.msg,{icon:2})
+          // }
+          if(e.code==0){
+
+            console.log('获得新加tag=>'+e.data['id'])
+            $('#tag select').append("<option value='%s'>%s</option>"%(e.data['id'],e.data['name']));
+
+            layui.form.render('select');
+          }
+
+
+
+        });
+
+      })
+
+    });
+
+
+
+
+ 
 
     has_select=0
     //初始化联想信息
@@ -241,8 +318,6 @@ layui.use(['table','layer'], function(){
       add_var_prop_smart_input('gain');
       // add_var_prop_smart_input('value');
       //
-
-
 
       //键盘up down
 
@@ -358,7 +433,7 @@ layui.use(['table','layer'], function(){
             'description':$("[name='description']").val(),
             'gain':$("[name='gain']").val(),
             'is_cache':$("[name='is_cache']").val(),
-            'tag':$("[name='tag']").val()
+            'tag':$("[name='tag_id']").val()
 
 
           }

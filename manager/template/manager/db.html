@@ -216,6 +216,9 @@ layui.use(['table','layer'], function(){
           //按钮【按钮一】的回调
           console.log('yes')
 
+          $('#addhtml')[0].reset()
+          layui.form.render()
+
           success=function (e) {
 
             table.reload('table-var',{

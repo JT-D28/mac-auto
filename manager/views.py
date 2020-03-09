@@ -220,7 +220,7 @@ def addcon(request):
 		con.username = username
 		con.password = password
 		con.description = description
-		con.author = md.User.objects.get(name=callername)
+		con.author = User.objects.get(name=callername)
 		con.save()
 		msg = '添加成功'
 	except:
@@ -461,7 +461,7 @@ def addvar(request):
 		c1 = is_valid_gain_value(var.gain, var.value)
 		if c1 is not True:
 			return JsonResponse(simplejson(code=2, msg=c1), safe=False)
-		var.author = md.User.objects.get(name=request.session.get('username', None))
+		var.author = User.objects.get(name=request.session.get('username', None))
 		# var.tag=request.POST.get('tag')
 		if request.POST.get('is_cache') == 'ON':
 			var.is_cache = True
@@ -645,7 +645,7 @@ def addcase(request):
 	msg = ''
 	try:
 		case = Case()
-		case.author = md.User.objects.get(name=request.session.get('username', None))
+		case.author = User.objects.get(name=request.session.get('username', None))
 		case.description = request.POST.get('description')
 		case.db_id = request.POST.get('dbid')
 
@@ -783,7 +783,7 @@ def queryplan(request):
 	else:
 		username = request.session.get('username', None)
 		print(username)
-		author = md.User.objects.get(name=username)
+		author = User.objects.get(name=username)
 
 		res = list(Plan.objects.filter(author=author))
 
@@ -847,7 +847,7 @@ def addplan(request):
 		plan = Plan()
 		plan.description = request.POST.get('description')
 		plan.db_id = request.POST.get('dbid')
-		plan.author = md.User.objects.get(name=request.session.get('username', None))
+		plan.author = User.objects.get(name=request.session.get('username', None))
 		plan.run_type = request.POST.get('run_type')
 
 		plan.save()
@@ -941,7 +941,7 @@ def changetocrontab(request):
 	try:
 		taskid = gettaskid()
 		planid = request.POST.get("planid")
-		author = md.User.get(name=request.session.get('username', None))
+		author = User.get(name=request.session.get('username', None))
 		plan = Plan.objects.get(id=planid)
 		config = Crontab()
 		config.plan = plan
@@ -1211,7 +1211,7 @@ def addfunc(request):
 	msg = ''
 	try:
 		f = Function()
-		f.author = md.User.objects.get(name=request.session.get('username', None))
+		f.author = User.objects.get(name=request.session.get('username', None))
 		f.description = request.POST.get("description")
 		# base64 str 存储
 		tbody = request.POST.get("body")
@@ -1310,7 +1310,7 @@ def addstep(request):
 		step.db_check = db_check
 		step.itf_check = itf_check
 		step.temp = tmp
-		step.author = md.User.objects.get(name=author)
+		step.author = User.objects.get(name=author)
 		step.db_id = dbid
 		# step.businesstitle=businsesstitle
 		step.save()
@@ -1413,7 +1413,7 @@ def editstep(request):
 
 		tmp = request.POST.get('tmp')
 		username = request.session.get('username')
-		author = md.User.objects.get(name=username)
+		author = User.objects.get(name=username)
 
 		step = Step.objects.get(id=id_)
 
@@ -1614,7 +1614,7 @@ def editmailconfig(request):
 			config.description = description
 			config.dingdingtoken = dingdingtoken
 			config.rich_text = rich_text
-			author = md.User.objects.get(name=request.session.get('username'))
+			author = User.objects.get(name=request.session.get('username'))
 			config.author = author
 			config.save()
 			plan.mail_config_id = config.id
@@ -1688,7 +1688,7 @@ def addorder(request):
 		order = Order()
 		order.main_id = main_id
 		order.follow_id = follow_id
-		order.author = md.User.objects.get(name=username)
+		order.author = User.objects.get(name=username)
 		order.kind = kind
 		order.save()
 
@@ -1760,7 +1760,7 @@ def queryafteradd(requests):
 						order.main_id = main_id
 						order.follow_id = follow_id
 						order.kind = kind
-						order.author = md.User.objects.get(name=username)
+						order.author = User.objects.get(name=username)
 						order.save()
 
 						case = Case.objects.get(id=main_id)
@@ -1774,7 +1774,7 @@ def queryafteradd(requests):
 						order.main_id = main_id
 						order.follow_id = follow_id
 						order.kind = kind
-						order.author = md.User.objects.get(name=username)
+						order.author = User.objects.get(name=username)
 						order.save()
 
 						plan = Plan.objects.get(id=main_id)
@@ -1835,7 +1835,7 @@ def queryafterdel(requests):
 	follow_ids = [int(x) for x in requests.POST.get("follow_ids").split(',')]
 	kind = requests.POST.get("kind")
 	username = requests.session.get('username', None)
-	author = md.User.objects.get(name=username)
+	author = User.objects.get(name=username)
 	for follow_id in follow_ids:
 
 		# print(main_id,follow_id,kind,username)

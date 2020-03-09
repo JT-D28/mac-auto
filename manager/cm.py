@@ -20,7 +20,7 @@ def addproduct(request):
 	try:
 		product=Product()
 		product.description=request.POST.get('description')
-		product.author=md.User.objects.get(name=request.session.get('username'))
+		product.author=User.objects.get(name=request.session.get('username'))
 		product.save()
 
 		return {
@@ -100,7 +100,7 @@ def addplan(request):
 		plan=Plan()
 		plan.description=request.POST.get('description')
 		plan.db_id=request.POST.get('dbid')
-		plan.author=md.User.objects.get(name=request.session.get('username',None))
+		plan.author=User.objects.get(name=request.session.get('username',None))
 		plan.run_type=request.POST.get('run_type')
 		plan.save()
 
@@ -279,7 +279,7 @@ def addcase(request):
 	msg=''
 	try:
 		case=Case()
-		case.author=md.User.objects.get(name=request.session.get('username',None))
+		case.author=User.objects.get(name=request.session.get('username',None))
 		case.description=request.POST.get('description')
 		case.db_id=request.POST.get('dbid')
 		case.save()
@@ -381,7 +381,7 @@ def addstep(request):
 		if step_type=='dir':
 			case=Case()
 			case.description=request.POST.get('description')
-			case.author=md.User.objects.get(name=request.session.get('username'))
+			case.author=User.objects.get(name=request.session.get('username'))
 			case.db_id=request.POST.get('dbid')
 			case.save()
 
@@ -483,7 +483,7 @@ def editstep(request):
 
 		tmp=request.POST.get('tmp')
 		username=request.session.get('username')
-		author=md.User.objects.get(name=username)
+		author=User.objects.get(name=username)
 
 		step=Step.objects.get(id=id_)
 		if step.step_type!=step_type:
@@ -794,7 +794,7 @@ def addrelation(kind,callername,main_id,follow_id):
 	order.main_id=main_id
 	order.follow_id=follow_id
 	order.value=getnextvalue(kind, main_id)
-	order.author=md.User.objects.get(name=callername)
+	order.author=User.objects.get(name=callername)
 	order.save()
 
 

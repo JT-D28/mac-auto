@@ -289,13 +289,13 @@ class Menu(models.Model):
 
 
 class DBCon(models.Model):
-	kind=models.CharField(choices=(('oracle','Oracle'),('mysql',"Mysql"),('db2','DB2')),max_length=10)
+	kind=models.CharField(choices=(('oracle','Oracle'),('mysql',"Mysql"),('db2','DB2')),max_length=32)
 	dbname=models.CharField(max_length=15)
 	host=models.CharField(max_length=15,blank=True)
 	port=models.CharField(max_length=5,blank=True)
-	username=models.CharField(max_length=15)
-	password=models.CharField(max_length=15)
-	description=models.CharField(max_length=32)
+	username=models.CharField(max_length=64)
+	password=models.CharField(max_length=128)
+	description=models.CharField(max_length=128)
 
 	author=models.ForeignKey(User, on_delete=models.CASCADE)
 	createtime=models.DateTimeField(auto_now_add=True)

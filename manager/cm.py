@@ -6,8 +6,9 @@
 
 import traceback,datetime
 from django.db.models import Q
-from manager.models import *
-from login.models import *
+from manager import models as mm
+
+from login import models as lm
 from .context import *
 from .invoker import runplan,DataMove,runplans
 from .core import gettaskid
@@ -18,9 +19,10 @@ from .core import gettaskid
 def addproduct(request):
 	product=None
 	try:
-		product=Product()
+
+		product=mm.Product()
 		product.description=request.POST.get('description')
-		product.author=md.User.objects.get(name=request.session.get('username'))
+		product.author=lm.User.objects.get(name=request.session.get('username'))
 		product.save()
 
 		return {
@@ -50,7 +52,7 @@ def delproduct(request):
 		ids=id_.split(',')
 		for i in ids:
 			i=i.split('_')[1]
-			p=Product.objects.get(id=int(i))
+			p=mm.Product.objects.get(id=int(i))
 			if len(getchild('product_plan',i))>0:
 				return{
 				'status':'fail',
@@ -72,7 +74,7 @@ def delproduct(request):
 def editproduct(request):
 	uid=request.POST.get('uid')
 	try:
-		p=Product.objects.get(id=int(uid.split('_')[1]))
+		p=mm.Product.objects.get(id=int(uid.split('_')[1]))
 		p.description=request.POST.get('description')
 		p.save()
 		return{
@@ -97,16 +99,16 @@ def addplan(request):
 	try:
 		pid=request.POST.get('pid').split('_')[1]
 
-		plan=Plan()
+		plan=mm.Plan()
 		plan.description=request.POST.get('description')
 		plan.db_id=request.POST.get('dbid')
-		plan.author=md.User.objects.get(name=request.session.get('username',None))
+		plan.author=lm.User.objects.get(name=request.session.get('username',None))
 		plan.run_type=request.POST.get('run_type')
 		plan.save()
 
 		addrelation('product_plan', request.session.get('username'), pid, plan.id)
 
-		mail_config = MailConfig()
+		mail_config = mm.MailConfig()
 		if request.POST.get('is_send_mail') == 'true':
 			mail_config.is_send_mail = 'open'
 		else:
@@ -157,7 +159,7 @@ def delplan(request):
 		for i in ids:
 			i=i.split('_')[1]
 			i=int(i)
-			plan=Plan.objects.get(id=i)
+			plan=mm.Plan.objects.get(id=i)
 			if len(list(getchild('plan_case',i)))>0:
 				return{
 				'status':'fail',
@@ -189,7 +191,7 @@ def editplan(request):
 	try:
 		is_send_mail=request.POST.get("is_send_mail")
 		is_send_dingding=request.POST.get("is_send_dingding")
-		plan=Plan.objects.get(id=id_)
+		plan=mm.Plan.objects.get(id=id_)
 		plan.description=request.POST.get('description')
 		plan.db_id=request.POST.get('dbid')
 		print('description=>',plan.description)
@@ -210,7 +212,7 @@ def editplan(request):
 			plan.mail_config_id=mail_config.id
 			plan.save()
 		else:
-			mail_config=MailConfig.objects.get(id=plan.mail_config_id)
+			mail_config=mm.MailConfig.objects.get(id=plan.mail_config_id)
 			if is_send_mail=='true':
 				mail_config.is_send_mail='open'
 			else:
@@ -242,7 +244,7 @@ def run(request):
 	planids=[x.split('_')[1] for x in request.POST.get('ids').split(',')]
 	is_verify=request.POST.get('is_verify')
 	for planid in planids:
-		plan=Plan.objects.get(id=planid)
+		plan=mm.Plan.objects.get(id=planid)
 		if plan.is_running in (1,'1'):
 			return {
 				'status': 'fail',
@@ -278,8 +280,8 @@ def importplan(request):
 def addcase(request):
 	msg=''
 	try:
-		case=Case()
-		case.author=md.User.objects.get(name=request.session.get('username',None))
+		case=mm.Case()
+		case.author=lm.User.objects.get(name=request.session.get('username',None))
 		case.description=request.POST.get('description')
 		case.db_id=request.POST.get('dbid')
 		case.save()
@@ -309,7 +311,7 @@ def editcase(request):
 	id_=request.POST.get('uid').split('_')[1]
 	msg=''
 	try:
-		case=Case.objects.get(id=id_)
+		case=mm.Case.objects.get(id=id_)
 		case.description=request.POST.get('description')
 		case.db_id=request.POST.get('dbid')
 		case.count=int(request.POST.get('count'))
@@ -335,7 +337,7 @@ def delcase(request):
 		for i in ids:
 			i=i.split('_')[1]
 			i=int(i)
-			case=Case.objects.get(id=i)
+			case=mm.Case.objects.get(id=i)
 			if len(getchild('case_step',i)) or len(getchild('case_case',i))>0:
 				return{
 				'status':'fail',
@@ -379,9 +381,9 @@ def addstep(request):
 		dbid=request.POST.get('dbid')
 ##
 		if step_type=='dir':
-			case=Case()
+			case=mm.Case()
 			case.description=request.POST.get('description')
-			case.author=md.User.objects.get(name=request.session.get('username'))
+			case.author=lm.User.objects.get(name=request.session.get('username'))
 			case.db_id=request.POST.get('dbid')
 			case.save()
 
@@ -402,7 +404,7 @@ def addstep(request):
 
 
 
-		step=Step()
+		step=mm.Step()
 		step.step_type=step_type
 		step.description=description
 		step.headers=headers
@@ -413,7 +415,7 @@ def addstep(request):
 		step.db_check=db_check
 		step.itf_check=itf_check
 		step.temp=tmp
-		step.author=md.User.objects.get(name=author)
+		step.author=lm.User.objects.get(name=author)
 		step.db_id=dbid
 		step.save()
 		# mounttestdata(author,step.id)
@@ -483,9 +485,9 @@ def editstep(request):
 
 		tmp=request.POST.get('tmp')
 		username=request.session.get('username')
-		author=md.User.objects.get(name=username)
+		author=lm.User.objects.get(name=username)
 
-		step=Step.objects.get(id=id_)
+		step=mm.Step.objects.get(id=id_)
 		if step.step_type!=step_type:
 			return {
 			'status':'fail',
@@ -538,7 +540,7 @@ def delstep(request):
 		for i in ids:
 			i=i.split('_')[1]
 			i=int(i)
-			step=Step.objects.get(id=i)
+			step=mm.Step.objects.get(id=i)
 			businessdatainfo=getchild('step_business',i)
 			if len(businessdatainfo)>0:
 				return{
@@ -561,13 +563,16 @@ def delstep(request):
 
 
 def _check_params(param_value):
-	if param_value.startswith('{') or param_value.endswith('}'):
+	if param_value.startswith('{') and param_value.endswith('}'):
+		print('f1')
 		try:
+
 			eval(param_value)
 			return True
 		except:
 			return False
 	else:
+		print('f2')
 		return True
 
 ##
@@ -576,7 +581,7 @@ def addbusiness(request):
 	bname=''
 	try:
 		pid=request.POST.get('pid').split('_')[1]
-		b=BusinessData()
+		b=mm.BusinessData()
 		b.businessname=request.POST.get('businessname')
 		bname=b.businessname
 		b.itf_check=request.POST.get('itf_check')
@@ -584,6 +589,7 @@ def addbusiness(request):
 		b.params=request.POST.get('params')
 
 		check_result=_check_params(b.params)
+		print('nn=>',check_result)
 		if not check_result:
 			return{
 			'status':'error',
@@ -633,7 +639,7 @@ def addbusiness(request):
 
 				call_str='%s(%s)'%(funcname,params)
 				flag=Fu.tzm_compute(call_str,'(.*?)\((.*?)\)')
-				funcs=list(Function.objects.filter(flag=flag))
+				funcs=list(mm.Function.objects.filter(flag=flag))
 				if len(funcs)>1:
 					return ('fail','找到多个匹配的自定义函数 请检查')
 				related_id=funcs[0].id
@@ -661,7 +667,7 @@ def editbusiness(request):
 	from .core import getbuiltin,Fu
 	bname=''
 	try:
-		b=BusinessData.objects.get(id=request.POST.get('uid').split('_')[1])
+		b=mm.BusinessData.objects.get(id=request.POST.get('uid').split('_')[1])
 		b.businessname=request.POST.get('businessname')
 		bname=b.businessname
 		b.itf_check=request.POST.get('itf_check')
@@ -715,7 +721,7 @@ def editbusiness(request):
 				params=','.join(res)
 				calll_str='%s(%s)'%(step.body.strip(),params)
 				flag=Fu.tzm_compute(calll_str,'(.*?)\((.*?)\)')
-				funcs=list(Function.objects.filter(flag=flag))
+				funcs=list(mm.Function.objects.filter(flag=flag))
 				if len(funcs)>1:
 					return ('fail','找到多个匹配的自定义函数 请检查')
 				related_id=funcs[0].id
@@ -740,7 +746,7 @@ def delbusiness(request):
 		for i in ids:
 			i=int(i.split('_')[1])
 
-			business=BusinessData.objects.get(id=i)
+			business=mm.BusinessData.objects.get(id=i)
 			#business.delete()
 			_regen_weight(request.session.get('username'),business,trigger='del')
 		return{
@@ -760,7 +766,7 @@ def movenode(request):
 		movetype=request.POST.get('move_type')
 		srcid=request.POST.get('src_id')
 		targetid=request.POST.get('target_id')
-		user=User.objects.get(name=request.session.get('username'))
+		user=lm.User.objects.get(name=request.session.get('username'))
 		# elementclass=srcid.split('_')[0]
 		# elementid=srcid.split('_')[1]
 		# if elementclass=='business':
@@ -789,12 +795,12 @@ def movenode(request):
 _order_value_cache=dict()
 
 def addrelation(kind,callername,main_id,follow_id):
-	order=Order()
+	order=mm.Order()
 	order.kind=kind
 	order.main_id=main_id
 	order.follow_id=follow_id
 	order.value=getnextvalue(kind, main_id)
-	order.author=md.User.objects.get(name=callername)
+	order.author=lm.User.objects.get(name=callername)
 	order.save()
 
 
@@ -805,7 +811,7 @@ def delrelation(kind,callername,main_id,follow_id):
 	# print('main_id=>',main_id)
 	# print('follow_id=>',follow_id)
 	try:
-		ol=Order.objects.get(kind=kind,main_id=main_id,follow_id=follow_id)
+		ol=mm.Order.objects.get(kind=kind,main_id=main_id,follow_id=follow_id)
 		print('==删除节点关联[%s]'%ol)
 		ol.delete()
 		# length=len(ol)
@@ -827,12 +833,13 @@ def getchild(kind,main_id):
 	返回有序子项
 	'''
 	child=[]
-	orderlist=ordered(list(Order.objects.filter(kind=kind,main_id=main_id)))		
+	orderlist=ordered(list(mm.Order.objects.filter(kind=kind,main_id=main_id)))		
 	if kind=='product_plan':
 		for order in orderlist:
 			print('planid=>',order.follow_id)
 			try:
-				p=Plan.objects.get(id=order.follow_id)
+				print('plan class=>',mm.Plan)
+				p=mm.Plan.objects.get(id=order.follow_id)
 				# print('添加计划=>',plan)
 				child.append(p)
 				#pirnt('child=>',child)
@@ -840,21 +847,22 @@ def getchild(kind,main_id):
 				print(traceback.format_exc())
 	elif kind=='plan_case':
 		for order in orderlist:
-			child.append(Case.objects.get(id=order.follow_id))
+			print('case class=>',mm.Case)
+			child.append(mm.Case.objects.get(id=order.follow_id))
 	elif kind=='case_step':
 		for order in orderlist:
 			print('main=>%s follow=>%s v=%s'%(order.main_id,order.follow_id,order.value))
 
-			child.append(Step.objects.get(id=order.follow_id))
+			child.append(mm.Step.objects.get(id=order.follow_id))
 	elif kind=='step_business':
 		for order in orderlist:
-			child.append(BusinessData.objects.get(id=order.follow_id))
+			child.append(mm.BusinessData.objects.get(id=order.follow_id))
 	elif kind=='case_case':
 		for order in orderlist:
-			child.append(Case.objects.get(id=order.follow_id))
+			child.append(mm.Case.objects.get(id=order.follow_id))
 
 	else:
-		orderlist=list(Order.objects.filter(Q(main_id=main_id)&Q(kind__contains=kind)))
+		orderlist=list(mm.Order.objects.filter(Q(main_id=main_id)&Q(kind__contains=kind)))
 		for order in orderlist:
 			kind=order.kind
 			ctype=kind.split('_')[1]
@@ -866,7 +874,7 @@ def getchild(kind,main_id):
 
 			#print('last ctype=>',ctype)
 
-			child.append(eval('%s.objects.get(id=%s)'%(ctype,order.follow_id)))
+			child.append(eval('mm.%s.objects.get(id=%s)'%(ctype,order.follow_id)))
 	
 	#print('ck=>',child)
 	return child
@@ -924,7 +932,7 @@ def _regen_weight_force(parent_type,parent_id,ignore_id=None):
 	print('==强制删除后兄弟节点权重调整')
 	try:
 		kind=''
-		ol=ordered(list(Order.objects.filter(Q(kind__contains='%s_'%parent_type)&Q(main_id=parent_id))))
+		ol=ordered(list(mm.Order.objects.filter(Q(kind__contains='%s_'%parent_type)&Q(main_id=parent_id))))
 		mx=len(ol)
 		cur=0
 		for idx in range(1,mx+1):
@@ -950,7 +958,7 @@ def _regen_weight(callername,element,trigger='prev',target_id=None):
 		c=element.__class__.__name__.lower()
 		if c=='businessdata':
 			c='business'
-		order=Order.objects.get(Q(kind__contains='_%s'%c)&Q(follow_id=element.id))
+		order=mm.Order.objects.get(Q(kind__contains='_%s'%c)&Q(follow_id=element.id))
 		parentid=order.main_id
 		group=order.value.split('.')[0]
 		parentkind=order.kind.split('_')[0]
@@ -961,7 +969,7 @@ def _regen_weight(callername,element,trigger='prev',target_id=None):
 		print('==删除节点[%s]'%element)
 		element.delete()
 		print('==删除后重新生成权重')
-		orderlist=ordered(list(Order.objects.filter(Q(kind__contains=text)&Q(main_id=parentid))))
+		orderlist=ordered(list(mm.Order.objects.filter(Q(kind__contains=text)&Q(main_id=parentid))))
 		
 		index=0
 		for order in orderlist:
@@ -982,13 +990,13 @@ def _regen_weight(callername,element,trigger='prev',target_id=None):
 		c=element.__class__.__name__.lower()
 		if c=='businessdata':
 			c='business'
-		order=Order.objects.get(Q(kind__contains='_%s'%c)&Q(follow_id=element.id))
+		order=mm.Order.objects.get(Q(kind__contains='_%s'%c)&Q(follow_id=element.id))
 		parentid=order.main_id
 		group=order.value.split('.')[0]
 		parentkind=order.kind.split('_')[0]
 		text='%s_'%parentkind
 		# print('text=%s main_id=%s'%(text,parentid))
-		orderlist=ordered(list(Order.objects.filter(Q(kind__contains=text)&Q(main_id=parentid))))
+		orderlist=ordered(list(mm.Order.objects.filter(Q(kind__contains=text)&Q(main_id=parentid))))
 		
 		if trigger=='prev':
 			orderlist=ordered(orderlist,time_asc=False)
@@ -1039,9 +1047,9 @@ def getnextvalue(kind,main_id,flag=0):
 	max_value=0
 	orderlist=[]
 	if kind in('case_case','case_step'):
-		orderlist=list(Order.objects.filter(kind='case_case',main_id=main_id))+list(Order.objects.filter(kind='case_step',main_id=main_id))
+		orderlist=list(mm.Order.objects.filter(kind='case_case',main_id=main_id))+list(mm.Order.objects.filter(kind='case_step',main_id=main_id))
 	else:
-		orderlist=list(Order.objects.filter(kind=kind,main_id=main_id))
+		orderlist=list(mm.Order.objects.filter(kind=kind,main_id=main_id))
 	# print('list=>',orderlist)
 	
 	if len(orderlist)==0:
@@ -1100,7 +1108,7 @@ def _sort_by_weight(childs):
 			print('res=>',parent_type,parent_id)
 			kind='%s_%s'%(parent_type,node_type)
 			print('o info=>%s %s %s'%(kind,parent_id,c.id))
-			ov=Order.objects.get(kind=kind,main_id=parent_id,follow_id=c.id).value
+			ov=mm.Order.objects.get(kind=kind,main_id=parent_id,follow_id=c.id).value
 			_m[str(ov)]=c
 		###
 		akeys=[int(k.replace('1.','')) for k in _m.keys()]
@@ -1132,7 +1140,7 @@ def _build_node(kind,src_uid,target_uid,move_type,user,build_nodes):
 	if kind in ('step_businessdata'):
 		kind='step_business'
 	print(src_type_upper,'=>',src_uid)
-	src=eval("%s.objects.get(id=%s)"%(src_type_upper,src_uid))
+	src=eval("mm.%s.objects.get(id=%s)"%(src_type_upper,src_uid))
 	# print('老id=>',src.id)
 	src.id=None
 	src.save()
@@ -1147,7 +1155,7 @@ def _build_node(kind,src_uid,target_uid,move_type,user,build_nodes):
 	# print('%s->%s'%(target_uid,src.id))
 
 	if move_type=='inner':
-		order=Order()
+		order=mm.Order()
 		order.kind=kind
 		order.main_id=target_uid
 		order.follow_id=src.id
@@ -1161,11 +1169,11 @@ def _build_node(kind,src_uid,target_uid,move_type,user,build_nodes):
 		print('kindlike=>',kindlike)##error
 		print('targetid=>',target_uid)
 
-		parent_order=Order.objects.get(Q(kind__contains=kindlike)&Q(follow_id=target_uid))
+		parent_order=mm.Order.objects.get(Q(kind__contains=kindlike)&Q(follow_id=target_uid))
 		parent_type=parent_order.kind.split('_')[0]
 		##不可能为business
 		parent_type_upper=parent_type.split('_')[0][0].upper()+parent_type.split('_')[0][1:]
-		parent=eval("%s.objects.get(id=%s)"%(parent_type_upper,parent_order.main_id))
+		parent=eval("mm.%s.objects.get(id=%s)"%(parent_type_upper,parent_order.main_id))
 
 		order=Order()
 		order.author=user
@@ -1173,7 +1181,7 @@ def _build_node(kind,src_uid,target_uid,move_type,user,build_nodes):
 		order.main_id=parent.id
 		order.follow_id=src.id
 
-		o=Order.objects.get(Q(kind__contains='%s_'%target_type)&Q(follow_id=target_uid))
+		o=mm.Order.objects.get(Q(kind__contains='%s_'%target_type)&Q(follow_id=target_uid))
 		if len(build_nodes)==1 and  move_type=='prev':
 			ogroup=o.value.split('.')[0]
 			oindex=int(o.value.split('.')[1])
@@ -1228,7 +1236,7 @@ def _build_all(src_id,target_id,move_type,user,is_copy,callername):
 	if elementclass=='business':
 		elementclass='businessData'
 	elementclass=_first_word_up(elementclass)
-	element=eval("%s.objects.get(id=%s)"%(elementclass,elementid))
+	element=eval("mm.%s.objects.get(id=%s)"%(elementclass,elementid))
 	##
 	if move_type!='inner':
 
@@ -1253,7 +1261,7 @@ def _build_all(src_id,target_id,move_type,user,is_copy,callername):
 		tclass=_first_word_up(t[0])
 		if tclass in('Business','Businessdata'):
 			tclass='BusinessData'
-		el=eval("%s.objects.get(id=%s)"%(tclass,t[1]))
+		el=eval("mm.%s.objects.get(id=%s)"%(tclass,t[1]))
 		_regen_weight(callername,el,trigger='del',target_id=target_id)
 	print('--拖动源处理结束')
 	#
@@ -1316,7 +1324,7 @@ icon_map={
 def get_full_tree():
 	nodes=[]
 	root={'id':-1,'name':'产品线','type':'root','textIcon':'fa fa-pinterest-p','open':True}
-	products=list(Product.objects.all())
+	products=list(mm.Product.objects.all())
 	for product in products:
 		productname=product.description
 		productobj={
@@ -1328,10 +1336,10 @@ def get_full_tree():
 			}
 
 		nodes.append(productobj)
-		plan_order_list=list(Order.objects.filter(kind='product_plan',main_id=product.id))
+		plan_order_list=list(mm.Order.objects.filter(kind='product_plan',main_id=product.id))
 		for order in plan_order_list:
 			try:
-				plan=Plan.objects.get(id=int(order.follow_id))
+				plan=mm.Plan.objects.get(id=int(order.follow_id))
 			except:
 				print('异常查询 planid=>',order.follow_id)
 
@@ -1347,9 +1355,9 @@ def get_full_tree():
 
 
 			nodes.append(planobj)
-			case_order_list=ordered(list(Order.objects.filter(kind='plan_case',main_id=plan.id)))
+			case_order_list=ordered(list(mm.Order.objects.filter(kind='plan_case',main_id=plan.id)))
 			for order in case_order_list:
-				case=Case.objects.get(id=order.follow_id)
+				case=mm.Case.objects.get(id=order.follow_id)
 				casename=case.description
 				caseobj={
 						'id':'case_%s'%case.id,
@@ -1368,10 +1376,10 @@ def get_full_tree():
 def _add_next_case_node(parent,case,nodes):
 
 	##处理所属单节点
-	step_order_list=ordered(list(Order.objects.filter(kind='case_step',main_id=case.id)))
+	step_order_list=ordered(list(mm.Order.objects.filter(kind='case_step',main_id=case.id)))
 	for order in step_order_list:
 		print('stepid=>',order.follow_id)
-		step=Step.objects.get(id=order.follow_id)
+		step=mm.Step.objects.get(id=order.follow_id)
 		nodes.append({
 			'id':'step_%s'%step.id,
 			'pId':'case_%s'%case.id,
@@ -1381,9 +1389,9 @@ def _add_next_case_node(parent,case,nodes):
 			})
 
 
-		business_order_list=ordered(list(Order.objects.filter(kind='step_business',main_id=step.id)))
+		business_order_list=ordered(list(mm.Order.objects.filter(kind='step_business',main_id=step.id)))
 		for order in business_order_list:
-			business=BusinessData.objects.get(id=order.follow_id)
+			business=mm.BusinessData.objects.get(id=order.follow_id)
 			nodes.append({
 				'id':'business_%s'%business.id,
 				'pId':'step_%s'%step.id,
@@ -1393,9 +1401,9 @@ def _add_next_case_node(parent,case,nodes):
 				})
 
 	##处理多级节点
-	case_order_list=ordered(list(Order.objects.filter(kind='case_case',main_id=case.id)))
+	case_order_list=ordered(list(mm.Order.objects.filter(kind='case_case',main_id=case.id)))
 	for order in case_order_list:
-		case0=Case.objects.get(id=order.follow_id)
+		case0=mm.Case.objects.get(id=order.follow_id)
 		nodes.append({
 			'id':'case_%s'%case0.id,
 			'pId':'case_%s'%case.id,
@@ -1439,10 +1447,10 @@ def weight_decorate(kind,followid):
 	if t=='Business':
 		t='BusinessData'
 		desp='businessname'
-	text=eval('%s.objects.get(id=%s).%s'%(t,followid,desp))
+	text=eval('mm.%s.objects.get(id=%s).%s'%(t,followid,desp))
 	print('kin=>',kind)
 	print('fl=>',followid)
-	weight=Order.objects.get(kind=kind,follow_id=followid).value
+	weight=mm.Order.objects.get(kind=kind,follow_id=followid).value
 	#final=weight+' ' +text
 	final=text
 	return final
@@ -1522,15 +1530,15 @@ def _get_node_parent_info(node_type,node_id):
 
 		kindlike='_%s'%node_type
 		print('fid=>%s kind like=>%s'%(node_id,kindlike))
-		o=Order.objects.get(Q(kind__contains=kindlike)&Q(follow_id=node_id))
+		o=mm.Order.objects.get(Q(kind__contains=kindlike)&Q(follow_id=node_id))
 		return (o.kind.split('_')[0],o.main_id)
 
 
 
 def _get_case_parent_info(case_id):
 	#print('del case id=>',case_id)
-	case_desp=Case.objects.get(id=case_id).description
-	o=list(Order.objects.filter(Q(kind__contains='_case')&Q(follow_id=case_id)))[0]
+	case_desp=mm.Case.objects.get(id=case_id).description
+	o=list(mm.Order.objects.filter(Q(kind__contains='_case')&Q(follow_id=case_id)))[0]
 	# print('order=>',o)
 	kind=o.kind.split('_')[0]
 	# print('获得文件夹[%s]上层节点类型=>%s'%(case_desp,kind))
@@ -1539,8 +1547,8 @@ def _get_case_parent_info(case_id):
 			
 def _del_product_force(product_id):
 	try:
-		product=Product.objects.get(id=product_id)
-		product_order_list=list(Order.objects.filter(kind='product_plan',main_id=product_id))
+		product=mm.Product.objects.get(id=product_id)
+		product_order_list=list(mm.Order.objects.filter(kind='product_plan',main_id=product_id))
 
 		for o in product_order_list:
 			#o.delete()
@@ -1553,12 +1561,12 @@ def _del_product_force(product_id):
 def _del_plan_force(plan_id):
 	#取消上层依赖
 	try:
-		Order.objects.get(kind='product_plan',follow_id=plan_id).delete()
+		mm.objects.get(kind='product_plan',follow_id=plan_id).delete()
 	except:
 		print('取消上层依赖异常.')
 	try:
-		plan=Plan.objects.get(id=plan_id)
-		plan_order_list=list(Order.objects.filter(kind='plan_case',main_id=plan_id))
+		plan=mm.Plan.objects.get(id=plan_id)
+		plan_order_list=list(mm.Order.objects.filter(kind='plan_case',main_id=plan_id))
 		
 		if len(plan_order_list)>0:
 			for o in plan_order_list:
@@ -1573,13 +1581,13 @@ def _del_plan_force(plan_id):
 def _del_case_force(case_id,up='plan_case'):
 	#取消上层依赖
 	try:
-		Order.objects.get(kind=up,follow_id=case_id).delete()
+		mm.Order.objects.get(kind=up,follow_id=case_id).delete()
 	except:
 		print('取消上层依赖异常.case_id=%s type=%s'%(case_id,up))
 
-	case=Case.objects.get(id=case_id)
-	case_order_list=list(Order.objects.filter(kind='case_step',main_id=case_id))
-	case_order_list_2=list(Order.objects.filter(kind='case_case',main_id=case_id))
+	case=mm.Case.objects.get(id=case_id)
+	case_order_list=list(mm.Order.objects.filter(kind='case_step',main_id=case_id))
+	case_order_list_2=list(mm.Order.objects.filter(kind='case_case',main_id=case_id))
 
 	##处理case->step
 	for o in case_order_list:
@@ -1589,7 +1597,7 @@ def _del_case_force(case_id,up='plan_case'):
 
 	#处理case->case
 	for o in case_order_list_2:
-		c=Case.objects.get(id=o.follow_id)
+		c=mm.Case.objects.get(id=o.follow_id)
 		_del_case_force(c.id,up='case_case')
 		#c.delete()
 		#o.delete()
@@ -1599,17 +1607,17 @@ def _del_case_force(case_id,up='plan_case'):
 def _del_step_force(step_id):
 	#取消上层依赖
 	try:
-		Order.objects.get(kind='case_step',follow_id=step_id).delete()
+		mm.Order.objects.get(kind='case_step',follow_id=step_id).delete()
 	except:
 		print('取消上层依赖异常.')
 
 	try:
 
-		step=Step.objects.get(id=step_id)
-		step_order_list=list(Order.objects.filter(kind='step_business',main_id=step_id))
+		step=mm.Step.objects.get(id=step_id)
+		step_order_list=list(mm.Order.objects.filter(kind='step_business',main_id=step_id))
 		for o in step_order_list:
 			o.delete()
-			business=BusinessData.objects.get(id=o.follow_id)
+			business=mm.BusinessData.objects.get(id=o.follow_id)
 			business.delete()
 
 		step.delete()

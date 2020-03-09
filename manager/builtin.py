@@ -76,13 +76,6 @@ def dbexecute2(sql,taskid=None,callername=None):
 		print(traceback.format_exc())
 		return 'error','执行内置函数报错sql[%s] error[%s]'%(sql,traceback.format_exc())
 	
-def redisCheck(host,port,key):
-	'''
-	redis校验(测试)
-	'''
-	con=redis.Redis(host = host,port =port)
-	return 1
-
 
 def getDate():
 	'''
@@ -110,16 +103,16 @@ def getSomeDate(num=1,format='%Y-%m-%d'):
 	v=None
 
 	if(num>0):
-	    v=datetime.datetime.strftime(today+numday,format)
+		v=datetime.datetime.strftime(today+numday,format)
 	else:
-	    v=datetime.datetime.strftime(today-numday,format)
+		v=datetime.datetime.strftime(today-numday,format)
 
 	return v
 
 
 def createPhone():
-    '''
-    返回随机手机号
-    '''
-    prelist=["130","131","132","133","134","135","136","137","138","139","147","150","151","152","153","155","156","157","158","159","186","187","188"]
-    return random.choice(prelist)+"".join(random.choice("0123456789") for i in range(8))
+	'''
+	返回随机手机号
+	'''
+	prelist=["130","131","132","133","134","135","136","137","138","139","147","150","151","152","153","155","156","157","158","159","186","187","188"]
+	return random.choice(prelist)+"".join(random.choice("0123456789") for i in range(8))

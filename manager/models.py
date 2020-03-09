@@ -200,7 +200,7 @@ class ResultDetail(models.Model):
 class Variable(models.Model):
 	author=models.ForeignKey(User, on_delete=models.CASCADE)
 	description=models.CharField(max_length=128)
-	tag_id=models.IntegerField(null=True)
+	tag_id=models.CharField(max_length=24,null=True)
 	key=models.CharField(max_length=64,unique=True)
 	value=models.TextField(blank=True)
 	gain=models.TextField(blank=True)

@@ -177,17 +177,18 @@
                 consoleSocket.onopen = function () {
                     // var username=$("#username").text()
                     console.log("开始获取" + username + "控制台消息..")
-                    consoleSocket.send('console.msg::read::' + username + '::' + data.taskid)
+                    consoleSocket.send('console.msg::read::' + username+'::'+data.taskid)
                 }
                 consoleSocket.onmessage = function (e) {
                     console.log(e.data);
-                    if (e.data.indexOf("[key-value]") === -1)
+                    console.log(e.data.indexOf("[key-value]"))
+                    if (e.data.indexOf("hasRead") === -1)
                         $("#msgview").append("<p class='console-line-msg'>" + e.data + "</p>")
                     else {
                         //$("#taskids").text(e.data)
                         //taskkeys = e.data.split('[key-value]')[1].split(",")
                         //console.log("设置taskkeys=>", taskkeys)
-                        $("#msgview").append("<p class='console-line-msg'>最新的运行缓存已经读取过</p>")
+                         $("#msgview").append("<p class='console-line-msg'>最新的运行日志缓存已经读取过</p>")
                     }
                 }
                 consoleSocket.onclose = function () {

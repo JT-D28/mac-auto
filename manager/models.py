@@ -94,7 +94,7 @@ class BusinessData(Model):
 class Step(Model):
 
 	choice=(('interface','接口'),('function','函数'))
-	count=IntegerField(default=1)
+	count=IntegerField(default=1,null=True)
 
 
 	author=ForeignKey(User, on_delete=CASCADE)
@@ -295,11 +295,11 @@ class Menu(Model):
 
 class DBCon(Model):
 	kind=CharField(choices=(('oracle','Oracle'),('mysql',"Mysql"),('db2','DB2')),max_length=32)
-	dbname=CharField(max_length=15)
+	dbname=CharField(max_length=64)
 	host=CharField(max_length=15,blank=True)
 	port=CharField(max_length=5,blank=True)
-	username=CharField(max_length=15)
-	password=CharField(max_length=15)
+	username=CharField(max_length=64)
+	password=CharField(max_length=64)
 	description=CharField(max_length=32)
 
 	author=ForeignKey(User, on_delete=CASCADE)

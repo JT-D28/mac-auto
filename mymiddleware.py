@@ -104,7 +104,7 @@ class Interceptor(MiddlewareMixin):
 			if request.session.get('username', None):
 				return True
 			else:
-				print('session校验不通过 跳到登陆页面')
+				print('session校验不通过 跳到登录页面')
 				return False
 
 		return True

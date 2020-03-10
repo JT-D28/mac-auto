@@ -66,7 +66,7 @@ class ConsoleConsumer(WebsocketConsumer):
 
 	def sendmsg(self,username):
 		msg=""
-		# print(ConsoleConsumer.__handled)
+		print(ConsoleConsumer.__handled)
 		self.keys=[x for x in self.con.keys("console.msg::%s*"%username) if x not in ConsoleConsumer.__handled]
 		self.keys.sort()
 		self.send("[key-value]"+",".join(self.keys))
@@ -107,6 +107,7 @@ class ConsoleConsumer(WebsocketConsumer):
 		self.accept()
 		pool = redis.ConnectionPool(host = settings.REDIS_HOST,port =settings.REDIS_PORT, db=0, decode_responses=True)
 		self.con= redis.Redis(connection_pool=pool)
+
 		#print("connect=>",self.con)
 	# print('consolemsg 连接.=>',self.con.keys("console.msg::%s*"%self.username))
 

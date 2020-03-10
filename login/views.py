@@ -57,7 +57,7 @@ def login(request):
 			request.session.set_expiry(14400)
 			request.session['is_login']=True
 			request.session['username']=username
-			print('登陆成功')
+			print('登录成功')
 
 			return redirect("/manager/index/")
 		else:

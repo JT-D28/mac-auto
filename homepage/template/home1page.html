@@ -14,7 +14,6 @@
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <script src="{% static 'homepage/vue.js' %}"></script>
     <script src="{% static 'homepage/eleui/index.js' %}"></script>
-    <script src="https://gw.alipayobjects.com/os/lib/antv/g2plot/0.11.3/dist/g2plot.js"></script>
     <style>
         .layui-card {
             border: 1px solid #f2f2f2;
@@ -34,7 +33,7 @@
             padding: 6px 20px;
         }
 
-        .layui-card>.el-tabs--left .el-tabs__header.is-left {
+        .layui-card > .el-tabs--left .el-tabs__header.is-left {
             margin-right: 0;
         }
 
@@ -106,59 +105,6 @@
         }
     </style>
 </head>
-
-<style>
-    .layui-tab-title {
-        border-bottom: none;
-    }
-
-    /* 重置 - 去掉下划线 */
-    .layui-tab-title .layui-this {
-        background: #81ffd9;
-    }
-
-    /* 增加背景 */
-    .layui-tab-title .layui-this:after {
-        border: none;
-    }
-
-    /* 重置 -this无边框 */
-    .layui-tab-title li {
-        display: list-item;
-    }
-
-    /* 重置 -纵向显示 */
-    .demo-table-expand {
-        font-size: 0;
-    }
-
-    .demo-table-expand label {
-        width: 90px;
-        color: #99a9bf;
-    }
-
-    .demo-table-expand .el-form-item {
-        margin-right: 0;
-        margin-bottom: 0;
-        width: 50%;
-    }
-
-    .div-outer {
-        height: 100%;
-        box-sizing: border-box;
-        padding-top: 100px;
-    }
-
-    .div-top {
-        background-color: burlywood;
-    }
-
-    .div-content {
-        background-color: #8ddad3;
-        height: 100%;
-    }
-
-</style>
 <script src="{% static 'manager/js/utils.js' %}" charset="utf-8"></script>
 
 
@@ -229,8 +175,9 @@
             </div>
         </div>
     </div>
-    <div class="layui-row" style="display:flex;bottom: 0">
-        <div class="layui-card" style="width:25%;height:100%;margin-bottom:0;margin-right: 15px;height: 365px;display: inline-block">
+    <div class="layui-row" v-show="showReport" style="display:flex;bottom: 0">
+        <div class="layui-card"
+             style="width:25%;height:100%;margin-bottom:0;margin-right: 15px;height: 365px;display: inline-block">
             <div style="padding:15px">
                 <div>
                     <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
@@ -397,7 +344,6 @@
                 </el-tab-pane>
             </el-tabs>
         </div>
-
     </div>
 
     <el-dialog id='productSet' title='项目设置' :visible.sync="productSetVisible" width="70%" top="3vh"
@@ -545,6 +491,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
         data() {
             var vue = this;
             return {
+                showReport: false,
                 productCountnum: '',
                 productRatenum: '',
                 noticeSetVisible: false,
@@ -698,6 +645,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     that.form.service = that.services[0] != null ? [that.services[0].id] : []
                     that.getReportChart()
                     that.getproductReport(data.rate, data.total)
+                    that.showReport = true
                 })
             },
             runplan() {
@@ -1160,19 +1108,6 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                             },
                         },
                         {
-                            type: 'bar',
-                            axisPointer: {show: false},
-                            stack: '总量',
-                            yAxisIndex: 1,
-                            itemStyle: {
-                                normal: {
-                                    color: 'rgba(201,155,237,0)',
-                                }
-                            },
-                            data: hundred,
-                            barWidth: 30,
-                        },
-                        {
                             name: '成功率',
                             stack: '总量',
                             type: 'bar',
@@ -1204,6 +1139,19 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                             yAxisIndex: 1,
                             barWidth: 30,
                             data: success_rate
+                        },
+                        {
+                            type: 'bar',
+                            axisPointer: {show: false},
+                            stack: '总量',
+                            itemStyle: {
+                                normal: {
+                                    color: 'rgba(201,155,237,0)',
+                                }
+                            },
+                            yAxisIndex: 1,
+                            data: hundred,
+                            barWidth: 30,
                         },
                     ]
                 };
@@ -1462,7 +1410,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     ]
                 };
                 option1 = {
-                    color:['rgba(77,201,122,1)','rgba(242,242,242,1)'],
+                    color: ['rgba(77,201,122,1)', 'rgba(242,242,242,1)'],
                     series: [
                         {
                             type: 'pie',

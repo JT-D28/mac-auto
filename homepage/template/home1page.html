@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layui.css' %}" media="all">
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layuimini.css' %}" media="all">
-    <link rel="stylesheet" href="{% static 'homepage/layui/css/public.css' %}" media="all">
+    <link rel="stylesheet" href="{% static 'homepage/public.css' %}" media="all">
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <script src="{% static 'homepage/vue.js' %}"></script>
     <script src="{% static 'homepage/eleui/index.js' %}"></script>
@@ -21,6 +21,10 @@
             border-radius: 5px;
         }
 
+        .el-tabs__item {
+            padding: 0 15px;
+        }
+
         .el-dialog__body {
             padding-top: 0;
             padding-bottom: 10px;
@@ -28,6 +32,10 @@
 
         .el-card__header {
             padding: 6px 20px;
+        }
+
+        .layui-card>.el-tabs--left .el-tabs__header.is-left {
+            margin-right: 0;
         }
 
         .jacocofontsize {
@@ -40,13 +48,14 @@
         }
 
         #echarts-records :first-child {
-            width: 99% !important;
             margin: 0 auto !important;
         }
 
-        .layuimini-qiuck-module {
+        .workbtn-module {
             text-align: center;
-            margin-top: 10px
+            margin: 15px 0;
+            height: 100%;
+            border-right: 2px solid rgba(248, 248, 248, 1);
         }
 
         .layui-tab-title > span {
@@ -59,7 +68,7 @@
             font-size: 12px;
         }
 
-        .layuimini-qiuck-module a i {
+        .workbtn-module a i {
             display: inline-block;
             width: 100%;
             height: 60px;
@@ -67,13 +76,13 @@
             text-align: center;
             border-radius: 2px;
             font-size: 30px;
-            background-color: #F8F8F8;
+            background-color: rgba(0, 0, 0, 0);
             color: #333;
             transition: all .3s;
             -webkit-transition: all .3s;
         }
 
-        .layuimini-qiuck-module a cite {
+        .workbtn-module a cite {
             position: relative;
             top: 2px;
             display: block;
@@ -84,9 +93,8 @@
             font-size: 14px;
         }
 
-        .welcome-module {
+        .work-module {
             width: 100%;
-            height: 210px;
         }
 
         #planHistory > .el-dialog {
@@ -134,353 +142,397 @@
         margin-bottom: 0;
         width: 50%;
     }
+
+    .div-outer {
+        height: 100%;
+        box-sizing: border-box;
+        padding-top: 100px;
+    }
+
+    .div-top {
+        background-color: burlywood;
+    }
+
+    .div-content {
+        background-color: #8ddad3;
+        height: 100%;
+    }
+
 </style>
 <script src="{% static 'manager/js/utils.js' %}" charset="utf-8"></script>
 
 
 <body>
-<div class="layuimini-main">
 
-    <div id='app'>
-        <div class="layui-row layui-col-space10">
-            <div class="layui-col-xs12 layui-col-md3">
-                <div class="layui-col-md12">
-                    <div class="layui-card">
-                        <div class="layui-card-header" style="padding: 0 0">
-                            <el-form :inline="true" :model="form" class="demo-form-inline">
-                                <el-select v-model="form.product" filterable placeholder="选择项目" style="width: 49%"
-                                           @change="selectProduct">
-                                    <el-option v-for="product in products" :key="product.id"
-                                               :label="product.description"
-                                               :value="product.id">
-                                    </el-option>
-                                </el-select>
-                                <el-select v-model="form.plan" @visible-change="selectPlanVisible($event)" filterable
-                                           placeholder="选择计划" style="width: 49%">
-                                    <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
-                                               :value="plan.id">
-                                    </el-option>
-                                </el-select>
-                            </el-form>
+
+<div id='app'>
+
+    <el-form :inline="true" :model="form" style="margin-bottom: 15px" class="demo-form-inline">
+        <el-select v-model="form.product" filterable placeholder="选择项目" style="width: 240px;padding-right: 15px"
+                   @change="selectProduct">
+            <el-option v-for="product in products" :key="product.id"
+                       :label="product.description"
+                       :value="product.id">
+            </el-option>
+        </el-select>
+        <el-select v-model="form.plan" @visible-change="selectPlanVisible($event)" filterable
+                   placeholder="选择计划" style="width: 240px">
+            <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
+                       :value="plan.id">
+            </el-option>
+        </el-select>
+    </el-form>
+    <div class="layui-row" style="margin-bottom: 15px">
+        <div class="layui-col-xs12 layui-col-md12">
+            <div class="layui-card">
+                <div class="work-module">
+                    <div class="layui-row">
+                        <div class="layui-col-xs4 layui-col-md2 workbtn-module" style="">
+                            <a @click="runplan" href="javascript:;" title="这里是验证用例，调试去用例管理！">
+                                <i class="layui-icon layui-icon-play"></i>
+                                <cite>验证</cite>
+                            </a>
                         </div>
-                        <div class="layui-card-body">
-                            <div class="welcome-module">
-                                <div class="layui-row layui-col-space10 layuimini-qiuck">
-                                    <div class="layui-col-xs4 layuimini-qiuck-module">
-                                        <a @click="runplan" href="javascript:;" title="这里是验证用例，调试去用例管理！">
-                                            <i class="layui-icon layui-icon-play"></i>
-                                            <cite>验证</cite>
-                                        </a>
-                                    </div>
-                                    <div class="layui-col-xs4 layuimini-qiuck-module">
-                                        <a @click="setplan" href="javascript:;">
-                                            <i class="layui-icon layui-icon-set"></i>
-                                            <cite>项目设置</cite>
-                                        </a>
-                                    </div>
-                                    <div class="layui-col-xs4 layuimini-qiuck-module">
-                                        <a @click="planHistory" href="javascript:;">
-                                            <i class="layui-icon layui-icon-survey"></i>
-                                            <cite>历史记录</cite>
-                                        </a>
-                                    </div>
-                                    <div class="layui-col-xs4 layuimini-qiuck-module">
-                                        <a @click="newRepoet" @contextmenu.prevent="downloadReport" href="javascript:;">
-                                            <i class="layui-icon layui-icon-chart-screen"></i>
-                                            <cite>最新报告</cite>
-                                        </a>
-                                    </div>
-                                    <div class="layui-col-xs4 layuimini-qiuck-module">
-                                        <a @click="setPlanNotice" href="javascript:;">
-                                            <i class="layui-icon layui-icon-notice"></i>
-                                            <cite>报告通知</cite>
-                                        </a>
-                                    </div>
-                                    <div class="layui-col-xs4 layuimini-qiuck-module">
-                                        <a @click="seeprocess" @contextmenu.prevent="downloadRunlog"
-                                           href="javascript:;">
-                                            <i class="layui-icon layui-icon-log"></i>
-                                            <cite>运行日志</cite>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="layui-col-xs4 layui-col-md2 workbtn-module">
+                            <a @click="setplan" href="javascript:;">
+                                <i class="layui-icon layui-icon-set"></i>
+                                <cite>项目设置</cite>
+                            </a>
+                        </div>
+                        <div class="layui-col-xs4 layui-col-md2 workbtn-module">
+                            <a @click="planHistory" href="javascript:;">
+                                <i class="layui-icon layui-icon-survey"></i>
+                                <cite>历史记录</cite>
+                            </a>
+                        </div>
+                        <div class="layui-col-xs4 layui-col-md2 workbtn-module">
+                            <a @click="newRepoet" @contextmenu.prevent="downloadReport" href="javascript:;">
+                                <i class="layui-icon layui-icon-chart-screen"></i>
+                                <cite>最新报告</cite>
+                            </a>
+                        </div>
+                        <div class="layui-col-xs4 layui-col-md2 workbtn-module">
+                            <a @click="setPlanNotice" href="javascript:;">
+                                <i class="layui-icon layui-icon-notice"></i>
+                                <cite>报告通知</cite>
+                            </a>
+                        </div>
+                        <div class="layui-col-xs4 layui-col-md2 workbtn-module">
+                            <a @click="seeprocess" @contextmenu.prevent="downloadRunlog"
+                               href="javascript:;">
+                                <i class="layui-icon layui-icon-log"></i>
+                                <cite>运行日志</cite>
+                            </a>
                         </div>
                     </div>
-                </div>
-            </div>
-            <div class="layui-col-xs12 layui-col-md9">
-                <el-tabs @tab-click="reportChartCilck" :tab-position="productsetposition" style="height: 420px;">
-                    <el-tab-pane label="计划成功率">
-                        <div id="echarts-records"
-                             style="background-color:#f2f2f2;min-height:400px;padding: 10px;"></div>
-                    </el-tab-pane>
-                    <el-tab-pane label="代码覆盖率">
-                        <el-card id="coverage" class="box-card" style="min-height: 400px">
-                            <div slot="header" class="clearfix">
-                                <span>选择服务</span>
-                                <el-select @change="serviceChange" clearable collapse-tags filterable
-                                           v-model="form.service" multiple style="width: 60%">
-                                    <el-option
-                                            v-for="i in services"
-                                            :key="i.id"
-                                            :label="i.name"
-                                            :value="i.id">
-                                    </el-option>
-                                </el-select>
-                                <el-button type="success" @click="jacocoReFlash">${synchronize}</el-button>
-                                <el-button type="success" @click="jacocoRun">${jacocoRunstate}</el-button>
-                            </div>
-                            <div class="text item">
-                                <div class="layui-col-md4">
-                                    <div class="layui-card">
-                                        <div class="layui-card-header">
-                                            branchCoverage
-                                        </div>
-                                        <div class="layui-card-body">
-                                            <div class="layui-row">
-                                                <div id="branchCoverage" class="layui-col-md4"
-                                                     style="width: 100px"></div>
-                                                <div class="layui-col-md6 jacocofontsize">
-                                                    覆盖率：${Coverage.branchCoverage.percentageFloat}%<br>
-                                                    覆盖数：${Coverage.branchCoverage.covered}<br>
-                                                    缺失数：${Coverage.branchCoverage.missed}<br>
-                                                    总 数：${Coverage.branchCoverage.total}<br>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="layui-col-md4">
-                                    <div class="layui-card">
-                                        <div class="layui-card-header">
-                                            classCoverage
-                                        </div>
-                                        <div class="layui-card-body">
-                                            <div class="layui-row">
-                                                <div id="classCoverage" class="layui-col-md4"
-                                                     style="width: 100px"></div>
-                                                <div class="layui-col-md6 jacocofontsize">
-                                                    覆盖率：${Coverage.classCoverage.percentageFloat}%<br>
-                                                    覆盖数：${Coverage.classCoverage.covered}<br>
-                                                    缺失数：${Coverage.classCoverage.missed}<br>
-                                                    总 数：${Coverage.classCoverage.total}<br>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="layui-col-md4">
-                                    <div class="layui-card">
-                                        <div class="layui-card-header">
-                                            instructionCoverage
-                                        </div>
-                                        <div class="layui-card-body">
-                                            <div class="layui-row">
-                                                <div id="instructionCoverage" class="layui-col-md4"
-                                                     style="width: 100px"></div>
-                                                <div class="layui-col-md6 jacocofontsize">
-                                                    覆盖率：${Coverage.instructionCoverage.percentageFloat}%<br>
-                                                    覆盖数：${Coverage.instructionCoverage.covered}<br>
-                                                    缺失数：${Coverage.instructionCoverage.missed}<br>
-                                                    总 数：${Coverage.instructionCoverage.total}<br>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="layui-col-md4">
-                                    <div class="layui-card">
-                                        <div class="layui-card-header">
-                                            complexityScore
-                                        </div>
-                                        <div class="layui-card-body">
-                                            <div class="layui-row">
-                                                <div id="complexityScore" class="layui-col-md4"
-                                                     style="width: 100px"></div>
-                                                <div class="layui-col-md6 jacocofontsize">
-                                                    覆盖率：${Coverage.complexityScore.percentageFloat}%<br>
-                                                    覆盖数：${Coverage.complexityScore.covered}<br>
-                                                    缺失数：${Coverage.complexityScore.missed}<br>
-                                                    总 数：${Coverage.complexityScore.total}<br>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="layui-col-md4">
-                                    <div class="layui-card">
-                                        <div class="layui-card-header">
-                                            lineCoverage
-                                        </div>
-                                        <div class="layui-card-body">
-                                            <div class="layui-row">
-                                                <div id="lineCoverage" class="layui-col-md4"
-                                                     style="width: 100px"></div>
-                                                <div class="layui-col-md6 jacocofontsize">
-                                                    覆盖率：${Coverage.lineCoverage.percentageFloat}%<br>
-                                                    覆盖数：${Coverage.lineCoverage.covered}<br>
-                                                    缺失数：${Coverage.lineCoverage.missed}<br>
-                                                    总 数：${Coverage.lineCoverage.total}<br>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="layui-col-md4">
-                                    <div class="layui-card">
-                                        <div class="layui-card-header">
-                                            methodCoverage
-                                        </div>
-                                        <div class="layui-card-body">
-                                            <div class="layui-row">
-                                                <div id="methodCoverage" class="layui-col-md4"
-                                                     style="width: 100px"></div>
-                                                <div class="layui-col-md6 jacocofontsize">
-                                                    覆盖率：${Coverage.methodCoverage.percentageFloat}%<br>
-                                                    覆盖数：${Coverage.methodCoverage.covered}<br>
-                                                    缺失数：${Coverage.methodCoverage.missed}<br>
-                                                    总 数：${Coverage.methodCoverage.total}<br>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </el-card>
-                    </el-tab-pane>
-                </el-tabs>
-            </div>
-        </div>
-
-
-        <el-dialog id='productSet' title='项目设置' :visible.sync="productSetVisible" width="70%" top="3vh"
-                   style="height: 100%">
-            <el-tabs :tab-position="productsetposition">
-                <el-tab-pane label="jacoco配置">
-                    <el-form :label-position="productsetposition" label-width="15%" :model="form">
-                        <el-form-item label="jenkins地址">
-                            <el-input v-model="form.productset.jenkinsurl"></el-input>
-                        </el-form-item>
-                        <el-form :inline="true" :model="form" class="demo-form-inline">
-                            <el-form-item label="用户名" style="width: 47%" label-width="32%">
-                                <el-input v-model="form.productset.authname"></el-input>
-                            </el-form-item>
-                            <el-form-item label="密码" style="width: 47%" label-width="32%">
-                                <el-input v-model="form.productset.authpwd"></el-input>
-                            </el-form-item>
-                        </el-form>
-                        <el-form-item label="服务名和任务名">
-                            <el-input type="textarea" v-model="form.productset.jobname" placeholder='填入内容为描述/服务名称和jenkins中对应的任务名，格式示例：
-settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></el-input>
-                        </el-form-item>
-                    </el-form>
-                    <el-button type="primary" @click="jacocoSetSave">保存</el-button>
-                    <el-button @click="productSetVisible = false">取消</el-button>
-                </el-tab-pane>
-                <el-tab-pane label='解除运行状态'>
-                    <el-form :inline="true" :model="form" class="demo-form-inline">
-                        <el-select v-model="form.forceStopPlans" filterable placeholder="选择计划" style="width: 49%">
-                            <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
-                                       :value="plan.id">
-                            </el-option>
-                        </el-select>
-                        <h3 style="margin-top: 3rem">任务当前状态：${runningState}</h3><br>
-                    </el-form>
-                    <el-button type="success" @click="planStatereFlash" style="margin-top: 2rem">刷新</el-button>
-                    <el-tooltip class="item" effect="dark" content="确定计划运行完成但是提示还在运行时点击" placement="bottom">
-                        <el-button type="danger" @click="forceStop" style="margin-top: 2rem">更改运行状态</el-button>
-                    </el-tooltip>
-                </el-tab-pane>
-                <el-tab-pane label='外部调用链接'>
-                    <el-select v-model="form.third_plan" filterable placeholder="选择计划" style="width: 49%">
-                        <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
-                                   :value="plan.id">
-                        </el-option>
-                    </el-select>
-
-                    <div style="margin-top: 15px;">
-                        <el-input placeholder="验证地址" v-model="form.is_verify_url">
-                            <template slot="prepend">验证地址</template>
-                            <template slot="append">
-                                <el-button type="primary" icon="el-icon-copy-document" plain
-                                           @click="copyUrl(form.is_verify_url)"></el-button>
-                            </template>
-                        </el-input>
-                    </div>
-                    <div style="margin-top: 15px;">
-                        <el-input placeholder="调试地址" v-model="form.debug_url">
-                            <template slot="prepend">调试地址</template>
-                            <template slot="append">
-                                <el-button type="primary" icon="el-icon-copy-document" plain
-                                           @click="copyUrl(form.debug_url)"></el-button>
-                            </template>
-                        </el-input>
-                    </div>
-                </el-tab-pane>
-            </el-tabs>
-        </el-dialog>
-        <el-dialog title="通知配置" :visible.sync="noticeSetVisible" width="70%" top="3vh" style="height: 100%">
-            <el-form :model="form">
-                <el-form-item label="配色方案" :label-width="form.formLabelWidth">
-                    <el-select v-model="form.reportNoticeSet.color" placeholder="请选择配色方案">
-                        <el-option label="red" value="red"></el-option>
-                        <el-option label="blue" value="blue"></el-option>
-                    </el-select>
-                </el-form-item>
-                <el-tooltip class="item" effect="dark" content="多收件人请用,分隔" placement="bottom">
-                    <el-form-item label="收件人" :label-width="form.formLabelWidth">
-                        <el-input v-model="form.reportNoticeSet.to_receive" autocomplete="off"></el-input>
-                    </el-form-item>
-                </el-tooltip>
-                <el-form-item label="标题" :label-width="form.formLabelWidth">
-                    <el-input v-model="form.reportNoticeSet.description" autocomplete="off"></el-input>
-                </el-form-item>
-                <el-tooltip class="item" effect="dark" content="内容中如果有参数，只会在任务运行完成后替换，手动发送报告不生效" placement="bottom">
-                    <el-form-item label="邮件内容" :label-width="form.formLabelWidth">
-                        <el-input type="textarea" v-model="form.reportNoticeSet.text" autocomplete="off"></el-input>
-                    </el-form-item>
-                </el-tooltip>
-                <el-form-item label="钉钉机器人token" :label-width="form.formLabelWidth" style="margin-top: 2rem">
-                    <el-input v-model="form.reportNoticeSet.dingdingtoken" autocomplete="off"></el-input>
-                </el-form-item>
-            </el-form>
-            <div slot="footer" class="dialog-footer">
-                <el-button type="success" round @click="sendRepoet">发送最新报告</el-button>
-                <el-button type="primary" @click="savenoticeSet(0)">保 存</el-button>
-                <el-button @click="noticeSetVisible = false">关 闭</el-button>
-            </div>
-        </el-dialog>
-        <el-dialog id="planHistory" title='历史记录' :visible.sync="planHistoryVisible" width="90%" top="3vh"
-                   style="height: 100%">
-            <el-tabs :tab-position="productsetposition" style="min-height: 320px;">
-                <el-tab-pane label="历史缺陷">
-                    <el-date-picker
-                            v-model="historytime"
-                            type="daterange"
-                            align="right"
-                            @change="queryOldBug('omit')"
-                            unlink-panels
-                            range-separator=" - "
-                            value-format="yyyy-MM-dd"
-                            start-placeholder="开始日期"
-                            end-placeholder="结束日期"
-                            :picker-options="pickerOptions">
-                    </el-date-picker>
-                    <table id="oldbugtable" lay-size='sm' lay-filter="oldbugtable" style="height: 100%"></table>
-                </el-tab-pane>
-            </el-tabs>
-        </el-dialog>
-        <div id="seeprocess" hidden>
-            <div class="layui-table">
-                <div class="layui-card-body">
-                    <div id="log_text"></div>
                 </div>
             </div>
         </div>
     </div>
+    <div class="layui-row" style="display:flex;bottom: 0">
+        <div class="layui-card" style="width:25%;height:100%;margin-bottom:0;margin-right: 15px;height: 365px;display: inline-block">
+            <div style="padding:15px">
+                <div>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        项目运行情况</p>
+                </div>
+                <div style="margin-top: 45px">
+                    <div style="padding: 0 0 0 6%;height: 100px">
+                        <div class="layui-row">
+                            <div id="productCount" class="layui-col-md4"
+                                 style="width: 100px;height: 100px"></div>
+                            <div class="layui-col-md6 " v-html="productCountnum" style="margin: 10% 0 0 5%;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 45px">
+                    <div style="padding: 0 0 0 6%;height: 100px">
+                        <div class="layui-row">
+                            <div id="productRate" class="layui-col-md4"
+                                 style="width: 100px;height: 100px"></div>
+                            <div class="layui-col-md6 " v-html="productRatenum" style="margin: 10% 0 0 5%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-card" style="flex:1;width:100%;height:365px;display: inline-block">
+            <el-tabs @tab-click="reportChartCilck" :tab-position="productsetposition">
+                <el-tab-pane label="计划成功率">
+                    <div id="echarts-records"
+                         style="background-color:#f2f2f2;min-height:365px;"></div>
+                </el-tab-pane>
+                <el-tab-pane label="代码覆盖率">
+                    <el-card id="coverage" class="box-card">
+                        <div slot="header" class="clearfix">
+                            <el-select @change="serviceChange" clearable collapse-tags filterable
+                                       v-model="form.service" multiple style="width: 50%">
+                                <el-option
+                                        v-for="i in services"
+                                        :key="i.id"
+                                        :label="i.name"
+                                        :value="i.id">
+                                </el-option>
+                            </el-select>
+                            <el-button type="success" @click="jacocoReFlash">${synchronize}</el-button>
+                            <el-button type="success" @click="jacocoRun">${jacocoRunstate}</el-button>
+                        </div>
+                        <div class="text item">
+                            <div class="layui-col-md4">
+                                <div class="layui-card">
+                                    <div class="layui-card-header">
+                                        branchCoverage
+                                    </div>
+                                    <div class="layui-card-body" style="padding:5px 15px">
+                                        <div class="layui-row">
+                                            <div id="branchCoverage" class="layui-col-md4"
+                                                 style="width: 100px;height: 100px"></div>
+                                            <div class="layui-col-md6 jacocofontsize">
+                                                覆盖率：${Coverage.branchCoverage.percentageFloat}%<br>
+                                                覆盖数：${Coverage.branchCoverage.covered}<br>
+                                                缺失数：${Coverage.branchCoverage.missed}<br>
+                                                总 数：${Coverage.branchCoverage.total}<br>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md4">
+                                <div class="layui-card">
+                                    <div class="layui-card-header">
+                                        classCoverage
+                                    </div>
+                                    <div class="layui-card-body" style="padding:5px 15px">
+                                        <div class="layui-row">
+                                            <div id="classCoverage" class="layui-col-md4"
+                                                 style="width: 100px;height: 100px"></div>
+                                            <div class="layui-col-md6 jacocofontsize">
+                                                覆盖率：${Coverage.classCoverage.percentageFloat}%<br>
+                                                覆盖数：${Coverage.classCoverage.covered}<br>
+                                                缺失数：${Coverage.classCoverage.missed}<br>
+                                                总 数：${Coverage.classCoverage.total}<br>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md4">
+                                <div class="layui-card">
+                                    <div class="layui-card-header">
+                                        instructionCoverage
+                                    </div>
+                                    <div class="layui-card-body" style="padding:5px 15px">
+                                        <div class="layui-row">
+                                            <div id="instructionCoverage" class="layui-col-md4"
+                                                 style="width: 100px;height: 100px"></div>
+                                            <div class="layui-col-md6 jacocofontsize">
+                                                覆盖率：${Coverage.instructionCoverage.percentageFloat}%<br>
+                                                覆盖数：${Coverage.instructionCoverage.covered}<br>
+                                                缺失数：${Coverage.instructionCoverage.missed}<br>
+                                                总 数：${Coverage.instructionCoverage.total}<br>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md4">
+                                <div class="layui-card">
+                                    <div class="layui-card-header">
+                                        complexityScore
+                                    </div>
+                                    <div class="layui-card-body" style="padding:5px 15px">
+                                        <div class="layui-row">
+                                            <div id="complexityScore" class="layui-col-md4"
+                                                 style="width: 100px;height: 100px"></div>
+                                            <div class="layui-col-md6 jacocofontsize">
+                                                覆盖率：${Coverage.complexityScore.percentageFloat}%<br>
+                                                覆盖数：${Coverage.complexityScore.covered}<br>
+                                                缺失数：${Coverage.complexityScore.missed}<br>
+                                                总 数：${Coverage.complexityScore.total}<br>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md4">
+                                <div class="layui-card">
+                                    <div class="layui-card-header">
+                                        lineCoverage
+                                    </div>
+                                    <div class="layui-card-body" style="padding:5px 15px">
+                                        <div class="layui-row">
+                                            <div id="lineCoverage" class="layui-col-md4"
+                                                 style="width: 100px;height: 100px"></div>
+                                            <div class="layui-col-md6 jacocofontsize">
+                                                覆盖率：${Coverage.lineCoverage.percentageFloat}%<br>
+                                                覆盖数：${Coverage.lineCoverage.covered}<br>
+                                                缺失数：${Coverage.lineCoverage.missed}<br>
+                                                总 数：${Coverage.lineCoverage.total}<br>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md4">
+                                <div class="layui-card">
+                                    <div class="layui-card-header">
+                                        methodCoverage
+                                    </div>
+                                    <div class="layui-card-body" style="padding:5px 15px">
+                                        <div class="layui-row">
+                                            <div id="methodCoverage" class="layui-col-md4"
+                                                 style="width: 100px;height: 100px"></div>
+                                            <div class="layui-col-md6 jacocofontsize">
+                                                覆盖率：${Coverage.methodCoverage.percentageFloat}%<br>
+                                                覆盖数：${Coverage.methodCoverage.covered}<br>
+                                                缺失数：${Coverage.methodCoverage.missed}<br>
+                                                总 数：${Coverage.methodCoverage.total}<br>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </el-card>
+                </el-tab-pane>
+            </el-tabs>
+        </div>
 
+    </div>
+
+    <el-dialog id='productSet' title='项目设置' :visible.sync="productSetVisible" width="70%" top="3vh"
+               style="height: 100%">
+        <el-tabs :tab-position="productsetposition">
+            <el-tab-pane label="jacoco配置">
+                <el-form :label-position="productsetposition" label-width="15%" :model="form">
+                    <el-form-item label="jenkins地址">
+                        <el-input v-model="form.productset.jenkinsurl"></el-input>
+                    </el-form-item>
+                    <el-form :inline="true" :model="form" class="demo-form-inline">
+                        <el-form-item label="用户名" style="width: 47%" label-width="32%">
+                            <el-input v-model="form.productset.authname"></el-input>
+                        </el-form-item>
+                        <el-form-item label="密码" style="width: 47%" label-width="32%">
+                            <el-input v-model="form.productset.authpwd"></el-input>
+                        </el-form-item>
+                    </el-form>
+                    <el-form-item label="服务名和任务名">
+                        <el-input type="textarea" v-model="form.productset.jobname" placeholder='填入内容为描述/服务名称和jenkins中对应的任务名，格式示例：
+settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></el-input>
+                    </el-form-item>
+                </el-form>
+                <el-button type="primary" @click="jacocoSetSave">保存</el-button>
+                <el-button @click="productSetVisible = false">取消</el-button>
+            </el-tab-pane>
+            <el-tab-pane label='解除运行状态'>
+                <el-form :inline="true" :model="form" class="demo-form-inline">
+                    <el-select v-model="form.forceStopPlans" filterable placeholder="选择计划"
+                               style="width: 49%">
+                        <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
+                                   :value="plan.id">
+                        </el-option>
+                    </el-select>
+                    <h3 style="margin-top: 3rem">任务当前状态：${runningState}</h3><br>
+                </el-form>
+                <el-button type="success" @click="planStatereFlash" style="margin-top: 2rem">刷新
+                </el-button>
+                <el-tooltip class="item" effect="dark" content="确定计划运行完成但是提示还在运行时点击" placement="bottom">
+                    <el-button type="danger" @click="forceStop" style="margin-top: 2rem">更改运行状态
+                    </el-button>
+                </el-tooltip>
+            </el-tab-pane>
+            <el-tab-pane label='外部调用链接'>
+                <el-select v-model="form.third_plan" filterable placeholder="选择计划" style="width: 49%">
+                    <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
+                               :value="plan.id">
+                    </el-option>
+                </el-select>
+
+                <div style="margin-top: 15px;">
+                    <el-input placeholder="验证地址" v-model="form.is_verify_url">
+                        <template slot="prepend">验证地址</template>
+                        <template slot="append">
+                            <el-button type="primary" icon="el-icon-copy-document" plain
+                                       @click="copyUrl(form.is_verify_url)"></el-button>
+                        </template>
+                    </el-input>
+                </div>
+                <div style="margin-top: 15px;">
+                    <el-input placeholder="调试地址" v-model="form.debug_url">
+                        <template slot="prepend">调试地址</template>
+                        <template slot="append">
+                            <el-button type="primary" icon="el-icon-copy-document" plain
+                                       @click="copyUrl(form.debug_url)"></el-button>
+                        </template>
+                    </el-input>
+                </div>
+            </el-tab-pane>
+        </el-tabs>
+    </el-dialog>
+    <el-dialog title="通知配置" :visible.sync="noticeSetVisible" width="70%" top="3vh" style="height: 100%">
+        <el-form :model="form">
+            <el-form-item label="配色方案" :label-width="form.formLabelWidth">
+                <el-select v-model="form.reportNoticeSet.color" placeholder="请选择配色方案">
+                    <el-option label="red" value="red"></el-option>
+                    <el-option label="blue" value="blue"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-tooltip class="item" effect="dark" content="多收件人请用,分隔" placement="bottom">
+                <el-form-item label="收件人" :label-width="form.formLabelWidth">
+                    <el-input v-model="form.reportNoticeSet.to_receive" autocomplete="off"></el-input>
+                </el-form-item>
+            </el-tooltip>
+            <el-form-item label="标题" :label-width="form.formLabelWidth">
+                <el-input v-model="form.reportNoticeSet.description" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-tooltip class="item" effect="dark" content="内容中如果有参数，只会在任务运行完成后替换，手动发送报告不生效"
+                        placement="bottom">
+                <el-form-item label="邮件内容" :label-width="form.formLabelWidth">
+                    <el-input type="textarea" v-model="form.reportNoticeSet.text"
+                              autocomplete="off"></el-input>
+                </el-form-item>
+            </el-tooltip>
+            <el-form-item label="钉钉机器人token" :label-width="form.formLabelWidth"
+                          style="margin-top: 2rem">
+                <el-input v-model="form.reportNoticeSet.dingdingtoken" autocomplete="off"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button type="success" round @click="sendRepoet">发送最新报告</el-button>
+            <el-button type="primary" @click="savenoticeSet(0)">保 存</el-button>
+            <el-button @click="noticeSetVisible = false">关 闭</el-button>
+        </div>
+    </el-dialog>
+    <el-dialog id="planHistory" title='历史记录' :visible.sync="planHistoryVisible" width="90%" top="3vh"
+               style="height: 100%">
+        <el-tabs :tab-position="productsetposition" style="min-height: 320px;">
+            <el-tab-pane label="历史缺陷">
+                <el-date-picker
+                        v-model="historytime"
+                        type="daterange"
+                        align="right"
+                        @change="queryOldBug('omit')"
+                        unlink-panels
+                        range-separator=" - "
+                        value-format="yyyy-MM-dd"
+                        start-placeholder="开始日期"
+                        end-placeholder="结束日期"
+                        :picker-options="pickerOptions">
+                </el-date-picker>
+                <table id="oldbugtable" lay-size='sm' lay-filter="oldbugtable"
+                       style="height: 100%"></table>
+            </el-tab-pane>
+        </el-tabs>
+    </el-dialog>
+    <div id="seeprocess" hidden>
+        <div class="layui-table">
+            <div class="layui-card-body">
+                <div id="log_text"></div>
+            </div>
+        </div>
+    </div>
 </div>
+
 
 <script src="{% static 'homepage/echarts.common.min.js' %}" charset="utf-8"></script>
 <script src="{% static 'homepage/echartsTheme.js' %}" charset="utf-8"></script>
@@ -493,6 +545,8 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
         data() {
             var vue = this;
             return {
+                productCountnum: '',
+                productRatenum: '',
                 noticeSetVisible: false,
                 runningState: '',
                 log_text: '',
@@ -643,6 +697,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     that.form.plan = that.plans[0] != null ? that.plans[0].id : ''
                     that.form.service = that.services[0] != null ? [that.services[0].id] : []
                     that.getReportChart()
+                    that.getproductReport(data.rate, data.total)
                 })
             },
             runplan() {
@@ -907,7 +962,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     })
                 }
             },
-            report(data, code) {
+            reportconfig(data, code) {
                 x = [];
                 success = [];
                 total = [];
@@ -929,24 +984,21 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                         //mysql  success_rate.push(data[i][8].substr(0, 5))
                         success_rate.push(data[i][8])
                         taskids.push(data[i][6])
-                        hundred.push(100)
+                        hundred.push(100 - data[i][8])
                     }
                     totalmax = total.map(function (e) {
-                        return Math.max.apply(null, total) + 2
+                        return Math.max.apply(null, total)
                     });
                 } else {
                     title = data
                     totalmax = 1
                 }
                 var optionRecords = {
-                    title: {
-                        text: title,
-                    },
                     animation: false,
                     legend: {
-                        left: 'center',
-                        top: '2%',
-                        data: ['成功率', '成功数', '失败数', '错误数', '跳过数',]
+                        right: '7%',
+                        top: '3%',
+                        data: ['成功率', '成功数', '失败数', '错误数', '跳过数', '失败率']
                     },
                     tooltip: {
                         trigger: 'axis',
@@ -974,25 +1026,13 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                             backgroundColor: '#777'
                         }
                     },
-                    brush: {
-                        xAxisIndex: 'all',
-                        brushLink: 'all',
-                        outOfBrush: {
-                            colorAlpha: 0.1
-                        }
-                    },
                     grid: [
                         {
-                            left: '5%',
-                            right: '5%',
-                            height: '48%'
+                            top: '20%',
+                            left: '10%',
+                            right: '10%',
+                            height: '68%'
                         },
-                        {
-                            left: '5%',
-                            right: '5%',
-                            bottom: '3%',
-                            height: '20%'
-                        }
                     ],
                     xAxis: [
                         {
@@ -1009,45 +1049,37 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                 z: 100
                             }
                         },
-                        {
-                            type: 'category',
-                            gridIndex: 1,
-                            data: x,
-                            scale: true,
-                            boundaryGap: false,
-                            axisLine: {onZero: false},
-                            axisTick: {show: false},
-                            splitLine: {show: false},
-                            axisLabel: {show: false},
-                            splitNumber: 20,
-                            min: 'dataMin',
-                            max: 'dataMax',
-                            axisPointer: {
-                                label: {
-                                    show: false
-                                }
-                            },
-                        }
                     ],
                     yAxis: [
                         {
                             scale: true,
                             name: '用例数',
+                            min: 0,
+                            max: totalmax[0] + 10,
+                            position: 'left',
+                            offset: 15,
                             splitArea: {
                                 show: true
                             },
-                            min: 0,
-                            max: totalmax[0]
+                            nameTextStyle: {
+                                color: 'rgba(153,153,153,1)',
+                                fontWeight: 400,
+                                fontFamily: 'PingFang-SC-Regular,PingFang-SC',
+                                fontSize: 12,
+                                lineHeight: 17,
+                                padding: [0, 0, 0, -35],
+                            }
                         },
                         {
                             scale: true,
                             name: '成功率',
-                            gridIndex: 1,
+                            position: 'right',
                             splitNumber: 2,
                             axisLabel: {show: true, formatter: '{value}%'},
                             axisLine: {show: true},
                             axisTick: {show: false},
                             splitLine: {show: false},
+                            offset: 15,
                             min: 0,
                             max: 100,
                             axisPointer: {
@@ -1055,97 +1087,153 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                     show: false
                                 }
                             },
-                        }
+                            nameTextStyle: {
+                                color: 'rgba(153,153,153,1)',
+                                fontWeight: 400,
+                                fontFamily: 'PingFang-SC-Regular,PingFang-SC',
+                                fontSize: 12,
+                                lineHeight: 17,
+                                padding: [0, 0, 0, 44],
+                            }
+                        },
                     ],
 
                     series: [
                         {
-                            name: ' 总数 ',
-                            axisPointer: {show: false},
-                            type: 'bar',
-                            itemStyle: {
-                                normal: {
-                                    color: 'rgba(0,0,0,0)',
-                                }
-                            },
-                            data: totalmax
-                        },
-                        {
                             name: '成功数',
                             type: 'line',
-                            areaStyle: {},
-                            stack: '总量',
                             data: success,
+                            symbol: 'none',
                             smooth: true,
                             lineStyle: {
-                                normal: {opacity: 0.5}
-                            }
+                                normal: {color: 'rgba(0,151,136,1)', width: 3}
+                            },
+                            itemStyle: {
+                                normal: {
+                                    color: 'rgba(0,151,136,1)',
+                                }
+                            },
                         },
                         {
                             name: '失败数',
-                            stack: '总量',
-                            areaStyle: {},
                             type: 'line',
+                            symbol: 'none',
                             data: fail,
                             smooth: true,
                             lineStyle: {
-                                normal: {opacity: 0.5}
-                            }
+                                normal: {color: 'rgba(105,208,242,1)', width: 3}
+                            },
+                            itemStyle: {
+                                normal: {
+                                    color: 'rgba(105,208,242,1)',
+                                }
+                            },
                         },
                         {
                             name: '跳过数',
-                            stack: '总量',
-                            areaStyle: {},
                             type: 'line',
+                            symbol: 'none',
                             data: skip,
                             smooth: true,
                             lineStyle: {
-                                normal: {opacity: 0.5}
-                            }
+                                normal: {color: 'rgba(184,223,125,1)', width: 3}
+                            },
+                            itemStyle: {
+                                normal: {
+                                    color: 'rgba(184,223,125,1)',
+                                }
+                            },
                         },
                         {
                             name: '错误数',
-                            stack: '总量',
-                            areaStyle: {},
                             type: 'line',
+                            symbol: 'none',
                             data: error,
                             smooth: true,
                             lineStyle: {
-                                normal: {opacity: 0.5}
-                            }
+                                normal: {color: 'rgb(255,56,55)', width: 3}
+                            },
+                            itemStyle: {
+                                normal: {
+                                    color: 'rgb(255,56,55)',
+                                }
+                            },
                         },
                         {
                             type: 'bar',
                             axisPointer: {show: false},
-                            xAxisIndex: 1,
+                            stack: '总量',
+                            yAxisIndex: 1,
                             itemStyle: {
                                 normal: {
                                     color: 'rgba(201,155,237,0)',
                                 }
                             },
-                            yAxisIndex: 1,
-                            data: hundred
+                            data: hundred,
+                            barWidth: 30,
                         },
                         {
                             name: '成功率',
-                            type: 'line',
+                            stack: '总量',
+                            type: 'bar',
                             label: {
                                 normal: {
-                                    show: true,
+                                    show: false,
                                     position: 'top',
                                     color: 'black'
                                 }
                             },
-                            barWidth: 10,
+                            itemStyle: {
+                                normal: {
+                                    color: {
+                                        type: 'linear',
+                                        x: 0,
+                                        y: 0,
+                                        x2: 0,
+                                        y2: 1,
+                                        colorStops: [{
+                                            offset: 1, color: '#FFFFFFFF' // 0% 处的颜色
+                                        }, {
+                                            offset: 0, color: '#FFEFEFEF' // 100% 处的颜色
+                                        }],
+                                        global: false // 缺省为 false
+                                    }
+                                }
+                            },
                             areaStyle: {},
-                            xAxisIndex: 1,
                             yAxisIndex: 1,
+                            barWidth: 30,
                             data: success_rate
                         },
                     ]
                 };
                 $("#echarts-records").css('background-color', 'white')
                 return optionRecords;
+            },
+            jacocoRepConfig(rate) {
+                option = {
+                    series: [
+                        {
+                            type: 'pie',
+                            radius: ['85%', '95%'],
+                            hoverAnimation: false,
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'center',
+                                    textStyle: {
+                                        fontSize: '14',
+                                    },
+                                },
+                            },
+                            data: [
+                                {value: rate, name: rate + '%'},
+                                {value: 100 - rate}
+                            ]
+                        }
+                    ]
+                };
+                return option
             },
             queryOldBug(taskid) {
                 var that = this;
@@ -1268,16 +1356,19 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 productid = that.form.product;
                 jobname = that.form.service
                 if (productid != '' & jobname != '') {
-                    that.synchronize = '获取中'
+                    that.synchronize = '获取中';
                     _post_nl('/homepage/jacocoreport/', {
                         productid: productid,
                         jobname: jobname
                     }, function (data) {
-                        data = JSON.parse(data)
+                        data = JSON.parse(data);
                         if (data.code == 0) {
                             coverlist.forEach(function (item, index) {
-                                rate = data.data[item]['percentageFloat'] != '' ? data.data[item]['percentageFloat'] / 100 : 0
-                                actjacoco[index].update(rate)
+                                rate = data.data[item]['percentageFloat'] != '' ? (data.data[item]['percentageFloat']).toFixed(2) : 0
+                                // actjacoco[index].update(rate)
+                                actjacoco[index].resize()
+                                actjacoco[index].setOption(that.jacocoRepConfig(rate));
+
                             });
                             that.Coverage = data.data
                         } else {
@@ -1312,7 +1403,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 _post_nl('/homepage/reportchart/', {planid: that.form.plan.substr(5)}, function (result) {
                     result = JSON.parse(result);
                     echartsRecords.resize();
-                    echartsRecords.setOption(that.report(result.data, result.code));
+                    echartsRecords.setOption(that.reportconfig(result.data, result.code));
                 });
             },
             reportChartCilck(obj) {
@@ -1341,6 +1432,64 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     });
                     that.jacocoRunstate = '运行';
                 })
+            },
+            getproductReport(rate, total) {
+                var that = this;
+                that.productRatenum = '共运行通过率:<br><p style="font-weight:bold">' + rate + "%</p>";
+                that.productCountnum = '共运行次数:<br><p style="font-weight:bold">' + total + "</p>";
+                option0 = {
+                    color: ['rgba(253,174,57,1)'],
+                    series: [
+                        {
+                            type: 'pie',
+                            radius: ['85%', '95%'],
+                            hoverAnimation: false,
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'center',
+                                    textStyle: {
+                                        fontSize: '22',
+                                        fontWeight: '500',
+                                        color: 'rgba(51,51,51,1)'
+                                    },
+                                },
+                            },
+                            data: [
+                                {value: total, name: total}
+                            ]
+                        }
+                    ]
+                };
+                option1 = {
+                    color:['rgba(77,201,122,1)','rgba(242,242,242,1)'],
+                    series: [
+                        {
+                            type: 'pie',
+                            radius: ['85%', '95%'],
+                            hoverAnimation: false,
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'center',
+                                    textStyle: {
+                                        fontSize: '22',
+                                        fontWeight: '500',
+                                        color: 'rgba(51,51,51,1)'
+                                    },
+                                },
+                            },
+                            data: [
+                                {value: rate, name: rate + '%'},
+                                {value: 100 - rate}
+                            ]
+                        }
+                    ]
+                };
+                actproduct[0].resize();
+                actproduct[0].setOption(option0);
+                actproduct[1].resize();
+                actproduct[1].setOption(option1);
             },
         },
         created: function () {
@@ -1372,15 +1521,18 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
     coverlist = ['branchCoverage', 'classCoverage', 'instructionCoverage', 'complexityScore', 'lineCoverage', 'methodCoverage']
     actjacoco = [];
     coverlist.forEach(function (item, index) {
-        actjacoco[index] = new g2plot.RingProgress(document.getElementById(item), {
-            percent: 0, width: 90, height: 100, padding: 'auto', angleField: "data",
-        });
-        actjacoco[index].render()
+        actjacoco[index] = echarts.init(document.getElementById(item), 'me2');
+        actjacoco[index].setOption(app.jacocoRepConfig(0))
     });
-    // echarts 窗口缩放自适应
     window.onresize = function () {
         echartsRecords.resize();
     };
+
+    productPiclist = ['productCount', 'productRate'];
+    actproduct = []
+    productPiclist.forEach(function (item, index) {
+        actproduct[index] = echarts.init(document.getElementById(item), 'me2');
+    });
 
     function ArraytoString(input) {
         let r = "";
@@ -1389,7 +1541,6 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
         });
         return r.substr(1);
     }
-
 
     echartsRecords.on('click', function (params) {
         if (success_rate[params.dataIndex] !== 100) {
@@ -1403,6 +1554,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
             });
         }
     });
+
 
 </script>
 </body>

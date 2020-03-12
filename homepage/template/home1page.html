@@ -55,11 +55,12 @@
 
         #footer {
             background: #f2f2f2;
-            height: 66%;
+            height: 70%;
             vertical-align: bottom;
         }
 
         #main {
+            height: 116px;
             background: #f2f2f2;
         }
 
@@ -132,6 +133,11 @@
 
         .layui-card > .el-tabs > .el-tabs__header {
             margin-right: 0px;
+        }
+
+        .el-input__inner {
+            height: 34px;
+            line-height: 34px;
         }
 
         .jacocofontsize {
@@ -230,52 +236,44 @@
         </el-form>
     </div>
     <div id="main">
-        <div id="text">
+        <div class="layui-card" style="margin: 0 20px;padding:20px 0">
             <div class="layui-row">
-                <div class="layui-col-xs12 layui-col-md12">
-                    <div class="layui-card" style="margin: 0 20px;padding:20px 0">
-                        <div class="work-module">
-                            <div class="layui-row">
-                                <div class="layui-col-xs4 layui-col-md2 workbtn-module" style="">
-                                    <a @click="runplan" href="javascript:;" title="这里是验证用例，调试去用例管理！">
-                                        <i class="layui-icon layui-icon-play"></i>
-                                        <cite>验证</cite>
-                                    </a>
-                                </div>
-                                <div class="layui-col-xs4 layui-col-md2 workbtn-module">
-                                    <a @click="setplan" href="javascript:;">
-                                        <i class="layui-icon layui-icon-set"></i>
-                                        <cite>项目设置</cite>
-                                    </a>
-                                </div>
-                                <div class="layui-col-xs4 layui-col-md2 workbtn-module">
-                                    <a @click="planHistory" href="javascript:;">
-                                        <i class="layui-icon layui-icon-survey"></i>
-                                        <cite>历史记录</cite>
-                                    </a>
-                                </div>
-                                <div class="layui-col-xs4 layui-col-md2 workbtn-module">
-                                    <a @click="newRepoet" @contextmenu.prevent="downloadReport" href="javascript:;">
-                                        <i class="layui-icon layui-icon-chart-screen"></i>
-                                        <cite>最新报告</cite>
-                                    </a>
-                                </div>
-                                <div class="layui-col-xs4 layui-col-md2 workbtn-module">
-                                    <a @click="setPlanNotice" href="javascript:;">
-                                        <i class="layui-icon layui-icon-notice"></i>
-                                        <cite>报告通知</cite>
-                                    </a>
-                                </div>
-                                <div class="layui-col-xs4 layui-col-md2 workbtn-module">
-                                    <a @click="seeprocess" @contextmenu.prevent="downloadRunlog"
-                                       href="javascript:;">
-                                        <i class="layui-icon layui-icon-log"></i>
-                                        <cite>运行日志</cite>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="layui-col-xs4 layui-col-md2 workbtn-module" style="">
+                    <a @click="runplan" href="javascript:;" title="这里是验证用例，调试去用例管理！">
+                        <i class="layui-icon layui-icon-play"></i>
+                        <cite>验证</cite>
+                    </a>
+                </div>
+                <div class="layui-col-xs4 layui-col-md2 workbtn-module">
+                    <a @click="setplan" href="javascript:;">
+                        <i class="layui-icon layui-icon-set"></i>
+                        <cite>项目设置</cite>
+                    </a>
+                </div>
+                <div class="layui-col-xs4 layui-col-md2 workbtn-module">
+                    <a @click="planHistory" href="javascript:;">
+                        <i class="layui-icon layui-icon-survey"></i>
+                        <cite>历史记录</cite>
+                    </a>
+                </div>
+                <div class="layui-col-xs4 layui-col-md2 workbtn-module">
+                    <a @click="newRepoet" @contextmenu.prevent="downloadReport" href="javascript:;">
+                        <i class="layui-icon layui-icon-chart-screen"></i>
+                        <cite>最新报告</cite>
+                    </a>
+                </div>
+                <div class="layui-col-xs4 layui-col-md2 workbtn-module">
+                    <a @click="setPlanNotice" href="javascript:;">
+                        <i class="layui-icon layui-icon-notice"></i>
+                        <cite>报告通知</cite>
+                    </a>
+                </div>
+                <div class="layui-col-xs4 layui-col-md2 workbtn-module">
+                    <a @click="seeprocess" @contextmenu.prevent="downloadRunlog"
+                       href="javascript:;">
+                        <i class="layui-icon layui-icon-log"></i>
+                        <cite>运行日志</cite>
+                    </a>
                 </div>
             </div>
         </div>
@@ -443,6 +441,137 @@
                         </el-card>
                     </el-tab-pane>
                 </el-tabs>
+            </div>
+        </div>
+    </div>
+    <el-dialog id='productSet' title='项目设置' :visible.sync="productSetVisible" width="70%" top="3vh"
+               style="height: 100%">
+        <el-tabs :tab-position="productsetposition">
+            <el-tab-pane label="jacoco配置">
+                <el-form :label-position="productsetposition" label-width="15%" :model="form">
+                    <el-form-item label="jenkins地址">
+                        <el-input v-model="form.productset.jenkinsurl"></el-input>
+                    </el-form-item>
+                    <el-form :inline="true" :model="form" class="demo-form-inline">
+                        <el-form-item label="用户名" style="width: 47%" label-width="32%">
+                            <el-input v-model="form.productset.authname"></el-input>
+                        </el-form-item>
+                        <el-form-item label="密码" style="width: 47%" label-width="32%">
+                            <el-input v-model="form.productset.authpwd"></el-input>
+                        </el-form-item>
+                    </el-form>
+                    <el-form-item label="服务名和任务名">
+                        <el-input type="textarea" v-model="form.productset.jobname" placeholder='填入内容为描述/服务名称和jenkins中对应的任务名，格式示例：
+settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></el-input>
+                    </el-form-item>
+                </el-form>
+                <el-button type="primary" @click="jacocoSetSave">保存</el-button>
+                <el-button @click="productSetVisible = false">取消</el-button>
+            </el-tab-pane>
+            <el-tab-pane label='解除运行状态'>
+                <el-form :inline="true" :model="form" class="demo-form-inline">
+                    <el-select v-model="form.forceStopPlans" filterable placeholder="选择计划"
+                               style="width: 49%">
+                        <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
+                                   :value="plan.id">
+                        </el-option>
+                    </el-select>
+                    <h3 style="margin-top: 3rem">任务当前状态：${runningState}</h3><br>
+                </el-form>
+                <el-button type="success" @click="planStatereFlash" style="margin-top: 2rem">刷新
+                </el-button>
+                <el-tooltip class="item" effect="dark" content="确定计划运行完成但是提示还在运行时点击" placement="bottom">
+                    <el-button type="danger" @click="forceStop" style="margin-top: 2rem">更改运行状态
+                    </el-button>
+                </el-tooltip>
+            </el-tab-pane>
+            <el-tab-pane label='外部调用链接'>
+                <el-select v-model="form.third_plan" filterable placeholder="选择计划" style="width: 49%">
+                    <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
+                               :value="plan.id">
+                    </el-option>
+                </el-select>
+
+                <div style="margin-top: 15px;">
+                    <el-input placeholder="验证地址" v-model="form.is_verify_url">
+                        <template slot="prepend">验证地址</template>
+                        <template slot="append">
+                            <el-button type="primary" icon="el-icon-copy-document" plain
+                                       @click="copyUrl(form.is_verify_url)"></el-button>
+                        </template>
+                    </el-input>
+                </div>
+                <div style="margin-top: 15px;">
+                    <el-input placeholder="调试地址" v-model="form.debug_url">
+                        <template slot="prepend">调试地址</template>
+                        <template slot="append">
+                            <el-button type="primary" icon="el-icon-copy-document" plain
+                                       @click="copyUrl(form.debug_url)"></el-button>
+                        </template>
+                    </el-input>
+                </div>
+            </el-tab-pane>
+        </el-tabs>
+    </el-dialog>
+    <el-dialog title="通知配置" :visible.sync="noticeSetVisible" width="70%" top="3vh" style="height: 100%">
+        <el-form :model="form">
+            <el-form-item label="配色方案" :label-width="form.formLabelWidth">
+                <el-select v-model="form.reportNoticeSet.color" placeholder="请选择配色方案">
+                    <el-option label="red" value="red"></el-option>
+                    <el-option label="blue" value="blue"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-tooltip class="item" effect="dark" content="多收件人请用,分隔" placement="bottom">
+                <el-form-item label="收件人" :label-width="form.formLabelWidth">
+                    <el-input v-model="form.reportNoticeSet.to_receive" autocomplete="off"></el-input>
+                </el-form-item>
+            </el-tooltip>
+            <el-form-item label="标题" :label-width="form.formLabelWidth">
+                <el-input v-model="form.reportNoticeSet.description" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-tooltip class="item" effect="dark" content="内容中如果有参数，只会在任务运行完成后替换，手动发送报告不生效"
+                        placement="bottom">
+                <el-form-item label="邮件内容" :label-width="form.formLabelWidth">
+                    <el-input type="textarea" v-model="form.reportNoticeSet.text"
+                              autocomplete="off"></el-input>
+                </el-form-item>
+            </el-tooltip>
+            <el-form-item label="钉钉机器人token" :label-width="form.formLabelWidth"
+                          style="margin-top: 2rem">
+                <el-input v-model="form.reportNoticeSet.dingdingtoken" autocomplete="off"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button type="success" round @click="sendRepoet">发送最新报告</el-button>
+            <el-button type="primary" @click="savenoticeSet(0)">保 存</el-button>
+            <el-button @click="noticeSetVisible = false">关 闭</el-button>
+        </div>
+    </el-dialog>
+    <el-dialog id="planHistory" title='历史记录' :visible.sync="planHistoryVisible" width="90%" top="3vh"
+               style="height: 100%">
+        <el-tabs :tab-position="productsetposition" style="min-height: 320px;">
+            <el-tab-pane label="历史缺陷">
+                <el-date-picker
+                        v-model="historytime"
+                        type="daterange"
+                        align="right"
+                        @change="queryOldBug('omit')"
+                        unlink-panels
+                        range-separator=" - "
+                        value-format="yyyy-MM-dd"
+                        start-placeholder="开始日期"
+                        end-placeholder="结束日期"
+                        :picker-options="pickerOptions">
+                </el-date-picker>
+                <table id="oldbugtable" lay-size='sm' lay-filter="oldbugtable"
+                       style="height: 100%"></table>
+            </el-tab-pane>
+        </el-tabs>
+    </el-dialog>
+    <div id="seeprocess" hidden>
+        <div class="layui-table">
+            <div class="layui-card-body">
+                <div id="log_text"></div>
             </div>
         </div>
     </div>

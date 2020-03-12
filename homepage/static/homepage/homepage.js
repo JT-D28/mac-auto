@@ -900,10 +900,27 @@ var app = new Vue({
             that.productCountnum = '共运行次数:<br><p style="font-weight:bold">' + total + "</p>";
             option0 = {
                 color: ['rgba(253,174,57,1)'],
+                legend: {
+                    right: 0,
+                    top: '30%',
+                    orient: 'vertical',
+                    data: [total],
+                    formatter: function (name) {
+                        return '项目共运行次数:\n\n' + name+"次";
+                    },
+                    icon: 'none',
+                    selectedMode: false,
+                    textStyle: {
+                        fontSize: 14,
+                        fontWeight: 500,
+                        color: 'rgba(51,51,51,1)',
+                    }
+                },
                 series: [
                     {
                         type: 'pie',
                         radius: ['85%', '95%'],
+                        center: ["25%", "53%"],
                         hoverAnimation: false,
                         label: {
                             normal: {
@@ -924,10 +941,27 @@ var app = new Vue({
             };
             option1 = {
                 color: ['rgba(77,201,122,1)', 'rgba(242,242,242,1)'],
+                legend: {
+                    orient: 'vertical',
+                    right: 0,
+                    top: '30%',
+                    data: [rate + '%'],
+                    formatter: function (name) {
+                        return '项目整体成功率:\n\n' + name;
+                    },
+                    icon: 'none',
+                    selectedMode: false,
+                    textStyle: {
+                        fontSize: 14,
+                        fontWeight: 500,
+                        color: 'rgba(51,51,51,1)',
+                    }
+                },
                 series: [
                     {
                         type: 'pie',
                         radius: ['85%', '95%'],
+                        center: ["25%", "53%"],
                         hoverAnimation: false,
                         label: {
                             normal: {
@@ -1017,7 +1051,7 @@ echartsRecords.on('click', function (params) {
 });
 
 window.onload = function () {
-   //homesize();
+    //homesize();
 };
 
 function homesize() {

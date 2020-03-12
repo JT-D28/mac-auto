@@ -28,7 +28,6 @@
         body,
         #app {
             height: 100%;
-
         }
 
         body {
@@ -148,6 +147,14 @@
             margin: 0 auto !important;
         }
 
+        #productRate > div {
+            width: 100% !important;
+        }
+
+        #productCount > div {
+            width: 100% !important;
+        }
+
         .workbtn-module {
             text-align: center;
             margin: 15px 0;
@@ -223,50 +230,48 @@
         </el-form>
     </div>
     <div id="main">
-        <div id="wrap">
-            <div id="text">
-                <div class="layui-row" style="margin-bottom: 15px">
-                    <div class="layui-col-xs12 layui-col-md12">
-                        <div class="layui-card" style="margin: 0 20px">
-                            <div class="work-module">
-                                <div class="layui-row">
-                                    <div class="layui-col-xs4 layui-col-md2 workbtn-module" style="">
-                                        <a @click="runplan" href="javascript:;" title="这里是验证用例，调试去用例管理！">
-                                            <i class="layui-icon layui-icon-play"></i>
-                                            <cite>验证</cite>
-                                        </a>
-                                    </div>
-                                    <div class="layui-col-xs4 layui-col-md2 workbtn-module">
-                                        <a @click="setplan" href="javascript:;">
-                                            <i class="layui-icon layui-icon-set"></i>
-                                            <cite>项目设置</cite>
-                                        </a>
-                                    </div>
-                                    <div class="layui-col-xs4 layui-col-md2 workbtn-module">
-                                        <a @click="planHistory" href="javascript:;">
-                                            <i class="layui-icon layui-icon-survey"></i>
-                                            <cite>历史记录</cite>
-                                        </a>
-                                    </div>
-                                    <div class="layui-col-xs4 layui-col-md2 workbtn-module">
-                                        <a @click="newRepoet" @contextmenu.prevent="downloadReport" href="javascript:;">
-                                            <i class="layui-icon layui-icon-chart-screen"></i>
-                                            <cite>最新报告</cite>
-                                        </a>
-                                    </div>
-                                    <div class="layui-col-xs4 layui-col-md2 workbtn-module">
-                                        <a @click="setPlanNotice" href="javascript:;">
-                                            <i class="layui-icon layui-icon-notice"></i>
-                                            <cite>报告通知</cite>
-                                        </a>
-                                    </div>
-                                    <div class="layui-col-xs4 layui-col-md2 workbtn-module">
-                                        <a @click="seeprocess" @contextmenu.prevent="downloadRunlog"
-                                           href="javascript:;">
-                                            <i class="layui-icon layui-icon-log"></i>
-                                            <cite>运行日志</cite>
-                                        </a>
-                                    </div>
+        <div id="text">
+            <div class="layui-row">
+                <div class="layui-col-xs12 layui-col-md12">
+                    <div class="layui-card" style="margin: 0 20px;padding:20px 0">
+                        <div class="work-module">
+                            <div class="layui-row">
+                                <div class="layui-col-xs4 layui-col-md2 workbtn-module" style="">
+                                    <a @click="runplan" href="javascript:;" title="这里是验证用例，调试去用例管理！">
+                                        <i class="layui-icon layui-icon-play"></i>
+                                        <cite>验证</cite>
+                                    </a>
+                                </div>
+                                <div class="layui-col-xs4 layui-col-md2 workbtn-module">
+                                    <a @click="setplan" href="javascript:;">
+                                        <i class="layui-icon layui-icon-set"></i>
+                                        <cite>项目设置</cite>
+                                    </a>
+                                </div>
+                                <div class="layui-col-xs4 layui-col-md2 workbtn-module">
+                                    <a @click="planHistory" href="javascript:;">
+                                        <i class="layui-icon layui-icon-survey"></i>
+                                        <cite>历史记录</cite>
+                                    </a>
+                                </div>
+                                <div class="layui-col-xs4 layui-col-md2 workbtn-module">
+                                    <a @click="newRepoet" @contextmenu.prevent="downloadReport" href="javascript:;">
+                                        <i class="layui-icon layui-icon-chart-screen"></i>
+                                        <cite>最新报告</cite>
+                                    </a>
+                                </div>
+                                <div class="layui-col-xs4 layui-col-md2 workbtn-module">
+                                    <a @click="setPlanNotice" href="javascript:;">
+                                        <i class="layui-icon layui-icon-notice"></i>
+                                        <cite>报告通知</cite>
+                                    </a>
+                                </div>
+                                <div class="layui-col-xs4 layui-col-md2 workbtn-module">
+                                    <a @click="seeprocess" @contextmenu.prevent="downloadRunlog"
+                                       href="javascript:;">
+                                        <i class="layui-icon layui-icon-log"></i>
+                                        <cite>运行日志</cite>
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -278,33 +283,27 @@
     <div id="footer">
         <div class="" v-show="showReport" style="display:flex;bottom: 0;height: 100%">
             <div class="layui-card"
-                 style="width:25%;margin: 10px 20px 20px 20px;display: inline-block">
-                <div style="padding:15px">
+                 style="width:25%;min-width:300px;margin: 20px 20px 20px 20px;display: inline-block">
+                <div style="padding:20px">
                     <div>
                         <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
                             项目运行情况</p>
                     </div>
                     <div style="margin-top: 45px">
-                        <div style="padding: 0 0 0 6%;height: 100px">
-                            <div class="layui-row">
-                                <div id="productCount" class="layui-col-md4"
-                                     style="width: 100px;height: 100px"></div>
-                                <div class="layui-col-md6 " v-html="productCountnum" style="margin: 10% 0 0 5%;"></div>
-                            </div>
+                        <div style="padding: 0 6%;height: 100px">
+                            <div id="productCount"
+                                 style="width: 250px;height: 100px"></div>
                         </div>
                     </div>
                     <div style="margin-top: 45px">
                         <div style="padding: 0 0 0 6%;height: 100px">
-                            <div class="layui-row">
-                                <div id="productRate" class="layui-col-md4"
-                                     style="width: 100px;height: 100px"></div>
-                                <div class="layui-col-md6 " v-html="productRatenum" style="margin: 10% 0 0 5%;"></div>
-                            </div>
+                            <div id="productRate"
+                                 style="width: 250px;height: 100px"></div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="layui-card" style="flex:1;width:100%;margin: 10px 20px 20px 0;display: inline-block">
+            <div class="layui-card" style="flex:1;width:100%;margin: 20px 20px 20px 0;display: inline-block">
                 <el-tabs @tab-click="reportChartCilck" :tab-position="productsetposition" style="height: 100%">
                     <el-tab-pane label="计划成功率" style="height: 100%">
                         <div id="echarts-records"

@@ -159,6 +159,10 @@ var app = new Vue({
                 that.getReportChart()
                 that.getproductReport(data.rate, data.total)
                 that.showReport = true
+                productPiclist.forEach(function (item, index) {
+                    setTimeout(() => actproduct[index].resize(), 0)
+                });
+
             })
         },
         runplan() {
@@ -492,7 +496,7 @@ var app = new Vue({
                         top: '65px',
                         left: '65px',
                         right: '65px',
-                        bottom:'40px',
+                        bottom: '40px',
                     },
                 ],
                 xAxis: [
@@ -671,12 +675,29 @@ var app = new Vue({
             $("#echarts-records").css('background-color', 'white')
             return optionRecords;
         },
-        jacocoRepConfig(rate) {
+        jacocoRepConfig(rate, covered, missed, total) {
             option = {
+                legend: {
+                    orient: 'vertical',
+                    right: 10,
+                    top: '5%',
+                    data: [rate + '%'],
+                    formatter: function (name) {
+                        return '覆盖率：' + rate + '%' + '\n\n覆盖数：' + covered + '\n\n缺失数：' + missed + '\n\n总数：' + total;
+                    },
+                    icon: 'none',
+                    selectedMode: false,
+                    textStyle: {
+                        fontSize: 12,
+                        fontWeight: 400,
+                        color: 'rgba(51,51,51,1)',
+                    }
+                },
                 series: [
                     {
                         type: 'pie',
                         radius: ['85%', '95%'],
+                        center: ["30%", "50%"],
                         hoverAnimation: false,
                         label: {
                             normal: {
@@ -826,10 +847,11 @@ var app = new Vue({
                     if (data.code == 0) {
                         coverlist.forEach(function (item, index) {
                             rate = data.data[item]['percentageFloat'] != '' ? (data.data[item]['percentageFloat']).toFixed(2) : 0
-                            // actjacoco[index].update(rate)
+                            covered = data.data[item]['covered']
+                            missed = data.data[item]['missed']
+                            total = data.data[item]['total']
                             actjacoco[index].resize()
-                            actjacoco[index].setOption(that.jacocoRepConfig(rate));
-
+                            actjacoco[index].setOption(that.jacocoRepConfig(rate, covered, missed, total));
                         });
                         that.Coverage = data.data
                     } else {
@@ -870,6 +892,10 @@ var app = new Vue({
         reportChartCilck(obj) {
             if (obj.$el.id == 'pane-0') {
                 this.getReportChart()
+            } else if (obj.$el.id == 'pane-1') {
+                coverlist.forEach(function (item, index) {
+                    setTimeout(() => actjacoco[index].resize(), -1)
+                });
             }
         },
         selectPlanVisible(obj) {
@@ -901,12 +927,12 @@ var app = new Vue({
             option0 = {
                 color: ['rgba(253,174,57,1)'],
                 legend: {
-                    right: 0,
-                    top: '30%',
+                    left: '45%',
+                    top: '34%',
                     orient: 'vertical',
                     data: [total],
                     formatter: function (name) {
-                        return '项目共运行次数:\n\n' + name+"次";
+                        return '项目共运行次数:\n\n' + name + "次";
                     },
                     icon: 'none',
                     selectedMode: false,
@@ -943,8 +969,8 @@ var app = new Vue({
                 color: ['rgba(77,201,122,1)', 'rgba(242,242,242,1)'],
                 legend: {
                     orient: 'vertical',
-                    right: 0,
-                    top: '30%',
+                    left: '45%',
+                    top: '34%',
                     data: [rate + '%'],
                     formatter: function (name) {
                         return '项目整体成功率:\n\n' + name;
@@ -1017,9 +1043,11 @@ coverlist = ['branchCoverage', 'classCoverage', 'instructionCoverage', 'complexi
 actjacoco = [];
 coverlist.forEach(function (item, index) {
     actjacoco[index] = echarts.init(document.getElementById(item), 'me2');
-    actjacoco[index].setOption(app.jacocoRepConfig(0))
+    actjacoco[index].resize()
+    actjacoco[index].setOption(app.jacocoRepConfig(0, 0, 0, 0))
 });
 window.onresize = function () {
+    homesize();
     echartsRecords.resize();
 };
 
@@ -1051,12 +1079,19 @@ echartsRecords.on('click', function (params) {
 });
 
 window.onload = function () {
-    //homesize();
+    homesize();
 };
 
 function homesize() {
-    console.log(document.documentElement.clientHeight);
     hight = document.documentElement.clientHeight;
     apphight = hight;
+    footheight = apphight * 0.81 - 94;
     $("#app").css('height', apphight + 'px');
+    $("#foot").css('height', footheight + 'px');
+    actproduct[0].resize();
+    actproduct[1].resize();
+    coverlist.forEach(function (item, index) {
+        actjacoco[index].resize()
+    });
+
 }

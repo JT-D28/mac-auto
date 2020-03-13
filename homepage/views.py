@@ -44,7 +44,7 @@ from .models import Jacoco_report
 
 @csrf_exempt
 def homepage(request):
-	return render(request, 'home1page.html')
+	return render(request, 'home0page.html')
 
 
 @csrf_exempt

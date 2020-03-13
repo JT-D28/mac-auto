@@ -930,9 +930,9 @@ var app = new Vue({
                     left: '45%',
                     top: '34%',
                     orient: 'vertical',
-                    data: [total],
-                    formatter: function (name) {
-                        return '项目共运行次数:\n\n' + name + "次";
+                    data: [total+''],
+                    formatter: function (total) {
+                        return '项目共运行次数:\n\n' + total + "次";
                     },
                     icon: 'none',
                     selectedMode: false,
@@ -960,7 +960,7 @@ var app = new Vue({
                             },
                         },
                         data: [
-                            {value: total, name: total}
+                            {value: total, name: total+''}
                         ]
                     }
                 ]

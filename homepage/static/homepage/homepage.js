@@ -506,6 +506,16 @@ var app = new Vue({
                         scale: true,
                         boundaryGap: false,
                         axisLine: {onZero: false},
+                        axisLabel: {
+                            interval: 1,  //控制坐标轴刻度标签的显示间隔.设置成 0 强制显示所有标签。设置为 1，隔一个标签显示一个标签。设置为2，间隔2个标签。以此类推
+                            rotate: 0,//倾斜度 -90 至 90 默认为0
+                            textStyle: {
+                                fontSize: 12,
+                                fontFamily: 'ingFang-SC-Regular,PingFang-SC',
+                                fontWeight: "400",  //加粗
+                                color: "rgba(153,153,153,1)"   //黑色
+                            },
+                        },
                         splitLine: {show: false},
                         splitNumber: 3,
                         min: 'dataMin',
@@ -644,12 +654,13 @@ var app = new Vue({
                                     x2: 0,
                                     y2: 1,
                                     colorStops: [{
-                                        offset: 1, color: '#FFFFFFFF' // 0% 处的颜色
+                                        offset: 1, color: 'rgba(255,255,255,1)' // 0% 处的颜色
                                     }, {
-                                        offset: 0, color: '#FFEFEFEF' // 100% 处的颜色
+                                        offset: 0, color: 'rgba(239,239,239,1)' // 100% 处的颜色
                                     }],
                                     global: false // 缺省为 false
-                                }
+                                },
+                                borderRadius: '2px'
                             }
                         },
                         areaStyle: {},
@@ -679,8 +690,8 @@ var app = new Vue({
             option = {
                 legend: {
                     orient: 'vertical',
-                    right: 10,
-                    top: '5%',
+                    right: 0,
+                    top: 'center',
                     data: [rate + '%'],
                     formatter: function (name) {
                         return '覆盖率：' + rate + '%' + '\n\n覆盖数：' + covered + '\n\n缺失数：' + missed + '\n\n总数：' + total;
@@ -697,14 +708,14 @@ var app = new Vue({
                     {
                         type: 'pie',
                         radius: ['85%', '95%'],
-                        center: ["30%", "50%"],
+                        center: ["32%", "50%"],
                         hoverAnimation: false,
                         label: {
                             normal: {
                                 show: true,
                                 position: 'center',
                                 textStyle: {
-                                    fontSize: '14',
+                                    fontSize: '18',
                                 },
                             },
                         },
@@ -928,19 +939,37 @@ var app = new Vue({
                 color: ['rgba(253,174,57,1)'],
                 legend: {
                     left: '45%',
-                    top: '34%',
+                    top: 'center',
                     orient: 'vertical',
-                    data: [total+''],
+                    data: [total + ''],
                     formatter: function (total) {
-                        return '项目共运行次数:\n\n' + total + "次";
+                        let arr = [
+                            '{a|' + '项目共运行次数:' + '}',
+                            '{b|' + total + '次}'
+                        ]
+                        return arr.join('\n')
+                    },
+                    textStyle: {
+                        color: '#FBFBFB',
+                        fontSize: 16,
+                        rich: {
+                            a: {
+                                color:'rgba(102,102,102,1)',
+                                fontSize: 12,
+                                fontWeight: 500,
+                                lineHeight:43,
+                                fontFamily:'PingFang-SC-Medium,PingFang-SC',
+                            },
+                            b: {
+                                color:'rgba(51,51,51,1)',
+                                fontSize: 16,
+                                fontWeight: 500,
+                                fontFamily:'PingFang-SC-Medium,PingFang-SC',
+                            },
+                        },
                     },
                     icon: 'none',
                     selectedMode: false,
-                    textStyle: {
-                        fontSize: 14,
-                        fontWeight: 500,
-                        color: 'rgba(51,51,51,1)',
-                    }
                 },
                 series: [
                     {
@@ -960,7 +989,7 @@ var app = new Vue({
                             },
                         },
                         data: [
-                            {value: total, name: total+''}
+                            {value: total, name: total + ''}
                         ]
                     }
                 ]
@@ -970,18 +999,36 @@ var app = new Vue({
                 legend: {
                     orient: 'vertical',
                     left: '45%',
-                    top: '34%',
+                    top: 'center',
                     data: [rate + '%'],
                     formatter: function (name) {
-                        return '项目整体成功率:\n\n' + name;
+                        let arr = [
+                            '{a|' + '项目整体成功率:' + '}',
+                            '{b|' + name + '}'
+                        ]
+                        return arr.join('\n')
                     },
                     icon: 'none',
                     selectedMode: false,
                     textStyle: {
-                        fontSize: 14,
-                        fontWeight: 500,
-                        color: 'rgba(51,51,51,1)',
-                    }
+                        color: '#FBFBFB',
+                        fontSize: 16,
+                        rich: {
+                            a: {
+                                color:'rgba(102,102,102,1)',
+                                fontSize: 12,
+                                fontWeight: 500,
+                                lineHeight:43,
+                                fontFamily:'PingFang-SC-Medium,PingFang-SC',
+                            },
+                            b: {
+                                color:'rgba(51,51,51,1)',
+                                fontSize: 16,
+                                fontWeight: 500,
+                                fontFamily:'PingFang-SC-Medium,PingFang-SC',
+                            },
+                        },
+                    },
                 },
                 series: [
                     {
@@ -1083,8 +1130,7 @@ window.onload = function () {
 };
 
 function homesize() {
-    hight = document.documentElement.clientHeight;
-    apphight = hight;
+    apphight = document.documentElement.clientHeight;
     footheight = apphight * 0.81 - 94;
     $("#app").css('height', apphight + 'px');
     $("#foot").css('height', footheight + 'px');

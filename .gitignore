@@ -6,12 +6,11 @@
 /ME2/__pycache__/
 /homepage/migrations/__pycache__/
 /tools/__pycache__/
-/manager/__pycache__/
+/homepage/__pycache__/
 /logs/*.log
 /logs/deal/*.log
 /login/__pycache__/
 /login/migrations/__pycache__/
-
-/local_reports/
+/local_reports/*.html
 /ME2/configs.py
 

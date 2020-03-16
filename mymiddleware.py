@@ -22,8 +22,9 @@ class Interceptor(MiddlewareMixin):
 		字段重复校验
 
 		"""
+		print('==字段重复校验====')
 		_meta={
-		'Function':'flag',
+		'Function':'name',
 		'Interface':'name',
 		'Tag':'name',
 		'Variable':'key',
@@ -32,6 +33,21 @@ class Interceptor(MiddlewareMixin):
 		'Case':'description',
 		'Plan':'description',
 		'RemoteLog':'description'
+		}
+		_m1={
+		'Function':'函数',
+		'Interface':'接口',
+		'Variable':'变量',
+		'DBCon':'数据连接',
+		'Step':'步骤',
+		'Case':'用例',
+		'Plan':'计划',
+		'RemoteLog':'远程日志'
+		}
+		_m2={
+		'name':'名称',
+		'description':'描述',
+		'key':'键名'
 		}
 		#op=None
 		tmp=request.path.split('?')[0]
@@ -51,6 +67,9 @@ class Interceptor(MiddlewareMixin):
 			if mkey:
 				actionV=request.POST.get(_meta[mkey])
 				callstr="list(models.%s.objects.filter(%s='%s'))"%(mkey,_meta[mkey],actionV)
+				if mkey=='Function':
+					callstr="list(models.Function.objects.filter(name='%s'))"%re.findall('def (.*?)\(.*?\)', request.POST.get('body'))[0]
+
 
 				qssize=len(eval(callstr))
 				print('callstr=>%s size=%s',(callstr,qssize))
@@ -58,7 +77,7 @@ class Interceptor(MiddlewareMixin):
 				if qssize==0:
 					return ('success','')
 				else:
-					return ('fail',"%s重复"%_meta[mkey])
+					return ('fail',"%s%s重复"%(_m1[mkey],_m2[_meta[mkey]]))
 
 			else:
 				return ('success','')
@@ -84,7 +103,7 @@ class Interceptor(MiddlewareMixin):
 						return('success','')
 					else:
 						if repeatid:
-							return ('fail',"%s重复"%_meta[mkey])
+							return ('fail',"%s%s重复"%(_m1[mkey],_m2[_meta[mkey]]))
 				else:
 					return('success','')
 			except:
@@ -112,7 +131,7 @@ class Interceptor(MiddlewareMixin):
 
 
 	def _print_call_msg(self,request):
-		print('\n','='*50,"调用[%s]==============="%request.path)
+		print("=============================调用[%s]==============="%request.path)
 		a=dict(request.GET)
 		b=dict(request.POST)
 		print({**a,**b})
@@ -120,17 +139,19 @@ class Interceptor(MiddlewareMixin):
 		
 	def process_request(self, request):
 
+		print('==进入拦截器==')
+
 		self._print_call_msg(request)
 
 		session_check_result=self._session_check(request)
-		# repeat_check_result=self._repeat_check(request)
+		repeat_check_result=self._repeat_check(request)
 		# field_common_check_result=self._field_common_check(request)
 		username=request.session.get('username')
 		if session_check_result==False:
 			return HttpResponseRedirect('/account/login/')
 
-		# if repeat_check_result[0] is not 'success':
-		# 	return JsonResponse(simplejson(code=101,msg=repeat_check_result[1]),safe=False)
+		if repeat_check_result[0] is not 'success':
+			return JsonResponse(simplejson(code=101,msg=repeat_check_result[1]),safe=False)
 
 
 		

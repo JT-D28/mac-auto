@@ -171,44 +171,48 @@
         var curtaskindex = 0
 
         $("#console").click(function () {
-            let consoleSocket = new WebSocket("ws://" + host + "/ws/consolemsg/");
-            consoleSocket.onopen = function () {
-                // var username=$("#username").text()
-                console.log("开始获取" + username + "控制台消息..")
-                consoleSocket.send('console.msg::read::' + username)
-            }
-            consoleSocket.onmessage = function (e) {
-                console.log(e.data);
-                if (e.data.indexOf("[key-value]") === -1)
-                    $("#msgview").append("<p class='console-line-msg'>" + e.data + "</p>")
-                else {
-                    //$("#taskids").text(e.data)
-                    taskkeys = e.data.split('[key-value]')[1].split(",")
-                    console.log("设置taskkeys=>", taskkeys)
+            _post_nl('/homepage/querytaskid/', {'console': 1}, function (data) {
+                let consoleSocket = new WebSocket("ws://" + host + "/ws/consolemsg/");
+                consoleSocket.onopen = function () {
+                    // var username=$("#username").text()
+                    console.log("开始获取" + username + "控制台消息..")
+                    consoleSocket.send('console.msg::read::' + username+'::'+data.taskid)
                 }
-            }
-            consoleSocket.onclose = function () {
-                console.log("结束获取控制台消息..")
-            }
-            var o = layer.open({
-                title: '运行消息',
-                type: 1,
-                content: $('#consoleview'),
-                btn: ['next'],
-                area: ["750px", "450px"],
-                maxmin: true,
-                yes: function (index, layero) {
+                consoleSocket.onmessage = function (e) {
+                    console.log(e.data);
+                    console.log(e.data.indexOf("[key-value]"))
+                    if (e.data.indexOf("hasRead") === -1)
+                        $("#msgview").append("<p class='console-line-msg'>" + e.data + "</p>")
+                    else {
+                        //$("#taskids").text(e.data)
+                        //taskkeys = e.data.split('[key-value]')[1].split(",")
+                        //console.log("设置taskkeys=>", taskkeys)
+                         $("#msgview").append("<p class='console-line-msg'>最新的运行日志缓存已经读取过</p>")
+                    }
+                }
+                consoleSocket.onclose = function () {
+                    console.log("结束获取控制台消息..")
+                }
+                var o = layer.open({
+                    title: '运行消息',
+                    type: 1,
+                    content: $('#consoleview'),
+                    btn: ['next'],
+                    area: ["750px", "450px"],
+                    maxmin: true,
+                    yes: function (index, layero) {
 
-                    console.log("next..")
-                    consoleSocket.send("console.msg::next")
+                        console.log("next..")
+                        consoleSocket.send("console.msg::next")
 
-                },
-                cancel: function (index, layero) {
-                    consoleSocket.close()
-                    $("#msgview").empty()
-                },
-            });
-            layer.full(o);
+                    },
+                    cancel: function (index, layero) {
+                        consoleSocket.close()
+                        $("#msgview").empty()
+                    },
+                });
+                layer.full(o);
+            })
         });
 
 

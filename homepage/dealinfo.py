@@ -12,7 +12,7 @@ def doDebugInfo(request):
 	if type == 'info':
 		sql = '''
 		SELECT p.description AS planname ,max(r.createtime) as time ,taskid,is_running from manager_plan p,
-		manager_resultdetail r where p.id=r.plan_id and r.plan_id=%s GROUP BY taskid ORDER BY time desc limit 1
+		manager_resultdetail r where p.id=r.plan_id and r.plan_id=%s  and r.is_verify=0 GROUP BY taskid ORDER BY time desc limit 1
 		'''
 		with connection.cursor() as cursor:
 			cursor.execute(sql, [id])

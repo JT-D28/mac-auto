@@ -2148,12 +2148,14 @@ def queryonebusiness(request):
 		# business = BusinessData.objects.get(id=vid)
 		# print('business=>', business)
 		# jsonstr = json.dumps(business, cls=BusinessDataEncoder)
-		sql = 'SELECT * FROM manager_businessdata  WHERE id=%s'
+		sql = '''
+		SELECT b.id,count,businessname,itf_check,db_check,params,preposition,postposition,value as weight 
+		FROM manager_businessdata b, manager_order o WHERE b.id=%s and o.follow_id=b.id
+		'''
 		with connection.cursor() as cursor:
 			cursor.execute(sql, [request.POST.get('vid').split('_')[1]])
 			desc = cursor.description
 			row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-			print(row)
 		return JsonResponse({'code':0,'data':row})
 		# return JsonResponse(jsonstr, safe=False)
 	except:

@@ -64,41 +64,61 @@ class ConsoleConsumer(WebsocketConsumer):
 		except:
 			pass
 
-	def sendmsg(self,username):
-		msg=""
-		# print(ConsoleConsumer.__handled)
-		self.keys=[x for x in self.con.keys("console.msg::%s*"%username) if x not in ConsoleConsumer.__handled]
-		self.keys.sort()
-		self.send("[key-value]"+",".join(self.keys))
-
-
-		print("查询到的任务id(%s)=>%s"%(len(self.keys),self.keys))
-		##
-		while True:
-
-			if self._flag==True:
-				print('='*40)
-				print("================结束向用户[%s]控制台发送消息==============="%username)
-				print('='*40)
-				break
-			for key in self.keys:
-
-				if self._flag==True:
+	def sendmsg(self,username,taskid):
+		msg = ""
+		self.keys =self.con.keys("console.msg::%s::%s" %(username,taskid))
+		print("查询到的任务id(%s)=>%s" % (len(self.keys), self.keys))
+		if self.keys:
+			key=self.keys[0]
+			while True:
+				if self._flag == True:
+					print('=' * 40)
+					print("================结束向用户[%s]控制台发送消息===============" % username)
+					print('=' * 40)
 					break
+				sep = self.con.rpop(key)
+				if sep is not None and "任务【<span style='color" in sep:
+					self.send(sep)
+					while True:
+						time.sleep(0.05)
+						if self._flag == True:
+							break
+						if self._next == True:
+							self._next = False
+							break;
+						sep = self.con.rpop(key)
+						if sep is not None:
+							self.send(sep)
+				else:
+					self.send("hasRead")
+					break
+		else:self.send("hasRead")
 
-				while  True:
-					time.sleep(0.05)
-
-					if self._flag==True:
-						break
-
-					if self._next==True:
-						self._next=False
-						break;
-
-					sep=self.con.rpop(key)
-					if sep is not None:
-						self.send(sep)
+		# msg=""
+		# print(ConsoleConsumer.__handled)
+		# self.keys=[x for x in self.con.keys("console.msg::%s*"%username) if x not in ConsoleConsumer.__handled]
+		# self.keys.sort()
+		# self.send("[key-value]"+",".join(self.keys))
+		# print("查询到的任务id(%s)=>%s"%(len(self.keys),self.keys))
+		# while True:
+		# 	if self._flag==True:
+		# 		print('='*40)
+		# 		print("================结束向用户[%s]控制台发送消息==============="%username)
+		# 		print('='*40)
+		# 		break
+		# 	for key in self.keys:
+		# 		if self._flag==True:
+		# 			break
+		# 		while True:
+		# 			time.sleep(0.05)
+		# 			if self._flag==True:
+		# 				break
+		# 			if self._next==True:
+		# 				self._next=False
+		# 				break;
+		# 			sep=self.con.rpop(key)
+		# 			if sep is not None:
+		# 				self.send(sep)
 
 
 
@@ -107,6 +127,7 @@ class ConsoleConsumer(WebsocketConsumer):
 		self.accept()
 		pool = redis.ConnectionPool(host = settings.REDIS_HOST,port =settings.REDIS_PORT, db=0, decode_responses=True)
 		self.con= redis.Redis(connection_pool=pool)
+
 		#print("connect=>",self.con)
 	# print('consolemsg 连接.=>',self.con.keys("console.msg::%s*"%self.username))
 
@@ -127,11 +148,12 @@ class ConsoleConsumer(WebsocketConsumer):
 
 		if text_data.startswith("console.msg::read"):
 			self.reset()
-			self.username=text_data.split("::")[2]
+			get = text_data.split("::")
+			self.username = get[2]
+			self.taskid = get[3]
+			print("receive=>", self.username, self.taskid)
 
-			print("receive=>",self.username)
-
-			self.thread=threading.Thread(target=self.sendmsg,args=(self.username,))
+			self.thread = threading.Thread(target=self.sendmsg, args=(self.username,self.taskid))
 			self.thread.setDaemon(True)
 			self.thread.start()
 
@@ -149,13 +171,10 @@ class logConsumer(WebsocketConsumer):
 		if os.path.exists(logname):
 			with open(logname, 'r', encoding='utf-8') as f:
 				if is_running in (0, '0'):
-					s=time.time()
 					log_text = f.readlines()
-					e = time.time()
 					count= len(log_text)
 					self.send(text_data=json.dumps({'data':log_text,'count':count}))
 					self.disconnect()
-					print(e-s)
 				else:
 					while True:
 						log_text = f.readlines()

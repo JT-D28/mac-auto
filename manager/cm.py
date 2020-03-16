@@ -127,7 +127,7 @@ def addplan(request):
 
 		if plan.run_type=='定时运行':
 			config=request.POST.get('config')
-			crontab=Crontab()
+			crontab=mm.Crontab()
 			crontab.taskid=gettaskid()
 			crontab.value=config
 			# crontab.status='close'
@@ -202,7 +202,7 @@ def editplan(request):
 		plan.save()
 		print(plan.mail_config_id)
 		if plan.mail_config_id =='' or plan.mail_config_id is None :         #针对老任务，没有邮箱配置
-			mail_config = MailConfig()
+			mail_config = mm.MailConfig()
 			if is_send_mail == 'true':
 				mail_config.is_send_mail = 'open'
 			else:
@@ -1296,7 +1296,7 @@ def _resort(orderlist,movetype,src_uid,target_uid):
 	b=None
 	cindex=None
 
-	target_uid=target_id.split('.')[1]
+	target_uid=target_uid.split('.')[1]
 	i=0
 	for order in orderlist:
 		if order.follow_id==src_uid:

@@ -27,6 +27,15 @@
         padding: 5px 20px;
     }
 
+    #selectpd,
+    #selectpl {
+        padding-left: 42px;
+    }
+
+    .el-input__prefix {
+        padding: 8px 11px;
+    }
+
     body {
         background-color: #f2f2f2
     }
@@ -43,7 +52,8 @@
 
     .workbtn-module {
         text-align: center;
-        top: 50%;transform: translateY(-50%);
+        top: 50%;
+        transform: translateY(-50%);
         border-right: 2px solid rgba(248, 248, 248, 1);
     }
 
@@ -79,8 +89,8 @@
         margin-right: 0px;
     }
 
-    #echarts-records :first-child {
-        margin: 0 auto !important;
+    .el-input__icon {
+        line-height: 0;
     }
 
     .layui-card > .el-tabs > .el-tabs__content {
@@ -128,15 +138,18 @@
 <div id="app">
     <div id="header" style="height: 74px;">
         <el-form :inline="true" :model="form" style="padding: 20px" class="demo-form-inline">
-            <el-select v-model="form.product" filterable placeholder="选择项目" style="width: 240px;padding-right: 15px"
+            <el-select id="selectpd" v-model="form.product" filterable placeholder="选择项目"
+                       style="width: 240px;padding-right: 15px"
                        @change="selectProduct">
+                <i slot="prefix" class="layui-icon layui-icon-template-1"></i>
                 <el-option v-for="product in products" :key="product.id"
                            :label="product.description"
                            :value="product.id">
                 </el-option>
             </el-select>
-            <el-select v-model="form.plan" @visible-change="selectPlanVisible($event)" filterable
+            <el-select id="selectpl" v-model="form.plan" @visible-change="selectPlanVisible($event)" filterable
                        placeholder="选择计划" style="width: 240px">
+                <i slot="prefix" class="el-icon-s-order"></i>
                 <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
                            :value="plan.id">
                 </el-option>

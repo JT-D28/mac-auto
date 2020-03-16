@@ -470,20 +470,28 @@ var app = new Vue({
                     axisPointer: {
                         type: 'cross'
                     },
-                    backgroundColor: 'rgba(245, 245, 245, 0.8)',
+                    backgroundColor: 'rgba(255,255,255,1)',
                     borderWidth: 1,
                     borderColor: '#ccc',
-                    padding: 10,
+                    padding: [12, 12, 4, 12],
                     textStyle: {
                         color: '#000'
                     },
-                    width: '100px',
+                    width: '110px',
                     position: function (pos, params, el, elRect, size) {
                         var obj = {top: 10};
                         obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30;
                         return obj;
                     },
-                    extraCssText: 'width: 100px'
+                    formatter: function (params) {
+                        res = '<p style="margin-bottom:4px;width:66px;height:17px;font-size:12px;font-family:PingFang-SC-Regular,PingFang-SC;font-weight:400;color:rgba(51,51,51,1);line-height:17px;">' + params[0].name + '</p>'
+                        res += '<div style="margin-bottom:14px;width:12px;height:12px;background:rgba(221,221,221,1);border-radius:1px;">' + '<p style="font-size:12px;font-family:PingFang-SC-Regular,PingFang-SC;font-weight:400;color:rgba(51,51,51,1);line-height:12px;">' + params[4].marker + ' ' + params[4].seriesName + '：' + params[4].value + '%' + '</p>' + '</div>'
+                        for (var i = 0; i < params.length - 1; i++) {
+                            res += '<p style="margin-bottom:8px;font-size:12px;font-family:PingFang-SC-Regular,PingFang-SC;font-weight:400;color:rgba(51,51,51,1);line-height:12px;">' + params[i].marker + ' ' + params[i].seriesName + '：' + params[i].value + '</p>'
+                        }
+                        return res
+                    },
+                    extraCssText: 'width: 110px'
                 },
                 axisPointer: {
                     link: {xAxisIndex: 'all'},
@@ -954,17 +962,17 @@ var app = new Vue({
                         fontSize: 16,
                         rich: {
                             a: {
-                                color:'rgba(102,102,102,1)',
+                                color: 'rgba(102,102,102,1)',
                                 fontSize: 12,
                                 fontWeight: 500,
-                                lineHeight:43,
-                                fontFamily:'PingFang-SC-Medium,PingFang-SC',
+                                lineHeight: 43,
+                                fontFamily: 'PingFang-SC-Medium,PingFang-SC',
                             },
                             b: {
-                                color:'rgba(51,51,51,1)',
+                                color: 'rgba(51,51,51,1)',
                                 fontSize: 16,
                                 fontWeight: 500,
-                                fontFamily:'PingFang-SC-Medium,PingFang-SC',
+                                fontFamily: 'PingFang-SC-Medium,PingFang-SC',
                             },
                         },
                     },
@@ -1015,17 +1023,17 @@ var app = new Vue({
                         fontSize: 16,
                         rich: {
                             a: {
-                                color:'rgba(102,102,102,1)',
+                                color: 'rgba(102,102,102,1)',
                                 fontSize: 12,
                                 fontWeight: 500,
-                                lineHeight:43,
-                                fontFamily:'PingFang-SC-Medium,PingFang-SC',
+                                lineHeight: 43,
+                                fontFamily: 'PingFang-SC-Medium,PingFang-SC',
                             },
                             b: {
-                                color:'rgba(51,51,51,1)',
+                                color: 'rgba(51,51,51,1)',
                                 fontSize: 16,
                                 fontWeight: 500,
-                                fontFamily:'PingFang-SC-Medium,PingFang-SC',
+                                fontFamily: 'PingFang-SC-Medium,PingFang-SC',
                             },
                         },
                     },

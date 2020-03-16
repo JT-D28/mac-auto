@@ -598,13 +598,13 @@ def addbusiness(request):
 		b.db_check=request.POST.get('db_check')
 		b.params=request.POST.get('params')
 
-		check_result=_check_params(b.params)
-		print('nn=>',check_result)
-		if not check_result:
-			return{
-			'status':'error',
-			'msg':'参数json格式异常，请检查！'
-			}
+		# check_result=_check_params(b.params)
+		# print('nn=>',check_result)
+		# if not check_result:
+		# 	return{
+		# 	'status':'error',
+		# 	'msg':'参数json格式异常，请检查！'
+		# 	}
 
 
 		b.postposition=request.POST.get('postposition')
@@ -643,7 +643,10 @@ def addbusiness(request):
 				status,res=gettestdataparams(businessdatainst.id)
 				print('gettestdataparams=>%s'%res)
 				if status is not 'success':
-					return (status,res)
+					return{
+					'status':status,
+					'msg':str(res)
+					}
 		
 				params=','.join(res)
 
@@ -651,8 +654,13 @@ def addbusiness(request):
 				flag=Fu.tzm_compute(call_str,'(.*?)\((.*?)\)')
 				funcs=list(mm.Function.objects.filter(flag=flag))
 				if len(funcs)>1:
-					return ('fail','找到多个匹配的自定义函数 请检查')
+					return {
+					'status':'fail',
+					'msg':'查找到多个函数请检查'
+					}
 				related_id=funcs[0].id
+
+				print('修改step related_id=>',related_id)
 				step.related_id=related_id
 				step.save()
 
@@ -690,11 +698,11 @@ def editbusiness(request):
 
 		#check params
 		check_result=_check_params(b.params)
-		if not check_result:
-			return{
-			'status':'error',
-			'msg':'参数json格式异常，请检查！'
-			}
+		# if not check_result:
+		# 	return{
+		# 	'status':'error',
+		# 	'msg':'参数json格式异常，请检查！'
+		# 	}
 
 
 		if b.count==0:

@@ -5,9 +5,17 @@
     <meta charset="UTF-8">
     <title>业务数据</title>
     <link rel="stylesheet" type="text/css" href="{% static 'manager/bootstrap/bootstrap.min.css' %}">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
     <style type="text/css">
+
+        .hide{
+            display: none;
+        }
+        #detail_config:hover{
+            cursor: pointer;
+
+        }
         .layui-icon:hover {
             cursor: pointer;
         }
@@ -126,6 +134,34 @@
                                class="layui-input" lay-verify="required">
                     </div>
                 </div>
+                <div class="layui-form-item ">
+                    <div class="layui-inline" style="width: 93%;">
+                        <label class="layui-form-label required">文件校验</label>
+                        <div class="layui-input-block">
+                            <input type="text" id='file_check' name="file_check" placeholder="请输入" autocomplete="off"
+                                   class="layui-input" lay-verify="required">
+                        </div>
+                    </div>
+                    <div class="layui-inline" style="width: 2%;">
+                        <i class="fa fa-arrow-down" style="color:#009688;font-size:12px;float:right;" id='detail_btn'></i>
+                    </div>
+
+
+                </div>
+
+
+                <!-- 详情配置 -->
+                    <div class="layui-tab layui-tab-card hide" id='detail_config'>
+                      <ul class="layui-tab-title">
+                        <li class="layui-this">指定文件</li>
+                        <li>字段配置</li>
+                      </ul>
+                      <div class="layui-tab-content" style="height: 100px;">
+                        <div class="layui-tab-item layui-show">1</div>
+                        <div class="layui-tab-item">2</div>
+                      </div>
+                    </div>
+
                 <div class="layui-form-item ">
                     <label class="layui-form-label required">参数信息</label>
                     <div class="layui-input-block">
@@ -247,6 +283,14 @@
             return false;
 
 
+        });
+
+        //文件校验
+
+        $("#detail_btn").click(function(){
+            $('#detail_config').toggleClass('hide')
+
+            
         });
 
     })

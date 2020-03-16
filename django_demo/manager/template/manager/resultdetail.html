@@ -1,0 +1,165 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+
+    <title>结果明细查看</title>
+
+</head>
+<body>
+<div class="layui-inline"> 
+	<div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="名称|键|值" class="layui-input"></div>
+	<button class="layui-btn" id='querybtn'>查询</button>
+  <button class="layui-btn" id='addbtn'>新增</button>
+  <button class="layui-btn layui-btn-danger" id='delbtn'>删除</button>
+
+</div>
+
+<table id='table-result' class="layui-table" lay-data="{height:400, cellMinWidth: 80, page: true, limit:10, url:'{{BASE_URL}}/manager/queryresultdetail/'}" lay-filter='target'>
+  <thead>
+    <tr>
+      <th lay-data="{type:'checkbox'}"></th>
+      <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
+<!--       <th lay-data="{field: 'case',width:160, sort: true}">用例</th> -->
+      <th lay-data="{field: 'step',width:160, sort: true}">步骤详情</th> 
+      <th lay-data="{field: 'result',width:160, sort: true}">运行结果</th>
+      <th lay-data="{field: 'createtime', width:200,sort:true}">创建时间</th>
+<!--       <th lay-data="{field: 'updatetime', width:160}">更改时间</th> -->
+      <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar'}">操作</th>
+ 
+    </tr>
+  </thead>
+</table>
+
+<div id='addhtml' hidden=true class="layui-form">
+  <div class="layui-form-item">
+    <label class="layui-form-label">名称</label>
+    <div class="layui-input-block">
+      <input type="text" name="" placeholder="请输入" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">键名</label>
+    <div class="layui-input-block">
+      <input type="text" name="" placeholder="请输入" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">值</label>
+    <div class="layui-input-block">
+      <input type="text" name="" placeholder="请输入" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">获取方式</label>
+    <div class="layui-input-block">
+      <input type="text" name="" placeholder="请输入" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+</div>
+</body>
+
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+
+<script type="text/javascript">
+layui.use(['table','layer'], function(){
+  var table = layui.table;
+  var $=layui.jquery
+  var layer=layui.layer;
+
+
+//查询功能
+  $("#querybtn").click(function(e){
+
+    console.log('query case');
+    table.reload('table-result',{
+      page:{
+        curr:1
+      },
+      where:{
+        searchvalue:$("#search-value").val()
+
+      }
+
+    });
+
+    
+  });
+
+//删除功能
+  $("#delbtn").click(function(e){
+
+    layer.confirm('确认删除么?',function(index){
+      layer.close(index);
+      layer.alert('删除成功',{icon:1,time:1000})
+
+    })
+
+  });
+
+//新增功能
+
+  $("#addbtn").click(function(e){
+    layer.open(
+      {
+        title:'新增变量',
+        type:1,
+        content:$('#addhtml'),
+        btn:['提交','取消'],
+
+        yes: function(index, layero){
+          //按钮【按钮一】的回调
+          console.log('yes')
+        },
+        btn2: function(index, layero){
+          //按钮【按钮二】的回调
+          //return false 开启该代码可禁止点击该按钮关闭
+          console.log('no')
+        },
+
+
+    });
+
+  });
+
+//tool事件
+  table.on("tool(target)",function(e){
+    console.log(e.event);
+
+
+    var checkStatus = table.checkStatus("table-result");
+    data = checkStatus.data; //获取选中的数据
+    
+    if(e.event=='edit'){
+
+      console.log(data);
+
+    }else if(e.event=='detail'){
+
+    }
+
+  });
+
+
+
+
+  
+  
+});
+
+// $(document).ready(function(){
+
+// });
+</script>
+
+<script type="text/html" id="toolbar">
+  <a class="layui-btn layui-btn-xs" lay-event="detail">详情</a>
+  <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+
+  
+</script>
+
+
+</html>

@@ -702,6 +702,17 @@ class DBEncoder(XJsonEncoder):
 	def __init__(self,**args):
 		super(DBEncoder,self).__init__(['id','kind','dbname','host','port','username','password','description','author','createtime','updatetime'],**args)
 
+
+
+class TemplateEncoder(XJsonEncoder):
+	def __init__(self,**args):
+		super(DBEncoder,self).__init__(['id','kind','name','description','author','createtime','updatetime'],**args)
+
+
+class TemplateFieldEncoder(XJsonEncoder):
+	def __init__(self,**args):
+		super(DBEncoder,self).__init__(['id','fieldcode','description','start','end','index','template'],**args)
+
 def simplejson(code=0,msg='',**kw):
 	_dict={}
 
@@ -804,6 +815,7 @@ def getbuiltin(searchvalue=None, filename='builtin.py'):
 		content = f.read()
 		# print(content)
 		methodnames = re.findall("def\s+(.*?)\(", content)
+		print('builtin methodnames=>',methodnames)
 		if searchvalue is None:
 			for methodname in methodnames:
 				f = Function()
@@ -900,6 +912,10 @@ class Fu:
 		m=re.findall(pattern, src)
 		funcname=m[0][0]
 		paramlist=m[0][1].split(",")
+
+		#带关键字参数和可变参数的 都按a()计算
+		#参数带=好 记为关键参数 去除
+		paramlist=[p for p in paramlist if not p.startswith('*') and not p.__contains__('=')]
 		size=len(paramlist)
 		paramstr=",".join(pool[0:size])
 		final="%s(%s)"%(funcname,paramstr)
@@ -962,6 +978,7 @@ class Fu:
 				
 				print("调用表达式:%s 结果为:%s"%(call_str,res))
 			else:
+				print('fucobj=>',funcobj)
 				user=funcobj.author
 				flag=funcobj.flag
 				f=__import__('manager.Function.%s.func_%s'%(user,flag),fromlist=True)

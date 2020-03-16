@@ -2,7 +2,7 @@ from django.db import connection
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
-from django.http import HttpResponse, JsonResponse, FileResponse
+from django.http import HttpResponse, JsonResponse
 
 from django.db.models import Q
 from manager.models import *
@@ -12,9 +12,8 @@ from login.models import *
 from .core import *
 from .invoker import *
 from . import cm
-from .context import querytestdata, gettestdatastep, mounttestdata, gettestdataparams, queryafteradd as qa, \
-	queryafterdel as qd, queryafteredit as qe, queryaftercopy as qc
-import json, threading, operator, xlrd, base64, traceback
+from .context import querytestdata, gettestdatastep, mounttestdata, gettestdataparams, queryafteradd as qa,queryafterdel as qd, queryafteredit as qe, queryaftercopy as qc
+import json ,operator, xlrd, base64, traceback
 
 
 # # Create your views here.
@@ -1153,9 +1152,14 @@ def queryonefunc(request):
 def queryfunc(request):
 	searchvalue = request.GET.get('searchvalue')
 	print("searchvalue=>", searchvalue)
-	res = list(Function.objects.all())
-	##
-	res = res + getbuiltin(searchvalue)
+	res = []
+	if searchvalue:
+		res=list(Function.objects.filter(Q(name__icontains=searchvalue.strip())))
+		res = res + getbuiltin(searchvalue)
+
+	else:
+		res=list(Function.objects.all())+getbuiltin()
+		
 	limit = request.GET.get('limit')
 	page = request.GET.get('page')
 	res, total = getpagedata(res, page, limit)
@@ -1946,7 +1950,7 @@ def treecontrol(request):
 		try:
 			# print('callstr=>',callstr)
 			k = eval(callstr)
-			# print('k=>',k)
+			print('k=>',k)
 			status, v, data = k.get('status'), k.get('msg'), k.get('data')
 
 			if status is not 'success':
@@ -2413,6 +2417,33 @@ def querytag(request):
 
 	jsonstr=json.dumps(res,cls=TagEncoder,total=total)
 	return JsonResponse(jsonstr,safe=False)
+'''
+报文模板
+
+'''
+def template(request):
+	return render(request, 'manager/template.html')
+
+def queryonetemplate(request):
+	pass
+	
+
+
+def querytemplatelist(request):
+	pass
+
+def addtemplate(requst):
+	pass
+
+def deltemplate(request):
+	pass
+
+def edittemplate(request):
+	pass
+
+def querytemplate(request):
+	pass
+
 
 
 """

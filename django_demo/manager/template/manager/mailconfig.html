@@ -1,0 +1,318 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+
+    <title>邮件配置</title>
+    <style type="text/css">
+      
+      .layui-icon:hover{
+        cursor: pointer;
+      }
+    </style>
+</head>
+<body>
+<div class="layui-inline"> 
+	<div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="名称|键|值" class="layui-input"></div>
+	<button class="layui-btn" id='querybtn'>查询</button>
+  <button class="layui-btn" id='addbtn'>新增</button>
+  <button class="layui-btn layui-btn-danger" id='delbtn'>删除</button>
+
+</div>
+
+<table id='table-var' class="layui-table" lay-data="{height:400, cellMinWidth: 80, page: true, limit:10, url:'{{BASE_URL}}/manager/querymailconfig/'}" lay-filter='target'>
+  <thead>
+    <tr>
+      <th lay-data="{type:'checkbox'}"></th>
+      <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
+      <th lay-data="{field: 'description',width:160, sort: true}">描述</th>
+      <th lay-data="{field: 'kind',width:160, sort: true}">接收者</th>
+      <th lay-data="{field: 'dbname',width:160, sort: true}">抄送</th>
+<!--       <th lay-data="{field: 'host',width:160, sort: true}">富文本内容</th> -->
+      <th lay-data="{field: 'port',width:160, sort: true}">配色方案</th>
+<!--       <th lay-data="{field: 'username',width:160, sort: true}">账号名</th>
+      <th lay-data="{field: 'password',width:160, sort: true}">密码</th> -->
+      <th lay-data="{field: 'createtime', width:160,sort:true}">创建时间</th>
+      <th lay-data="{field: 'updatetime', width:160}">更改时间</th>
+      <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:160}">操作</th>
+ 
+    </tr>
+  </thead>
+</table>
+
+<div id='addhtml' hidden=true class="layui-form" style="padding:10px;">
+  <div class="layui-form-item">
+    <label class="layui-form-label">类型</label>
+    <div class="layui-input-block">
+      <select name="kind" lay-verify="">
+        <option value="">请选择</option>
+        <option value="mysql">mysql</option>
+        <option value="oracle">oracle</option>
+<!--         <option value="db2">db2</option> -->
+      </select> 
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">描述</label>
+    <div class="layui-input-block">
+      <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">数据库名</label>
+    <div class="layui-input-block">
+      <input type="text" name="dbname" placeholder="请输入" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">host</label>
+    <div class="layui-input-block">
+      <input type="text" name="host" placeholder="请输入" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">port</label>
+    <div class="layui-input-block">
+      <input type="text" name="port" placeholder="请输入" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">账号名</label>
+    <div class="layui-input-block">
+      <input type="text" name="accountname" placeholder="请输入" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">密码</label>
+    <div class="layui-input-block">
+      <input type="text" name="password" placeholder="请输入" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+
+</div>
+</body>
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+
+<script type="text/javascript">
+layui.use(['table','layer'], function(){
+  var table = layui.table;
+  var $=layui.jquery
+  var layer=layui.layer;
+  var form = layui.form;
+
+
+//查询功能
+  $("#querybtn").click(function(e){
+
+    console.log('query var');
+
+    layer.open({'title':'','type':2,'content':'http://www.baidu.com'});
+    table.reload('table-var',{
+      page:{
+        curr:1
+      },
+      where:{
+        searchvalue:$("#search-value").val()
+
+      }
+
+    });
+
+    
+  });
+
+//删除功能
+  $("#delbtn").click(function(e){
+
+    var checkStatus = table.checkStatus("table-var");
+    data = checkStatus.data;
+    ids=[]
+    if(data.length<1)
+    {
+      layer.alert('你有选择要删除的配置么',{icon:3,time:1500})
+      return
+    }
+    else{
+      for(var index=0;index<data.length;index++){
+        ids.splice(0,0,data[index]['id'])
+
+      }
+    }
+
+    layer.confirm('确认删除么?',function(index){
+
+      success=function(e){
+        e=JSON.parse(e)
+        if(e.code==0){
+          layer.alert(e.msg,{icon:1,time:1500})
+        }else{
+          layer.alert(e.msg,{icon:2})
+        }
+
+      }
+      layer.close(index);
+
+      _post('/manager/delcon/',{'ids':ids.join()},success)
+   
+
+    })
+
+  });
+
+//新增功能
+
+  $("#addbtn").click(function(e){
+    layer.open(
+      {
+        title:'新增数据库连接',
+        type:1,
+        // area:["350px","350px"],
+        content:$('#addhtml'),
+        btn:['提交','取消'],
+
+        yes: function(index, layero){
+          //按钮【按钮一】的回调
+          console.log('yes')
+
+          success=function (e) {
+            e=JSON.parse(e)
+
+
+            layer.close(index)
+            // body...
+            if(e.code==0)
+              layer.alert('添加连接成功',{icon:1})
+          }
+          data={
+            'description':$("[name='description']").val(),
+            'host':$("[name='host']").val(),
+            'port':$("[name='port']").val(),
+            'dbname':$("[name='dbname']").val(),
+            'accountname':$("[name='accountname']").val(),
+            'password':$("[name='password']").val(),
+            'kind':$("[name='kind']").val()
+          }
+
+          console.log(data)
+          _post('/manager/addcon/',data,success)
+        },
+        // btn2: function(index, layero){
+        //   //按钮【按钮二】的回调
+        //   //return false 开启该代码可禁止点击该按钮关闭
+        //   console.log('no')
+        // },
+
+
+    });
+
+  });
+
+//tool事件
+  table.on("tool(target)",function(e){
+
+    console.log(e.event);
+    console.log(e)
+
+    // var checkStatus = table.checkStatus("table-var");
+    // data = checkStatus.data; //获取选中的数据
+    id=e.data['id']
+    if(e.event=='edit'){
+
+      success=function(data){
+        console.log(data.data)
+        // data=JSON.parse(data)
+        // console.log(data.data)
+        // alert(data.data)
+
+        //设置addhtml
+       
+        kind=data.data['kind']
+        description=data.data['description']
+        dbname=data.data['dbname']
+        host=data.data['host']
+        port=data.data['port']
+        accountname=data.data['username']
+        password=data.data['password']
+
+
+        $("[name='kind']").val(kind)
+        layui.form.render('select');
+        $("[name='description']").val(description)
+        $("[name='dbname']").val(dbname)
+        $("[name='host']").val(host)
+        $("[name='port']").val(port)
+        $("[name='accountname']").val(accountname)
+        $("[name='password']").val(password)
+
+        //打开表单
+
+        layer.open({
+          type:1,
+          title:'编辑DB连接信息',
+          content:$('#addhtml'),
+          btn:['提交','取消'],
+          yes:function(index,layero){
+
+            layer.close(index)
+
+            success=function(e){
+
+              e=JSON.parse(e)
+              if(e.code==0)
+                layer.alert(e.msg,{icon:1,time:1500})
+              else
+                layer.alert(e.msg,{icon:2})
+
+            }
+            _post('/manager/editcon/',{
+              'id':id,
+              'kind':$("[name='kind']").val(),
+              'description':$("[name='description']").val(),
+              'dbname':$("[name='dbname']").val(),
+              'host':$("[name='host']").val(),
+              'port':$("[name='port']").val(),
+              'accountname':$("[name='accountname']").val(),
+              'password':$("[name='password']").val()
+
+
+            },success)
+
+          }
+
+        });
+
+
+      }
+      _post('/manager/queryonedb/',{id:id},success)
+
+
+
+    }else if(e.event=='detail'){
+
+    }
+
+  });
+
+
+
+
+  
+  
+});
+
+// $(document).ready(function(){
+
+// });
+</script>
+
+<script type="text/html" id="toolbar">
+  <i class="layui-icon layui-icon-form" lay-event="detail"></i>
+  <i class="layui-icon layui-icon-edit" lay-event="edit"></i>
+
+  
+</script>
+</html>

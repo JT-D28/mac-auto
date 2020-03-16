@@ -190,6 +190,8 @@ layui.use(['table','layer'], function(){
         content:$('#addhtml'),
         btn:['测试连接','提交','取消'],
         yes:function(index, layero){
+
+          // alert($("[name='description']").val())
           success=function(res){
             res=JSON.parse(res)
             if(res.code==0){
@@ -209,6 +211,8 @@ layui.use(['table','layer'], function(){
             'password':$("[name='password']").val(),
             'kind':$("[name='kind']").val()
           }
+          console.log(data)
+          
           _post('/manager/testdbcon/',data,success)
 
         },
@@ -216,8 +220,8 @@ layui.use(['table','layer'], function(){
           //按钮【按钮一】的回调
           console.log('yes')
 
-          $('#addhtml')[0].reset()
-          layui.form.render()
+          // $('#addhtml')[0].reset()
+          // layui.form.render()
 
           success=function (e) {
 
@@ -251,7 +255,7 @@ layui.use(['table','layer'], function(){
             'kind':$("[name='kind']").val()
           }
 
-          console.log(data)
+          console.log('添加db',data)
           _post('/manager/adddbcon/',data,success)
         },
         // btn2: function(index, layero){

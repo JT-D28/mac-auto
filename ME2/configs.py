@@ -1,5 +1,5 @@
 # 数据库类型  sqlite3|mysql
-dbtype = 'mysql'
+dbtype = 'sqlite3'
 
 # ME2 url地址
 ME2_URL = '127.0.0.1:8000'
@@ -16,7 +16,7 @@ DATABASES_PORT = '3306'
 
 
 # redis配置
-REDIS_HOST = '10.60.44.59'
+REDIS_HOST = '127.0.0.1'
 REDIS_PORT = '6379'
 REDIS_PASSWORD = ''
 

@@ -1,0 +1,616 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+
+    <title>步骤管理</title>
+    <style type="text/css">
+
+      .layui-table-cell {
+      height: inherit;
+      }
+            
+      .layui-icon:hover{
+        cursor: pointer;
+      }
+
+      #adddata:hover{
+        cursor: pointer;
+        color:#009688;
+
+      }
+      #deldata:hover{
+        cursor: pointer;
+        color: #009688;
+
+      }
+
+
+      .required::after{
+      content:'*';
+      position:absolute;
+      right: :2px;
+      top:0;
+      color:red;
+      }
+    </style>
+
+
+</head>
+<body>
+<div class="layui-inline"> 
+	<div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="名称|类型|标签" class="layui-input"></div>
+	<button class="layui-btn" id='querybtn'>查询</button>
+  <button class="layui-btn" id='addbtn'>新增</button>
+  <button class="layui-btn" id='packagebtn'>打包</button>
+  <button class="layui-btn layui-btn-danger" id='delbtn'>删除</button>
+
+</div>
+
+<table id='table-step' lay-data="{height:400, cellMinWidth: 80, page: true, limit:10, url:'{{BASE_URL}}/manager/querystep/'}" lay-filter='target' class='layui-table'>
+  <thead>
+    <tr>
+      <th lay-data="{type:'checkbox'}"></th>
+      <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
+      <th lay-data="{field: 'description', sort: true}">名称</th>
+      <th lay-data="{field: 'step_type',sort: true}">类型</th>
+      <th lay-data="{field: 'tagname', width:100,sort:true,hide:true}">标签</th>
+<!--       <th lay-data="{field: 'db_check', width:160}">数据校验</th>
+      <th lay-data="{field: 'itf_check', width:160}">接口校验</th> -->
+      <th lay-data="{field: 'createtime',sort:true}">创建时间</th>
+      
+      <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:120}">操作</th>
+ 
+    </tr>
+  </thead>
+</table>
+<!-- <form id='addparam' style="margin:10px;" hidden>
+  <div class="layui-form-item">
+    <label class="layui-form-label">新建参数</label>
+    <div class="layui-input-block">
+      <input type="text" name="create_param" placeholder="请输入" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+
+</form> -->
+<!-- <form id='delparam' style="margin:10px;" hidden>
+  <div class="layui-form-item">
+  <label class="layui-form-label">删除参数</label>
+  <div class="layui-input-block">
+    <input type="text" name="del_param" placeholder="请输入" autocomplete="off" class="layui-input">
+  </div>
+  </div>
+
+</form> -->
+
+<form id='addbusiness' hidden class='layui-form' style="padding:10px;">
+  <div class="layui-form-item ">
+    <label class="layui-form-label required">测试点</label>
+    <div class="layui-input-block">
+      <input type="text" name="businessname" placeholder="请输入" autocomplete="off" class="layui-input" lay-verify="required">
+    </div>
+  </div>
+  <div class="layui-form-item ">
+    <label class="layui-form-label required">接口校验</label>
+    <div class="layui-input-block">
+      <input type="text" id='itf_check' name="itf_check" placeholder="请输入" autocomplete="off" class="layui-input" lay-verify="required">
+    </div>
+  </div>
+  <div class="layui-form-item ">
+    <label class="layui-form-label required">DB校验</label>
+    <div class="layui-input-block">
+      <input type="text" id='db_check' name="db_check" placeholder="请输入" autocomplete="off" class="layui-input" lay-verify="required">
+    </div>
+  </div>
+  <div class="layui-form-item ">
+    <label class="layui-form-label required">参数信息</label>
+    <div class="layui-input-block">
+      <textarea name="params" id='params' placeholder="接口时输入json字符串 函数时直接输入参数,多个时,分隔" autocomplete="off" class="layui-textarea" lay-verify="required"  style="min-height:300px!important;"></textarea>
+    </div>
+  </div>
+</form>
+<form id='addhtml' hidden class="layui-form" style="padding: 10px;">
+  <div class="layui-form-item">
+    <label class="layui-form-label">DB选择</label>
+    <div class="layui-input-block">
+      <select name="db_id" lay-verify="">
+<!--         <option value="">请选择</option>
+        <option value="">mysql</option> -->
+      </select> 
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">类型</label>
+    <div class="layui-input-block">
+      <input type="radio" name="step_type" value="interface" title="接口"  lay-filter='kind' checked>
+      <input type="radio" name="step_type" value='function' title="函数"  lay-filter='kind'>
+
+    </div>
+  </div>
+
+  <div class="layui-form-item ">
+    <label class="layui-form-label required">描述</label>
+    <div class="layui-input-block">
+      <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input" lay-verify="required">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label required">url</label>
+    <div class="layui-input-block">
+      <input id='url' type="text" name="url" placeholder="" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">请求头</label>
+    <div class="layui-input-block">
+      <input type="text" id='header' name="header" placeholder="请输入" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+<!--   <div class="layui-form-item">
+    <label class="layui-form-label">body</label>
+    <div class="layui-input-block">
+      <textarea type="text" name="body" placeholder="请输入" autocomplete="off" class="layui-input"></textarea>
+    </div>
+  </div> -->
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">method</label>
+    <div class="layui-input-block">
+      <input type="radio" name="method" value="get" title="GET" >
+      <input type="radio" name="method" value='post' title="POST" checked>
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">content-type</label>
+    <div class="layui-input-block">
+      <input type="radio" name="content-type" value="urlencode" title="urlencode" checked>
+      <input type="radio" name="content-type" value='json' title="json">
+      <input type="radio" name="content-type" value='xml' title="xml">
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">属性</label>
+    <div class="layui-input-block">
+      <input type="text" id='property' name="property" placeholder="" autocomplete="off" class="layui-input">
+    </div>
+  </div>
+
+  <div class="layui-form-item" hidden>
+    <label class="layui-form-label">标签</label>
+    <div class="layui-input-block">
+      <select name="tag" lay-verify="">
+        <option value="">请选择</option>
+<!--         <option value="mysql">mysql</option>
+        <option value="oracle">oracle</option> -->
+<!--         <option value="db2">db2</option> -->
+      </select> 
+    </div>
+  </div>
+  
+
+  <div class="layui-form-item" hidden>
+    <label class="layui-form-label required">调用函数</label>
+    <div class="layui-input-block">
+      <select name='body'></select>
+    </div>
+  </div>
+  <div id='table-show' style="width:1200px;"></div>
+
+
+</form>
+</body>
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+<script src="{% static 'manager/js/step.js' %}"></script>
+
+
+<script type="text/javascript">
+
+function selectinterface(){
+  $("[name='url']").parent().parent().show()
+  $("[name='body']").parent().parent().hide()
+  $("[name='header']").parent().parent().show()
+  $("[name='method']").parent().parent().show()
+  $("[name='content-type']").parent().parent().show()
+  $("[name='itf-check']").parent().parent().show()
+
+  $("[value='interface']").attr('checked','checked')
+  $("[value='function']").removeAttr('checked')
+
+}
+function selectfunction(){
+
+  $("[name='url']").parent().parent().hide()
+  $("[name='body']").parent().parent().show()
+  $("[name='header']").parent().parent().hide()
+  $("[name='method']").parent().parent().hide()
+  $("[name='content-type']").parent().parent().hide()
+  $("[name='itf-check']").parent().parent().hide()
+
+  $("[value='function']").attr('checked','checked')
+  $("[value='interface']").removeAttr('checked')
+
+
+
+}
+
+
+
+_load_db_dropdownlist()
+
+add_var_prop_smart_inputs(['url','header','property','params','itf_check','db_check'])
+
+
+layui.use(['table','layer','element'], function(){
+  var table = layui.table;
+  var $=layui.jquery
+  var layer=layui.layer;
+  var form = layui.form;
+  var element = layui.element;
+  //
+
+  //加载函数列表
+  success2=function(data){
+      console.log('函数列表信息=>'+data)
+      data=JSON.parse(data)
+      data=data.data
+
+      for(var index=0;index<data.length;index++){
+
+        $("[name='body']").append("<option value='"+data[index]['value']+"'>"+data[index]['description']+"</option>")
+      }
+
+      layui.form.render('select')
+
+    }
+   _post('/manager/queryfunclist/',{},success2)
+
+  form.on('radio(kind)', function (data) {
+    //v=$("[name='step_type']").val()
+    v=data.value
+    // alert(v)
+    // alert(data.value)
+    console.log("选择"+v)
+    if(v=='interface'){
+      // alert(1)
+
+      selectinterface()
+
+
+   }else{
+    // alert(2)
+    selectfunction()
+
+   }
+
+    });
+
+//查询功能
+  $("#querybtn").click(function(e){
+
+    console.log('query var');
+    table.reload('table-step',{
+      page:{
+        curr:1
+      },
+      where:{
+        searchvalue:$("#search-value").val()
+
+      }
+
+    });
+
+    
+  });
+
+//删除功能
+  $("#delbtn").click(function(e){
+
+    var checkStatus = table.checkStatus("table-step");
+    data = checkStatus.data;
+    ids=[]
+    if(data.length<1)
+    {
+      layer.alert('你有选择测试步骤么',{icon:3,time:1500})
+      return
+    }
+    else{
+      for(var index=0;index<data.length;index++){
+        ids.splice(0,0,data[index]['id'])
+
+      }
+    }
+
+    layer.confirm('确认删除么?',function(index){
+
+      success=function(e){
+        e=JSON.parse(e)
+        if(e.code==0){
+
+            table.reload('table-step',{
+              page:{
+                curr:1
+              },
+              where:{
+                searchvalue:$("#search-value").val()
+
+              }
+
+            });
+
+
+          layer.alert(e.msg,{icon:1,time:1500})
+        }else{
+          layer.alert(e.msg,{icon:2})
+        }
+
+      }
+      layer.close(index);
+
+      _post('/manager/delstep/',{'ids':ids.join()},success)
+   
+
+    })
+
+  });
+
+
+//新增功能
+
+  $("#addbtn").click(function(e){
+
+    //加载业务数据
+    success=function(data){
+      loadbusinessdata(data)
+    }
+    _post('/manager/querybusinessdata/',{'flag':'0'},success)
+
+    $("#addhtml")[0].reset()
+    layui.form.render()
+
+
+    var o=layer.open(
+      {
+        title:'新增步骤',
+        type:1,
+        area:["350px","350px"],
+        content:$('#addhtml'),
+        btn:['提交','取消'],
+
+        yes: function(index, layero){
+          //按钮【按钮一】
+          ///alert(JSON.stringify(layui.table.cache['business-data']))
+          layer.close(index)
+          success=function(e){
+            table.reload('table-step',{
+              page:{
+                curr:1
+              },
+              where:{
+                searchvalue:$("#search-value").val()
+
+              }
+
+            });
+            // _post('/manager/clearstepbusinesscache/')
+            e=JSON.parse(e)
+            if(e.code==0)
+              layer.alert(e.msg,{icon:1})
+            else
+              layer.alert(e.msg,{icon:2})
+
+          }
+          data={
+
+            'step_type':$("[name='step_type']:checked").val(),
+            'description':$("[name='description']").val(),
+            'url':$("[name='url']").val(),
+            'method':$("[name='method']:checked").val(),
+            'headers':$("[name='header']").val(),
+            'body':$("[name='body']").val(),
+            'content_type':$("[name='content-type']:checked").val(),
+            'tmp':$("[name='property']").val(),
+            'dbid':$("[name='db_id']").val()
+
+          }
+          _post('/manager/addstep/',data,success)
+        },
+        btn2: function(index, layero){
+          //按钮【按钮二】的回调
+          //return false 开启该代码可禁止点击该按钮关闭
+          //alert('no')
+          //_post('/manager/clearstepbusinesscache/')
+        },
+        cancel:function(){
+         // alert('close')
+          // _post('/manager/clearstepbusinesscache/')
+        }
+
+
+    });
+    layer.full(o);
+
+
+  });
+
+//tool事件
+  table.on("tool(target)",function(e){
+    console.log(e.event);
+    id=e.data['id']
+    
+    if(e.event=='edit'){
+      console.log($("#addhtml")[0])
+
+      $('#addhtml')[0].reset()
+      layui.form.render()
+      success=function(data){
+
+        console.log(data.data)
+        //设置addhtml
+
+        step_type=data.data[0]['step_type']
+
+        // alert(step_type)
+        description=data.data[0]['description']
+        url=data.data[0]['url']
+        //alert(url)
+        method=data.data[0]['method']
+        headers=data.data[0]['headers']
+        body=data.data[0]['body']
+        content_type=data.data[0]['content_type']
+        itf_check=data.data[0]['itf_check']
+        db_check=data.data[0]['db_check']
+        tmp=data.data[0]['temp']
+
+        // $("[value='"+step_type+"']").attr('checked','checked')
+
+        // layui.form.render('radio')
+
+
+        if('interface'==step_type)
+          selectinterface()
+        else
+          selectfunction()
+
+        $("[name='description']").val(description)
+        $("[name='url']").val(url)
+        $("[value='"+method+"']").attr('checked','checked')
+        // layui.form.render('radio')
+        $("[name='header']").val(headers)
+        $("[name='body']").val(body)
+        //alert(content_type)
+        $("[value='"+content_type+"']").attr('checked','checked')
+
+        layui.form.render('radio')
+
+
+        $("[name='itf-check']").val(itf_check)
+        $("[name='db-check']").val(db_check)
+        $("[name='property']").val(tmp)
+
+        $("[name='db_id']").val(data.data[0]['db_id'])
+        layui.form.render('select')
+
+
+        //打开表单
+        //加载业务数据
+        success_1=function(data){
+          loadbusinessdata(data,id)
+
+        }
+        data={
+          'flag':'0',
+          'stepid':id
+          // 'businessname':$("[name='businessname']").val(),
+          // 'itf_check':$("[name='itf_check']").val(),
+          // 'db_check':$("[name='db_check']").val(),
+          // 'params':$("[name='params']").val(),
+
+        }
+        _post('/manager/querybusinessdata/',data,success_1);
+
+        var eo=layer.open({
+          type:1,
+          title:'编辑step信息',
+          content:$('#addhtml'),
+          btn:['提交','取消'],
+          yes:function(index,layero){
+
+            layer.close(index)
+
+            selectinterface()
+
+            success=function(e){
+
+              table.reload('table-step',{
+                page:{
+                  curr:1
+                },
+                where:{
+                  searchvalue:$("#search-value").val()
+
+                }
+
+              });
+
+              // _post('/manager/clearstepbusinesscache/')
+
+              e=JSON.parse(e)
+              if(e.code==0){
+                layer.alert(e.msg,{icon:1,time:1500})
+
+
+              }
+              else
+                layer.alert(e.msg,{icon:2})
+
+            }
+            _post('/manager/editstep/',{
+              'id':id,
+              'step_type':$("[name='step_type']:checked").val(),
+              'description':$("[name='description']").val(),
+              'url':$("[name='url']").val(),
+              'method':$("[name='method']:checked").val(),
+              'headers':$("[name='header']").val(),
+              'body':$("[name='body']").val(),
+              'content_type':$("[name='content-type']:checked").val(),
+              'tmp':$("[name='property']").val(),
+              'dbid':$("[name='db_id']").val()
+
+            },success)
+
+          },
+          btn2:function(index,layero){
+           // $_post('/manager/clearstepbusinesscache/')
+
+          },
+          cancel:function(){
+            //$_post('/manager/clearstepbusinesscache/')
+
+          }
+
+        });
+
+        layer.full(eo);
+
+      }
+      _post('/manager/queryonestep/',{id:id},success)
+
+
+    }else if(e.event=='detail'){
+
+    }
+
+  });
+
+
+  
+});
+
+
+</script>
+
+<script type="text/html" id="toolbar">
+  <i class="layui-icon layui-icon-form" lay-event="detail"></i>
+  <i class="layui-icon layui-icon-edit" lay-event="edit"></i>
+</script>
+
+<script type="text/html" id="toolbar2">
+  <i class="layui-icon layui-icon-edit" lay-event="edit"></i>
+</script>
+<script type="text/html" id="business-toolbar">
+  <i class="layui-icon layui-icon-add-1" lay-event="add"></i>
+  <i class="layui-icon layui-icon-delete" lay-event="del"></i>
+</script>
+
+<script type="text/html" id="index">
+  {% verbatim %}
+    {{d.LAY_TABLE_INDEX+1}}
+  {% endverbatim %}
+</script>
+</html>

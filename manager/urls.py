@@ -121,6 +121,10 @@ urlpatterns = [
     path('deltag/',views.deltag),
     path('querytag/',views.querytag),
 
+    #
+    path('template/', views.template),
+    # path('querytemplate/',),
+
     
     path('queryoneproduct/',views.queryoneproduct),
     path('tree/',views.treetest),

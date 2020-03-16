@@ -57,6 +57,31 @@ class Tag(Model):
 	def __str__(self):
 		return self.name
 
+
+class Template(Model):
+	'''报文校验
+	'''
+	kind=IntegerField()#0:按长度解析  1：按分隔符解析
+	name=CharField(max_length=16)
+	description=TextField()
+	author=ForeignKey(User, on_delete=CASCADE)
+	createtime=DateTimeField(auto_now_add=True)
+	updatetime=DateTimeField(auto_now=True)
+
+	def __str__(self):
+		return '[%s]%s'%(self.id,self.name)
+
+
+class TemplateField(Model):
+	'''报文字段定义
+	'''
+	fieldcode=CharField(max_length=16)
+	description=TextField()
+	template=ForeignKey(Template, on_delete=CASCADE)
+	start=IntegerField()
+	end=IntegerField()
+	index=IntegerField()
+
 #
 # class Scheme(Model):
 # 	name=CharField(max_length=18)
@@ -203,7 +228,7 @@ class ResultDetail(Model):
 class Variable(Model):
 	author=ForeignKey(User, on_delete=CASCADE)
 	description=CharField(max_length=128)
-	tag_id=CharField(max_length=24,null=True)
+	tag_id=CharField(max_length=24,null=True,blank=True)
 	key=CharField(max_length=255,unique=True)
 	value=TextField(blank=True,null=True)
 	gain=TextField(blank=True,null=True)
@@ -300,7 +325,7 @@ class DBCon(Model):
 	port=CharField(max_length=5,blank=True)
 	username=CharField(max_length=15)
 	password=CharField(max_length=15)
-	description=CharField(max_length=32)
+	description=TextField()
 
 	author=ForeignKey(User, on_delete=CASCADE)
 	createtime=DateTimeField(auto_now_add=True)

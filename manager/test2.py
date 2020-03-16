@@ -1,5 +1,49 @@
-a='''Traceback (most recent call last): File "/data/python/lib/python3.7/site-packages/pymysql/connections.py", line 583, in connect **kwargs) File "/data/python/lib/python3.7/socket.py", line 727, in create_connection raise err File "/data/python/lib/python3.7/socket.py", line 716, in create_connection sock.connect(sa) ConnectionRefusedError: [Errno 111] Connection refused During handling of the above exception, another exception occurred: Traceback (most recent call last): File "/data/me2_7777/manager/invoker.py", line 91, in db_connect charset='utf8mb4') File "/data/python/lib/python3.7/site-packages/pymysql/__init__.py", line 94, in Connect return Connection(*args, **kwargs) File "/data/python/lib/python3.7/site-packages/pymysql/connections.py", line 325, in __init__ self.connect() File "/data/python/lib/python3.7/site-packages/pymysql/connections.py", line 630, in connect raise exc pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on '172.18.12.64' ([Errno 111] Connection refused)")'''
+import re
+from hashlib import md5,sha512
+def _md5(s):
+    """
+    函数文件名标识
+    """
+    new_md5 = md5()
+    new_md5.update(s.encode(encoding='utf-8'))
+    return new_md5.hexdigest()
+
+def tzm_compute(src,pattern):
+    """
+    计算方法特征码
+    通过pattern从src字符串获取方法名和参数串计算特征码
+    """
+    pool=[chr(x) for x in range(97,123)]
+    m=re.findall(pattern, src)
+    funcname=m[0][0]
+    paramlist=m[0][1].split(",")
+
+    #带关键字参数和可变参数的 都按a()计算
+    #参数带=好 记为关键参数 去除
+    paramlist=[p for p in paramlist if not p.startswith('*') and not p.__contains__('=')]
+    size=len(paramlist)
+    paramstr=",".join(pool[0:size])
+    final="%s(%s)"%(funcname,paramstr)
+    print('final=>',final)
+
+    return _md5(final)
 
 
-b="pymysql.err.OperationalError: (2003"
-print(a.__contains__(b))
+
+
+def createSignature(key,**kws):
+    from hashlib import sha512
+    keys=list(kws.keys())
+    keys.sort()
+    #print(keys)
+    valstr=""
+    for k in keys:
+        if kws[k] !=None:
+            valstr +=str(kws[k])+'_'
+    valstr +=key
+    hash=sha512()
+    hash.update(valstr.encode('utf-8'))
+    Signature=hash.hexdigest().upper()
+    return Signature
+
+print(createSignature('wwww',AppVersion='1.11.0',UserInfoURID='',EnterpriseNum='AC530001',PhoneNum='',OrganizationID='0103',IdentityType=1,IdentityID='2018092901'))

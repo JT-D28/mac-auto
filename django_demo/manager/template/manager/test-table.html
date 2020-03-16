@@ -1,0 +1,187 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+
+    <title>动态表格测试</title>
+    <style type="text/css">
+      
+      .layui-icon:hover{
+        cursor: pointer;
+      }
+      #business-table{
+        width: 100%;
+      }
+    </style>
+</head>
+<body>
+<div class="layui-inline"> 
+  <button class="layui-btn" id='addparambtn'>新增参数列</button>
+  <button class="layui-btn layui-btn-danger" id='addrow'>新增组数据</button>
+  <button class="layui-btn layui-btn-danger" id='getall'>所有数据</button>
+</div>
+
+<div id='table-show'>
+  
+
+</div>
+
+
+</body>
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+
+<script type="text/javascript">
+layui.use(['element','table','layer'], function(){
+  var table = layui.table;
+  var $=layui.jquery
+  var layer=layui.layer;
+  var form = layui.form;
+  var element = layui.element;
+
+
+
+//画业务表格
+  var businesstitle;
+  success=function(e){
+    //alert('back')
+    //console.log(e)
+    data=e.data
+    title=e.title
+
+   // console.log(data)
+    console.log(JSON.stringify(title))
+    console.log(JSON.stringify(data))
+    businesstitle=e.title
+
+    $("#table-show").empty();
+    $("#table-show").append("<table id='business-table' lay-filter='target'></table>")
+    var tableIns= table.render({
+      // url:'/manager/querytesttable/'
+      elem:'#business-table', 
+      id:'business-data', 
+      height: 312,
+      data:data,
+      cols:[title],
+      page:false,
+      // limit:1,
+      // count:3
+    });
+
+    ///
+
+    $("#getall").click(function(event){
+
+      alert(JSON.stringify(table.cache['business-data']))
+      //table.cache['business-data'].splice(0,1)
+      //alert(JSON.stringify(table.cache['business-data']))
+
+    });
+
+    $("#addparambtn").click(function(){
+
+     // table.cache['business-data']
+      //alert(businesstitle)
+      var insertpos=businesstitle.length
+      //alert(insertpos)
+      var timestamp = (new Date()).valueOf()
+      headfieldtmp={'width':0,'type':'normal','hide':false,'field':['field',timestamp].join('_'),'title':['参数',timestamp].join('_'),'edit':true,'key':['0',insertpos].join('-')}
+
+      console.log(headfieldtmp)
+
+      //businesstitle.push(headfieldtmp)
+
+      businesstitle.splice(insertpos,0,headfieldtmp)
+
+      console.log(businesstitle)
+
+      table.reload('business-data',{
+          title : [businesstitle],
+          
+      });
+
+  
+      console.log(table.cache['business-data'])
+
+      console.log('===========================')
+
+
+
+    });
+
+    $('#addrow').click(function(){
+      alert(1)
+      table.cache['business-data'].splice(0,0,{})
+    });
+   
+
+
+  };
+  _get('/manager/querytesttable/',{},success)
+  //alert(1)
+
+
+
+//tool事件
+  table.on("edit(business-table)",function(obj){
+  var value = obj.value //得到修改后的值
+    ,data = obj.data //得到所在行所有键值
+    ,field = obj.field; //得到字段
+    layer.msg('[ID: '+ data.id +'] ' + field + ' 字段更改为：'+ value);
+
+  });
+
+
+//工具条
+table.on("tool(target)",function(e){
+
+  if(e.event=='add'){
+    console.log('add')
+
+    var oldData =  table.cache["business-data"];
+    var linetmp={};
+    oldData.push(linetmp);
+    table.reload('business-data',{
+        data : oldData
+    });
+
+    console.log( table.cache["business-data"]);
+
+
+
+  }else if(e.event=='del'){
+    console.log('del')
+    e.del()
+    //table.reload()
+    console.log(table.cache['business-data'])
+
+
+
+  }
+});
+
+
+
+  
+  
+});
+
+
+</script>
+
+<script type="text/html" id="toolbar">
+  <i class="layui-icon layui-icon-add-1" lay-event="add"></i>
+  <i class="layui-icon layui-icon-delete" lay-event="del"></i>
+
+  
+</script>
+
+<script type="text/html" id="index">
+  {% verbatim %}
+    {{d.LAY_TABLE_INDEX+1}}
+  {% endverbatim %}
+</script>
+</html>

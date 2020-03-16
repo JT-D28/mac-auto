@@ -24,7 +24,8 @@ urlpatterns = [
     path('account/',include('login.urls')),
     path('manager/',include('manager.urls')),
     path('homepage/',include('homepage.urls')),
-    path('test_expression/',views.testexpress)
+    path('test_expression/',views.testexpress),
+    path('test_expression1/', views.testexpress1),
     # path('',views.index),
 
 ]

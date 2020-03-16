@@ -2005,7 +2005,6 @@ class JSONParser(Struct):
         #print(msg)
         return msg
 
-
     def translate(self,chainstr):
 
         def is_ok(chainstr):
@@ -2016,12 +2015,18 @@ class JSONParser(Struct):
             return True
 
         if is_ok(chainstr)==True:
+            h=''
+            if isinstance(self.obj,(list,)):
+                if chainstr.startswith('response.json'):
+                    startindex=re.findall('response.json\[(.*?)\]', chainstr)[0]
+                    h="[%s]"%startindex
+                    chainstr=chainstr.replace('response.json%s.'%h, '')
+
             stages=chainstr.split(".")
-            return "self.obj."+".".join(["get('%s')[%s"%(stage.split("[")[0],stage.split("[")[1])  if "[" in stage else "get('%s')"%stage for stage in stages ])
+            return "self.obj%s."%h+".".join(["get('%s')[%s"%(stage.split("[")[0],stage.split("[")[1])  if "[" in stage else "get('%s')"%stage for stage in stages ])
 
         else:
             return False
-
 
     def getValue(self,chainstr):
         errms='解析数据链[%s]失败 数据链作为值返回'%chainstr

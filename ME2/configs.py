@@ -6,7 +6,7 @@ ME2_URL = '127.0.0.1:8000'
 
 # 环境数据库配置
 # mysql
-DATABASES_NAME = 'me2-59'
+DATABASES_NAME = 'me2-local-test'
 DATABASES_USER = 'root'
 DATABASES_PWD = '123456'
 DATABASES_HOST = '10.60.44.59'

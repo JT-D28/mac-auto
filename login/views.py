@@ -182,6 +182,10 @@ def testexpress(request):
 	return JsonResponse({'code':1,'bool':True,'str':'hhh','nullstr':None,'spacestr':'','array':[],'data':[{'token':'tokenyyeyye'}],'qibastr':'10,203.30'},safe=False)
 
 
+
+@csrf_exempt
+def testexpress1(request):
+	return JsonResponse([{'linenum':1},{'linenum':2}],safe=False)
 # '''
 # 测试特殊返回字符串
 # '''

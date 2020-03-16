@@ -118,7 +118,7 @@ class Interceptor(MiddlewareMixin):
 		'''
 		session校验
 		'''
-		_meta=('/manager/addstep/','/account/login/','/manager/querytaskdetail/','/test_expression/','/manager/third_party_call/')
+		_meta=('/account/login/','/manager/querytaskdetail/','/test_expression/','/test_expression1/','/manager/third_party_call/')
 		if request.path not in _meta and not  request.path.startswith('/captcha/image/'):
 			if request.session.get('username', None):
 				return True

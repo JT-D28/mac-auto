@@ -1069,6 +1069,10 @@ var app = new Vue({
         },
     },
     created: function () {
+        apphight = document.documentElement.clientHeight;
+        footheight = apphight * 0.81 - 94;
+        $("#app").css('height', apphight + 'px');
+        $("#foot").css('height', footheight + 'px');
         this.getproduct();
     },
     watch: {

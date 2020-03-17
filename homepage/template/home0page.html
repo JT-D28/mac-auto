@@ -10,7 +10,7 @@
     <!--网页在缓存中的过期时间为0，一旦网页过期，必须从服务器上重新订阅-->
     <meta http-equiv="expires" content="0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <link rel="stylesheet" href="https://cdn.bootcss.com/element-ui/2.13.0/theme-chalk/index.css">
+    <link rel="stylesheet" href="{% static 'homepage/eleui/theme-chalk/index.css' %}">
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layui.css' %}" media="all">
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layuimini.css' %}" media="all">
     <script src="{% static 'homepage/vue.js' %}"></script>
@@ -149,7 +149,7 @@
             </el-select>
             <el-select id="selectpl" v-model="form.plan" @visible-change="selectPlanVisible($event)" filterable
                        placeholder="选择计划" style="width: 240px">
-                <i slot="prefix" class="el-icon-s-order"></i>
+                <i slot="prefix" class="el-icon-s-order" style="font-size: 16px"></i>
                 <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
                            :value="plan.id">
                 </el-option>

@@ -10,10 +10,10 @@
     <!--网页在缓存中的过期时间为0，一旦网页过期，必须从服务器上重新订阅-->
     <meta http-equiv="expires" content="0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <script src="{% static 'homepage/vue.js' %}"></script>
     <link rel="stylesheet" href="{% static 'homepage/eleui/theme-chalk/index.css' %}">
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layui.css' %}" media="all">
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layuimini.css' %}" media="all">
-    <script src="{% static 'homepage/vue.js' %}"></script>
     <script src="{% static 'homepage/eleui/index.js' %}"></script>
     <title></title>
 </head>
@@ -30,10 +30,6 @@
     #selectpd,
     #selectpl {
         padding-left: 42px;
-    }
-
-    .el-input__prefix {
-        padding: 8px 11px;
     }
 
     body {
@@ -73,7 +69,7 @@
 
     .workbtn-module a cite {
         position: relative;
-        top: 2px;
+        top: 6px;
         display: block;
         text-overflow: ellipsis;
         overflow: hidden;
@@ -141,7 +137,8 @@
             <el-select id="selectpd" v-model="form.product" filterable placeholder="选择项目"
                        style="width: 240px;padding-right: 15px"
                        @change="selectProduct">
-                <i slot="prefix" class="layui-icon layui-icon-template-1"></i>
+                <img slot="prefix" src="{% static 'manager/icon/product.svg' %}"
+                     style="width:18px;height:18px;padding: 8px 10px;">
                 <el-option v-for="product in products" :key="product.id"
                            :label="product.description"
                            :value="product.id">
@@ -149,7 +146,8 @@
             </el-select>
             <el-select id="selectpl" v-model="form.plan" @visible-change="selectPlanVisible($event)" filterable
                        placeholder="选择计划" style="width: 240px">
-                <i slot="prefix" class="el-icon-s-order" style="font-size: 16px"></i>
+                <img slot="prefix" src="{% static 'manager/icon/plan.svg' %}"
+                     style="width:18px;height:18px;padding: 8px 10px;">
                 <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
                            :value="plan.id">
                 </el-option>
@@ -161,38 +159,38 @@
             <div class="layui-row" style="height: 100%;">
                 <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
                     <a @click="runplan" href="javascript:;" title="这里是验证用例，调试去用例管理！">
-                        <i class="layui-icon layui-icon-play"></i>
+                        <img src="{% static 'manager/icon/run.svg' %}">
                         <cite>验证</cite>
                     </a>
                 </div>
                 <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
                     <a @click="setplan" href="javascript:;">
-                        <i class="layui-icon layui-icon-set"></i>
+                        <img src="{% static 'manager/icon/proset.svg' %}">
                         <cite>项目设置</cite>
                     </a>
                 </div>
                 <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
                     <a @click="planHistory" href="javascript:;">
-                        <i class="layui-icon layui-icon-survey"></i>
+                        <img src="{% static 'manager/icon/history.svg' %}">
                         <cite>历史记录</cite>
                     </a>
                 </div>
                 <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
                     <a @click="newRepoet" @contextmenu.prevent="downloadReport" href="javascript:;">
-                        <i class="layui-icon layui-icon-chart-screen"></i>
+                        <img src="{% static 'manager/icon/report.svg' %}">
                         <cite>最新报告</cite>
                     </a>
                 </div>
                 <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
                     <a @click="setPlanNotice" href="javascript:;">
-                        <i class="layui-icon layui-icon-notice"></i>
+                        <img src="{% static 'manager/icon/send.svg' %}">
                         <cite>报告通知</cite>
                     </a>
                 </div>
                 <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
                     <a @click="seeprocess" @contextmenu.prevent="downloadRunlog"
                        href="javascript:;">
-                        <i class="layui-icon layui-icon-log"></i>
+                        <img src="{% static 'manager/icon/runlog.svg' %}">
                         <cite>运行日志</cite>
                     </a>
                 </div>
@@ -212,13 +210,13 @@
                     <div style="height: calc(50% - 20px)">
                         <div style="padding: 7% 0;height: 100%">
                             <div id="productCount"
-                                 style="width: 100%;height: 70%;padding-top: 7%"></div>
+                                 style="width: 100%;height: 70%;max-height:200px;padding-top: 7%"></div>
                         </div>
                     </div>
                     <div style="height:calc(50% - 20px);padding-top: 11.3%">
                         <div style="padding: 0 0;height: 100%">
                             <div id="productRate"
-                                 style="width: 100%;height: 70%"></div>
+                                 style="width: 100%;height: 70%;max-height:200px;"></div>
                         </div>
                     </div>
                 </div>
@@ -255,7 +253,7 @@
                                         <div class="layui-card-body"
                                              style="padding:5px 5px;height: calc(100% - 55px)">
                                             <div id="branchCoverage" class="layui-col-md6"
-                                                 style="width: 100%;height: 100%;"></div>
+                                                 style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -267,7 +265,7 @@
                                         <div class="layui-card-body"
                                              style="padding:5px 5px;height: calc(100% - 55px)">
                                             <div id="classCoverage" class="layui-col-md6"
-                                                 style="width: 100%;height: 100%"></div>
+                                                 style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -280,7 +278,7 @@
                                         <div class="layui-card-body"
                                              style="padding:5px 5px;height: calc(100% - 55px)">
                                             <div id="instructionCoverage" class="layui-col-md6"
-                                                 style="width: 100%;height: 100%"></div>
+                                                 style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -292,7 +290,7 @@
                                         <div class="layui-card-body"
                                              style="padding:5px 5px;height: calc(100% - 55px)">
                                             <div id="complexityScore" class="layui-col-md6"
-                                                 style="width: 100%;height: 100%"></div>
+                                                 style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -305,7 +303,7 @@
                                         <div class="layui-card-body"
                                              style="padding:5px 5px;height: calc(100% - 55px)">
                                             <div id="lineCoverage" class="layui-col-md6"
-                                                 style="width: 100%;height: 100%"></div>
+                                                 style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -317,7 +315,7 @@
                                         <div class="layui-card-body"
                                              style="padding:5px 5px;height: calc(100% - 55px)">
                                             <div id="methodCoverage" class="layui-col-md6"
-                                                 style="width: 100%;height: 100%"></div>
+                                                 style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
                                         </div>
                                     </div>
                                 </div>

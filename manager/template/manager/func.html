@@ -54,7 +54,7 @@
     </thead>
 </table>
 
-<form id='addhtml' hidden=true class="layui-form" style="padding:10px;">
+<form id='addhtml' hidden=true class="layui-form" style="padding: 30px 100px 0 30px ;">
 
     <div class="layui-form-item">
         <label class="layui-form-label">描述</label>
@@ -175,7 +175,7 @@
         $("#addbtn").click(function (e) {
             var o = layer.open(
                 {
-                    title: '添加函数',
+                    title: '函数定义 / 新增',
                     type: 1,
                     // area:["350px","350px"],
                     content: $('#addhtml'),
@@ -257,7 +257,7 @@
                     //打开表单
                     var o = layer.open({
                         type: 1,
-                        title: '编辑自定义函数',
+                        title: '函数定义 / 编辑',
                         content: $('#addhtml'),
                         btn: ['提交', '取消'],
                         yes: function (index, layero) {

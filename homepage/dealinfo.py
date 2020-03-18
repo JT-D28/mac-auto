@@ -199,21 +199,6 @@ def dealDeBuginfo(taskid):
 			print('处理日志完成------')
 
 
-def dealJacocoData(jsond, jobname, num):
-	if not Jacoco_data.objects.filter(jobnum=num, jobname=jobname).exists():
-		data = Jacoco_data()
-		data.jobnum = num
-		data.jobname = jobname
-		data.branchCoverage = jsond['branchCoverage']
-		data.classCoverage = jsond['classCoverage']
-		data.complexityScore = jsond['complexityScore']
-		data.instructionCoverage = jsond['instructionCoverage']
-		data.lineCoverage = jsond['lineCoverage']
-		data.methodCoverage = jsond['methodCoverage']
-		data.save()
-		print('%s第%s次构建的覆盖率数据保存成功' % (jobname, num))
-
-
 def dealJacocoJobName(jacocojobname, jobs):
 	jobnames = []
 	if '0' in jobs:

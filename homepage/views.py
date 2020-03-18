@@ -308,6 +308,7 @@ def jacocoreport(request):
 		jobnames = dealJacocoJobName(jacocoset.jobname, jobs)
 		jobnum = len(jobnames)
 		if request.POST.get('s') == 'get':
+			print('库中获取覆盖率')
 			with connection.cursor() as cursor:
 				cursor.execute('''SELECT branchCoverage,classCoverage,complexityScore,instructionCoverage,
 				lineCoverage,methodCoverage from (SELECT max(jobnum) AS num,jobname FROM `homepage_jacoco_data` a 
@@ -316,6 +317,7 @@ def jacocoreport(request):
 				''', [jobnames])
 				desc = cursor.description
 				rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+				print(rows)
 			for jsond in rows:
 				for i in coveragelist:
 					jsond[i] = json.loads(jsond[i].replace("'", '"'))
@@ -347,7 +349,19 @@ def jacocoreport(request):
 						jsond = json.loads(s.get(url).text)
 						del jsond['_class']
 						del jsond['previousResult']
-						threading.Thread(target=dealJacocoData, args=(jsond, jobname, num[jobname])).start()
+						if not Jacoco_data.objects.filter(jobnum=num[jobname], jobname=jobname).exists():
+							data = Jacoco_data()
+							data.jobnum = num[jobname]
+							data.jobname = jobname
+							data.branchCoverage = jsond['branchCoverage']
+							data.classCoverage = jsond['classCoverage']
+							data.complexityScore = jsond['complexityScore']
+							data.instructionCoverage = jsond['instructionCoverage']
+							data.lineCoverage = jsond['lineCoverage']
+							data.methodCoverage = jsond['methodCoverage']
+							data.save()
+							print('%s第%s次构建的覆盖率数据保存成功' % (jobname, num[jobname]))
+						# threading.Thread(target=dealJacocoData, args=(jsond.copy(), jobname, num[jobname])).start()
 						for i in coveragelist:
 							for k in items:
 								if k in ['percentage', 'percentageFloat']:

@@ -564,12 +564,31 @@ def query_third_call(request):
 def jenkinsJobRun(request):
 	jobs = request.POST.getlist('jobnames[]')
 	action = request.POST.get('action')
-	jobnames = []
 	res = ''
-	if action == 'jacocoMany':
+	try:
 		jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
 		jobnames = dealJacocoJobName(jacocoset.jobname, jobs)
+	except:
+		return JsonResponse({'code': 1, 'data': '产品没有相应的代码覆盖率配置！'})
+
+	# 测试连接
+	try:
 		server = jenkins.Jenkins(jacocoset.jenkinsurl, username=jacocoset.authname, password=jacocoset.authpwd)
+		server.get_whoami()
+	except:
+		print(traceback.format_exc())
+		return JsonResponse({'code': 1, 'data': '用户名或密码错误，请检查！'})
+
+	# 任务运行状态检查
+	msg = ''
+	for job in jobnames:
+		buildinfo = server.get_build_info(job, server.get_job_info(job)['lastBuild']['number'])
+		if buildinfo['building']:
+			msg += '%s:已经在运行了，请稍后再试<br>' % (job)
+	if msg != '':
+		return JsonResponse({'code': 1, 'data': msg})
+
+	if action == 'jacocoMany':
 		buildnumber0 = {}
 		buildnumber1 = {}
 		for index, job in enumerate(jobnames):
@@ -584,21 +603,19 @@ def jenkinsJobRun(request):
 				if len(res.split("<br>")) - 1 == len(jobnames):
 					return JsonResponse({'code': 0, 'data': res})
 				time.sleep(3)
+
 	if action == 'jacocoOne':
-		jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
-		jobnames = dealJacocoJobName(jacocoset.jobname, jobs)
 		jobstr = ','.join(i for i in jobnames)
-		# server = jenkins.Jenkins(jacocoset.jenkinsurl, username=jacocoset.authname, password=jacocoset.authpwd)
-		#
-		# print(server.get_job_config())
-		# job = 'me2jacoco'
-		# if server.job_exists(job):
-		# 	server.delete_job(job)
-		# 	print('delete')
-		# with open('./JenkinsConfig.xml') as f:
-		# 	config = f.read() % jobstr
-		# server.create_job(job, config)
-		# server.build_job(job)
-	# 	time.sleep(5)
-	# 	# server.delete_job('me2-jacoco-getreport')
-	return JsonResponse({'code': 1,'data':'todo'})
+		job = 'tfp-cmbc-mysql-uat-report'
+		print(server.get_job_config('tfp-cmbc-mysql-uat-report1'))
+		try:
+			if server.job_exists(job):
+				server.delete_job(job)
+				print('删除已有的执行任务')
+			with open('./JenkinsConfig.xml') as f:
+				config = f.read() % jobstr
+			server.create_job(job, config)
+			server.build_job(job)
+			return JsonResponse({'code': 0, 'data': '任务已开始执行'})
+		except:
+			return JsonResponse({'code': 1, 'data': "可能出现了问题，可以前往jenkins检查"})

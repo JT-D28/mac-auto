@@ -1221,6 +1221,8 @@ def _call_extra(user,call_strs,taskid=None,kind='前置操作'):
                     f=Function.objects.get(flag=flag)
                 except:
                     return ('fail','库中没发现可用函数[%s]'%methodname)
+            elif len(al)==1:
+                f=al[0]
             else:
                 f=al[0]
                 viewcache(taskid,user.name,None,"<span style='color:#FF3333;'>函数库中发现多个匹配函数 这里使用第一个匹配项</span>")

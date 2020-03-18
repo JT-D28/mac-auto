@@ -4,7 +4,7 @@ dbtype = 'mysql'
 # ME2 url地址
 ME2_URL = '127.0.0.1:8001'
 
-# 环境数据库配置
+# 环境数据库配置  本地用 me2-local-test root 123456 10.60.44.59 3306
 # mysql
 DATABASES_NAME = 'me2-local-test'
 DATABASES_USER = 'root'

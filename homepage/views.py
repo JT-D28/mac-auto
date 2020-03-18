@@ -12,7 +12,7 @@ from manager.core import *
 # Create your views here.
 from manager.models import Product, Plan, ResultDetail, MailConfig, Order
 import json
-from .dealinfo import doDebugInfo, dealJacocoData, dealJacocoJobName
+from .dealinfo import doDebugInfo, dealJacocoJobName
 from .models import Jacoco_report, Jacoco_data
 
 

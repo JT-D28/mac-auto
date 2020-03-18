@@ -327,8 +327,6 @@ class DBCon(Model):
 	username=CharField(max_length=15)
 	password=CharField(max_length=15)
 	description=TextField()
-
-
 	author=ForeignKey(User, on_delete=CASCADE)
 	createtime=DateTimeField(auto_now_add=True)
 	updatetime=DateTimeField(auto_now=True)

@@ -22,7 +22,7 @@ class Interceptor(MiddlewareMixin):
 		字段重复校验
 
 		"""
-		print('==字段重复校验====')
+		# print('==字段重复校验====')
 		_meta={
 		'Function':'name',
 		'Interface':'name',
@@ -139,7 +139,7 @@ class Interceptor(MiddlewareMixin):
 		
 	def process_request(self, request):
 
-		print('==进入拦截器==')
+		# print('==进入拦截器==')
 
 		self._print_call_msg(request)
 

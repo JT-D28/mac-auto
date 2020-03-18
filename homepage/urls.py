@@ -20,7 +20,6 @@ from . import views
 from manager import views as mv
 
 urlpatterns = [
-	# path('login/',views.login),
 	path('', views.homepage),
 	path('queryproduct/', views.queryproduct),
 	path('queryplan/', views.queryplan),
@@ -41,5 +40,5 @@ urlpatterns = [
 	path('queryPlanState/',views.queryPlanState),
 	path('planforceStop/',views.planforceStop),
 	path('query_third_call/',views.query_third_call),
-	path('jenkinsJobRun/',views.jenkinsJobRun)
+	path('jenkinsJobRun/',views.jenkinsJobRun),
 ]

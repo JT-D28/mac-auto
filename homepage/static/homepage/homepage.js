@@ -128,6 +128,7 @@ var app = new Vue({
                     authname: '',
                     authpwd: '',
                     jobname: '',
+                    order: '',
                 },
                 reportNoticeSet: {
                     color: '',
@@ -162,7 +163,7 @@ var app = new Vue({
                 productPiclist.forEach(function (item, index) {
                     setTimeout(() => actproduct[index].resize(), 0)
                 });
-
+                that.jacocoReFlash('get')
             })
         },
         runplan() {
@@ -852,7 +853,7 @@ var app = new Vue({
             });
             oInput.remove()
         },
-        jacocoReFlash() {
+        jacocoReFlash(s) {
             var that = this;
             productid = that.form.product;
             jobname = that.form.service
@@ -860,7 +861,8 @@ var app = new Vue({
                 that.synchronize = '获取中';
                 _post_nl('/homepage/jacocoreport/', {
                     productid: productid,
-                    jobname: jobname
+                    jobname: jobname,
+                    s: s
                 }, function (data) {
                     data = JSON.parse(data);
                     if (data.code == 0) {
@@ -872,15 +874,19 @@ var app = new Vue({
                             actjacoco[index].resize()
                             actjacoco[index].setOption(that.jacocoRepConfig(rate, covered, missed, total));
                         });
-                        that.Coverage = data.data
-                    } else {
+                    } else if (data.code == 1) {
                         that.$notify({
                             title: '获取结果',
                             message: data.msg,
                             type: 'warning',
                             dangerouslyUseHTMLString: true,
-                            duration: 2000,
+                            duration: 1000,
                             position: 'bottom-left'
+                        });
+                    } else {
+                        coverlist.forEach(function (item, index) {
+                            actjacoco[index].resize()
+                            actjacoco[index].setOption(that.jacocoRepConfig(0, 0, 0, 0));
                         });
                     }
                     that.synchronize = '获取'
@@ -898,7 +904,7 @@ var app = new Vue({
             } else if (curdata[0] == 0) {
                 this.form.service = curdata.shift()
             }
-            this.jacocoReFlash()
+            this.jacocoReFlash('get')
         },
         getReportChart() {
             var that = this;
@@ -924,20 +930,47 @@ var app = new Vue({
         },
         jacocoRun() {
             var that = this;
-            that.jacocoRunstate = '请等待';
-            _post_nl('/homepage/jenkinsJobRun/', {
-                productid: that.form.product, jobnames: that.form.service, action: 'jacoco'
-            }, function (data) {
-                that.$notify({
-                    title: '运行结果',
-                    dangerouslyUseHTMLString: true,
-                    message: data.data,
-                    duration: 2000,
-                    type: 'success',
-                    position: 'bottom-left'
+            layer.confirm('选择任务执行方案', {
+                title: false,
+                btn: ['顺序执行', '批量执行'],
+                btnAlign: 'c'
+            }, function () {
+                that.jacocoRunstate = '请等待';
+                _post_nl('/homepage/jenkinsJobRun/', {
+                    productid: that.form.product, jobnames: that.form.service, action: 'jacocoOne'
+                }, function (data) {
+                    that.$notify({
+                        title: '运行结果',
+                        dangerouslyUseHTMLString: true,
+                        message: data.data,
+                        duration: 2000,
+                        type: 'success',
+                        position: 'bottom-left'
+                    });
+                    that.jacocoRunstate = '运行';
+                })
+                layer.msg('运行等待中', {
+                    time: 1000
                 });
-                that.jacocoRunstate = '运行';
-            })
+            }, function () {
+                that.jacocoRunstate = '请等待';
+                _post_nl('/homepage/jenkinsJobRun/', {
+                    productid: that.form.product, jobnames: that.form.service, action: 'jacocoMany'
+                }, function (data) {
+                    that.$notify({
+                        title: '运行结果',
+                        dangerouslyUseHTMLString: true,
+                        message: data.data,
+                        duration: 2000,
+                        type: 'success',
+                        position: 'bottom-left'
+                    });
+                    that.jacocoRunstate = '运行';
+                })
+                layer.msg('运行等待中', {
+                    time: 1000
+                });
+            });
         },
         getproductReport(rate, total) {
             var that = this;

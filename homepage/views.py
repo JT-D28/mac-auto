@@ -9,6 +9,11 @@ from ME2 import configs
 from manager.invoker import gettaskresult, MainSender
 from manager import cm
 from manager.core import *
+# Create your views here.
+from manager.models import Product, Plan, ResultDetail, MailConfig, Order
+import json
+from .dealinfo import doDebugInfo, dealJacocoData, dealJacocoJobName
+from .models import Jacoco_report, Jacoco_data
 
 
 @csrf_exempt
@@ -33,13 +38,6 @@ def process(request):
 		code = 1
 		msg = "出错了！"
 	return JsonResponse(simplejson(code=code, msg=is_done, data=log_text), safe=False)
-
-
-# Create your views here.
-from manager.models import Product, Plan, ResultDetail, MailConfig, Order
-import json
-from .dealinfo import doDebugInfo
-from .models import Jacoco_report
 
 
 @csrf_exempt
@@ -295,6 +293,7 @@ def badresult(request):
 @csrf_exempt
 def jacocoreport(request):
 	code, msg = 0, ''
+	jobs = request.POST.getlist('jobname[]')
 	jobnames = []
 	res = {}
 	coveragelist = ['branchCoverage', 'classCoverage', 'complexityScore', 'instructionCoverage', 'lineCoverage',
@@ -303,48 +302,66 @@ def jacocoreport(request):
 	for i in coveragelist:
 		res[i] = {'covered': 0, 'missed': 0, 'percentage': 0, 'percentageFloat': 0, 'total': 0}
 
-	jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
-	if jacocoset:
+	try:
+		jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
 		authname, authpwd, jenkinsurl = jacocoset.authname, jacocoset.authname, jacocoset.jenkinsurl
-		if '0' in request.POST.getlist('jobname[]'):
-			jobs = jacocoset.jobname.split(";")[:-1] if jacocoset.jobname.endswith(";") else jacocoset.jobname.split(
-				";")
-			for i in jobs:
-				jobnames.append(i.split(":")[1])
-		else:
-			jobnames = [x for x in request.POST.getlist('jobname[]')]
+		jobnames = dealJacocoJobName(jacocoset.jobname, jobs)
 		jobnum = len(jobnames)
-		if len(authname) & len(authpwd) != 0:
-			# 先判断下任务有没有在运行
-			server = jenkins.Jenkins(jacocoset.jenkinsurl, username=jacocoset.authname, password=jacocoset.authpwd)
-			for job in jobnames:
-				buildinfo = server.get_build_info(job, server.get_job_info(job)['lastBuild']['number'])
-				if buildinfo['building']:
-					msg += '%s:正在运行<br>' % (job)
-				elif buildinfo['result'] != 'SUCCESS':
-					msg += '%s:上次构建失败<br>' % (job)
-			if msg != '':
-				return JsonResponse(simplejson(code=1, msg=msg), safe=False)
-
-			s = requests.session()
-			s.auth = (authname, authpwd)
-			for index, jobname in enumerate(jobnames):
-				try:
-					url = jenkinsurl + "/job/" + jobname + "/lastBuild/jacoco/api/python?pretty=true"
-					jsond = json.loads(s.get(url).text)
-					del jsond['_class'];
-					del jsond['previousResult']
-					for i in coveragelist:
-						for k in items:
-							if k in ['percentage', 'percentageFloat']:
-								jsond[i][k] = round(res[i][k] + jsond[i][k] / jobnum, 2)
-							else:
-								jsond[i][k] = res[i][k] + jsond[i][k]
-					res = jsond.copy()
-				except:
-					print(traceback.format_exc())
-					code = 1
-					msg = '查询异常'
+		if request.POST.get('s') == 'get':
+			with connection.cursor() as cursor:
+				cursor.execute('''SELECT branchCoverage,classCoverage,complexityScore,instructionCoverage,
+				lineCoverage,methodCoverage from (SELECT max(jobnum) AS num,jobname FROM `homepage_jacoco_data` a 
+				GROUP BY jobname ) a , homepage_jacoco_data b where a.num = b.jobnum and a.jobname=b.jobname 
+				and a.jobname in %s
+				''', [jobnames])
+				desc = cursor.description
+				rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+			for jsond in rows:
+				for i in coveragelist:
+					jsond[i] = json.loads(jsond[i].replace("'", '"'))
+					for k in items:
+						if k in ['percentage', 'percentageFloat']:
+							jsond[i][k] = round(res[i][k] + jsond[i][k] / jobnum, 2)
+						else:
+							jsond[i][k] = res[i][k] + jsond[i][k]
+				res = jsond.copy()
+		elif request.POST.get('s') == 'update':
+			if len(authname) & len(authpwd) != 0:
+				# 先判断下任务有没有在运行
+				num = {}
+				server = jenkins.Jenkins(jacocoset.jenkinsurl, username=jacocoset.authname, password=jacocoset.authpwd)
+				for i, job in enumerate(jobnames):
+					num[job] = server.get_job_info(job)['lastBuild']['number']
+					buildinfo = server.get_build_info(job, num[job])
+					if buildinfo['building']:
+						msg += '%s:正在运行<br>' % (job)
+					elif buildinfo['result'] != 'SUCCESS':
+						msg += '%s:上次构建失败<br>' % (job)
+				if msg != '':
+					return JsonResponse(simplejson(code=1, msg=msg), safe=False)
+				s = requests.session()
+				s.auth = (authname, authpwd)
+				for index, jobname in enumerate(jobnames):
+					try:
+						url = jenkinsurl + "/job/" + jobname + "/lastBuild/jacoco/api/python?pretty=true"
+						jsond = json.loads(s.get(url).text)
+						del jsond['_class']
+						del jsond['previousResult']
+						threading.Thread(target=dealJacocoData, args=(jsond, jobname, num[jobname])).start()
+						for i in coveragelist:
+							for k in items:
+								if k in ['percentage', 'percentageFloat']:
+									jsond[i][k] = round(res[i][k] + jsond[i][k] / jobnum, 2)
+								else:
+									jsond[i][k] = res[i][k] + jsond[i][k]
+						res = jsond.copy()
+					except:
+						print(traceback.format_exc())
+						code = 1
+						msg = '查询异常'
+	except:
+		print(traceback.format_exc())
+		return JsonResponse(simplejson(code=2, msg='没有进行代码覆盖率配置', data=res), safe=False)
 	return JsonResponse(simplejson(code=code, msg=msg, data=res), safe=False)
 
 
@@ -535,17 +552,10 @@ def jenkinsJobRun(request):
 	action = request.POST.get('action')
 	jobnames = []
 	res = ''
-	if action == 'jacoco':
+	if action == 'jacocoMany':
 		jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
-		if '0' in jobs:
-			jobs = jacocoset.jobname.split(";")[:-1] if jacocoset.jobname.endswith(";") else jacocoset.jobname.split(
-				";")
-			for i in jobs:
-				jobnames.append(i.split(":")[1])
-		else:
-			jobnames = [x for x in request.POST.getlist('jobnames[]')]
+		jobnames = dealJacocoJobName(jacocoset.jobname, jobs)
 		server = jenkins.Jenkins(jacocoset.jenkinsurl, username=jacocoset.authname, password=jacocoset.authpwd)
-
 		buildnumber0 = {}
 		buildnumber1 = {}
 		for index, job in enumerate(jobnames):
@@ -560,3 +570,21 @@ def jenkinsJobRun(request):
 				if len(res.split("<br>")) - 1 == len(jobnames):
 					return JsonResponse({'code': 0, 'data': res})
 				time.sleep(3)
+	if action == 'jacocoOne':
+		jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
+		jobnames = dealJacocoJobName(jacocoset.jobname, jobs)
+		jobstr = ','.join(i for i in jobnames)
+		# server = jenkins.Jenkins(jacocoset.jenkinsurl, username=jacocoset.authname, password=jacocoset.authpwd)
+		#
+		# print(server.get_job_config())
+		# job = 'me2jacoco'
+		# if server.job_exists(job):
+		# 	server.delete_job(job)
+		# 	print('delete')
+		# with open('./JenkinsConfig.xml') as f:
+		# 	config = f.read() % jobstr
+		# server.create_job(job, config)
+		# server.build_job(job)
+	# 	time.sleep(5)
+	# 	# server.delete_job('me2-jacoco-getreport')
+	return JsonResponse({'code': 1,'data':'todo'})

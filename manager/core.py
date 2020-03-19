@@ -749,7 +749,7 @@ def getpagedata(data,page,limit):
 	old=copy.copy(data)
 	start=(int(page)-1)*int(limit)
 	end=int(page)*int(limit)
-	data=data[start:end+1]
+	data=data[start:end]
 
 	print("分页信息[分页数据大小=%s 返回%s-%s数据]"%(len(old),start+1,end))
 	#print(start,end)

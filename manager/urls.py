@@ -113,7 +113,7 @@ urlpatterns = [
     path('queryonebusiness/',views.queryonebusiness),
     path('queryonebusinessdata/',views.queryonebusinessdata),
     path('querybusinessdatalist/',views.querybusinessdatalist),
-
+	path('queryUser/',views.queryUser),
     #
     path('tag/',views.tag),
     path('querytaglist/',views.querytaglist),

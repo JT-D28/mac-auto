@@ -48,41 +48,46 @@
 
         #addtag:hover {
             cursor: pointer;
-
-
         }
 
+        .layui-input, .layui-textarea, .layui-select {
+            height: 34px;
+        }
+
+        .layui-input-block {
+            min-height: 34px;
+        }
+
+        .layui-unselect .layui-form-select {
+            width: 70%;
+            float: right;
+        }
     </style>
 </head>
 <body style="height: calc(100% - 40px);padding: 20px">
-<div class="layui-inline">
-    <button class="layui-btn btn" id='addbtn'>新增</button>
-    <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
+<div class="layui-form">
+    <div class="layui-inline">
+        <button class="layui-btn btn" id='addbtn'>新增</button>
+        <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
+    </div>
+    <div class="layui-inline" style="float: right">
+        <div class="layui-input-inline" style="margin-bottom: 0px;width: 120px">
+            <select name="user" lay-filter="user" lay-verify="required" lay-search>
+                <option value="0">我的变量</option>
+                <option value="-1">全部变量</option>
+            </select>
+        </div>
+        <div class="layui-input-inline">
+            <input id='search-value' type="text" name="" placeholder="描述|键|获取方式|值"
+                   class="layui-input btn">
+        </div>
+        <button class="layui-btn btn" id='querybtn'>查询</button>
+    </div>
+
 </div>
-<div class="layui-inline" style="float: right">
-    <div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="描述|键|获取方式|值"
-                                           class="layui-input btn"></div>
-    <button class="layui-btn btn" id='querybtn'>查询</button>
 </div>
 
-<table id='table-var' class="layui-table"
-       lay-data="{height: 'full-100', cellMinWidth: 80, page: true, limit:10, url:'/manager/queryvar/'}"
-       lay-filter='target'>
-    <thead>
-    <tr>
-        <th lay-data="{type:'checkbox',width:'5%'}"></th>
-        <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
-        <th lay-data="{field: 'key',width:'15%', sort: true}">键名</th>
-        <th lay-data="{field: 'description',width:'10%', sort: true}">描述</th>
-        <th lay-data="{field: 'value',width:'25%'}">值</th>
-        <th lay-data="{field: 'gain', width:'25%'}">获取方式</th>
-        <th lay-data="{field: 'author',width:'8%', sort: true}">创建者</th>
-        <!--       <th lay-data="{field: 'createtime', width:160,sort:true}">创建时间</th>
-			  <th lay-data="{field: 'updatetime', width:160}">更改时间</th> -->
-        <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:'12%'}">操作</th>
-
-    </tr>
-    </thead>
+<table id='table-var' class="layui-table" lay-filter='target' style="display:none">
 </table>
 
 <form id='addhtml' hidden=true class="layui-form" style="padding: 30px 100px 0 30px ;" lay-filter='addhtml'>
@@ -156,6 +161,21 @@
         var form = layui.form;
 //
 
+        //获取用户
+        _post_nl('/manager/queryUser/', {},
+            function (data) {
+                var userData = data.data
+                for (var i = 0; i < userData.length; i++) {
+                    $("[name='user']").append("<option value='" + userData[i]['id'] + "'>" + userData[i]['name'] + "</option>")
+                }
+                layui.form.render('select')
+                $("#querybtn").click()
+            }
+        );
+        form.on('select(user)', function () {
+            console.log($("[name='user']").val())
+            $("#querybtn").click()
+        });
 
 //TAG功能
         $("#addtag").click(function () {
@@ -173,25 +193,30 @@
 
         });
 
-
 //查询功能
         $("#querybtn").click(function (e) {
-
-            console.log('query var');
-
-            //layer.open({'title':'','type':2,'content':'http://www.baidu.com'});
-            table.reload('table-var', {
-                page: {
-                    curr: 1
-                },
-                where: {
-                    searchvalue: $("#search-value").val()
-
+            table.render({
+                elem: '#table-var'
+                , method: 'POST'
+                , page: true
+                , limit: 10
+                , height: 'full-100'
+                , url: '/manager/queryvar/' //数据接口
+                , where: {searchvalue: $("#search-value").val(), userid: $("[name='user']").val()}
+                , cols: [[
+                    {type: 'checkbox', fixed: 'left'}
+                    , {field: 'id', title: 'ID', sort: true, fixed: 'left',hide: true}
+                    , {field: 'key', width: '15%', title: '键名'}
+                    , {field: 'description', width: '22%', title: '描述', sort: true}
+                    , {field: 'value', width: '22%', title: '值'}
+                    , {field: 'gain', width: '22%', title: '获取方式'}
+                    , {field: 'author', width: '10%', title: '创建者', sort: true}
+                    , {align: 'center',toolbar: '#toolbar',  fixed: 'right'}
+                ]]
+                , text: {
+                    none: '没有找到相关变量！'
                 }
-
             });
-
-
         });
 
 //删除功能

@@ -2857,5 +2857,6 @@ def querytesttable(request):
 
 @csrf_exempt
 def queryUser(request):
-	user = list(User.objects.values('id', 'name'))
+	name=request.session.get('username')
+	user = list(User.objects.values('id', 'name').exclude(name = name))
 	return JsonResponse({'data': user})

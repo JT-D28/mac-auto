@@ -42,7 +42,8 @@ class Interceptor(MiddlewareMixin):
 		'Step':'步骤',
 		'Case':'用例',
 		'Plan':'计划',
-		'RemoteLog':'远程日志'
+		'RemoteLog':'远程日志',
+		'Tag':'标签'
 		}
 		_m2={
 		'name':'名称',
@@ -72,7 +73,7 @@ class Interceptor(MiddlewareMixin):
 
 
 				qssize=len(eval(callstr))
-				print('callstr=>%s size=%s',(callstr,qssize))
+				print('callstr=>%s size=%s'%(callstr,qssize))
 				print('url[%s]字段[%s]重复验证 已存在[%s]条'%(request.path,_meta[mkey],qssize))
 				if qssize==0:
 					return ('success','')

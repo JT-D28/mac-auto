@@ -126,8 +126,6 @@
             <label class="layui-form-label">标签</label>
             <div class="layui-input-block">
                 <select name="tag_id" lay-search>
-
-
                 </select>
             </div>
         </div>
@@ -179,7 +177,6 @@
 
 //TAG功能
         $("#addtag").click(function () {
-
             layer.prompt({
                 // formType: 1,
                 value: '',
@@ -188,6 +185,8 @@
                 // area: ['800px', '350px'] //自定义文本域宽高
             }, function (value, index, elem) {
                 alert(value); //得到value
+                layer.close(index);
+            },function (value, index, elem) {
                 layer.close(index);
             });
 
@@ -273,39 +272,27 @@
         });
 
 //新增功能
-
         function tagrender() {
-
             _post('/manager/querytaglist/', {}, function (e) {
-                //
                 $("#tag select").empty()
-
                 if (e.code == 0) {
                     for (var i = 0; i < e.data.length; i++) {
                         $("#tag select").append('<option value=' + e.data[i]['id'] + '>' + e.data[i]['name'] + '</option>')
                     }
-
                 }
-
                 layui.form.render('select')
-
             })
-
         };
 
         $("#addbtn").click(function () {
-
             //标签列表加载
             tagrender()
-
-
             //添加标签
             $("#addtag").click(function () {
                 var i1 = layer.prompt({
                     title: '添加标签',
                     maxlength: 10,
                     value: '',
-
                 }, function (value, index1, elem) {
                     _post('/manager/addtag/', {'name': value}, function (e) {
 

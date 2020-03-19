@@ -48,20 +48,30 @@ def dbexecute2(sql,taskid=None,callername=None):
                     # print(sqls1[i].split(";")[0])
                     sqls1[i - 1] += "@" + sqls1[i].split(";")[0]
                     sqls1[i] = sqls1[i].split(";", 1)[-1]
-            sqls1.pop()
+            if '@' in sqls1:
+                sqls1.pop()
             for sql in sqls1:
-                sqls = sql.split("@")[0].split(";")
-                conname=sql.split('@')[1]
-                for sql in sqls:
-                    res,msg=dbexecute("%s@%s"%(sql,conname),taskid=taskid,callername=callername)
-                    print('执行结果=>',(res,msg))
-                    if res!='success':
-                        return res,msg
-                    d.append(str(msg))
+                if '@' in sql:
+                    sqls = sql.split("@")[0].split(";")
+                    conname=sql.split('@')[1]
+                    for sql in sqls:
+                        res,msg=dbexecute("%s@%s"%(sql,conname),taskid=taskid,callername=callername)
+                        print('执行结果=>',(res,msg))
+                        if res!='success':
+                            return res,msg
+                        d.append(str(msg))
+                elif '@' not in sql:
+                    sqls = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")
+                    dbnamecache = get_top_common_config(taskid)
+                    for sql in sqls:
+                        res, msg = dbexecute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
+                        print('执行结果=>', (res, msg))
+                        if res != 'success':
+                            return res, msg
+                        d.append(str(msg))
             return 'success','+'.join(d)
         elif re.search('@', sql) is None:
             sqls2=sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")
-            print("sqltest",sqls2)
             dbnamecache = get_top_common_config(taskid)
             for sql in sqls2:
                 res,msg=dbexecute("%s@%s"%(sql,dbnamecache),taskid=taskid,callername=callername)
@@ -70,8 +80,6 @@ def dbexecute2(sql,taskid=None,callername=None):
                     return res,msg
                 d.append(str(msg))
             return 'success','+'.join(d)
-
-
 
     except:
         print(traceback.format_exc())

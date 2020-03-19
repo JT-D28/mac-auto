@@ -1111,9 +1111,7 @@ var app = new Vue({
     watch: {
         'form.forceStopPlans': function (id) {
             var that = this;
-            _post_nl('/homepage/queryPlanState/', {id: id}, function (data) {
-                that.runningState = data.data === 1 ? '运行' : '未运行'
-            })
+            that.planStatereFlash()
         },
         'form.third_plan': function (id) {
             var that = this;

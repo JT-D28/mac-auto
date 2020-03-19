@@ -82,9 +82,9 @@ def set_top_common_config(taskid, value, kind='db', src=None):
 	print('===[%s]设置缓存通用配置%s->%s=>%s' % (src, taskid, kind, value))
 	cache = _task_context_manager.get(taskid, {})
 	dbcache = cache.get(kind, None)
-	if dbcache is None:
-		cache[kind] = value
-		_task_context_manager[taskid] = cache
+	# if dbcache is None:  加上以后优先级变成 计划>用例。。。
+	cache[kind] = value
+	_task_context_manager[taskid] = cache
 
 	print(_task_context_manager.get(taskid))
 

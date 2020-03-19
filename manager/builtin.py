@@ -48,7 +48,7 @@ def dbexecute2(sql,taskid=None,callername=None):
                     # print(sqls1[i].split(";")[0])
                     sqls1[i - 1] += "@" + sqls1[i].split(";")[0]
                     sqls1[i] = sqls1[i].split(";", 1)[-1]
-            if '@' in sqls1:
+            if '@' in sqls1[-1]:
                 sqls1.pop()
             for sql in sqls1:
                 if '@' in sql:

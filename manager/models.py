@@ -228,7 +228,7 @@ class ResultDetail(Model):
 class Variable(Model):
 	author=ForeignKey(User, on_delete=CASCADE)
 	description=CharField(max_length=128)
-	tag_id=CharField(max_length=24,null=True,blank=True)
+	tag=TextField(null=True,blank=True)
 	key=CharField(max_length=255,unique=True)
 	value=TextField(blank=True,null=True)
 	gain=TextField(blank=True,null=True)

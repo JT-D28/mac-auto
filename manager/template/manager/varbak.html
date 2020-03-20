@@ -84,6 +84,14 @@
         .el-input {
             width: 70%;
         }
+
+        .el-select > .el-input {
+            width: 100%
+        }
+        .el-input__inner ,.el-input__icon{
+            height: 34px;
+            line-height: 34px;
+        }
     </style>
 </head>
 <body style="height: calc(100% - 40px);padding: 20px">
@@ -93,23 +101,27 @@
             <button class="layui-btn btn" id='addbtn'>新增</button>
             <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
         </div>
-        <div class="layui-inline" style="float: right">
-            <div class="layui-input-inline" style="margin-bottom: 0px;width: 120px">
-                <select name="user" lay-filter="user" lay-verify="required" lay-search>
+        <div class="layui-inline" style="float: right;width: 80%;">
+            <button class="layui-btn btn" id='querybtn' style="float: right;">查询</button>
+            <div class="layui-input-inline" style="float: right;">
+                <input id='search-value' type="text" name="" placeholder="描述|键|获取方式|值"
+                       class="layui-input btn">
+            </div>
+            <el-select @change="tagChange" clearable collapse-tags filterable
+                       v-model="form.tagvalue" multiple style="width: 30%;float: right;">
+                <el-option
+                        v-for="i in tagvalues"
+                        :key="i.id"
+                        :label="i.name"
+                        :value="i.id">
+                </el-option>
+            </el-select>
+            <div class="layui-input-inline" style="margin-bottom: 0px;width: 14%;float: right;">
+                <select name="user" lay-filter="user" lay-verify="required" lay-search style="float: right;">
                     <option value="0">我的变量</option>
                     <option value="-1">全部变量</option>
                 </select>
             </div>
-            <div class="layui-input-inline" style="margin-bottom: 0px;width: 120px">
-                <select name="vartag" lay-filter="vartag" lay-verify="required" lay-search>
-                    <option value="0">全部标签</option>
-                </select>
-            </div>
-            <div class="layui-input-inline">
-                <input id='search-value' type="text" name="" placeholder="描述|键|获取方式|值"
-                       class="layui-input btn">
-            </div>
-            <button class="layui-btn btn" id='querybtn'>查询</button>
         </div>
     </div>
     <table id='table-var' class="layui-table" lay-filter='target' style="display:none">
@@ -146,13 +158,14 @@
 
 
         <div class="layui-form-item" id='tag'>
-            <div class="layui-inline" style="width:25%;">
+            <div class="layui-inline" style="width: 100%">
                 <label class="layui-form-label">标签</label>
                 <div class="layui-input-block">
                     <button type="button" @click="addtagbtn" class="layui-btn layui-btn-radius layui-btn-primary">添加标签
                     </button>
+                    <blockquote class="layui-inline" v-html="wantTag">
+                    </blockquote>
                 </div>
-                <label class="layui-form-label" v-html="wantTag"></label>
             </div>
         </div>
 
@@ -189,14 +202,91 @@
 
 
 <script type="text/javascript">
-    fa.init()
+
+
+    var app = new Vue({
+        el: '#var',
+        data() {
+            return {
+                tagform: {
+                    tags: [{
+                        value: ''
+                    }],
+                },
+                tagvalues: [],
+                form: {
+                    tagvalue: '',
+                },
+                wantTag: '',
+                tagFormVisible: false,
+            }
+        },
+        methods: {
+            tagChange(curdata) {
+                console.log(curdata)
+                if (curdata.indexOf(0) != -1) {
+                    if (curdata[curdata.length - 1] == 0) {
+                        this.form.tagvalue = [0]
+                    } else {
+                        curdata.splice(curdata.indexOf(0), 1)
+                        this.form.tagvalue = curdata
+                    }
+                } else if (curdata[0] == 0) {
+                    this.form.tagvalue = curdata.shift()
+                }
+                console.log(curdata)
+                $("#querybtn").click()
+            },
+            addtagbtn() {
+                var that = this;
+                that.tagFormVisible = true
+            },
+            tagSubmit(formName) {
+                var that = this;
+                str = '';
+                that.tagform.tags.forEach(function (item, index) {
+                    if (item.value != '') {
+                        str += '<span class="layui-badge">' + item.value + '</span>&nbsp&nbsp&nbsp&nbsp'
+                    }
+                });
+                console.log(str);
+                that.wantTag = str
+                that.tagFormVisible = false;
+            },
+            removetag(item) {
+                var index = this.tagform.tags.indexOf(item)
+                if (index !== -1) {
+                    this.tagform.tags.splice(index, 1)
+                }
+            },
+            addtag() {
+                this.tagform.tags.push({
+                    value: '',
+                    key: Date.now()
+                });
+            },
+            querytaglist() {
+                var that = this;
+                _post('/manager/querytaglist/', {}, function (e) {
+                    if (e.code == 0) {
+                        that.tagvalues = e.data;
+                        console.log(that.tags)
+                        that.form.tagvalue = that.tagvalues[0] != null ? [that.tagvalues[0].id] : []
+                    }
+                });
+            }
+        },
+        created: function () {
+            this.querytaglist()
+        }
+    });
+
     layui.use(['table', 'layer'], function () {
         var table = layui.table;
-        var $ = layui.jquery
+        var $ = layui.jquery;
         var layer = layui.layer;
         var form = layui.form;
-//
-
+        fa.init();
         //获取用户
         _post_nl('/manager/queryUser/', {},
             function (data) {
@@ -204,38 +294,42 @@
                 for (var i = 0; i < userData.length; i++) {
                     $("[name='user']").append("<option value='" + userData[i]['id'] + "'>" + userData[i]['name'] + "</option>")
                 }
-                layui.form.render('select')
+                layui.form.render('select');
                 $("#querybtn").click()
             }
         );
         form.on('select(user)', function () {
+            layui.form.render('select');
             $("#querybtn").click()
         });
-        form.on('select(vartag)', function () {
-            $("#querybtn").click()
-        });
+
 
 //查询功能
         $("#querybtn").click(function (e) {
             table.render({
-                elem: '#table-var'
-                , method: 'POST'
-                , page: true
-                , limit: 10
-                , height: 'full-100'
-                , url: '/manager/queryvar/' //数据接口
-                , where: {searchvalue: $("#search-value").val(), userid: $("[name='user']").val()}
-                , cols: [[
+                elem: '#table-var',
+                method: 'POST',
+                page: true,
+                limit: 10,
+                height: 'full-100',
+                url: '/manager/queryvar/', //数据接口,
+                where: {
+                    searchvalue: $("#search-value").val(),
+                    userid: $("[name='user']").val(),
+                    tags: app.form.tagvalue
+                },
+                cols: [[
                     {type: 'checkbox', fixed: 'left'}
                     , {field: 'id', title: 'ID', sort: true, fixed: 'left', hide: true}
                     , {field: 'key', width: '15%', title: '键名'}
-                    , {field: 'description', width: '22%', title: '描述', sort: true}
-                    , {field: 'value', width: '22%', title: '值'}
-                    , {field: 'gain', width: '22%', title: '获取方式'}
-                    , {field: 'author', width: '10%', title: '创建者', sort: true}
+                    , {field: 'description', width: '20%', title: '描述', sort: true}
+                    , {field: 'value', width: '15%', title: '值'}
+                    , {field: 'gain', width: '15%', title: '获取方式'}
+                    , {field: 'tag', width: '15%', title: '标签'}
+                    , {field: 'author', width: '8%', title: '创建者', sort: true}
                     , {align: 'center', toolbar: '#toolbar', fixed: 'right'}
-                ]]
-                , text: {
+                ]],
+                text: {
                     none: '没有找到相关变量！'
                 }
             });
@@ -281,22 +375,10 @@
         });
 
 //新增功能
-        function tagrender() {
-            _post('/manager/querytaglist/', {}, function (e) {
-                $("#tag select").empty()
-                if (e.code == 0) {
-                    for (var i = 0; i < e.data.length; i++) {
-                        $("#tag select").append('<option value=' + e.data[i]['id'] + '>' + e.data[i]['name'] + '</option>')
-                    }
-                }
-                layui.form.render('select')
-            })
-        };
-
         $("#addbtn").click(function () {
             //标签列表加载
             // tagrender()
-            //添加标签
+
             has_select = 0
             //初始化联想信息
             success = function (d) {
@@ -307,63 +389,62 @@
                 }
                 $("#dblist li").each(function () {
                     $(this).click(function () {
-
                         $('#gain').val($('#gain').val() + $(this).text())
                         $("#dblist").hide()
                     });
                 });
-                //
                 add_var_prop_smart_input('gain');
                 $(document).keydown(function (e) {
-                    var flag
-                    {#alert(e.keyCode)#}
-                    var len = $('#gain').val().length
-                    var last_word = $('#gain').val().charAt(len - 1)
-                    if (e.keyCode == 13 && last_word == '@') {
-                        console.log('enter')
-                        cur = $("#dblist .active").text();
-                        $('#gain').val($('#gain').val() + cur);
-                        var e = jQuery.Event("keydown"); //模拟一个键盘事件
-                        e.keyCode = 8;
-                        e.which = 8;  //增加设置which
-                        $('#gain').trigger(e); //模拟按键
-                        has_select = 1;
-                        return;
-                    } else if (e.keyCode == 38) {
-                        flag = -1
-                        console.log('up')
-                    } else if (e.keyCode == 40) {
-                        flag = 1
-                        console.log('down')
-                    } else
-                        return
+                        var flag
+                        var len = $('#gain').val().length
+                        var last_word = $('#gain').val().charAt(len - 1)
 
-                    optionsize = $("#dblist li").length
-                    // console.log(optionsize)
+                        if (e.keyCode == 13 && last_word == '@') {
+                            console.log('enter')
+                            cur = $("#dblist .active").text();
+                            $('#gain').val($('#gain').val() + cur);
+                            var e = jQuery.Event("keydown"); //模拟一个键盘事件
+                            e.keyCode = 8;
+                            e.which = 8;  //增加设置which
+                            $('#gain').trigger(e); //模拟按键
+                            has_select = 1;
+                            return;
+                        } else if (e.keyCode == 38) {
+                            flag = -1
+                            console.log('up')
+                        } else if (e.keyCode == 40) {
+                            flag = 1
+                            console.log('down')
+                        } else
+                            return
 
-                    if ($("#dblist").css('display') == 'block') {
-                        cur_active = $('#dblist .active')
+                        optionsize = $("#dblist li").length
+                        // console.log(optionsize)
 
-                        if (cur_active.length == 0) {
-                            // console.log('h1')
-                            $("#dblist li:eq(0)").addClass('active')
-                            // layui.form.render('ul','addhtml')
+                        if ($("#dblist").css('display') == 'block') {
+                            cur_active = $('#dblist .active')
 
-                        } else {
-                            // console.log('h2')
-                            index = parseInt(cur_active.attr('index'))
-                            index = index + flag
-                            if (index > optionsize - 1)
-                                index = 0
+                            if (cur_active.length == 0) {
+                                // console.log('h1')
+                                $("#dblist li:eq(0)").addClass('active')
+                                // layui.form.render('ul','addhtml')
 
-                            if (index < 0)
-                                inde = optionsize - 1
+                            } else {
+                                // console.log('h2')
+                                index = parseInt(cur_active.attr('index'))
+                                index = index + flag
+                                if (index > optionsize - 1)
+                                    index = 0
 
-                            cur_active.removeClass('active')
-                            $("#dblist li:eq(" + index + ")").addClass('active')
+                                if (index < 0)
+                                    inde = optionsize - 1
+
+                                cur_active.removeClass('active')
+                                $("#dblist li:eq(" + index + ")").addClass('active')
+                            }
                         }
                     }
-                });
+                );
             }
             _post('/manager/querydblist/', {}, success);
 
@@ -378,12 +459,14 @@
                     yes: function (index, layero) {
                         tag = ''
                         app.tagform.tags.forEach(function (item, index) {
-                            tag += item.value + ';'
+                            if (item.value != '') {
+                                tag += item.value + ';'
+                            }
                         });
                         success = function (e) {
-                            layer.close(index)
                             e = JSON.parse(e)
                             if (e.code == 0) {
+                                layer.close(index)
                                 $('#addhtml')[0].reset()
                                 layui.form.render()
                                 layer.alert(e.msg, {icon: 1})
@@ -396,6 +479,7 @@
                                         userid: $("[name='user']").val()
                                     }
                                 });
+                                app.querytaglist()
                             } else
                                 layer.alert(e.msg, {icon: 2})
                         };
@@ -440,38 +524,44 @@
                     gain = data.data['gain']
                     value = data.data['value']
                     is_cache = data.data['is_cache']
-                    tagid = data.data['tag_id']
-
+                    tag = data.data['tag']
                     $("[name='description']").val(description)
                     $("[name='key']").val(key)
                     $("[name='value']").val(value)
                     $("[name='gain']").val(gain)
                     $("[name='is_cache']").val(is_cache)
-
-                    _post_nl('/manager/querytag/', {'tagid': tagid}, function (data) {
-                        var str = ''
-                        data.data.forEach(function (item, index) {
-                            str += item + ';'
+                    //处理标签
+                    app.tagform.tags.length = 0
+                    tags = tag.split(';')
+                    tags.pop()
+                    str = ''
+                    tags.forEach(function (item, index) {
+                        str += '<span class="layui-badge">' + item + '</span>&nbsp&nbsp&nbsp&nbsp'
+                        app.tagform.tags.push({
+                            value: item,
+                            key: Date.now()
                         });
-                        app.wantTag = str
                     });
-
+                    app.wantTag = str;
                     //打开表单
                     var o = layer.open({
                         type: 1,
                         title: '变量管理 / 编辑',
                         content: $('#addhtml'),
                         btn: ['提交', '取消'],
+                        zIndex: 1000,
                         yes: function (index, layero) {
-
-                            layer.close(index)
+                            tagedit = ''
+                            app.tagform.tags.forEach(function (item, index) {
+                                tagedit += item.value + ';'
+                            });
                             success = function (e) {
                                 // alert(e)
                                 $('#addhtml')[0].reset()
                                 layui.form.render()
-
                                 e = JSON.parse(e)
                                 if (e.code == 0) {
+                                    layer.close(index)
                                     layer.alert(e.msg, {icon: 1, time: 1500})
                                     table.reload('table-var', {
                                         page: {
@@ -493,7 +583,7 @@
                                 'gain': $("[name='gain']").val(),
                                 'value': $("[name='value']").val(),
                                 'is_cache': $("[name='is_cache']").val(),
-                                'tag': $("[name='tag']").val()
+                                'tag': tagedit
                             }, success)
 
                         },

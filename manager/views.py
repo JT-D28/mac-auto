@@ -333,7 +333,7 @@ def querydblistdefault(request):
 
 
 def var(request):
-	return render(request, 'manager/var.html')
+	return render(request, 'manager/varbak.html')
 
 
 @csrf_exempt
@@ -355,23 +355,57 @@ def queryonevar(request):
 @csrf_exempt
 def queryvar(request):
 	searchvalue = request.POST.get('searchvalue')
+	searchvalue='%'+searchvalue+'%'
 	userid = request.POST.get('userid')
+	tags = request.POST.getlist('tags[]')
+	strtag = '%'
+	for i in tags:
+		if i == '0':
+			strtag='%%'
+		elif i != '0':
+			strtag += i.split('_')[1]+'%'
+	print(strtag)
 	userid = userid if userid != '0' else str(User.objects.values('id').get(name=request.session.get('username'))['id'])
 	print("searchvalue=>", searchvalue)
-	if (len(searchvalue) | len(userid)) and userid != '-1':
-		print("变量查询条件=>")
-		res = list(Variable.objects.filter(Q(author_id=userid) & (
-				Q(description__icontains=searchvalue) | Q(key__icontains=searchvalue) | Q(
-			value__icontains=searchvalue) | Q(
-			gain__icontains=searchvalue))))
-	else:
-		res = list(Variable.objects.all())
-	limit = request.POST.get('limit')
-	page = request.POST.get('page')
-	# print("res old size=>",len(res))
-	res, total = getpagedata(res, page, limit)
-	jsonstr = json.dumps(res, cls=VarEncoder, total=total)
+	
+	with connection.cursor() as cursor:
+		sql = '''SELECT v.id,description,`key`,gain,value,DATE_FORMAT(v.createtime,'%%m-%%d %%H:%%i') AS createtime,
+					DATE_FORMAT(v.updatetime,'%%m-%%d %%H:%%i') AS updatetime,is_cache,tag,u.name as author FROM `manager_variable` v,login_user u
+					where (description like %s or `key` like %s or gain like %s) and (tag like %s) and v.author_id=u.id '''
+		if userid != '-1':
+			sql += 'and author_id=%s'
+			cursor.execute(sql, [searchvalue,searchvalue,searchvalue,strtag,userid])
+		else:
+			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag])
+		desc = cursor.description
+		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+		limit = request.POST.get('limit')
+		page = request.POST.get('page')
+		res, total = getpagedata(rows, page, limit)
+		jsonstr = json.dumps(res, cls=VarEncoder, total=total)
+		
 	return JsonResponse(jsonstr, safe=False)
+	# searchvalue = request.POST.get('searchvalue')
+	# userid = request.POST.get('userid')
+	# tags= request.POST.get('tags')
+	# tags = tags if tags!='0' else ''
+	# userid = userid if userid != '0' else str(User.objects.values('id').get(name=request.session.get('username'))['id'])
+	# print("searchvalue=>", searchvalue)
+	# if (len(searchvalue) | len(userid)) and userid != '-1':
+	# 	print("变量查询条件=>")
+	# 	res = list(Variable.objects.filter(Q(author_id=userid) & (
+	# 			Q(description__icontains=searchvalue) | Q(key__icontains=searchvalue) | Q(
+	# 		value__icontains=searchvalue) | Q(
+	# 		gain__icontains=searchvalue)) & Q(tag__contains=tags)))
+	# else:
+	# 	res = list(Variable.objects.all())
+	# print(res)
+	# limit = request.POST.get('limit')
+	# page = request.POST.get('page')
+	# # print("res old size=>",len(res))
+	# res, total = getpagedata(res, page, limit)
+	# jsonstr = json.dumps(res, cls=VarEncoder, total=total)
+	# return JsonResponse(jsonstr, safe=False)
 
 
 @csrf_exempt
@@ -422,7 +456,7 @@ def editvar(request):
 		else:
 			var.is_cache = False
 		
-		# var.tag=request.POST.get('tag')
+		var.tag = request.POST.get('tag')
 		
 		var.save()
 		msg = '编辑成功'
@@ -457,14 +491,14 @@ def addvar(request):
 		if c1 is not True:
 			return JsonResponse(simplejson(code=2, msg=c1), safe=False)
 		var.author = User.objects.get(name=request.session.get('username', None))
-		# var.tag=request.POST.get('tag')
+		
 		if request.POST.get('is_cache') == 'ON':
 			var.is_cache = True
 		else:
 			var.is_cache = False
-		
+		var.tag = request.POST.get('tag') if request.POST.get('tag')!=';' else ''
 		var.save()
-		msg = '添加成功'
+		msg = '新增成功'
 	except:
 		print(traceback.format_exc())
 		code = 1
@@ -2386,35 +2420,44 @@ def edittag(request):
 def querytaglist(request):
 	namelist = []
 	try:
-		for _ in list(Tag.objects.all()):
-			namelist.append({
-				'id': _.id,
-				'name': _.name,
-			})
-	
+		# for _ in list(Tag.objects.all()):
+		# 	namelist.append({
+		# 		'id': _.id,
+		# 		'name': _.name,
+		# 	})
+		with connection.cursor() as cursor:
+			sql = '''
+				SELECT tag from manager_variable where tag !=''
+			'''
+			cursor.execute(sql)
+			rows = cursor.fetchall()
+		for i in rows:
+			m=list(i)[0].split(';')[:-1]
+			for x in m :
+				if x not in namelist:
+					namelist.append(x)
+		print('tag列表：',namelist)
+		data = [{'id':0,'name':'全部标签'}]
+		for m,n in enumerate(namelist):
+			data.append({'id':str(m+1)+'_'+n,'name':n})
 	except:
+		print(traceback.format_exc())
 		print('==获取标签列表异常')
 	finally:
-		return JsonResponse(pkg(code=0, data=namelist))
+		return JsonResponse(pkg(code=0, data=data))
 
 
 @csrf_exempt
 def querytag(request):
-	searchvalue = request.GET.get('searchvalue')
-	
+	searchvalue = request.POST.get('tagid')
+	print(searchvalue)
 	if searchvalue:
-		print("变量查询条件=>", searchvalue)
-		res = list(Tag.objects.filter(Q(name__icontains=searchvalue)))
-	
+		code, data = 0, Tag.objects.values('name').get(id=searchvalue)
+		print(data)
+		data = data['name'].split(';')[:-1]
 	else:
-		res = list(Tag.objects.all())
-	
-	limit = request.GET.get('limit')
-	page = request.GET.get('page')
-	res, total = getpagedata(res, page, limit)
-	
-	jsonstr = json.dumps(res, cls=TagEncoder, total=total)
-	return JsonResponse(jsonstr, safe=False)
+		code, data = 0, ''
+	return JsonResponse({'code': code, 'data': data})
 
 
 '''
@@ -2459,7 +2502,7 @@ def querytemplate(request):
 def addsteprelation(request):
 	cases = list(Case.objects.all())
 	for case in cases:
-
+		
 		businesses = list(case.businessdatainfo.all())
 		for business in businesses:
 			status, step = gettestdatastep(business.id)
@@ -2468,7 +2511,7 @@ def addsteprelation(request):
 			else:
 				print('case_%s=>step_%s' % (case.id, step.id))
 				case.steps.add(step)
-
+	
 	return JsonResponse(simplejson(code=0, msg='关联case&step ok.'), safe=False)
 
 
@@ -2857,6 +2900,6 @@ def querytesttable(request):
 
 @csrf_exempt
 def queryUser(request):
-	name=request.session.get('username')
-	user = list(User.objects.values('id', 'name').exclude(name = name))
+	name = request.session.get('username')
+	user = list(User.objects.values('id', 'name').exclude(name=name))
 	return JsonResponse({'data': user})

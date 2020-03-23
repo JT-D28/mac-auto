@@ -144,7 +144,7 @@
             <label class="layui-form-label">获取方式</label>
             <div class="layui-input-block">
             <textarea id="gain" type="text" name="gain"
-                      placeholder="方式1=>sql查询如select urid from manager_user&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;方式2=>函数调用如 getDate()"
+                      placeholder="方式1=>sql查询如select urid from manager_user@dbname;         方式2=>函数调用如 getDate()"
                       autocomplete="off" class="layui-textarea" style=""></textarea>
                 <ul id='dblist'></ul>
             </div>
@@ -250,7 +250,6 @@
                         str += '<span class="layui-badge">' + item.value + '</span>&nbsp&nbsp&nbsp&nbsp'
                     }
                 });
-                console.log(str);
                 that.wantTag = str
                 that.tagFormVisible = false;
             },
@@ -266,18 +265,20 @@
                     key: Date.now()
                 });
             },
-            querytaglist() {
+            querytaglist(up) {
                 var that = this;
-                _post('/manager/querytaglist/', {}, function (e) {
+                _post('/manager/querytaglist/', {userid: $("[name='user']").val()}, function (e) {
                     if (e.code == 0) {
                         that.tagvalues = e.data;
-                        that.form.tagvalue = that.tagvalues[0] != null ? [that.tagvalues[0].id] : []
+                        if(up==1){
+                            that.form.tagvalue = that.tagvalues[0] != null ? [that.tagvalues[0].id] : []
+                        }
                     }
                 });
             }
         },
         created: function () {
-            this.querytaglist()
+            this.querytaglist(1)
         }
     });
 
@@ -299,8 +300,9 @@
             }
         );
         form.on('select(user)', function () {
+            app.querytaglist(1)
             layui.form.render('select');
-            $("#querybtn").click()
+            setTimeout(()=>$("#querybtn").click(),50)
         });
 
 
@@ -350,16 +352,19 @@
                     success = function (e) {
                         e = JSON.parse(e)
                         if (e.code == 0) {
-                            table.reload('table-var', {
-                                page: {
-                                    curr: 1
-                                },
-                                where: {
-                                    searchvalue: $("#search-value").val(),
-                                    userid: $("[name='user']").val()
-                                }
-
-                            });
+                            app.querytaglist(0);
+                            setTimeout(function () {
+                                table.reload('table-var', {
+                                    page: {
+                                        curr: 1
+                                    },
+                                    where: {
+                                        searchvalue: $("#search-value").val(),
+                                        userid: $("[name='user']").val(),
+                                        tags: app.form.tagvalue
+                                    }
+                                })
+                            }, 50);
                             layer.alert(e.msg, {icon: 1, time: 1500})
                         } else
                             layer.alert(e.msg, {icon: 2})
@@ -376,9 +381,6 @@
 
 //新增功能
         $("#addbtn").click(function () {
-            //标签列表加载
-            // tagrender()
-
             has_select = 0
             //初始化联想信息
             success = function (d) {
@@ -398,7 +400,6 @@
                         var flag
                         var len = $('#gain').val().length
                         var last_word = $('#gain').val().charAt(len - 1)
-
                         if (e.keyCode == 13 && last_word == '@') {
                             console.log('enter')
                             cur = $("#dblist .active").text();
@@ -417,28 +418,23 @@
                             console.log('down')
                         } else
                             return
-
                         optionsize = $("#dblist li").length
                         // console.log(optionsize)
 
                         if ($("#dblist").css('display') == 'block') {
                             cur_active = $('#dblist .active')
-
                             if (cur_active.length == 0) {
                                 // console.log('h1')
                                 $("#dblist li:eq(0)").addClass('active')
                                 // layui.form.render('ul','addhtml')
-
                             } else {
                                 // console.log('h2')
                                 index = parseInt(cur_active.attr('index'))
                                 index = index + flag
                                 if (index > optionsize - 1)
                                     index = 0
-
                                 if (index < 0)
                                     inde = optionsize - 1
-
                                 cur_active.removeClass('active')
                                 $("#dblist li:eq(" + index + ")").addClass('active')
                             }
@@ -447,7 +443,6 @@
                 );
             }
             _post('/manager/querydblist/', {}, success);
-
             var o = layer.open(
                 {
                     title: '变量管理 / 新增',
@@ -467,24 +462,25 @@
                             e = JSON.parse(e)
                             if (e.code == 0) {
                                 layer.close(index)
+                                app.querytaglist(0);
                                 $('#addhtml')[0].reset()
                                 layui.form.render()
-                                layer.alert(e.msg, {icon: 1})
-                                table.reload('table-var', {
-                                    page: {
-                                        curr: 1
-                                    },
-                                    where: {
-                                        searchvalue: $("#search-value").val(),
-                                        userid: $("[name='user']").val()
-                                    }
-                                });
-                                app.querytaglist()
+                                layer.alert(e.msg, {icon: 1});
+                                setTimeout(function () {
+                                    table.reload('table-var', {
+                                        page: {
+                                            curr: 1
+                                        },
+                                        where: {
+                                            searchvalue: $("#search-value").val(),
+                                            userid: $("[name='user']").val(),
+                                            tags: app.form.tagvalue
+                                        }
+                                    })
+                                }, 50)
                             } else
                                 layer.alert(e.msg, {icon: 2})
                         };
-
-
                         data = {
                             'key': $("[name='key']").val(),
                             'value': $("[name='value']").val(),
@@ -561,6 +557,7 @@
                                     layui.form.render()
                                     e = JSON.parse(e)
                                     if (e.code == 0) {
+                                        app.querytaglist(0)
                                         layer.close(index)
                                         layer.alert(e.msg, {icon: 1, time: 1500})
                                         table.reload('table-var', {
@@ -572,7 +569,6 @@
                                                 userid: $("[name='user']").val()
                                             }
                                         });
-                                        app.querytaglist()
                                     } else
                                         layer.alert(e.msg, {icon: 2})
 
@@ -596,7 +592,7 @@
                             }
                         });
                         layer.full(o);
-                    }else{
+                    } else {
                         layer.msg(data.msg)
                     }
                 };
@@ -609,6 +605,16 @@
 
         });
     });
+
+    function tagSpanClick(e) {
+        v = $(e).text()
+        app.tagvalues.forEach(function (item, index) {
+            if (v == item.name) {
+                app.form.tagvalue = [item.id]
+                $("#querybtn").click()
+            }
+        });
+    }
 
 </script>
 

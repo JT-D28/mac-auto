@@ -387,7 +387,7 @@ def queryvar(request):
 			m = ''
 			for j in i['tag'].split(';'):
 				if j != '':
-					m += "<span class='layui-badge'>" + j + "</span> "
+					m += "<span class='layui-badge' onclick=tagSpanClick(this) style='cursor:pointer;'>" + j + "</span> "
 			i['tag'] = m
 		limit = request.POST.get('limit')
 		page = request.POST.get('page')
@@ -2431,17 +2431,21 @@ def edittag(request):
 @csrf_exempt
 def querytaglist(request):
 	namelist = []
+	userid=request.POST.get('userid')
 	try:
 		# for _ in list(Tag.objects.all()):
 		# 	namelist.append({
 		# 		'id': _.id,
 		# 		'name': _.name,
 		# 	})
+		userid = userid if userid != '0' else str(
+			User.objects.values('id').get(name=request.session.get('username'))['id'])
+		
 		with connection.cursor() as cursor:
 			sql = '''
-				SELECT tag from manager_variable where tag !=''
+				SELECT tag from manager_variable where tag !='' and author_id=%s
 			'''
-			cursor.execute(sql)
+			cursor.execute(sql,[userid])
 			rows = cursor.fetchall()
 		for i in rows:
 			m = list(i)[0].split(';')[:-1]

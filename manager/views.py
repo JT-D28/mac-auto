@@ -12,8 +12,9 @@ from login.models import *
 from .core import *
 from .invoker import *
 from . import cm
-from .context import querytestdata, gettestdatastep, mounttestdata, gettestdataparams, queryafteradd as qa,queryafterdel as qd, queryafteredit as qe, queryaftercopy as qc
-import json ,operator, xlrd, base64, traceback
+from .context import querytestdata, gettestdatastep, mounttestdata, gettestdataparams, queryafteradd as qa, \
+	queryafterdel as qd, queryafteredit as qe, queryaftercopy as qc
+import json, operator, xlrd, base64, traceback
 
 
 # # Create your views here.
@@ -22,7 +23,7 @@ import json ,operator, xlrd, base64, traceback
 def index(request):
 	if request.session.get('is_login', None):
 		return render(request, 'manager/start.html', locals())
-
+	
 	else:
 		return redirect("/account/login/")
 
@@ -343,27 +344,30 @@ def queryonevar(request):
 	res = None
 	try:
 		res = Variable.objects.get(id=request.POST.get('id'))
-		pass
+		if str(res.author) != request.session.get('username'):
+			code = 1
+			msg = '不是创建人，没有编辑权限'
+		else:
+			jsonstr = json.dumps(res, cls=VarEncoder)
+			return JsonResponse(jsonstr, safe=False)
 	except:
 		code = 1
 		msg = '查询异常[%s]' % traceback.format_exc()
-	finally:
-		jsonstr = json.dumps(res, cls=VarEncoder)
-		return JsonResponse(jsonstr, safe=False)
+	return JsonResponse({'code': code, 'msg': msg})
 
 
 @csrf_exempt
 def queryvar(request):
 	searchvalue = request.POST.get('searchvalue')
-	searchvalue='%'+searchvalue+'%'
+	searchvalue = '%' + searchvalue + '%'
 	userid = request.POST.get('userid')
 	tags = request.POST.getlist('tags[]')
 	strtag = '%'
 	for i in tags:
 		if i == '0':
-			strtag='%%'
+			strtag = '%%'
 		elif i != '0':
-			strtag += i.split('_')[1]+'%'
+			strtag += i.split('_')[1] + '%'
 	print(strtag)
 	userid = userid if userid != '0' else str(User.objects.values('id').get(name=request.session.get('username'))['id'])
 	print("searchvalue=>", searchvalue)
@@ -374,7 +378,7 @@ def queryvar(request):
 					where (description like %s or `key` like %s or gain like %s) and (tag like %s) and v.author_id=u.id '''
 		if userid != '-1':
 			sql += 'and author_id=%s'
-			cursor.execute(sql, [searchvalue,searchvalue,searchvalue,strtag,userid])
+			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag, userid])
 		else:
 			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag])
 		desc = cursor.description
@@ -384,34 +388,36 @@ def queryvar(request):
 			for j in i['tag'].split(';'):
 				if j != '':
 					m += "<span class='layui-badge'>" + j + "</span> "
-			i['tag']=m
+			i['tag'] = m
 		limit = request.POST.get('limit')
 		page = request.POST.get('page')
 		res, total = getpagedata(rows, page, limit)
 		jsonstr = json.dumps(res, cls=VarEncoder, total=total)
-		
+	
 	return JsonResponse(jsonstr, safe=False)
-	# searchvalue = request.POST.get('searchvalue')
-	# userid = request.POST.get('userid')
-	# tags= request.POST.get('tags')
-	# tags = tags if tags!='0' else ''
-	# userid = userid if userid != '0' else str(User.objects.values('id').get(name=request.session.get('username'))['id'])
-	# print("searchvalue=>", searchvalue)
-	# if (len(searchvalue) | len(userid)) and userid != '-1':
-	# 	print("变量查询条件=>")
-	# 	res = list(Variable.objects.filter(Q(author_id=userid) & (
-	# 			Q(description__icontains=searchvalue) | Q(key__icontains=searchvalue) | Q(
-	# 		value__icontains=searchvalue) | Q(
-	# 		gain__icontains=searchvalue)) & Q(tag__contains=tags)))
-	# else:
-	# 	res = list(Variable.objects.all())
-	# print(res)
-	# limit = request.POST.get('limit')
-	# page = request.POST.get('page')
-	# # print("res old size=>",len(res))
-	# res, total = getpagedata(res, page, limit)
-	# jsonstr = json.dumps(res, cls=VarEncoder, total=total)
-	# return JsonResponse(jsonstr, safe=False)
+
+
+# searchvalue = request.POST.get('searchvalue')
+# userid = request.POST.get('userid')
+# tags= request.POST.get('tags')
+# tags = tags if tags!='0' else ''
+# userid = userid if userid != '0' else str(User.objects.values('id').get(name=request.session.get('username'))['id'])
+# print("searchvalue=>", searchvalue)
+# if (len(searchvalue) | len(userid)) and userid != '-1':
+# 	print("变量查询条件=>")
+# 	res = list(Variable.objects.filter(Q(author_id=userid) & (
+# 			Q(description__icontains=searchvalue) | Q(key__icontains=searchvalue) | Q(
+# 		value__icontains=searchvalue) | Q(
+# 		gain__icontains=searchvalue)) & Q(tag__contains=tags)))
+# else:
+# 	res = list(Variable.objects.all())
+# print(res)
+# limit = request.POST.get('limit')
+# page = request.POST.get('page')
+# # print("res old size=>",len(res))
+# res, total = getpagedata(res, page, limit)
+# jsonstr = json.dumps(res, cls=VarEncoder, total=total)
+# return JsonResponse(jsonstr, safe=False)
 
 
 @csrf_exempt
@@ -502,7 +508,7 @@ def addvar(request):
 			var.is_cache = True
 		else:
 			var.is_cache = False
-		var.tag = request.POST.get('tag') if request.POST.get('tag')!=';' else ''
+		var.tag = request.POST.get('tag') if request.POST.get('tag') != ';' else ''
 		var.save()
 		msg = '新增成功'
 	except:
@@ -2438,14 +2444,14 @@ def querytaglist(request):
 			cursor.execute(sql)
 			rows = cursor.fetchall()
 		for i in rows:
-			m=list(i)[0].split(';')[:-1]
-			for x in m :
+			m = list(i)[0].split(';')[:-1]
+			for x in m:
 				if x not in namelist:
 					namelist.append(x)
-		print('tag列表：',namelist)
-		data = [{'id':0,'name':'全部标签'}]
-		for m,n in enumerate(namelist):
-			data.append({'id':str(m+1)+'_'+n,'name':n})
+		print('tag列表：', namelist)
+		data = [{'id': 0, 'name': '全部标签'}]
+		for m, n in enumerate(namelist):
+			data.append({'id': str(m + 1) + '_' + n, 'name': n})
 	except:
 		print(traceback.format_exc())
 		print('==获取标签列表异常')

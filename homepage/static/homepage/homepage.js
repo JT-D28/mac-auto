@@ -296,11 +296,11 @@ var app = new Vue({
             } else {
                 _post_nl('/manager/queryonemailconfig/', {id: planid}, function (data) {
                     if (data.code == 0) {
-                        that.form.reportNoticeSet.color = data.data.color_scheme;
-                        that.form.reportNoticeSet.to_receive = data.data.to_receive;
-                        that.form.reportNoticeSet.description = data.data.description;
-                        that.form.reportNoticeSet.text = data.data.rich_text;
-                        that.form.reportNoticeSet.dingdingtoken = data.data.dingdingtoken
+                        that.form.reportNoticeSet.color = data.data.color_scheme!='None'?data.data.color_scheme:'';
+                        that.form.reportNoticeSet.to_receive = data.data.to_receive!='None'?data.data.to_receive:'';
+                        that.form.reportNoticeSet.description = data.data.description!='None'?data.data.description:'';
+                        that.form.reportNoticeSet.text = data.data.rich_text!='None'?data.data.rich_text:'';
+                        that.form.reportNoticeSet.dingdingtoken = data.data.dingdingtoken!='None'?data.data.dingdingtoken:''
                         that.noticeSetVisible = true;
                     } else {
                         layer.msg(data.msg)

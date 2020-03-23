@@ -2196,7 +2196,7 @@ class MainSender:
 			if description_rp[0] is 'success':
 				description_rv = _replace_variable(user, description_rp[1], taskid=taskid)
 				if description_rv[0] is 'success':
-					subject = description_rv[1]
+					subject = description_rv[1]+'————'+str(time.strftime("%m-%d %H:%M", time.localtime()))
 				else:
 					ret = 1
 					error = '变量替换异常,检查变量是否已定义'

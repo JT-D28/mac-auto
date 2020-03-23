@@ -379,6 +379,12 @@ def queryvar(request):
 			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag])
 		desc = cursor.description
 		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+		for i in rows:
+			m = ''
+			for j in i['tag'].split(';'):
+				if j != '':
+					m += "<span class='layui-badge'>" + j + "</span> "
+			i['tag']=m
 		limit = request.POST.get('limit')
 		page = request.POST.get('page')
 		res, total = getpagedata(rows, page, limit)

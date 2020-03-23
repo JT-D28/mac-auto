@@ -101,6 +101,9 @@
         <div class="layui-inline">
             <button class="layui-btn btn" id='addbtn'>新增</button>
             <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
+            <el-tooltip class="item" effect="dark" content="批量替换标签！" placement="top">
+                <button class="layui-btn btn" id='editbtn'>编辑</button>
+            </el-tooltip>
         </div>
         <div class="layui-inline" style="float: right;width: 80%;">
             <button class="layui-btn btn" id='querybtn' style="float: right;">查询</button>
@@ -185,11 +188,11 @@
                     :label="'标签' + index"
                     :key="tag.key"
                     :prop="'tags.' + index + '.value'">
-                <el-input v-model="tag.value"></el-input>
+                <el-input v-model="tag.value" maxlength="8" show-word-limit></el-input>
                 <el-button @click.prevent="removetag(tag)">删除</el-button>
             </el-form-item>
             <el-form-item>
-                <el-button type="primary" @click="tagSubmit('tagform')">提交</el-button>
+                <el-button id='tagsubmit' type="primary" @click="tagSubmit('tagform',0)">提交</el-button>
                 <el-button @click="addtag">新增标签</el-button>
             </el-form-item>
         </el-form>
@@ -242,16 +245,33 @@
                 var that = this;
                 that.tagFormVisible = true
             },
-            tagSubmit(formName) {
+            tagSubmit(formName, action) {
+                //action 0时为新增编辑中的提交，否则为批量替换的提交
                 var that = this;
-                str = '';
-                that.tagform.tags.forEach(function (item, index) {
-                    if (item.value != '') {
-                        str += '<span class="layui-badge">' + item.value + '</span>&nbsp&nbsp&nbsp&nbsp'
-                    }
-                });
-                that.wantTag = str
-                that.tagFormVisible = false;
+                if (action == 0) {
+                    str = '';
+                    that.tagform.tags.forEach(function (item, index) {
+                        if (item.value != '') {
+                            str += '<span class="layui-badge">' + item.value + '</span>&nbsp&nbsp&nbsp&nbsp'
+                        }
+                    });
+                    that.wantTag = str;
+                    that.tagFormVisible = false;
+                } else {
+                    str = '';
+                    that.tagform.tags.forEach(function (item, index) {
+                        if (item.value != '') {
+                            str += item.value + ';'
+                        }
+                    });
+                    _post_nl('/manager/varBatchEdit/', {ids: ids, tags: str}, function (res) {
+                        if (res.code == 0) {
+                            layer.msg("标签批量替换成功！")
+                        } else {
+                            layer.msg(res.msg, {icon: 5});
+                        }
+                    })
+                }
             },
             removetag(item) {
                 var index = this.tagform.tags.indexOf(item)
@@ -270,7 +290,7 @@
                 _post('/manager/querytaglist/', {userid: $("[name='user']").val()}, function (e) {
                     if (e.code == 0) {
                         that.tagvalues = e.data;
-                        if(up==1){
+                        if (up == 1) {
                             that.form.tagvalue = that.tagvalues[0] != null ? [that.tagvalues[0].id] : []
                         }
                     }
@@ -302,7 +322,7 @@
         form.on('select(user)', function () {
             app.querytaglist(1)
             layui.form.render('select');
-            setTimeout(()=>$("#querybtn").click(),50)
+            setTimeout(() => $("#querybtn").click(), 50)
         });
 
 
@@ -336,15 +356,36 @@
                 }
             });
         });
+
+//批量编辑(暂时只针对标签)
+        $("#editbtn").click(function (e) {
+            var checkStatus = table.checkStatus("table-var");
+            data = checkStatus.data; //获取选中的数据
+            if (data.length == 0) {
+                layer.msg('请选择变量！', {time: 1200});
+                return
+            }
+            app.tagFormVisible = true
+            ids = []
+            for (var index = 0; index < data.length; index++) {
+                ids.splice(0, 0, data[index]['id'])
+            }
+            $("#tagsubmit").unbind("click");
+            setTimeout(() => $("#tagsubmit").click(() => {
+                app.tagSubmit('tagform', ids);
+                app.querytaglist(1)
+                setTimeout(() => $("#querybtn").click(), 50)
+            }), 20);
+
+        });
+
 //删除功能
         $("#delbtn").click(function (e) {
             var checkStatus = table.checkStatus("table-var");
             data = checkStatus.data; //获取选中的数据
-
             if (data.length == 0) {
-                layer.alert('你有选择删除的变量么?', {icon: 3, time: 1500})
+                layer.msg('请选择变量！', {time: 1200});
                 return
-
             }
             layer.confirm('确认删除么?', {
                 btn1: function (index, layero) {
@@ -441,7 +482,7 @@
                         }
                     }
                 );
-            }
+            };
             _post('/manager/querydblist/', {}, success);
             var o = layer.open(
                 {

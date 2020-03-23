@@ -120,7 +120,7 @@ urlpatterns = [
     path('addtag/',views.addtag),
     path('deltag/',views.deltag),
     path('querytag/',views.querytag),
-
+	path('varBatchEdit/',views.varBatchEdit),
     #
     path('template/', views.template),
     # path('querytemplate/',),

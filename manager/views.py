@@ -2476,6 +2476,22 @@ def querytag(request):
 	return JsonResponse({'code': code, 'data': data})
 
 
+@csrf_exempt
+def varBatchEdit(request):
+	ids=request.POST.getlist('ids[]')
+	tags=request.POST.get('tags')
+	print(ids)
+	print(tags)
+	for id in ids:
+		try:
+			var=Variable.objects.get(id=id)
+			var.tag=tags
+			var.save()
+		except:
+			return JsonResponse({'code':1,'msg':'变量'+var.description+'标签更改失败！'})
+	return JsonResponse({'code': 0, 'msg': 'success'})
+
+
 '''
 报文模板
 

@@ -57,7 +57,7 @@ def queryproduct(request):
 			o['description'] = x.description
 			res.append(o)
 		return JsonResponse(simplejson(code=0, msg='操作成功', data=res), safe=False)
-
+	
 	except:
 		print(traceback.format_exc())
 		code = 4
@@ -80,7 +80,7 @@ def queryplan(request):
 		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
 	success_rate = rows[0]['成功数'] / rows[0]['总数'] * 100 if rows[0]['总数'] != 0 else 0
 	total = rows[0]['total'] if rows[0]['total'] is not None else 0
-
+	
 	jacocoset = Jacoco_report.objects.values().filter(productid=pid) if pid != '' else None
 	service = [{'id': 0, 'name': '总计'}]
 	if jacocoset:
@@ -105,7 +105,7 @@ def queryplan(request):
 		return JsonResponse(
 			simplejson(code=0, msg='操作成功', data=datanode, rate=str(success_rate)[0:5], total=total, service=service),
 			safe=False)
-
+	
 	except:
 		print(traceback.format_exc())
 		code = 4
@@ -247,7 +247,7 @@ def reportchart(request):
         FROM manager_resultdetail GROUP BY taskid) AS n JOIN manager_plan m 
         ON x.taskid=n.taskid AND x.plan_id=m.id WHERE is_verify=1 and plan_id=%s ORDER BY time DESC LIMIT 10
         '''
-
+		
 		# sqlite3
 		sql2 = '''
         SELECT plan_id,description,success,fail,skip,total,taskid,time,(success*100/total) rate,(total-success-FAIL-skip) error FROM (
@@ -257,9 +257,9 @@ def reportchart(request):
         strftime('%%m-%%d %%H:%%M',manager_resultdetail.createtime) AS time FROM manager_resultdetail LEFT JOIN 
         manager_plan ON manager_resultdetail.plan_id=manager_plan.id WHERE plan_id=%s and is_verify=1 GROUP BY taskid) AS m ORDER BY time DESC LIMIT 10
         '''
-
+		
 		sql = sql2 if configs.dbtype == 'sqlite3' else sql1
-
+		
 		with connection.cursor() as cursor:
 			cursor.execute(sql, [planid])
 			row = cursor.fetchall()
@@ -301,7 +301,7 @@ def jacocoreport(request):
 	items = ['covered', 'missed', 'percentage', 'percentageFloat', 'total']
 	for i in coveragelist:
 		res[i] = {'covered': 0, 'missed': 0, 'percentage': 0, 'percentageFloat': 0, 'total': 0}
-
+	
 	try:
 		jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
 		authname, authpwd, jenkinsurl = jacocoset.authname, jacocoset.authname, jacocoset.jenkinsurl
@@ -428,14 +428,14 @@ def querybuglog(request):  # 历史缺陷
 			 '测试点': rows[i]['测试点'], '参数信息': rows[i]['参数信息'], '失败原因': rows[i]['失败原因'],
 			 '任务id': rows[i]['任务id']})
 	res, total = getpagedata(res, request.POST.get('page'), request.POST.get('limit'))
-
+	
 	return JsonResponse({"code": 0, 'count': total, "data": res})
 
 
 @csrf_exempt
 def initbugcount(request):  # 缺陷统计
 	productid = request.POST.get('productid')
-
+	
 	sql = '''
     SELECT url as '接口' ,count(*) as '次数' from manager_resultdetail r ,manager_step s
     WHERE r.plan_id in (SELECT follow_id FROM manager_order WHERE main_id=%s) and r.result 
@@ -450,20 +450,19 @@ def initbugcount(request):  # 缺陷统计
 
 @csrf_exempt
 def downloadlog(request):
-	logname = './logs/deal/' + request.POST.get('taskid') + '.log'
-	# file = open(logname, 'rb')
+	logname = './logs/' + request.POST.get('taskid') + '.log'
 	with open(logname, 'r', encoding='utf-8') as f:
-		log_text = f.read()
-	log_text = log_text.replace("<span style='color:#FF3399'>", '').replace("</xmp>", '').replace(
-		"<xmp style='color:#009999;'>", '').replace(
-		"<span class='layui-bg-green'>", '').replace("<span class='layui-bg-red'>", '').replace(
-		"<span class='layui-bg-orange'>", '').replace("</span>", '').replace(
-		"<span style='color:#009999;'>", '').replace('<br>', '').replace(
-		"'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36', ",
-		'')
+		log_text = '<meta charset="UTF-8">\n' + f.read()
+	# log_text = log_text.replace("<span style='color:#FF3399'>", '').replace("</xmp>", '').replace(
+	# 	"<xmp style='color:#009999;'>", '').replace(
+	# 	"<span class='layui-bg-green'>", '').replace("<span class='layui-bg-red'>", '').replace(
+	# 	"<span class='layui-bg-orange'>", '').replace("</span>", '').replace(
+	# 	"<span style='color:#009999;'>", '').replace('<br>', '').replace(
+	# 	"'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36', ",
+	# 	'')
 	response = HttpResponse(log_text)
 	response['Content-Type'] = 'application/octet-stream'
-	response['Content-Disposition'] = 'attachment;filename=%s.log' % request.POST.get('taskid')
+	response['Content-Disposition'] = 'attachment;filename=%s.html' % request.POST.get('taskid')
 	return response
 
 
@@ -511,8 +510,8 @@ def editProductSet(request):
 def downloadReport(request):
 	reportname = './local_reports/report_' + request.POST.get("taskid") + '.html'
 	if os.path.exists(reportname):
-		with open(reportname, 'r', encoding='GBK') as f:
-			text = f.read()
+		with open(reportname, 'r', encoding='gbk') as f:
+			text = '<meta charset="UTF-8">\n' + f.read()
 		response = HttpResponse(text)
 		response['Content-Type'] = 'application/octet-stream'
 		response['Content-Disposition'] = 'attachment;filename=%s.html' % request.POST.get('taskid')
@@ -570,7 +569,7 @@ def jenkinsJobRun(request):
 		jobnames = dealJacocoJobName(jacocoset.jobname, jobs)
 	except:
 		return JsonResponse({'code': 1, 'data': '产品没有相应的代码覆盖率配置！'})
-
+	
 	# 测试连接
 	try:
 		server = jenkins.Jenkins(jacocoset.jenkinsurl, username=jacocoset.authname, password=jacocoset.authpwd)
@@ -578,7 +577,7 @@ def jenkinsJobRun(request):
 	except:
 		print(traceback.format_exc())
 		return JsonResponse({'code': 1, 'data': '用户名或密码错误，请检查！'})
-
+	
 	# 任务运行状态检查
 	msg = ''
 	for job in jobnames:
@@ -587,7 +586,7 @@ def jenkinsJobRun(request):
 			msg += '%s:已经在运行了，请稍后再试<br>' % (job)
 	if msg != '':
 		return JsonResponse({'code': 1, 'data': msg})
-
+	
 	if action == 'jacocoMany':
 		buildnumber0 = {}
 		buildnumber1 = {}
@@ -603,7 +602,7 @@ def jenkinsJobRun(request):
 				if len(res.split("<br>")) - 1 == len(jobnames):
 					return JsonResponse({'code': 0, 'data': res})
 				time.sleep(3)
-
+	
 	if action == 'jacocoOne':
 		jobstr = ','.join(i for i in jobnames)
 		job = 'tfp-cmbc-mysql-uat-report'

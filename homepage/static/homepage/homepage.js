@@ -816,7 +816,7 @@ var app = new Vue({
                             const data = req.response;
                             const blob = new Blob([data]);
                             var a = document.createElement('a');
-                            a.download = '日志_' + res.data + '.log';
+                            a.download = '日志_' + res.data + '.html';
                             a.href = window.URL.createObjectURL(blob);
                             a.click();
                         } else {

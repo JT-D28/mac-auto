@@ -266,6 +266,7 @@
                     });
                     _post_nl('/manager/varBatchEdit/', {ids: ids, tags: str}, function (res) {
                         if (res.code == 0) {
+                            app.querytaglist(1)
                             layer.msg("标签批量替换成功！")
                         } else {
                             layer.msg(res.msg, {icon: 5});
@@ -287,11 +288,12 @@
             },
             querytaglist(up) {
                 var that = this;
-                _post('/manager/querytaglist/', {userid: $("[name='user']").val()}, function (e) {
+                _post_nl('/manager/querytaglist/', {userid: $("[name='user']").val()}, function (e) {
                     if (e.code == 0) {
                         that.tagvalues = e.data;
                         if (up == 1) {
                             that.form.tagvalue = that.tagvalues[0] != null ? [that.tagvalues[0].id] : []
+                            setTimeout(() => $("#querybtn").click(), 50)
                         }
                     }
                 });
@@ -322,7 +324,6 @@
         form.on('select(user)', function () {
             app.querytaglist(1)
             layui.form.render('select');
-            setTimeout(() => $("#querybtn").click(), 50)
         });
 
 
@@ -373,8 +374,6 @@
             $("#tagsubmit").unbind("click");
             setTimeout(() => $("#tagsubmit").click(() => {
                 app.tagSubmit('tagform', ids);
-                app.querytaglist(1)
-                setTimeout(() => $("#querybtn").click(), 50)
             }), 20);
 
         });

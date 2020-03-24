@@ -344,16 +344,16 @@ def queryonevar(request):
 	res = None
 	try:
 		res = Variable.objects.get(id=request.POST.get('id'))
-		if str(res.author) != request.session.get('username'):
-			code = 1
-			msg = '不是创建人，没有编辑权限'
-		else:
-			jsonstr = json.dumps(res, cls=VarEncoder)
-			return JsonResponse(jsonstr, safe=False)
+		# if str(res.author) != request.session.get('username'):
+		# 	code = 1
+		# 	msg = '不是创建人，没有编辑权限'
+		# else:
+		jsonstr = json.dumps(res, cls=VarEncoder)
+		return JsonResponse(jsonstr, safe=False)
 	except:
 		code = 1
 		msg = '查询异常[%s]' % traceback.format_exc()
-	return JsonResponse({'code': code, 'msg': msg})
+		return JsonResponse({'code': code, 'msg': msg})
 
 
 @csrf_exempt

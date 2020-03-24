@@ -291,7 +291,8 @@
             },
             querytaglist(up) {
                 var that = this;
-                _post_nl('/manager/querytaglist/', {userid: $("[name='user']").val()}, function (e) {
+                setTimeout(() => $("#querybtn").click(), 50)
+               /** _post_nl('/manager/querytaglist/', {userid: $("[name='user']").val()}, function (e) {
                     if (e.code == 0) {
                         that.tagvalues = e.data;
                         if (up == 1) {
@@ -299,7 +300,7 @@
                             setTimeout(() => $("#querybtn").click(), 50)
                         }
                     }
-                });
+                });**/
             }
         },
         created: function () {

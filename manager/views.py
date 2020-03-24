@@ -380,7 +380,7 @@ def queryvar(request):
 			sql += 'and author_id=%s'
 			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, userid])
 		else:
-			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag])
+			cursor.execute(sql, [searchvalue, searchvalue, searchvalue])
 		desc = cursor.description
 		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
 		# for i in rows:

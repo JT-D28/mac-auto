@@ -374,8 +374,8 @@ def queryvar(request):
 	
 	with connection.cursor() as cursor:
 		sql = '''SELECT v.id,description,`key`,gain,value,DATE_FORMAT(v.createtime,'%%m-%%d %%H:%%i') AS createtime,
-					DATE_FORMAT(v.updatetime,'%%m-%%d %%H:%%i') AS updatetime,is_cache,tagid,u.name as author FROM `manager_variable` v,login_user u
-					where (description like %s or `key` like %s or gain like %s) and (tagid like %s) and v.author_id=u.id '''
+					DATE_FORMAT(v.updatetime,'%%m-%%d %%H:%%i') AS updatetime,is_cache,u.name as author FROM `manager_variable` v,login_user u
+					where (description like %s or `key` like %s or gain like %s) and v.author_id=u.id '''
 		if userid != '-1':
 			sql += 'and author_id=%s'
 			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag, userid])
@@ -383,12 +383,12 @@ def queryvar(request):
 			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag])
 		desc = cursor.description
 		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-		for i in rows:
-			m = ''
-			for j in i['tagid'].split(';'):
-				if j != '':
-					m += "<span class='layui-badge' onclick=tagSpanClick(this) style='cursor:pointer;'>" + j + "</span> "
-			i['tag'] = m
+		# for i in rows:
+		# 	m = ''
+		# 	for j in i['tag'].split(';'):
+		# 		if j != '':
+		# 			m += "<span class='layui-badge' onclick=tagSpanClick(this) style='cursor:pointer;'>" + j + "</span> "
+		# 	i['tag'] = m
 		limit = request.POST.get('limit')
 		page = request.POST.get('page')
 		res, total = getpagedata(rows, page, limit)
@@ -2437,10 +2437,10 @@ def querytaglist(request):
 			if userid != '-1':
 				userid = userid if userid != '0' else str(
 					User.objects.values('id').get(name=request.session.get('username'))['id'])
-				sql = "SELECT tag from manager_variable where tagid !='' and author_id=%s"
+				sql = "SELECT tag from manager_variable where author_id=%s"
 				cursor.execute(sql, [userid])
 			elif userid == '-1':
-				sql = "SELECT tag from manager_variable where tagid !=''"
+				sql = "SELECT tag from manager_variable "
 				cursor.execute(sql)
 			rows = cursor.fetchall()
 		for i in rows:

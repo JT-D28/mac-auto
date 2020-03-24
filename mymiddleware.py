@@ -134,12 +134,13 @@ class Interceptor(MiddlewareMixin):
 		print("=============================调用[%s]==============="%request.path)
 		a=dict(request.GET)
 		b=dict(request.POST)
-		print({**a,**b})
+		o={**a,**b}
+		for ok in o:
+			o[ok]=o.get(ok)[0]
+		print(o)
 
 		
 	def process_request(self, request):
-
-		print('==进入拦截器==')
 
 		self._print_call_msg(request)
 
@@ -153,8 +154,6 @@ class Interceptor(MiddlewareMixin):
 		if repeat_check_result[0] is not 'success':
 			return JsonResponse(simplejson(code=101,msg=repeat_check_result[1]),safe=False)
 
-
-		
 
 def getkey(d,key):
 	for k in d:

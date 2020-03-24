@@ -614,7 +614,7 @@ class StepEncoder(XJsonEncoder):
 
 class BusinessDataEncoder(XJsonEncoder):
 	def __init__(self,**args):
-		super(BusinessDataEncoder,self).__init__(['id','businessname','db_check','itf_check','params','postposition','preposition','count'],**args)
+		super(BusinessDataEncoder,self).__init__(['id','businessname','db_check','itf_check','params','postposition','preposition','count','parser_id','parser_check'],**args)
 	
 	def encode(self,obj):
 		from .cm import getchild
@@ -706,12 +706,12 @@ class DBEncoder(XJsonEncoder):
 
 class TemplateEncoder(XJsonEncoder):
 	def __init__(self,**args):
-		super(DBEncoder,self).__init__(['id','kind','name','description','author','createtime','updatetime'],**args)
+		super(TemplateEncoder,self).__init__(['id','kind','name','description','author','createtime','updatetime','content_url'],**args)
 
 
 class TemplateFieldEncoder(XJsonEncoder):
 	def __init__(self,**args):
-		super(DBEncoder,self).__init__(['id','fieldcode','description','start','end','index','template'],**args)
+		super(TemplateFieldEncoder,self).__init__(['id','fieldcode','description','start','end','index','template','order'],**args)
 
 def simplejson(code=0,msg='',**kw):
 	_dict={}
@@ -734,6 +734,18 @@ def pkg(code=0,msg='',**kw):
 		_dict[key]=value
 
 	return _dict
+
+def get_params(request):
+	'''
+	封装请求参数
+
+	'''
+	o={**dict(request.POST),**dict(request.GET)}
+	for ok in o:
+		o[ok]=o.get(ok)[0]
+
+	return o
+
 
 def getpagedata(data,page,limit):
 	'''

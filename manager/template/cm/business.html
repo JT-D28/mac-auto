@@ -135,32 +135,28 @@
                     </div>
                 </div>
                 <div class="layui-form-item ">
-                    <div class="layui-inline" style="width: 93%;">
+                    
                         <label class="layui-form-label required">文件校验</label>
                         <div class="layui-input-block">
                             <input type="text" id='file_check' name="file_check" placeholder="请输入" autocomplete="off"
                                    class="layui-input" lay-verify="required">
                         </div>
-                    </div>
-                    <div class="layui-inline" style="width: 2%;">
+             
+     <!--                <div class="layui-inline" style="width: 2%;">
                         <i class="fa fa-arrow-down" style="color:#009688;font-size:12px;float:right;" id='detail_btn'></i>
-                    </div>
-
-
+                    </div> -->
                 </div>
+                  <div class="layui-form-item">
+                    <label class="layui-form-label">模板选择</label>
+                    <div class="layui-input-block">
+                      <select name="template_list" lay-verify="">
 
-
-                <!-- 详情配置 -->
-                    <div class="layui-tab layui-tab-card hide" id='detail_config'>
-                      <ul class="layui-tab-title">
-                        <li class="layui-this">指定文件</li>
-                        <li>字段配置</li>
-                      </ul>
-                      <div class="layui-tab-content" style="height: 100px;">
-                        <div class="layui-tab-item layui-show">1</div>
-                        <div class="layui-tab-item">2</div>
-                      </div>
+                      </select> 
                     </div>
+                  </div>
+
+
+
 
                 <div class="layui-form-item ">
                     <label class="layui-form-label required">参数信息</label>
@@ -186,6 +182,28 @@
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
 <script type="text/javascript">
+
+function load_templates(){
+    success=function(e){
+        if(e.code==0){
+            $("[name='template_list']").empty();
+            $("[name='template_list']").append("<option value='0'>请选择</option>")
+
+            for(var i=0;i<e.data.length;i++){
+                console.log(e.data[i])
+                $("[name='template_list']").append("<option value='"+e.data[i]['value']+"'>"+e.data[i]['name']+"</option>")
+
+            }
+
+        };
+
+        layui.form.render('select');
+
+    }
+    _post('/manager/querytemplatelist/',{},success);
+
+}
+
     add_var_prop_smart_inputs(['pre','post','itf_check','db_check','params'])
     layui.use(['table', 'element', 'form'], function () {
 
@@ -193,6 +211,8 @@
         var $ = layui.jquery
         var layer = layui.layer;
         var form = layui.form
+
+        load_templates()
         uid = _get_query_param('uid')
         pid = _get_query_param('pid')
         action = _get_query_param('action')
@@ -223,6 +243,11 @@
                 $("[name='params']").val(data['params'])
                 $("[name='pre']").val(data['preposition'])
                 $("[name='post']").val(data['postposition'])
+                $("[name='file_check']").val(data['parser_check'])
+                $("[name='template_list']").val(data['parser_id'])
+
+                form.render('select');
+                
 
             };
             _post('/manager/queryonebusiness/', {'vid': uid}, success);
@@ -231,8 +256,6 @@
 
         if (detail == 'addbusiness') {
             $("[name='count']").val(1)
-
-
         }
 
 
@@ -251,6 +274,9 @@
                 'preposition': $("[name='pre']").val(),
                 'postposition': $("[name='post']").val(),
                 'count': $("[name='count']").val(),
+                'file_check':$("[name='file_check']").val(),
+                'parser_id':$("[name='template_list']").val()
+                //'parser_id':$("[name='template_list']").attr('value'),
 
             }
             _post('/manager/treecontrol/', data, function (e) {

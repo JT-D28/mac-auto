@@ -373,6 +373,8 @@ def addstep(request):
 		headers=request.POST.get('headers')
 		body=request.POST.get("body")
 		url=request.POST.get('url')
+		if url:
+			url=url.strip()
 		method=request.POST.get('method')
 		content_type=request.POST.get('content_type')
 		db_check=request.POST.get('db_check')
@@ -597,6 +599,8 @@ def addbusiness(request):
 		b.itf_check=request.POST.get('itf_check')
 		b.db_check=request.POST.get('db_check')
 		b.params=request.POST.get('params')
+		b.parser_check=request.POST.get('parser_check')
+		b.parser_id=request.POST.get('parser_id')
 
 		# check_result=_check_params(b.params)
 		# print('nn=>',check_result)
@@ -694,7 +698,8 @@ def editbusiness(request):
 		b.postposition=request.POST.get('postposition')
 		b.preposition=request.POST.get('preposition')
 		b.count=int(request.POST.get('count').strip()) if request.POST.get('count') !='' else int(1)
-
+		b.parser_check=request.POST.get('file_check')
+		b.parser_id=request.POST.get('parser_id')
 
 		#check params
 		check_result=_check_params(b.params)

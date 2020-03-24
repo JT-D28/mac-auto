@@ -14,6 +14,7 @@ from .invoker import *
 from . import cm
 from .context import querytestdata, gettestdatastep, mounttestdata, gettestdataparams, queryafteradd as qa,queryafterdel as qd, queryafteredit as qe, queryaftercopy as qc
 import json ,operator, xlrd, base64, traceback
+from .pa import MessageParser
 
 
 # # Create your views here.
@@ -2149,7 +2150,7 @@ def queryonebusiness(request):
 		# print('business=>', business)
 		# jsonstr = json.dumps(business, cls=BusinessDataEncoder)
 		sql = '''
-		SELECT b.id,count,businessname,itf_check,db_check,params,preposition,postposition,value as weight 
+		SELECT b.id,count,businessname,itf_check,db_check,params,preposition,postposition,value as weight,parser_id,parser_check
 		FROM manager_businessdata b, manager_order o WHERE b.id=%s and o.follow_id=b.id
 		'''
 		with connection.cursor() as cursor:
@@ -2426,27 +2427,78 @@ def querytag(request):
 def template(request):
 	return render(request, 'manager/template.html')
 
-def queryonetemplate(request):
-	pass
+@csrf_exempt
+def querytemplatecommon(request):
+	p=MessageParser.query_template_common(request.POST.get('tid'))
+	return JsonResponse(p,safe=False)
+
 	
-
-
+@csrf_exempt
 def querytemplatelist(request):
-	pass
+	return JsonResponse(MessageParser.query_template_name_list(),safe=False)
 
-def addtemplate(requst):
-	pass
+@csrf_exempt
+def addtemplate(request):
+	pa=get_params(request)
+	pa['author']=User.objects.get(name=request.session.get('username'))
+	p=MessageParser.add_template(**pa)
+	return JsonResponse(p,safe=False)
 
+
+@csrf_exempt
 def deltemplate(request):
-	pass
+	return JsonResponse(MessageParser.del_template(request.POST.get('ids')),safe=False)
 
+
+@csrf_exempt
 def edittemplate(request):
-	pass
+	return JsonResponse(MessageParser.edit_template(**get_params(request)),safe=False)
 
+@csrf_exempt
 def querytemplate(request):
-	pass
+	searchvalue = request.GET.get('searchvalue')
+	print("searchvalue=>", searchvalue)
+
+	if searchvalue:
+		print("变量查询条件=>")
+		res = list(Template.objects.filter(name__icontains=searchvalue))
+	else:
+		res = list(Template.objects.all())
+
+	limit = request.GET.get('limit')
+	page = request.GET.get('page')
+	# print("res old size=>",len(res))
+	res, total = getpagedata(res, page, limit)
+
+	jsonstr = json.dumps(res, cls=TemplateEncoder, total=total)
+	return JsonResponse(jsonstr, safe=False)
+
+def templatefield(request):
+	tid=request.GET.get('tid')
+	return render(request, 'manager/templatefield.html',locals())
 
 
+@csrf_exempt
+def querytemplatefield(request):
+	return JsonResponse(MessageParser.query_template_field(**get_params(request)),safe=False)
+
+
+@csrf_exempt
+def addtemplatefield(request):
+	return JsonResponse(MessageParser.add_field(**get_params(request)),safe=False)
+
+@csrf_exempt
+def deltemplatefield(request):
+	return JsonResponse(MessageParser.del_field(request.POST.get('ids')),safe=False)
+
+
+@csrf_exempt
+def edittemplatefield(request):
+	return JsonResponse(MessageParser.edit_field(**get_params(request)),safe=False)
+
+@csrf_exempt
+def queryfielddetail(request):
+	return JsonResponse(MessageParser.query_field_detail(request.POST.get('tid')),safe=False)
 
 """
 测试接口

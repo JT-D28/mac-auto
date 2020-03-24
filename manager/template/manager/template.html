@@ -11,156 +11,99 @@
         cursor: pointer;
       }
 
-      #gain{
-         /* font-size:16px;*/
-          padding-left:5px;
-          /*line-height:30px;*/
-      }
-      #dblist{
-          position:absolute;
-          list-style:none;
-          width:150px;
-          display:none;
-          border:1px solid #5FB878;
-          padding:5px;
-      }
-      #dblist li{height:25px;line-height:25px;}
-/*      #dblist li:hover{background:#5FB878;cursor:pointer;}*/
-      #dblist .active{background:#5FB878;cursor:pointer;}
-
-      #addtag:hover{
-        cursor:pointer;
-
-
-      }
 
     </style>
 </head>
 <body style="height: 100%">
 <div class="layui-inline"> 
-	<div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="名称|键|获取方式|值" class="layui-input"></div>
+	<div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="模板名称|创建者" class="layui-input"></div>
 	<button class="layui-btn" id='querybtn'>查询</button>
   <button class="layui-btn" id='addbtn'>新增</button>
   <button class="layui-btn layui-btn-danger" id='delbtn'>删除</button>
 
 </div>
 
-<table id='table-var' class="layui-table" lay-data="{height: 'full-80', cellMinWidth: 80, page: true, limit:10, url:'/manager/queryvar/'}" lay-filter='target'>
+<table id='table-template' class="layui-table" lay-data="{height: 'full-80',cellMinWidth:'180',page: true, limit:10, url:'/manager/querytemplate/'}" lay-filter='target'>
   <thead>
     <tr>
       <th lay-data="{type:'checkbox',width:'5%'}"></th>
       <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
-      <th lay-data="{field: 'key',width:'15%', sort: true}">键名</th>
-      <th lay-data="{field: 'description',width:'10%', sort: true}">描述</th>
-      <th lay-data="{field: 'value',width:'25%'}">值</th>
-      <th lay-data="{field: 'gain', width:'25%'}">获取方式</th>
-      <th lay-data="{field: 'author',width:'8%', sort: true}">创建者</th>
+      <th lay-data="{field: 'name', sort: true}">模板名</th>
+   <!--    <th lay-data="{field: 'description',width:'30%', sort: true}">描述</th> -->
+      
+      <th lay-data="{field: 'kind', sort: true}">解析方式</th>
+      <th lay-data="{field: 'content_url', sort: true}">比对数据来源</th>
+      <th lay-data="{field: 'author', sort: true}">创建者</th>
 <!--       <th lay-data="{field: 'createtime', width:160,sort:true}">创建时间</th>
       <th lay-data="{field: 'updatetime', width:160}">更改时间</th> -->
-      <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:'12%'}">操作</th>
+      <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar'}">操作</th>
  
     </tr>
   </thead>
 </table>
 
 <form id='addhtml' hidden=true class="layui-form" style="padding: 10px;" lay-filter='addhtml'>
+
+<!--   <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+      <li class="layui-this">通用</li>
+      <li>字段配置</li>
+
+    </ul>
+    <div class="layui-tab-content"></div>
+  </div>  -->
+
+
   <div class="layui-form-item">
-    <label class="layui-form-label">键名</label>
+    <label class="layui-form-label">模板名称</label>
     <div class="layui-input-block">
-      <input type="text" name="key" placeholder="请输入" autocomplete="off" class="layui-input">
+      <input type="text" name="name" placeholder="请输入" autocomplete="off" class="layui-input">
     </div>
   </div>
   <div class="layui-form-item">
     <label class="layui-form-label">描述</label>
     <div class="layui-input-block">
-      <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input">
+      <input type="textarea" name="description" placeholder="" autocomplete="off" class="layui-textarea" multiple>
     </div>
   </div>
-  <div class="layui-form-item">
-    <label class="layui-form-label">获取方式</label>
-    <div class="layui-input-block">
-      <textarea id="gain" type="text" name="gain"  placeholder="方式1=>sql查询如select urid from manager_user&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;方式2=>函数调用如 getDate()" autocomplete="off" class="layui-textarea" style="height:200px!important;"></textarea>
-      <ul id='dblist'></ul>
-    </div>
-  </div>
-  <div class="layui-form-item">
-    <label class="layui-form-label">值</label>
-    <div class="layui-input-block">
-      <textarea id='value' type="text" name="value" placeholder="请输入" autocomplete="off" class="layui-textarea"></textarea>
-    </div>
-  </div>
-
-
-  <div class="layui-form-item" id='tag'>
-    <div class="layui-inline" style="width:25%;">
-      <label class="layui-form-label">标签</label>
-      <div class="layui-input-block">
-        <select name="tag_id" lay-search>
-
-
-        </select> 
-      </div>
-    </div>
-    <div class="layui-inline" style="width: 30%;color:#009688;">
-          <i class="fa fa-plus-circle" id="addtag"></i>
-    </div>
-
-  </div>
-
-
 
   <div class="layui-form-item">
-    <label class="layui-form-label">缓存</label>
+   <label class="layui-form-label">分隔类型</label>
+        <div class="layui-input-block">
+             <input name="kind" value="length" type="radio" title="长度" >
+             <input name="kind" value="sepator" type="radio" title="分隔符">
+         </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">来源URL</label>
     <div class="layui-input-block">
-      <input type="checkbox" name="is_cache" lay-skin="switch" lay-text="ON|OFF" >
+      <input type="textarea" name="parser_url" placeholder="请输入" autocomplete="off" class="layui-input">
     </div>
   </div>
+
 </form>
 </body>
-<script src="{% static 'manager/js/fa.js' %}"></script>
+
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
 
-
-
-
 <script type="text/javascript">
-fa.init()
+
 layui.use(['table','layer'], function(){
   var table = layui.table;
   var $=layui.jquery
   var layer=layui.layer;
   var form=layui.form;
 //
-
-
-
-//TAG功能
-$("#addtag").click(function(){
-
-  layer.prompt({
-    // formType: 1,
-    value: '',
-    title: '添加标签',
-    maxlength:10,
-    // area: ['800px', '350px'] //自定义文本域宽高
-  }, function(value, index, elem){
-    alert(value); //得到value
-    layer.close(index);
-  });
-
-});
-
-
-
 //查询功能
   $("#querybtn").click(function(e){
 
     console.log('query var');
 
     //layer.open({'title':'','type':2,'content':'http://www.baidu.com'});
-    table.reload('table-var',{
+    table.reload('table-template',{
       page:{
         curr:1
       },
@@ -178,11 +121,11 @@ $("#addtag").click(function(){
   $("#delbtn").click(function(e){
 
 
-    var checkStatus = table.checkStatus("table-var");
+    var checkStatus = table.checkStatus("table-template");
     data = checkStatus.data; //获取选中的数据
 
     if(data.length==0){
-      layer.alert('你有选择删除的变量么?',{icon:3,time:1500})
+      layer.alert('你有选择要删除的模板么?',{icon:3,time:1500})
 
       return
 
@@ -192,9 +135,8 @@ $("#addtag").click(function(){
       btn1:function(index,layero){
         layer.close(index)
         success=function(e){
-          e=JSON.parse(e)
           if(e.code==0){
-            table.reload('table-var',{
+            table.reload('table-template',{
                 page:{
                   curr:1
                 },
@@ -219,7 +161,7 @@ $("#addtag").click(function(){
 
         //alert(ids)
     
-        _post('/manager/delvar/',{'ids':ids.join()},success)
+        _post('/manager/deltemplate/',{'ids':ids.join()},success)
 
 
       },
@@ -230,171 +172,14 @@ $("#addtag").click(function(){
 
 //新增功能
 
-  function tagrender(){
-
-    _post('/manager/querytaglist/',{},function(e){
-      //
-      $("#tag select").empty()
-
-      if(e.code==0){
-        for(var i=0;i<e.data.length;i++){
-          $("#tag select").append('<option value='+e.data[i]['id']+'>'+e.data[i]['name']+'</option>')
-        }
-
-      }
-
-      layui.form.render('select')
-
-    })
-    
-  };
-
   $("#addbtn").click(function(){
-
-    //标签列表加载
-    tagrender()
-
-
-    //添加标签
-    $("#addtag").click(function(){
-      var i1=layer.prompt({
-        title:'添加标签',
-        maxlength:10,
-        value:'',
-      
-      },function(value, index1, elem){
-        _post('/manager/addtag/',{'name':value},function(e){
-
-          //layer.close(layer.index)
-
-          // var index = parent.layer.getFrameIndex(window.name);  
-          // parent.layer.close(index); 
-          
-          // if(e.code==0){
-          //   layer.alert(e.msg,{icon:1,time:1500})
-          // }
-          // else{
-          //   layer.alert(e.msg,{icon:2})
-          // }
-          if(e.code==0){
-
-            console.log('获得新加tag=>'+e.data['id'])
-            $('#tag select').append("<option value='%s'>%s</option>"%(e.data['id'],e.data['name']));
-
-            layui.form.render('select');
-          }
-
-
-
-        });
-
-      })
-
-    });
-
-
-
-
- 
-
-    has_select=0
-    //初始化联想信息
-    success=function(d){
-      data=JSON.parse(d)
-      $("#dblist").empty()
-      for(var index=0;index<data.data.length;index++){
-        $("#dblist").append("<li index='"+index+"' class=''>"+data.data[index]['name']+"</li>")
-      }
-
-      $("#dblist li").each(function(){
-        $(this).click(function(){
-
-          $('#gain').val($('#gain').val()+$(this).text())
-          $("#dblist").hide()
-        });
-      });
-
-      //
-      add_var_prop_smart_input('gain');
-      // add_var_prop_smart_input('value');
-      //
-
-      //键盘up down
-
-      $(document).keydown(function(e){
-
-        var flag
-
-        // alert(e.keyCode)
-        var len=$('#gain').val().length
-        var last_word=$('#gain').val().charAt(len-1)
-      
-
-        if(e.keyCode==13&&last_word=='@'){
-          console.log('enter')
-            cur=$("#dblist .active").text();
-            $('#gain').val($('#gain').val()+cur);
-            var e = jQuery.Event("keydown"); //模拟一个键盘事件
-            e.keyCode = 8;
-            e.which = 8;  //增加设置which
-            $('#gain').trigger(e); //模拟按键
-            has_select=1;
-            return;
-
-          }
-
-        else if(e.keyCode==38){
-          flag=-1
-          console.log('up')
-        }
-
-        else if(e.keyCode==40){
-          flag=1
-          console.log('down')
-        }
-
-        else
-          return
-
-        optionsize=$("#dblist li").length
-        // console.log(optionsize)
-
-        if($("#dblist").css('display')=='block'){
-          cur_active=$('#dblist .active')
-          
-          if(cur_active.length==0){
-            // console.log('h1')
-            $("#dblist li:eq(0)").addClass('active')
-           // layui.form.render('ul','addhtml')
-
-          }else{
-           // console.log('h2')
-            index=parseInt(cur_active.attr('index'))
-            index=index+flag
-            if(index>optionsize-1)
-              index=0
-
-            if(index<0)
-              inde=optionsize-1
-
-            cur_active.removeClass('active')
-            $("#dblist li:eq("+index+")").addClass('active')
-
-
-          }
-
-        }
-
-      });
-
-
-
-    }
-    _post('/manager/querydblist/',{},success)
+    // alert(1)
+    $("[name='kind'][value='length']").attr('checked','')
+    form.render()
 
     var o=layer.open(
       {
-        title:'新增变量',
+        title:'配置模板',
         type:1,
         // area:["350px","350px"],
         content:$('#addhtml'),
@@ -403,15 +188,15 @@ $("#addtag").click(function(){
         yes: function(index, layero){
           //按钮【按钮一】的回调
           success=function(e){
+            
             layer.close(index)
-            e=JSON.parse(e)
+           
             if(e.code==0){
 
-            $('#addhtml')[0].reset()
-            layui.form.render()
-
+            // $('#addhtml')[0].reset()
+            // layui.form.render()
               layer.alert(e.msg,{icon:1})
-              table.reload('table-var',{
+              table.reload('table-template',{
                 page:{
                   curr:1
                 },
@@ -428,16 +213,14 @@ $("#addtag").click(function(){
 
           
           data={
-            'key':$("[name='key']").val(),
-            'value':$("[name='value']").val(),
+            'kind':$("[name='kind']:checked").val(),
             'description':$("[name='description']").val(),
-            'gain':$("[name='gain']").val(),
-            'is_cache':$("[name='is_cache']").val(),
-            'tag':$("[name='tag_id']").val()
-
-
+            'name':$("[name='name']").val(),
+            'content_url':$("[name='parser_url']").val()
           }
-          _post("/manager/addvariable/",data,success)
+
+          _post("/manager/addtemplate/",data,success)
+
         },
         btn2: function(index, layero){
           //按钮【按钮二】的回调
@@ -448,52 +231,36 @@ $("#addtag").click(function(){
 
     });
 
-    layer.full(o);
+    // layer.full(o);
 
   });
 
 //tool事件
   table.on("tool(target)",function(e){
     console.log(e.event);
-
-
-    // var checkStatus = table.checkStatus("table-var");
+    // var checkStatus = table.checkStatus("table-template");
     // data = checkStatus.data; //获取选中的数据
     id=e.data['id']
     
-    if(e.event=='edit'){
+    if(e.event=='common_edit'){
+
+      $("[name='kind']").each(function(){
+        $(this).removeAttr('checked')
+      });
 
       success=function(data){
-        console.log(data.data)
-        // data=JSON.parse(data)
-        // console.log(data.data)
-        // alert(data.data)
-
+        console.log(data)
         //设置addhtml
-        description=data.data['description']
-        key=data.data['key']
-        gain=data.data['gain']
-        value=data.data['value']
-        is_cache=data.data['is_cache']
-        tag=data.data['tag']
-        //alert(tag)
-
-        // $("[name='tag']").val(tag)
-        // layui.form.render('select');
-
-        $("[name='description']").val(description)
-        $("[name='key']").val(key)
-        $("[name='value']").val(value)
-        $("[name='gain']").val(gain)
-        $("[name='is_cache']").val(is_cache)
-
-
-
-        //打开表单
+        $("[name='description']").val(data.data['description'])
+        $("[name='name']").val(data.data['name'])
+        $("[name='parser_url']").val(data.data['content_url'])
+        $("[name='kind'][value='"+data.data['kind']+"']").attr('checked','')
+        form.render()
+        //打开表
 
         var o=layer.open({
           type:1,
-          title:'编辑变量',
+          title:'编辑通用',
           content:$('#addhtml'),
           btn:['提交','取消'],
           yes:function(index,layero){
@@ -503,11 +270,10 @@ $("#addtag").click(function(){
              // alert(e)
               $('#addhtml')[0].reset()
               layui.form.render()
-              
-              e=JSON.parse(e)
+              //e=JSON.parse(e)
               if(e.code==0){
                 layer.alert(e.msg,{icon:1,time:1500})
-                table.reload('table-var',{
+                table.reload('table-template',{
                     page:{
                       curr:1
                     },
@@ -520,54 +286,50 @@ $("#addtag").click(function(){
               }
               else
                 layer.alert(e.msg,{icon:2})
-
             }
-            _post('/manager/editvariable/',{
-              'id':id,
+            _post('/manager/edittemplate/',{
+              'tid':id,
+              'name':$("[name='name']").val(),
               'description':$("[name='description']").val(),
-              'key':$("[name='key']").val(),
-              'gain':$("[name='gain']").val(),
-              'value':$("[name='value']").val(),
-              'is_cache':$("[name='is_cache']").val(),
-              'tag':$("[name='tag']").val()
+              'kind':$("[name='kind']:checked").val(),
+              'content_url':$("[name='parser_url']").val()
           
-
-
             },success)
 
           }
 
         });
-        layer.full(o);
-
-
+        // layer.full(o);
       }
-      _post('/manager/queryonevar/',{id:id},success)
+      _post('/manager/querytemplatecommon/',{tid:id},success)
+    }else if(e.event=='field_edit'){
 
-    }else if(e.event=='detail'){
+        host=window.location.host
+        // port=window.location.port
+        field_url='http://'+host+'/manager/templatefield/?tid='+id
+        console.log('加载编辑字段页面=>',field_url)
+
+        var o=layer.open({
+          type:2,
+          title:'编辑字段',
+          content:field_url,
+          btn:[]
+
+        });
+
+        layer.full(o);
 
     }
 
   });
 
-
-
-
-  
-  
 });
 
-// $(document).ready(function(){
-
-// });
 </script>
 
 <script type="text/html" id="toolbar">
-
-
-  <i class="layui-icon layui-icon-edit" lay-event="edit"></i>
-
-
+  <i class="layui-icon layui-icon-edit" lay-event="common_edit"></i>
+  <i class="layui-icon layui-icon-form" lay-event="field_edit"></i>
   
 </script>
 </html>

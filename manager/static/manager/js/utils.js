@@ -342,7 +342,8 @@ function _get(url,data,success,headers={}){
 
 
 function _post(url,data,success){
-
+    console.log("【POST】"+url)
+    console.log("【data】"+JSON.stringify(data))
   // console.log(getCookie("csrftoken"));
   var loadIndex=''
     var ajaxobj=$.ajax({

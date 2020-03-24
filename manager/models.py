@@ -17,8 +17,6 @@ class Function(Model):
 	def __str__(self):
 		return self.name
 
-
-
 # class Interface(Model):
 # 	author=ForeignKey(User, on_delete=CASCADE)
 # 	name=CharField(max_length=64)
@@ -57,30 +55,36 @@ class Tag(Model):
 	def __str__(self):
 		return self.name
 
-
-class Template(Model):
-	'''报文校验
-	'''
-	kind=IntegerField()#0:按长度解析  1：按分隔符解析
-	name=CharField(max_length=16)
-	description=TextField()
-	author=ForeignKey(User, on_delete=CASCADE)
-	createtime=DateTimeField(auto_now_add=True)
-	updatetime=DateTimeField(auto_now=True)
-
-	def __str__(self):
-		return '[%s]%s'%(self.id,self.name)
-
-
 class TemplateField(Model):
 	'''报文字段定义
 	'''
 	fieldcode=CharField(max_length=16)
 	description=TextField()
-	template=ForeignKey(Template, on_delete=CASCADE)
-	start=IntegerField()
+
+	start=IntegerField()##从1算起
 	end=IntegerField()
 	index=IntegerField()
+
+	order=IntegerField()
+
+
+class Template(Model):
+	'''报文校验
+	'''
+	kind=CharField(max_length=2)#length/separator
+	name=CharField(max_length=16)
+	description=TextField()
+	author=ForeignKey(User, on_delete=CASCADE)
+	createtime=DateTimeField(auto_now_add=True)
+	updatetime=DateTimeField(auto_now=True)
+	content_url=TextField(blank=True)#报文来源接口
+	fieldinfo=ManyToManyField(TemplateField,blank=True,db_column='field_id')
+
+	def __str__(self):
+		return '[%s]%s'%(self.id,self.name)
+
+
+
 
 #
 # class Scheme(Model):
@@ -109,6 +113,10 @@ class BusinessData(Model):
 	params=TextField(blank=True,null=True)
 	preposition=TextField(blank=True,null=True)
 	postposition=TextField(blank=True,null=True)
+
+	parser_id=IntegerField(null=True)#解析器id
+	parser_check=TextField()#解析器校验
+
 	def __str__(self):
 		return '[%s]%s'%(self.id,self.businessname)
 
@@ -241,7 +249,7 @@ class Variable(Model):
 
 	def __str__(self):
 
-		return "%s_%s"%(self.author,self.key)
+		return "[%s]%s"%(self.author,self.key)
 
 
 

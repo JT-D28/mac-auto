@@ -123,7 +123,19 @@ urlpatterns = [
 
     #
     path('template/', views.template),
-    # path('querytemplate/',),
+    path('querytemplatecommon/', views.querytemplatecommon),
+    path('addtemplate/', views.addtemplate),
+    path('deltemplate/', views.deltemplate),
+    path('edittemplate/', views.edittemplate),
+    path('querytemplate/',views.querytemplate),  
+    path('querytemplatelist/',views.querytemplatelist),
+
+    path('templatefield/', views.templatefield),
+    path('querytemplatefield/', views.querytemplatefield),
+    path('addtemplatefield/', views.addtemplatefield),
+    path('deltemplatefield/',views.deltemplatefield),
+    path('edittemplatefield/',views.edittemplatefield),
+    path('queryfielddetail/', views.queryfielddetail),
 
     
     path('queryoneproduct/',views.queryoneproduct),

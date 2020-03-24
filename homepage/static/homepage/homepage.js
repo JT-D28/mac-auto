@@ -128,6 +128,7 @@ var app = new Vue({
                     authname: '',
                     authpwd: '',
                     jobname: '',
+                    order: '',
                 },
                 reportNoticeSet: {
                     color: '',
@@ -162,7 +163,7 @@ var app = new Vue({
                 productPiclist.forEach(function (item, index) {
                     setTimeout(() => actproduct[index].resize(), 0)
                 });
-
+                that.jacocoReFlash('get')
             })
         },
         runplan() {
@@ -295,11 +296,11 @@ var app = new Vue({
             } else {
                 _post_nl('/manager/queryonemailconfig/', {id: planid}, function (data) {
                     if (data.code == 0) {
-                        that.form.reportNoticeSet.color = data.data.color_scheme;
-                        that.form.reportNoticeSet.to_receive = data.data.to_receive;
-                        that.form.reportNoticeSet.description = data.data.description;
-                        that.form.reportNoticeSet.text = data.data.rich_text;
-                        that.form.reportNoticeSet.dingdingtoken = data.data.dingdingtoken
+                        that.form.reportNoticeSet.color = data.data.color_scheme!='None'?data.data.color_scheme:'';
+                        that.form.reportNoticeSet.to_receive = data.data.to_receive!='None'?data.data.to_receive:'';
+                        that.form.reportNoticeSet.description = data.data.description!='None'?data.data.description:'';
+                        that.form.reportNoticeSet.text = data.data.rich_text!='None'?data.data.rich_text:'';
+                        that.form.reportNoticeSet.dingdingtoken = data.data.dingdingtoken!='None'?data.data.dingdingtoken:''
                         that.noticeSetVisible = true;
                     } else {
                         layer.msg(data.msg)
@@ -470,20 +471,28 @@ var app = new Vue({
                     axisPointer: {
                         type: 'cross'
                     },
-                    backgroundColor: 'rgba(245, 245, 245, 0.8)',
+                    backgroundColor: 'rgba(255,255,255,1)',
                     borderWidth: 1,
                     borderColor: '#ccc',
-                    padding: 10,
+                    padding: [12, 12, 4, 12],
                     textStyle: {
                         color: '#000'
                     },
-                    width: '100px',
+                    width: '110px',
                     position: function (pos, params, el, elRect, size) {
                         var obj = {top: 10};
                         obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30;
                         return obj;
                     },
-                    extraCssText: 'width: 100px'
+                    formatter: function (params) {
+                        res = '<p style="margin-bottom:4px;width:66px;height:17px;font-size:12px;font-family:PingFang-SC-Regular,PingFang-SC;font-weight:400;color:rgba(51,51,51,1);line-height:17px;">' + params[0].name + '</p>'
+                        res += '<div style="margin-bottom:14px;width:12px;height:12px;background:rgba(221,221,221,1);border-radius:1px;">' + '<p style="font-size:12px;font-family:PingFang-SC-Regular,PingFang-SC;font-weight:400;color:rgba(51,51,51,1);line-height:12px;">' + params[4].marker + ' ' + params[4].seriesName + '：' + params[4].value + '%' + '</p>' + '</div>'
+                        for (var i = 0; i < params.length - 1; i++) {
+                            res += '<p style="margin-bottom:8px;font-size:12px;font-family:PingFang-SC-Regular,PingFang-SC;font-weight:400;color:rgba(51,51,51,1);line-height:12px;">' + params[i].marker + ' ' + params[i].seriesName + '：' + params[i].value + '</p>'
+                        }
+                        return res
+                    },
+                    extraCssText: 'width: 110px'
                 },
                 axisPointer: {
                     link: {xAxisIndex: 'all'},
@@ -807,7 +816,7 @@ var app = new Vue({
                             const data = req.response;
                             const blob = new Blob([data]);
                             var a = document.createElement('a');
-                            a.download = '日志_' + res.data + '.log';
+                            a.download = '日志_' + res.data + '.html';
                             a.href = window.URL.createObjectURL(blob);
                             a.click();
                         } else {
@@ -844,7 +853,7 @@ var app = new Vue({
             });
             oInput.remove()
         },
-        jacocoReFlash() {
+        jacocoReFlash(s) {
             var that = this;
             productid = that.form.product;
             jobname = that.form.service
@@ -852,7 +861,8 @@ var app = new Vue({
                 that.synchronize = '获取中';
                 _post_nl('/homepage/jacocoreport/', {
                     productid: productid,
-                    jobname: jobname
+                    jobname: jobname,
+                    s: s
                 }, function (data) {
                     data = JSON.parse(data);
                     if (data.code == 0) {
@@ -864,15 +874,19 @@ var app = new Vue({
                             actjacoco[index].resize()
                             actjacoco[index].setOption(that.jacocoRepConfig(rate, covered, missed, total));
                         });
-                        that.Coverage = data.data
-                    } else {
+                    } else if (data.code == 1) {
                         that.$notify({
                             title: '获取结果',
                             message: data.msg,
                             type: 'warning',
                             dangerouslyUseHTMLString: true,
-                            duration: 2000,
+                            duration: 1000,
                             position: 'bottom-left'
+                        });
+                    } else {
+                        coverlist.forEach(function (item, index) {
+                            actjacoco[index].resize()
+                            actjacoco[index].setOption(that.jacocoRepConfig(0, 0, 0, 0));
                         });
                     }
                     that.synchronize = '获取'
@@ -890,7 +904,7 @@ var app = new Vue({
             } else if (curdata[0] == 0) {
                 this.form.service = curdata.shift()
             }
-            this.jacocoReFlash()
+            this.jacocoReFlash('get')
         },
         getReportChart() {
             var that = this;
@@ -916,20 +930,47 @@ var app = new Vue({
         },
         jacocoRun() {
             var that = this;
-            that.jacocoRunstate = '请等待';
-            _post_nl('/homepage/jenkinsJobRun/', {
-                productid: that.form.product, jobnames: that.form.service, action: 'jacoco'
-            }, function (data) {
-                that.$notify({
-                    title: '运行结果',
-                    dangerouslyUseHTMLString: true,
-                    message: data.data,
-                    duration: 2000,
-                    type: 'success',
-                    position: 'bottom-left'
+            layer.confirm('选择任务执行方案', {
+                title: false,
+                btn: ['顺序执行', '批量执行'],
+                btnAlign: 'c'
+            }, function () {
+                that.jacocoRunstate = '请等待';
+                _post_nl('/homepage/jenkinsJobRun/', {
+                    productid: that.form.product, jobnames: that.form.service, action: 'jacocoOne'
+                }, function (data) {
+                    that.$notify({
+                        title: '运行结果',
+                        dangerouslyUseHTMLString: true,
+                        message: data.data,
+                        duration: 2000,
+                        type: 'success',
+                        position: 'bottom-left'
+                    });
+                    that.jacocoRunstate = '运行';
+                })
+                layer.msg('运行等待中', {
+                    time: 1000
                 });
-                that.jacocoRunstate = '运行';
-            })
+            }, function () {
+                that.jacocoRunstate = '请等待';
+                _post_nl('/homepage/jenkinsJobRun/', {
+                    productid: that.form.product, jobnames: that.form.service, action: 'jacocoMany'
+                }, function (data) {
+                    that.$notify({
+                        title: '运行结果',
+                        dangerouslyUseHTMLString: true,
+                        message: data.data,
+                        duration: 2000,
+                        type: 'success',
+                        position: 'bottom-left'
+                    });
+                    that.jacocoRunstate = '运行';
+                })
+                layer.msg('运行等待中', {
+                    time: 1000
+                });
+            });
         },
         getproductReport(rate, total) {
             var that = this;
@@ -954,17 +995,17 @@ var app = new Vue({
                         fontSize: 16,
                         rich: {
                             a: {
-                                color:'rgba(102,102,102,1)',
+                                color: 'rgba(102,102,102,1)',
                                 fontSize: 12,
                                 fontWeight: 500,
-                                lineHeight:43,
-                                fontFamily:'PingFang-SC-Medium,PingFang-SC',
+                                lineHeight: 43,
+                                fontFamily: 'PingFang-SC-Medium,PingFang-SC',
                             },
                             b: {
-                                color:'rgba(51,51,51,1)',
+                                color: 'rgba(51,51,51,1)',
                                 fontSize: 16,
                                 fontWeight: 500,
-                                fontFamily:'PingFang-SC-Medium,PingFang-SC',
+                                fontFamily: 'PingFang-SC-Medium,PingFang-SC',
                             },
                         },
                     },
@@ -1015,17 +1056,17 @@ var app = new Vue({
                         fontSize: 16,
                         rich: {
                             a: {
-                                color:'rgba(102,102,102,1)',
+                                color: 'rgba(102,102,102,1)',
                                 fontSize: 12,
                                 fontWeight: 500,
-                                lineHeight:43,
-                                fontFamily:'PingFang-SC-Medium,PingFang-SC',
+                                lineHeight: 43,
+                                fontFamily: 'PingFang-SC-Medium,PingFang-SC',
                             },
                             b: {
-                                color:'rgba(51,51,51,1)',
+                                color: 'rgba(51,51,51,1)',
                                 fontSize: 16,
                                 fontWeight: 500,
-                                fontFamily:'PingFang-SC-Medium,PingFang-SC',
+                                fontFamily: 'PingFang-SC-Medium,PingFang-SC',
                             },
                         },
                     },
@@ -1061,14 +1102,16 @@ var app = new Vue({
         },
     },
     created: function () {
+        apphight = document.documentElement.clientHeight;
+        footheight = apphight * 0.81 - 94;
+        $("#app").css('height', apphight + 'px');
+        $("#foot").css('height', footheight + 'px');
         this.getproduct();
     },
     watch: {
         'form.forceStopPlans': function (id) {
             var that = this;
-            _post_nl('/homepage/queryPlanState/', {id: id}, function (data) {
-                that.runningState = data.data === 1 ? '运行' : '未运行'
-            })
+            that.planStatereFlash()
         },
         'form.third_plan': function (id) {
             var that = this;

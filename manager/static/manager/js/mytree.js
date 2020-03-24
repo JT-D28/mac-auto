@@ -426,7 +426,7 @@ var tree={
 												const data = req.response;
 												const blob = new Blob([data]);
 												var a = document.createElement('a');
-												a.download = taskid+'.log';
+												a.download = taskid+'.html';
 												a.href = window.URL.createObjectURL(blob);
 												a.click();
 											}

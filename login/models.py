@@ -1,37 +1,36 @@
 from django.db.models import *
 
+
 # Create your models here.
 
 class User(Model):
-
-    gender = (
-        ('male', "男"),
-        ('female', "女"),
-    )
-
-    name = CharField(max_length=128, unique=True)
-    password = CharField(max_length=256)
-    email = EmailField(blank=True)
-    sex = CharField(max_length=32, choices=gender, default="男")
-    createtime=DateTimeField(auto_now_add=True,null=True)
-    updatetime=DateTimeField(auto_now=True,null=True)
-
-
-    def __str__(self):
-        return self.name
-
-    @classmethod
-    def create_superuser(cls, password):
-        if not User.objects.filter(name='admin').exists():
-            user = User()
-            user.name = 'admin'
-            user.password = password
-            user.save()
-
-    class Meta:
-        ordering = ["-createtime"]
-        verbose_name = "用户"
-        verbose_name_plural = "用户"
+	gender = (
+		('male', "男"),
+		('female', "女"),
+	)
+	
+	name = CharField(max_length=128, unique=True)
+	password = CharField(max_length=256)
+	email = EmailField(blank=True)
+	sex = CharField(max_length=32, choices=gender, default="男")
+	createtime = DateTimeField(auto_now_add=True, null=True)
+	updatetime = DateTimeField(auto_now=True, null=True)
+	
+	def __str__(self):
+		return self.name
+	
+	@classmethod
+	def create_superuser(cls, password):
+		if not User.objects.filter(name='admin').exists():
+			user = User()
+			user.name = 'admin'
+			user.password = password
+			user.save()
+	
+	class Meta:
+		ordering = ["-createtime"]
+		verbose_name = "用户"
+		verbose_name_plural = "用户"
 
 #
 # class Role(Model):
@@ -45,7 +44,6 @@ class User(Model):
 #     权限表
 #     '''
 #     kind=CharField(max_length=16,default='menu')#OPERATIOH|WEB
-
 
 
 # class Operation(Model):
@@ -84,4 +82,3 @@ class User(Model):
 #     '''
 #     auth=ForeignKey(Auth, on_delete=CASCADE)
 #     el=ForeignKey(WebElement,on_delete=CASCADE)
-

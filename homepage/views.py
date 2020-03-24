@@ -9,6 +9,11 @@ from ME2 import configs
 from manager.invoker import gettaskresult, MainSender
 from manager import cm
 from manager.core import *
+# Create your views here.
+from manager.models import Product, Plan, ResultDetail, MailConfig, Order
+import json
+from .dealinfo import doDebugInfo, dealJacocoJobName
+from .models import Jacoco_report, Jacoco_data
 
 
 @csrf_exempt
@@ -35,13 +40,6 @@ def process(request):
 	return JsonResponse(simplejson(code=code, msg=is_done, data=log_text), safe=False)
 
 
-# Create your views here.
-from manager.models import Product, Plan, ResultDetail, MailConfig, Order
-import json
-from .dealinfo import doDebugInfo
-from .models import Jacoco_report
-
-
 @csrf_exempt
 def homepage(request):
 	return render(request, 'home0page.html')
@@ -59,7 +57,7 @@ def queryproduct(request):
 			o['description'] = x.description
 			res.append(o)
 		return JsonResponse(simplejson(code=0, msg='操作成功', data=res), safe=False)
-
+	
 	except:
 		print(traceback.format_exc())
 		code = 4
@@ -82,7 +80,7 @@ def queryplan(request):
 		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
 	success_rate = rows[0]['成功数'] / rows[0]['总数'] * 100 if rows[0]['总数'] != 0 else 0
 	total = rows[0]['total'] if rows[0]['total'] is not None else 0
-
+	
 	jacocoset = Jacoco_report.objects.values().filter(productid=pid) if pid != '' else None
 	service = [{'id': 0, 'name': '总计'}]
 	if jacocoset:
@@ -107,7 +105,7 @@ def queryplan(request):
 		return JsonResponse(
 			simplejson(code=0, msg='操作成功', data=datanode, rate=str(success_rate)[0:5], total=total, service=service),
 			safe=False)
-
+	
 	except:
 		print(traceback.format_exc())
 		code = 4
@@ -249,7 +247,7 @@ def reportchart(request):
         FROM manager_resultdetail GROUP BY taskid) AS n JOIN manager_plan m 
         ON x.taskid=n.taskid AND x.plan_id=m.id WHERE is_verify=1 and plan_id=%s ORDER BY time DESC LIMIT 10
         '''
-
+		
 		# sqlite3
 		sql2 = '''
         SELECT plan_id,description,success,fail,skip,total,taskid,time,(success*100/total) rate,(total-success-FAIL-skip) error FROM (
@@ -259,9 +257,9 @@ def reportchart(request):
         strftime('%%m-%%d %%H:%%M',manager_resultdetail.createtime) AS time FROM manager_resultdetail LEFT JOIN 
         manager_plan ON manager_resultdetail.plan_id=manager_plan.id WHERE plan_id=%s and is_verify=1 GROUP BY taskid) AS m ORDER BY time DESC LIMIT 10
         '''
-
+		
 		sql = sql2 if configs.dbtype == 'sqlite3' else sql1
-
+		
 		with connection.cursor() as cursor:
 			cursor.execute(sql, [planid])
 			row = cursor.fetchall()
@@ -295,6 +293,7 @@ def badresult(request):
 @csrf_exempt
 def jacocoreport(request):
 	code, msg = 0, ''
+	jobs = request.POST.getlist('jobname[]')
 	jobnames = []
 	res = {}
 	coveragelist = ['branchCoverage', 'classCoverage', 'complexityScore', 'instructionCoverage', 'lineCoverage',
@@ -302,49 +301,81 @@ def jacocoreport(request):
 	items = ['covered', 'missed', 'percentage', 'percentageFloat', 'total']
 	for i in coveragelist:
 		res[i] = {'covered': 0, 'missed': 0, 'percentage': 0, 'percentageFloat': 0, 'total': 0}
-
-	jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
-	if jacocoset:
+	
+	try:
+		jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
 		authname, authpwd, jenkinsurl = jacocoset.authname, jacocoset.authname, jacocoset.jenkinsurl
-		if '0' in request.POST.getlist('jobname[]'):
-			jobs = jacocoset.jobname.split(";")[:-1] if jacocoset.jobname.endswith(";") else jacocoset.jobname.split(
-				";")
-			for i in jobs:
-				jobnames.append(i.split(":")[1])
-		else:
-			jobnames = [x for x in request.POST.getlist('jobname[]')]
+		jobnames = dealJacocoJobName(jacocoset.jobname, jobs)
 		jobnum = len(jobnames)
-		if len(authname) & len(authpwd) != 0:
-			# 先判断下任务有没有在运行
-			server = jenkins.Jenkins(jacocoset.jenkinsurl, username=jacocoset.authname, password=jacocoset.authpwd)
-			for job in jobnames:
-				buildinfo = server.get_build_info(job, server.get_job_info(job)['lastBuild']['number'])
-				if buildinfo['building']:
-					msg += '%s:正在运行<br>' % (job)
-				elif buildinfo['result'] != 'SUCCESS':
-					msg += '%s:上次构建失败<br>' % (job)
-			if msg != '':
-				return JsonResponse(simplejson(code=1, msg=msg), safe=False)
-
-			s = requests.session()
-			s.auth = (authname, authpwd)
-			for index, jobname in enumerate(jobnames):
-				try:
-					url = jenkinsurl + "/job/" + jobname + "/lastBuild/jacoco/api/python?pretty=true"
-					jsond = json.loads(s.get(url).text)
-					del jsond['_class'];
-					del jsond['previousResult']
-					for i in coveragelist:
-						for k in items:
-							if k in ['percentage', 'percentageFloat']:
-								jsond[i][k] = round(res[i][k] + jsond[i][k] / jobnum, 2)
-							else:
-								jsond[i][k] = res[i][k] + jsond[i][k]
-					res = jsond.copy()
-				except:
-					print(traceback.format_exc())
-					code = 1
-					msg = '查询异常'
+		if request.POST.get('s') == 'get':
+			print('库中获取覆盖率')
+			with connection.cursor() as cursor:
+				cursor.execute('''SELECT branchCoverage,classCoverage,complexityScore,instructionCoverage,
+				lineCoverage,methodCoverage from (SELECT max(jobnum) AS num,jobname FROM `homepage_jacoco_data` a 
+				GROUP BY jobname ) a , homepage_jacoco_data b where a.num = b.jobnum and a.jobname=b.jobname 
+				and a.jobname in %s
+				''', [jobnames])
+				desc = cursor.description
+				rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+				print(rows)
+			for jsond in rows:
+				for i in coveragelist:
+					jsond[i] = json.loads(jsond[i].replace("'", '"'))
+					for k in items:
+						if k in ['percentage', 'percentageFloat']:
+							jsond[i][k] = round(res[i][k] + jsond[i][k] / jobnum, 2)
+						else:
+							jsond[i][k] = res[i][k] + jsond[i][k]
+				res = jsond.copy()
+		elif request.POST.get('s') == 'update':
+			if len(authname) & len(authpwd) != 0:
+				# 先判断下任务有没有在运行
+				num = {}
+				server = jenkins.Jenkins(jacocoset.jenkinsurl, username=jacocoset.authname, password=jacocoset.authpwd)
+				for i, job in enumerate(jobnames):
+					num[job] = server.get_job_info(job)['lastBuild']['number']
+					buildinfo = server.get_build_info(job, num[job])
+					if buildinfo['building']:
+						msg += '%s:正在运行<br>' % (job)
+					elif buildinfo['result'] != 'SUCCESS':
+						msg += '%s:上次构建失败<br>' % (job)
+				if msg != '':
+					return JsonResponse(simplejson(code=1, msg=msg), safe=False)
+				s = requests.session()
+				s.auth = (authname, authpwd)
+				for index, jobname in enumerate(jobnames):
+					try:
+						url = jenkinsurl + "/job/" + jobname + "/lastBuild/jacoco/api/python?pretty=true"
+						jsond = json.loads(s.get(url).text)
+						del jsond['_class']
+						del jsond['previousResult']
+						if not Jacoco_data.objects.filter(jobnum=num[jobname], jobname=jobname).exists():
+							data = Jacoco_data()
+							data.jobnum = num[jobname]
+							data.jobname = jobname
+							data.branchCoverage = jsond['branchCoverage']
+							data.classCoverage = jsond['classCoverage']
+							data.complexityScore = jsond['complexityScore']
+							data.instructionCoverage = jsond['instructionCoverage']
+							data.lineCoverage = jsond['lineCoverage']
+							data.methodCoverage = jsond['methodCoverage']
+							data.save()
+							print('%s第%s次构建的覆盖率数据保存成功' % (jobname, num[jobname]))
+						# threading.Thread(target=dealJacocoData, args=(jsond.copy(), jobname, num[jobname])).start()
+						for i in coveragelist:
+							for k in items:
+								if k in ['percentage', 'percentageFloat']:
+									jsond[i][k] = round(res[i][k] + jsond[i][k] / jobnum, 2)
+								else:
+									jsond[i][k] = res[i][k] + jsond[i][k]
+						res = jsond.copy()
+					except:
+						print(traceback.format_exc())
+						code = 1
+						msg = '查询异常'
+	except:
+		print(traceback.format_exc())
+		return JsonResponse(simplejson(code=2, msg='没有进行代码覆盖率配置', data=res), safe=False)
 	return JsonResponse(simplejson(code=code, msg=msg, data=res), safe=False)
 
 
@@ -397,14 +428,14 @@ def querybuglog(request):  # 历史缺陷
 			 '测试点': rows[i]['测试点'], '参数信息': rows[i]['参数信息'], '失败原因': rows[i]['失败原因'],
 			 '任务id': rows[i]['任务id']})
 	res, total = getpagedata(res, request.POST.get('page'), request.POST.get('limit'))
-
+	
 	return JsonResponse({"code": 0, 'count': total, "data": res})
 
 
 @csrf_exempt
 def initbugcount(request):  # 缺陷统计
 	productid = request.POST.get('productid')
-
+	
 	sql = '''
     SELECT url as '接口' ,count(*) as '次数' from manager_resultdetail r ,manager_step s
     WHERE r.plan_id in (SELECT follow_id FROM manager_order WHERE main_id=%s) and r.result 
@@ -419,20 +450,19 @@ def initbugcount(request):  # 缺陷统计
 
 @csrf_exempt
 def downloadlog(request):
-	logname = './logs/deal/' + request.POST.get('taskid') + '.log'
-	# file = open(logname, 'rb')
+	logname = './logs/' + request.POST.get('taskid') + '.log'
 	with open(logname, 'r', encoding='utf-8') as f:
-		log_text = f.read()
-	log_text = log_text.replace("<span style='color:#FF3399'>", '').replace("</xmp>", '').replace(
-		"<xmp style='color:#009999;'>", '').replace(
-		"<span class='layui-bg-green'>", '').replace("<span class='layui-bg-red'>", '').replace(
-		"<span class='layui-bg-orange'>", '').replace("</span>", '').replace(
-		"<span style='color:#009999;'>", '').replace('<br>', '').replace(
-		"'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36', ",
-		'')
+		log_text = '<meta charset="UTF-8">\n' + f.read()
+	# log_text = log_text.replace("<span style='color:#FF3399'>", '').replace("</xmp>", '').replace(
+	# 	"<xmp style='color:#009999;'>", '').replace(
+	# 	"<span class='layui-bg-green'>", '').replace("<span class='layui-bg-red'>", '').replace(
+	# 	"<span class='layui-bg-orange'>", '').replace("</span>", '').replace(
+	# 	"<span style='color:#009999;'>", '').replace('<br>', '').replace(
+	# 	"'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36', ",
+	# 	'')
 	response = HttpResponse(log_text)
 	response['Content-Type'] = 'application/octet-stream'
-	response['Content-Disposition'] = 'attachment;filename=%s.log' % request.POST.get('taskid')
+	response['Content-Disposition'] = 'attachment;filename=%s.html' % request.POST.get('taskid')
 	return response
 
 
@@ -480,8 +510,8 @@ def editProductSet(request):
 def downloadReport(request):
 	reportname = './local_reports/report_' + request.POST.get("taskid") + '.html'
 	if os.path.exists(reportname):
-		with open(reportname, 'r', encoding='GBK') as f:
-			text = f.read()
+		with open(reportname, 'r', encoding='gbk') as f:
+			text = '<meta charset="UTF-8">\n' + f.read()
 		response = HttpResponse(text)
 		response['Content-Type'] = 'application/octet-stream'
 		response['Content-Disposition'] = 'attachment;filename=%s.html' % request.POST.get('taskid')
@@ -533,19 +563,31 @@ def query_third_call(request):
 def jenkinsJobRun(request):
 	jobs = request.POST.getlist('jobnames[]')
 	action = request.POST.get('action')
-	jobnames = []
 	res = ''
-	if action == 'jacoco':
+	try:
 		jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
-		if '0' in jobs:
-			jobs = jacocoset.jobname.split(";")[:-1] if jacocoset.jobname.endswith(";") else jacocoset.jobname.split(
-				";")
-			for i in jobs:
-				jobnames.append(i.split(":")[1])
-		else:
-			jobnames = [x for x in request.POST.getlist('jobnames[]')]
+		jobnames = dealJacocoJobName(jacocoset.jobname, jobs)
+	except:
+		return JsonResponse({'code': 1, 'data': '产品没有相应的代码覆盖率配置！'})
+	
+	# 测试连接
+	try:
 		server = jenkins.Jenkins(jacocoset.jenkinsurl, username=jacocoset.authname, password=jacocoset.authpwd)
-
+		server.get_whoami()
+	except:
+		print(traceback.format_exc())
+		return JsonResponse({'code': 1, 'data': '用户名或密码错误，请检查！'})
+	
+	# 任务运行状态检查
+	msg = ''
+	for job in jobnames:
+		buildinfo = server.get_build_info(job, server.get_job_info(job)['lastBuild']['number'])
+		if buildinfo['building']:
+			msg += '%s:已经在运行了，请稍后再试<br>' % (job)
+	if msg != '':
+		return JsonResponse({'code': 1, 'data': msg})
+	
+	if action == 'jacocoMany':
 		buildnumber0 = {}
 		buildnumber1 = {}
 		for index, job in enumerate(jobnames):
@@ -560,3 +602,19 @@ def jenkinsJobRun(request):
 				if len(res.split("<br>")) - 1 == len(jobnames):
 					return JsonResponse({'code': 0, 'data': res})
 				time.sleep(3)
+	
+	if action == 'jacocoOne':
+		jobstr = ','.join(i for i in jobnames)
+		job = 'tfp-cmbc-mysql-uat-report'
+		print(server.get_job_config('tfp-cmbc-mysql-uat-report1'))
+		try:
+			if server.job_exists(job):
+				server.delete_job(job)
+				print('删除已有的执行任务')
+			with open('./JenkinsConfig.xml') as f:
+				config = f.read() % jobstr
+			server.create_job(job, config)
+			server.build_job(job)
+			return JsonResponse({'code': 0, 'data': '任务已开始执行'})
+		except:
+			return JsonResponse({'code': 1, 'data': "可能出现了问题，可以前往jenkins检查"})

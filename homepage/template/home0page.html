@@ -10,11 +10,16 @@
     <!--网页在缓存中的过期时间为0，一旦网页过期，必须从服务器上重新订阅-->
     <meta http-equiv="expires" content="0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <link rel="stylesheet" href="https://cdn.bootcss.com/element-ui/2.13.0/theme-chalk/index.css">
+    <script src="{% static 'homepage/vue.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'homepage/eleui/theme-chalk/index.css' %}">
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layui.css' %}" media="all">
     <link rel="stylesheet" href="{% static 'homepage/layui/css/layuimini.css' %}" media="all">
-    <script src="{% static 'homepage/vue.js' %}"></script>
     <script src="{% static 'homepage/eleui/index.js' %}"></script>
+    <script src="{% static 'manager/js/utils.js' %}" charset="utf-8"></script>
+    <script src="{% static 'homepage/echarts.common.min.js' %}" charset="utf-8"></script>
+    <script src="{% static 'homepage/echartsTheme.js' %}" charset="utf-8"></script>
+    <script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
+    <script src="{% static 'manager/js/jquery.min.js' %}"></script>
     <title></title>
 </head>
 
@@ -25,6 +30,11 @@
 
     #coverage > .el-card__header {
         padding: 5px 20px;
+    }
+
+    #selectpd,
+    #selectpl {
+        padding-left: 42px;
     }
 
     body {
@@ -43,7 +53,8 @@
 
     .workbtn-module {
         text-align: center;
-        top: 50%;transform: translateY(-50%);
+        top: 50%;
+        transform: translateY(-50%);
         border-right: 2px solid rgba(248, 248, 248, 1);
     }
 
@@ -63,7 +74,7 @@
 
     .workbtn-module a cite {
         position: relative;
-        top: 2px;
+        top: 6px;
         display: block;
         text-overflow: ellipsis;
         overflow: hidden;
@@ -79,8 +90,8 @@
         margin-right: 0px;
     }
 
-    #echarts-records :first-child {
-        margin: 0 auto !important;
+    .el-input__icon {
+        line-height: 0;
     }
 
     .layui-card > .el-tabs > .el-tabs__content {
@@ -120,459 +131,461 @@
     .el-tabs__active-bar {
         background-color: rgba(0, 151, 136, 1);
     }
-
-
 </style>
-
 <body>
 <div id="app">
-    <div id="header" style="height: 74px;">
-        <el-form :inline="true" :model="form" style="padding: 20px" class="demo-form-inline">
-            <el-select v-model="form.product" filterable placeholder="选择项目" style="width: 240px;padding-right: 15px"
-                       @change="selectProduct">
-                <el-option v-for="product in products" :key="product.id"
-                           :label="product.description"
-                           :value="product.id">
-                </el-option>
-            </el-select>
-            <el-select v-model="form.plan" @visible-change="selectPlanVisible($event)" filterable
-                       placeholder="选择计划" style="width: 240px">
-                <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
-                           :value="plan.id">
-                </el-option>
-            </el-select>
-        </el-form>
-    </div>
-    <div id="body" style="height: 19%;padding: 0 20px 20px 20px;">
-        <div style="height: 100%;background-color: rgba(255,255,255,1)">
-            <div class="layui-row" style="height: 100%;">
-                <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
-                    <a @click="runplan" href="javascript:;" title="这里是验证用例，调试去用例管理！">
-                        <i class="layui-icon layui-icon-play"></i>
-                        <cite>验证</cite>
-                    </a>
-                </div>
-                <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
-                    <a @click="setplan" href="javascript:;">
-                        <i class="layui-icon layui-icon-set"></i>
-                        <cite>项目设置</cite>
-                    </a>
-                </div>
-                <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
-                    <a @click="planHistory" href="javascript:;">
-                        <i class="layui-icon layui-icon-survey"></i>
-                        <cite>历史记录</cite>
-                    </a>
-                </div>
-                <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
-                    <a @click="newRepoet" @contextmenu.prevent="downloadReport" href="javascript:;">
-                        <i class="layui-icon layui-icon-chart-screen"></i>
-                        <cite>最新报告</cite>
-                    </a>
-                </div>
-                <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
-                    <a @click="setPlanNotice" href="javascript:;">
-                        <i class="layui-icon layui-icon-notice"></i>
-                        <cite>报告通知</cite>
-                    </a>
-                </div>
-                <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
-                    <a @click="seeprocess" @contextmenu.prevent="downloadRunlog"
-                       href="javascript:;">
-                        <i class="layui-icon layui-icon-log"></i>
-                        <cite>运行日志</cite>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-    </div>
-    <div id="foot" style="height: 40%">
-        <div class="" v-show="showReport" style="display:flex;bottom: 0;height: 100%">
-            <div class="layui-card"
-                 style="width:25%;min-width:300px;margin: 0px 20px 20px 20px;display: inline-block">
-                <div style="padding:20px;height: calc(100% - 40px)">
-                    <div>
-                        <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
-                            项目运行情况</p>
-                    </div>
-                    <div style="height: calc(50% - 20px)">
-                        <div style="padding: 7% 0;height: 100%">
-                            <div id="productCount"
-                                 style="width: 100%;height: 70%;padding-top: 7%"></div>
-                        </div>
-                    </div>
-                    <div style="height:calc(50% - 20px);padding-top: 11.3%">
-                        <div style="padding: 0 0;height: 100%">
-                            <div id="productRate"
-                                 style="width: 100%;height: 70%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="layui-card" style="flex:1;width:100%;margin: 0px 20px 20px 0;display: inline-block">
-                <el-tabs @tab-click="reportChartCilck" :tab-position="productsetposition" style="height: 100%">
-                    <el-tab-pane label="计划成功率" style="height: 100%">
-                        <div id="echarts-records"
-                             style="background-color:#f2f2f2;height:100%;"></div>
-                    </el-tab-pane>
-
-                    <el-tab-pane label="代码覆盖率" style="height: 100%">
-                        <el-card id="coverage" class="box-card" style="height: 100%">
-                            <div slot="header" class="clearfix">
-                                <el-select @change="serviceChange" clearable collapse-tags filterable
-                                           v-model="form.service" multiple style="width: 50%">
-                                    <el-option
-                                            v-for="i in services"
-                                            :key="i.id"
-                                            :label="i.name"
-                                            :value="i.id">
-                                    </el-option>
-                                </el-select>
-                                <el-button type="success" @click="jacocoReFlash">${synchronize}</el-button>
-                                <el-button type="success" @click="jacocoRun">${jacocoRunstate}</el-button>
-                            </div>
-
-                            <div id="coveragerow" class="layui-row" style="height: 100%">
-                                <div class="layui-col-md4">
-                                    <div class="layui-card" style="height: 100%;">
-                                        <div class="layui-card-header" style="padding-right: 20px;height: 42px">
-                                            branchCoverage
-                                        </div>
-                                        <div class="layui-card-body"
-                                             style="padding:5px 5px;height: calc(100% - 55px)">
-                                            <div id="branchCoverage" class="layui-col-md6"
-                                                 style="width: 100%;height: 100%;"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="layui-col-md4">
-                                    <div class="layui-card" style="height: 100%;">
-                                        <div class="layui-card-header" style="padding-right: 20px;height: 42px">
-                                            classCoverage
-                                        </div>
-                                        <div class="layui-card-body"
-                                             style="padding:5px 5px;height: calc(100% - 55px)">
-                                            <div id="classCoverage" class="layui-col-md6"
-                                                 style="width: 100%;height: 100%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="layui-col-md4">
-                                    <div class="layui-card" style="height: 100%;">
-                                        <div class="layui-card-header" style="padding-right: 20px;height: 42px">
-                                            instructionCoverage
-                                        </div>
-                                        <div class="layui-card-body"
-                                             style="padding:5px 5px;height: calc(100% - 55px)">
-                                            <div id="instructionCoverage" class="layui-col-md6"
-                                                 style="width: 100%;height: 100%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="layui-col-md4">
-                                    <div class="layui-card" style="height: 100%;">
-                                        <div class="layui-card-header" style="padding-right: 20px;height: 42px">
-                                            complexityScore
-                                        </div>
-                                        <div class="layui-card-body"
-                                             style="padding:5px 5px;height: calc(100% - 55px)">
-                                            <div id="complexityScore" class="layui-col-md6"
-                                                 style="width: 100%;height: 100%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="layui-col-md4">
-                                    <div class="layui-card" style="height: 100%;">
-                                        <div class="layui-card-header" style="padding-right: 20px;height: 42px">
-                                            lineCoverage
-                                        </div>
-                                        <div class="layui-card-body"
-                                             style="padding:5px 5px;height: calc(100% - 55px)">
-                                            <div id="lineCoverage" class="layui-col-md6"
-                                                 style="width: 100%;height: 100%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="layui-col-md4">
-                                    <div class="layui-card" style="height: 100%;">
-                                        <div class="layui-card-header" style="padding-right: 20px;height: 42px">
-                                            methodCoverage
-                                        </div>
-                                        <div class="layui-card-body"
-                                             style="padding:5px 5px;height: calc(100% - 55px)">
-                                            <div id="methodCoverage" class="layui-col-md6"
-                                                 style="width: 100%;height: 100%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-
-                            <!--      <div class="layui-col-md4">
-									  <div class="layui-card">
-										  <div class="layui-card-header" style="padding-right: 20px">
-											  branchCoverage
-										  </div>
-										  <div class="layui-card-body" style="padding:5px 15px">
-											  <div class="layui-row">
-												  <div id="branchCoverage" class="layui-col-md4"
-													   style="width: 100px;height: 100px"></div>
-												  <div class="layui-col-md6 jacocofontsize">
-													  覆盖率：${Coverage.branchCoverage.percentageFloat}%<br>
-													  覆盖数：${Coverage.branchCoverage.covered}<br>
-													  缺失数：${Coverage.branchCoverage.missed}<br>
-													  总 数：${Coverage.branchCoverage.total}<br>
-												  </div>
-											  </div>
-										  </div>
-									  </div>
-								  </div>
-								  <div class="layui-col-md4">
-									  <div class="layui-card">
-										  <div class="layui-card-header">
-											  classCoverage
-										  </div>
-										  <div class="layui-card-body" style="padding:5px 15px">
-											  <div class="layui-row">
-												  <div id="classCoverage" class="layui-col-md4"
-													   style="width: 100px;height: 100px"></div>
-												  <div class="layui-col-md6 jacocofontsize">
-													  覆盖率：${Coverage.classCoverage.percentageFloat}%<br>
-													  覆盖数：${Coverage.classCoverage.covered}<br>
-													  缺失数：${Coverage.classCoverage.missed}<br>
-													  总 数：${Coverage.classCoverage.total}<br>
-												  </div>
-											  </div>
-										  </div>
-									  </div>
-								  </div>
-								  <div class="layui-col-md4">
-									  <div class="layui-card">
-										  <div class="layui-card-header">
-											  instructionCoverage
-										  </div>
-										  <div class="layui-card-body" style="padding:5px 15px">
-											  <div class="layui-row">
-												  <div id="instructionCoverage" class="layui-col-md4"
-													   style="width: 100px;height: 100px"></div>
-												  <div class="layui-col-md6 jacocofontsize">
-													  覆盖率：${Coverage.instructionCoverage.percentageFloat}%<br>
-													  覆盖数：${Coverage.instructionCoverage.covered}<br>
-													  缺失数：${Coverage.instructionCoverage.missed}<br>
-													  总 数：${Coverage.instructionCoverage.total}<br>
-												  </div>
-											  </div>
-										  </div>
-									  </div>
-								  </div>
-								  <div class="layui-col-md4">
-									  <div class="layui-card">
-										  <div class="layui-card-header">
-											  complexityScore
-										  </div>
-										  <div class="layui-card-body" style="padding:5px 15px">
-											  <div class="layui-row">
-												  <div id="complexityScore" class="layui-col-md4"
-													   style="width: 100px;height: 100px"></div>
-												  <div class="layui-col-md6 jacocofontsize">
-													  覆盖率：${Coverage.complexityScore.percentageFloat}%<br>
-													  覆盖数：${Coverage.complexityScore.covered}<br>
-													  缺失数：${Coverage.complexityScore.missed}<br>
-													  总 数：${Coverage.complexityScore.total}<br>
-												  </div>
-											  </div>
-										  </div>
-									  </div>
-								  </div>
-								  <div class="layui-col-md4">
-									  <div class="layui-card">
-										  <div class="layui-card-header">
-											  lineCoverage
-										  </div>
-										  <div class="layui-card-body" style="padding:5px 15px">
-											  <div class="layui-row">
-												  <div id="lineCoverage" class="layui-col-md4"
-													   style="width: 100px;height: 100px"></div>
-												  <div class="layui-col-md6 jacocofontsize">
-													  覆盖率：${Coverage.lineCoverage.percentageFloat}%<br>
-													  覆盖数：${Coverage.lineCoverage.covered}<br>
-													  缺失数：${Coverage.lineCoverage.missed}<br>
-													  总 数：${Coverage.lineCoverage.total}<br>
-												  </div>
-											  </div>
-										  </div>
-									  </div>
-								  </div>
-								  <div class="layui-col-md4">
-									  <div class="layui-card">
-										  <div class="layui-card-header">
-											  methodCoverage
-										  </div>
-										  <div class="layui-card-body" style="padding:5px 15px">
-											  <div class="layui-row">
-												  <div id="methodCoverage" class="layui-col-md4"
-													   style="width: 100px;height: 100px"></div>
-												  <div class="layui-col-md6 jacocofontsize">
-													  覆盖率：${Coverage.methodCoverage.percentageFloat}%<br>
-													  覆盖数：${Coverage.methodCoverage.covered}<br>
-													  缺失数：${Coverage.methodCoverage.missed}<br>
-													  总 数：${Coverage.methodCoverage.total}<br>
-												  </div>
-											  </div>
-										  </div>
-									  </div>
-								  </div>!-->
-
-                        </el-card>
-                    </el-tab-pane>
-                </el-tabs>
-            </div>
-        </div>
-    </div>
-
-
-    <el-dialog id='productSet' title='项目设置' :visible.sync="productSetVisible" width="70%" top="3vh"
-               style="height: 100%">
-        <el-tabs :tab-position="productsetposition">
-            <el-tab-pane label="jacoco配置">
-                <el-form :label-position="productsetposition" label-width="15%" :model="form">
-                    <el-form-item label="jenkins地址">
-                        <el-input v-model="form.productset.jenkinsurl"></el-input>
-                    </el-form-item>
-                    <el-form :inline="true" :model="form" class="demo-form-inline">
-                        <el-form-item label="用户名" style="width: 47%" label-width="32%">
-                            <el-input v-model="form.productset.authname"></el-input>
-                        </el-form-item>
-                        <el-form-item label="密码" style="width: 47%" label-width="32%">
-                            <el-input v-model="form.productset.authpwd"></el-input>
-                        </el-form-item>
-                    </el-form>
-                    <el-form-item label="服务名和任务名">
-                        <el-input type="textarea" v-model="form.productset.jobname" placeholder='填入内容为描述/服务名称和jenkins中对应的任务名，格式示例：
-settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></el-input>
-                    </el-form-item>
-                </el-form>
-                <el-button type="primary" @click="jacocoSetSave">保存</el-button>
-                <el-button @click="productSetVisible = false">取消</el-button>
-            </el-tab-pane>
-            <el-tab-pane label='解除运行状态'>
-                <el-form :inline="true" :model="form" class="demo-form-inline">
-                    <el-select v-model="form.forceStopPlans" filterable placeholder="选择计划"
-                               style="width: 49%">
-                        <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
-                                   :value="plan.id">
-                        </el-option>
-                    </el-select>
-                    <h3 style="margin-top: 3rem">任务当前状态：${runningState}</h3><br>
-                </el-form>
-                <el-button type="success" @click="planStatereFlash" style="margin-top: 2rem">刷新
-                </el-button>
-                <el-tooltip class="item" effect="dark" content="确定计划运行完成但是提示还在运行时点击" placement="bottom">
-                    <el-button type="danger" @click="forceStop" style="margin-top: 2rem">更改运行状态
-                    </el-button>
-                </el-tooltip>
-            </el-tab-pane>
-            <el-tab-pane label='外部调用链接'>
-                <el-select v-model="form.third_plan" filterable placeholder="选择计划" style="width: 49%">
+    <template>
+        <div id="header" style="height: 74px;">
+            <el-form :inline="true" :model="form" style="padding: 20px" class="demo-form-inline">
+                <el-select id="selectpd" v-model="form.product" filterable placeholder="选择产品"
+                           style="width: 240px;padding-right: 15px"
+                           @change="selectProduct">
+                    <img slot="prefix" src="{% static 'manager/icon/product.svg' %}"
+                         style="width:18px;height:18px;padding: 8px 10px;">
+                    <el-option v-for="product in products" :key="product.id"
+                               :label="product.description"
+                               :value="product.id">
+                    </el-option>
+                </el-select>
+                <el-select id="selectpl" v-model="form.plan" @visible-change="selectPlanVisible($event)" filterable
+                           placeholder="选择计划" style="width: 240px">
+                    <img slot="prefix" src="{% static 'manager/icon/plan.svg' %}"
+                         style="width:18px;height:18px;padding: 8px 10px;">
                     <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
                                :value="plan.id">
                     </el-option>
                 </el-select>
-
-                <div style="margin-top: 15px;">
-                    <el-input placeholder="验证地址" v-model="form.is_verify_url">
-                        <template slot="prepend">验证地址</template>
-                        <template slot="append">
-                            <el-button type="primary" icon="el-icon-copy-document" plain
-                                       @click="copyUrl(form.is_verify_url)"></el-button>
-                        </template>
-                    </el-input>
-                </div>
-                <div style="margin-top: 15px;">
-                    <el-input placeholder="调试地址" v-model="form.debug_url">
-                        <template slot="prepend">调试地址</template>
-                        <template slot="append">
-                            <el-button type="primary" icon="el-icon-copy-document" plain
-                                       @click="copyUrl(form.debug_url)"></el-button>
-                        </template>
-                    </el-input>
-                </div>
-            </el-tab-pane>
-        </el-tabs>
-    </el-dialog>
-    <el-dialog title="通知配置" :visible.sync="noticeSetVisible" width="70%" top="3vh" style="height: 100%">
-        <el-form :model="form">
-            <el-form-item label="配色方案" :label-width="form.formLabelWidth">
-                <el-select v-model="form.reportNoticeSet.color" placeholder="请选择配色方案">
-                    <el-option label="red" value="red"></el-option>
-                    <el-option label="blue" value="blue"></el-option>
-                </el-select>
-            </el-form-item>
-            <el-tooltip class="item" effect="dark" content="多收件人请用,分隔" placement="bottom">
-                <el-form-item label="收件人" :label-width="form.formLabelWidth">
-                    <el-input v-model="form.reportNoticeSet.to_receive" autocomplete="off"></el-input>
-                </el-form-item>
-            </el-tooltip>
-            <el-form-item label="标题" :label-width="form.formLabelWidth">
-                <el-input v-model="form.reportNoticeSet.description" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-tooltip class="item" effect="dark" content="内容中如果有参数，只会在任务运行完成后替换，手动发送报告不生效"
-                        placement="bottom">
-                <el-form-item label="邮件内容" :label-width="form.formLabelWidth">
-                    <el-input type="textarea" v-model="form.reportNoticeSet.text"
-                              autocomplete="off"></el-input>
-                </el-form-item>
-            </el-tooltip>
-            <el-form-item label="钉钉机器人token" :label-width="form.formLabelWidth"
-                          style="margin-top: 2rem">
-                <el-input v-model="form.reportNoticeSet.dingdingtoken" autocomplete="off"></el-input>
-            </el-form-item>
-        </el-form>
-        <div slot="footer" class="dialog-footer">
-            <el-button type="success" round @click="sendRepoet">发送最新报告</el-button>
-            <el-button type="primary" @click="savenoticeSet(0)">保 存</el-button>
-            <el-button @click="noticeSetVisible = false">关 闭</el-button>
+            </el-form>
         </div>
-    </el-dialog>
-    <el-dialog id="planHistory" title='历史记录' :visible.sync="planHistoryVisible" width="90%" top="3vh"
-               style="height: 100%">
-        <el-tabs :tab-position="productsetposition" style="min-height: 320px;">
-            <el-tab-pane label="历史缺陷">
-                <el-date-picker
-                        v-model="historytime"
-                        type="daterange"
-                        align="right"
-                        @change="queryOldBug('omit')"
-                        unlink-panels
-                        range-separator=" - "
-                        value-format="yyyy-MM-dd"
-                        start-placeholder="开始日期"
-                        end-placeholder="结束日期"
-                        :picker-options="pickerOptions">
-                </el-date-picker>
-                <table id="oldbugtable" lay-size='sm' lay-filter="oldbugtable"
-                       style="height: 100%"></table>
-            </el-tab-pane>
-        </el-tabs>
-    </el-dialog>
-    <div id="seeprocess" style="display:none">
-        <div class="layui-table">
-            <div class="layui-card-body">
-                <div id="log_text"></div>
+        <div id="body" style="height: 19%;padding: 0 20px 20px 20px;">
+            <div style="height: 100%;background-color: rgba(255,255,255,1)">
+                <div class="layui-row" style="height: 100%;">
+                    <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
+                        <a @click="runplan" href="javascript:;" title="这里是验证用例，调试去用例管理！">
+                            <img src="{% static 'manager/icon/run.svg' %}">
+                            <cite>验证</cite>
+                        </a>
+                    </div>
+                    <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
+                        <a @click="setplan" href="javascript:;">
+                            <img src="{% static 'manager/icon/proset.svg' %}">
+                            <cite>项目设置</cite>
+                        </a>
+                    </div>
+                    <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
+                        <a @click="planHistory" href="javascript:;">
+                            <img src="{% static 'manager/icon/history.svg' %}">
+                            <cite>历史记录</cite>
+                        </a>
+                    </div>
+                    <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
+                        <a @click="newRepoet" @contextmenu.prevent="downloadReport" href="javascript:;">
+                            <img src="{% static 'manager/icon/report.svg' %}">
+                            <cite>最新报告</cite>
+                        </a>
+                    </div>
+                    <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
+                        <a @click="setPlanNotice" href="javascript:;">
+                            <img src="{% static 'manager/icon/send.svg' %}">
+                            <cite>报告通知</cite>
+                        </a>
+                    </div>
+                    <div class="layui-col-xs2 layui-col-md2 workbtn-module" style="padding: 1.3%">
+                        <a @click="seeprocess" @contextmenu.prevent="downloadRunlog"
+                           href="javascript:;">
+                            <img src="{% static 'manager/icon/runlog.svg' %}">
+                            <cite>运行日志</cite>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div id="foot" style="height: 40%">
+            <div class="" v-show="showReport" style="display:flex;bottom: 0;height: 100%">
+                <div class="layui-card"
+                     style="width:25%;min-width:300px;margin: 0px 20px 20px 20px;display: inline-block">
+                    <div style="padding:20px;height: calc(100% - 40px)">
+                        <div>
+                            <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                                产品运行情况</p>
+                        </div>
+                        <div style="height: calc(50% - 20px)">
+                            <div style="padding: 7% 0;height: 100%">
+                                <div id="productCount"
+                                     style="width: 100%;height: 70%;max-height:200px;padding-top: 7%"></div>
+                            </div>
+                        </div>
+                        <div style="height:calc(50% - 20px);padding-top: 11.3%">
+                            <div style="padding: 0 0;height: 100%">
+                                <div id="productRate"
+                                     style="width: 100%;height: 70%;max-height:200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-card" style="flex:1;width:100%;margin: 0px 20px 20px 0;display: inline-block">
+                    <el-tabs @tab-click="reportChartCilck" :tab-position="productsetposition" style="height: 100%">
+                        <el-tab-pane label="计划成功率" style="height: 100%">
+                            <div id="echarts-records"
+                                 style="background-color:#f2f2f2;height:100%;"></div>
+                        </el-tab-pane>
+
+                        <el-tab-pane label="代码覆盖率" style="height: 100%">
+                            <el-card id="coverage" class="box-card" style="height: 100%">
+                                <div slot="header" class="clearfix">
+                                    <el-select @change="serviceChange" clearable collapse-tags filterable
+                                               v-model="form.service" multiple style="width: 50%">
+                                        <el-option
+                                                v-for="i in services"
+                                                :key="i.id"
+                                                :label="i.name"
+                                                :value="i.id">
+                                        </el-option>
+                                    </el-select>
+                                    <el-button type="success" @click="jacocoReFlash('update')">${synchronize}
+                                    </el-button>
+                                    <el-button type="success" @click="jacocoRun">${jacocoRunstate}</el-button>
+                                </div>
+
+                                <div id="coveragerow" class="layui-row" style="height: 100%">
+                                    <div class="layui-col-md4">
+                                        <div class="layui-card" style="height: 100%;">
+                                            <div class="layui-card-header" style="padding-right: 20px;height: 42px">
+                                                branchCoverage
+                                            </div>
+                                            <div class="layui-card-body"
+                                                 style="padding:5px 5px;height: calc(100% - 55px)">
+                                                <div id="branchCoverage" class="layui-col-md6"
+                                                     style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="layui-col-md4">
+                                        <div class="layui-card" style="height: 100%;">
+                                            <div class="layui-card-header" style="padding-right: 20px;height: 42px">
+                                                classCoverage
+                                            </div>
+                                            <div class="layui-card-body"
+                                                 style="padding:5px 5px;height: calc(100% - 55px)">
+                                                <div id="classCoverage" class="layui-col-md6"
+                                                     style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="layui-col-md4">
+                                        <div class="layui-card" style="height: 100%;">
+                                            <div class="layui-card-header" style="padding-right: 20px;height: 42px">
+                                                instructionCoverage
+                                            </div>
+                                            <div class="layui-card-body"
+                                                 style="padding:5px 5px;height: calc(100% - 55px)">
+                                                <div id="instructionCoverage" class="layui-col-md6"
+                                                     style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="layui-col-md4">
+                                        <div class="layui-card" style="height: 100%;">
+                                            <div class="layui-card-header" style="padding-right: 20px;height: 42px">
+                                                complexityScore
+                                            </div>
+                                            <div class="layui-card-body"
+                                                 style="padding:5px 5px;height: calc(100% - 55px)">
+                                                <div id="complexityScore" class="layui-col-md6"
+                                                     style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="layui-col-md4">
+                                        <div class="layui-card" style="height: 100%;">
+                                            <div class="layui-card-header" style="padding-right: 20px;height: 42px">
+                                                lineCoverage
+                                            </div>
+                                            <div class="layui-card-body"
+                                                 style="padding:5px 5px;height: calc(100% - 55px)">
+                                                <div id="lineCoverage" class="layui-col-md6"
+                                                     style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="layui-col-md4">
+                                        <div class="layui-card" style="height: 100%;">
+                                            <div class="layui-card-header" style="padding-right: 20px;height: 42px">
+                                                methodCoverage
+                                            </div>
+                                            <div class="layui-card-body"
+                                                 style="padding:5px 5px;height: calc(100% - 55px)">
+                                                <div id="methodCoverage" class="layui-col-md6"
+                                                     style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <!--      <div class="layui-col-md4">
+										  <div class="layui-card">
+											  <div class="layui-card-header" style="padding-right: 20px">
+												  branchCoverage
+											  </div>
+											  <div class="layui-card-body" style="padding:5px 15px">
+												  <div class="layui-row">
+													  <div id="branchCoverage" class="layui-col-md4"
+														   style="width: 100px;height: 100px"></div>
+													  <div class="layui-col-md6 jacocofontsize">
+														  覆盖率：${Coverage.branchCoverage.percentageFloat}%<br>
+														  覆盖数：${Coverage.branchCoverage.covered}<br>
+														  缺失数：${Coverage.branchCoverage.missed}<br>
+														  总 数：${Coverage.branchCoverage.total}<br>
+													  </div>
+												  </div>
+											  </div>
+										  </div>
+									  </div>
+									  <div class="layui-col-md4">
+										  <div class="layui-card">
+											  <div class="layui-card-header">
+												  classCoverage
+											  </div>
+											  <div class="layui-card-body" style="padding:5px 15px">
+												  <div class="layui-row">
+													  <div id="classCoverage" class="layui-col-md4"
+														   style="width: 100px;height: 100px"></div>
+													  <div class="layui-col-md6 jacocofontsize">
+														  覆盖率：${Coverage.classCoverage.percentageFloat}%<br>
+														  覆盖数：${Coverage.classCoverage.covered}<br>
+														  缺失数：${Coverage.classCoverage.missed}<br>
+														  总 数：${Coverage.classCoverage.total}<br>
+													  </div>
+												  </div>
+											  </div>
+										  </div>
+									  </div>
+									  <div class="layui-col-md4">
+										  <div class="layui-card">
+											  <div class="layui-card-header">
+												  instructionCoverage
+											  </div>
+											  <div class="layui-card-body" style="padding:5px 15px">
+												  <div class="layui-row">
+													  <div id="instructionCoverage" class="layui-col-md4"
+														   style="width: 100px;height: 100px"></div>
+													  <div class="layui-col-md6 jacocofontsize">
+														  覆盖率：${Coverage.instructionCoverage.percentageFloat}%<br>
+														  覆盖数：${Coverage.instructionCoverage.covered}<br>
+														  缺失数：${Coverage.instructionCoverage.missed}<br>
+														  总 数：${Coverage.instructionCoverage.total}<br>
+													  </div>
+												  </div>
+											  </div>
+										  </div>
+									  </div>
+									  <div class="layui-col-md4">
+										  <div class="layui-card">
+											  <div class="layui-card-header">
+												  complexityScore
+											  </div>
+											  <div class="layui-card-body" style="padding:5px 15px">
+												  <div class="layui-row">
+													  <div id="complexityScore" class="layui-col-md4"
+														   style="width: 100px;height: 100px"></div>
+													  <div class="layui-col-md6 jacocofontsize">
+														  覆盖率：${Coverage.complexityScore.percentageFloat}%<br>
+														  覆盖数：${Coverage.complexityScore.covered}<br>
+														  缺失数：${Coverage.complexityScore.missed}<br>
+														  总 数：${Coverage.complexityScore.total}<br>
+													  </div>
+												  </div>
+											  </div>
+										  </div>
+									  </div>
+									  <div class="layui-col-md4">
+										  <div class="layui-card">
+											  <div class="layui-card-header">
+												  lineCoverage
+											  </div>
+											  <div class="layui-card-body" style="padding:5px 15px">
+												  <div class="layui-row">
+													  <div id="lineCoverage" class="layui-col-md4"
+														   style="width: 100px;height: 100px"></div>
+													  <div class="layui-col-md6 jacocofontsize">
+														  覆盖率：${Coverage.lineCoverage.percentageFloat}%<br>
+														  覆盖数：${Coverage.lineCoverage.covered}<br>
+														  缺失数：${Coverage.lineCoverage.missed}<br>
+														  总 数：${Coverage.lineCoverage.total}<br>
+													  </div>
+												  </div>
+											  </div>
+										  </div>
+									  </div>
+									  <div class="layui-col-md4">
+										  <div class="layui-card">
+											  <div class="layui-card-header">
+												  methodCoverage
+											  </div>
+											  <div class="layui-card-body" style="padding:5px 15px">
+												  <div class="layui-row">
+													  <div id="methodCoverage" class="layui-col-md4"
+														   style="width: 100px;height: 100px"></div>
+													  <div class="layui-col-md6 jacocofontsize">
+														  覆盖率：${Coverage.methodCoverage.percentageFloat}%<br>
+														  覆盖数：${Coverage.methodCoverage.covered}<br>
+														  缺失数：${Coverage.methodCoverage.missed}<br>
+														  总 数：${Coverage.methodCoverage.total}<br>
+													  </div>
+												  </div>
+											  </div>
+										  </div>
+									  </div>!-->
+
+                            </el-card>
+                        </el-tab-pane>
+                    </el-tabs>
+                </div>
             </div>
         </div>
-    </div>
+        <el-dialog id='productSet' title='项目设置' :visible.sync="productSetVisible" width="70%" top="3vh"
+                   style="height: 100%">
+            <el-tabs :tab-position="productsetposition">
+                <el-tab-pane label="jacoco配置">
+                    <el-form :label-position="productsetposition" label-width="15%" :model="form">
+                        <el-form-item label="jenkins地址">
+                            <el-input v-model="form.productset.jenkinsurl"></el-input>
+                        </el-form-item>
+                        <el-form :inline="true" :model="form" class="demo-form-inline">
+                            <el-form-item label="用户名" style="width: 47%" label-width="32%">
+                                <el-input v-model="form.productset.authname"></el-input>
+                            </el-form-item>
+                            <el-form-item label="密码" style="width: 47%" label-width="32%">
+                                <el-input v-model="form.productset.authpwd"></el-input>
+                            </el-form-item>
+                        </el-form>
+                        <el-form-item label="服务名和任务名">
+                            <el-input type="textarea" v-model="form.productset.jobname" placeholder='填入内容为描述/服务名称和jenkins中对应的任务名，格式示例：
+settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></el-input>
+                        </el-form-item>
+                        <el-form-item label="顺序执行任务名">
+                            <el-input v-model="form.productset.order" placeholder='填入顺序执行时jenkins对应的任务名称'></el-input>
+                        </el-form-item>
+                    </el-form>
+                    <el-button type="primary" @click="jacocoSetSave">保存</el-button>
+                    <el-button @click="productSetVisible = false">取消</el-button>
+                </el-tab-pane>
+                <el-tab-pane label='解除运行状态'>
+                    <el-form :inline="true" :model="form" class="demo-form-inline">
+                        <el-select v-model="form.forceStopPlans" filterable placeholder="选择计划"
+                                   style="width: 49%">
+                            <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
+                                       :value="plan.id">
+                            </el-option>
+                        </el-select>
+                        <h3 style="margin-top: 3rem">任务当前状态：${runningState}</h3><br>
+                    </el-form>
+                    <el-button type="success" @click="planStatereFlash" style="margin-top: 2rem">刷新
+                    </el-button>
+                    <el-tooltip class="item" effect="dark" content="确定计划运行完成但是提示还在运行时点击" placement="bottom">
+                        <el-button type="danger" @click="forceStop" style="margin-top: 2rem">更改运行状态
+                        </el-button>
+                    </el-tooltip>
+                </el-tab-pane>
+                <el-tab-pane label='外部调用链接'>
+                    <el-select v-model="form.third_plan" filterable placeholder="选择计划" style="width: 49%">
+                        <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
+                                   :value="plan.id">
+                        </el-option>
+                    </el-select>
+
+                    <div style="margin-top: 15px;">
+                        <el-input placeholder="验证地址" v-model="form.is_verify_url">
+                            <template slot="prepend">验证地址</template>
+                            <template slot="append">
+                                <el-button type="primary" icon="el-icon-copy-document" plain
+                                           @click="copyUrl(form.is_verify_url)"></el-button>
+                            </template>
+                        </el-input>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <el-input placeholder="调试地址" v-model="form.debug_url">
+                            <template slot="prepend">调试地址</template>
+                            <template slot="append">
+                                <el-button type="primary" icon="el-icon-copy-document" plain
+                                           @click="copyUrl(form.debug_url)"></el-button>
+                            </template>
+                        </el-input>
+                    </div>
+                </el-tab-pane>
+            </el-tabs>
+        </el-dialog>
+        <el-dialog title="通知配置" :visible.sync="noticeSetVisible" width="70%" top="3vh" style="height: 100%">
+            <el-form :model="form">
+                <el-form-item label="配色方案" :label-width="form.formLabelWidth">
+                    <el-select v-model="form.reportNoticeSet.color" placeholder="请选择配色方案">
+                        <el-option label="red" value="red"></el-option>
+                        <el-option label="blue" value="blue"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-tooltip class="item" effect="dark" content="多收件人请用,分隔" placement="bottom">
+                    <el-form-item label="收件人" :label-width="form.formLabelWidth">
+                        <el-input v-model="form.reportNoticeSet.to_receive" autocomplete="off"></el-input>
+                    </el-form-item>
+                </el-tooltip>
+                <el-form-item label="标题" :label-width="form.formLabelWidth">
+                    <el-input v-model="form.reportNoticeSet.description" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-tooltip class="item" effect="dark" content="内容中如果有参数，只会在任务运行完成后替换，手动发送报告不生效"
+                            placement="bottom">
+                    <el-form-item label="邮件内容" :label-width="form.formLabelWidth">
+                        <el-input type="textarea" v-model="form.reportNoticeSet.text"
+                                  autocomplete="off"></el-input>
+                    </el-form-item>
+                </el-tooltip>
+                <el-form-item label="钉钉机器人token" :label-width="form.formLabelWidth"
+                              style="margin-top: 2rem">
+                    <el-input v-model="form.reportNoticeSet.dingdingtoken" autocomplete="off"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button type="success" round @click="sendRepoet">发送最新报告</el-button>
+                <el-button type="primary" @click="savenoticeSet(0)">保 存</el-button>
+                <el-button @click="noticeSetVisible = false">关 闭</el-button>
+            </div>
+        </el-dialog>
+        <el-dialog id="planHistory" title='历史记录' :visible.sync="planHistoryVisible" width="90%" top="3vh"
+                   style="height: 100%">
+            <el-tabs :tab-position="productsetposition" style="min-height: 320px;">
+                <el-tab-pane label="历史缺陷">
+                    <el-date-picker
+                            v-model="historytime"
+                            type="daterange"
+                            align="right"
+                            @change="queryOldBug('omit')"
+                            unlink-panels
+                            range-separator=" - "
+                            value-format="yyyy-MM-dd"
+                            start-placeholder="开始日期"
+                            end-placeholder="结束日期"
+                            :picker-options="pickerOptions">
+                    </el-date-picker>
+                    <table id="oldbugtable" lay-size='sm' lay-filter="oldbugtable"
+                           style="height: 100%"></table>
+                </el-tab-pane>
+            </el-tabs>
+        </el-dialog>
+        <div id="seeprocess" style="display:none">
+            <div class="layui-table">
+                <div class="layui-card-body">
+                    <div id="log_text"></div>
+                </div>
+            </div>
+        </div>
+    </template>
 </div>
 </body>
+<script src="{% static 'homepage/homepage.js' %}"></script>
 </html>
 
-<script src="{% static 'manager/js/utils.js' %}" charset="utf-8"></script>
-<script src="{% static 'homepage/echarts.common.min.js' %}" charset="utf-8"></script>
-<script src="{% static 'homepage/echartsTheme.js' %}" charset="utf-8"></script>
-<script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
-<script src="{% static 'manager/js/jquery.min.js' %}"></script>
-<script src="{% static 'homepage/homepage.js' %}"></script>
+
 

@@ -3,6 +3,7 @@
 # @Date    : 2020-03-10 14:31:32
 # @Author  : Blackstone
 # @to 
+
 from manager.models import Template,TemplateField
 from login.models import User
 import os,re
@@ -113,11 +114,6 @@ class MessageParser(object):
         for ex in self._expectlist:
             status,msg=self._compute_expression(ex)
             _ret[ex]=(status,msg)
-
-        return _ret
-
-
-
 
 
     @classmethod
@@ -439,3 +435,4 @@ if __name__=='__main__':
     m=MessageParser(f,c,expected)
     m.compute()
     
+

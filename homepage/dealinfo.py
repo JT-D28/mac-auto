@@ -3,6 +3,8 @@ import re
 
 from django.db import connection
 
+from homepage.models import Jacoco_data
+
 
 def doDebugInfo(request):
 	type = request.POST.get("type")
@@ -195,3 +197,14 @@ def dealDeBuginfo(taskid):
 					with open(dealogname, 'a', encoding='UTF-8') as f:
 						f.write(step.replace("        ", '\n') + '\n========\n')
 			print('处理日志完成------')
+
+
+def dealJacocoJobName(jacocojobname, jobs):
+	jobnames = []
+	if '0' in jobs:
+		jobs = jacocojobname.split(";")[:-1] if jacocojobname.endswith(";") else jacocojobname.split(";")
+		for i in jobs:
+			jobnames.append(i.split(":")[1])
+	else:
+		jobnames = [x for x in jobs]
+	return jobnames

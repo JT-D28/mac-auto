@@ -46,8 +46,9 @@ class Function(Model):
 
 
 class Tag(Model):
-	name=CharField(max_length=16)
-
+	planids=CharField(max_length=128,null=True)
+	customize=TextField(null=True)
+	isglobal=IntegerField(default=0)
 	author=ForeignKey(User, on_delete=CASCADE)
 	createtime=DateTimeField(auto_now_add=True)
 	updatetime=DateTimeField(auto_now=True)
@@ -236,7 +237,7 @@ class ResultDetail(Model):
 class Variable(Model):
 	author=ForeignKey(User, on_delete=CASCADE)
 	description=CharField(max_length=128)
-	tag_id=CharField(max_length=24,null=True,blank=True)
+	tag=TextField()
 	key=CharField(max_length=255,unique=True)
 	value=TextField(blank=True,null=True)
 	gain=TextField(blank=True,null=True)
@@ -335,8 +336,6 @@ class DBCon(Model):
 	username=CharField(max_length=15)
 	password=CharField(max_length=15)
 	description=TextField()
-
-
 	author=ForeignKey(User, on_delete=CASCADE)
 	createtime=DateTimeField(auto_now_add=True)
 	updatetime=DateTimeField(auto_now=True)
@@ -416,7 +415,7 @@ class Product(Model):
 # 	ex_4=CharField(max_length=64,blank=True)
 # 	ex_5=CharField(max_length=64,blank=True)
 
-	
+
 # class DataMove(Model):
 # 	'''
 # 	数据迁移记录

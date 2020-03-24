@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="10px" height="10px" viewBox="0 0 10 10" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.5 (67469) - http://www.bohemiancoding.com/sketch -->
+    <title>箭头-下</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="首页" transform="translate(-438.000000, -92.000000)">
+            <rect id="矩形" fill="#F2F2F2" fill-rule="nonzero" x="200" y="60" width="1240" height="650"></rect>
+            <g id="输入框-新增编辑带星号-copy-16" transform="translate(220.000000, 80.000000)">
+                <rect id="Rectangle-4" stroke="#DCDEE0" fill="#FFFFFF" x="0.5" y="0.5" width="239" height="33" rx="2"></rect>
+                <g id="箭头-下-2" transform="translate(218.000000, 12.000000)">
+                    <g id="箭头-下">
+                        <g id="Group-4-Copy-2">
+                            <rect id="Rectangle-18" x="0" y="0" width="10" height="10"></rect>
+                            <path d="M5.48483496,4.99708776 L3.06066017,7.42126255 C2.79289322,7.6890295 2.79289322,8.12316551 3.06066017,8.39093246 C3.32842712,8.65869942 3.76256313,8.65869942 4.03033009,8.39093246 L6.93933983,5.48192272 C7.0732233,5.34803925 7.14016504,5.1725635 7.14016504,4.99708776 C7.14016504,4.82161202 7.0732233,4.64613628 6.93933983,4.51225281 L4.03033009,1.60324307 C3.76256313,1.33547611 3.32842712,1.33547611 3.06066017,1.60324307 C2.79289322,1.87101002 2.79289322,2.30514603 3.06066017,2.57291298 L5.48483496,4.99708776 Z" id="Combined-Shape" fill="#9DA4AD" transform="translate(5.000000, 4.997088) rotate(-270.000000) translate(-5.000000, -4.997088) "></path>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

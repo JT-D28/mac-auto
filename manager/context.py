@@ -8,40 +8,40 @@ from django.conf import settings
 from manager import models
 from hashlib import md5
 
-
 '''
 提示优化
 
 '''
 
-_friendly_map={
-'db':{
-	'ORA-01017':'[oracle]账号密码错误',
-	'DPI-1047':'[oracle]没装instantclient工具,请联系开发',
-	'ORA-12505':'[oracle]SID无法识别',
-	'RA-12545':'[oracle]host错误',
-	'RA-12541':'[oracle]端口号错误',
-	'psycopg2.OperationalError':'[pqsql]连接配置错误,请自检字段',
-	'pymysql.err.OperationalError: (1044':'[mysql]库名错误',
-	'pymysql.err.OperationalError: (2003':'[mysql]host/port错误',
-	'pymysql.err.OperationalError: (1045':'[mysql]账号密码错误',
+_friendly_map = {
+	'db': {
+		'ORA-01017': '[oracle]账号密码错误',
+		'DPI-1047': '[oracle]没装instantclient工具,请联系开发',
+		'ORA-12505': '[oracle]SID无法识别',
+		'RA-12545': '[oracle]host错误',
+		'RA-12541': '[oracle]端口号错误',
+		'psycopg2.OperationalError': '[pqsql]连接配置错误,请自检字段',
+		'pymysql.err.OperationalError: (1044': '[mysql]库名错误',
+		'pymysql.err.OperationalError: (2003': '[mysql]host/port错误',
+		'pymysql.err.OperationalError: (1045': '[mysql]账号密码错误',
 	}
 }
 
-def get_friendly_msg(msg0,kind='all'):
+
+def get_friendly_msg(msg0, kind='all'):
 	'''
 	'''
-	if 'all'==kind:
-		for k1,v1 in _friendly_map.items():
-			for k2,v2 in v1.items():
-				print('msg0=>',msg0)
+	if 'all' == kind:
+		for k1, v1 in _friendly_map.items():
+			for k2, v2 in v1.items():
+				print('msg0=>', msg0)
 				if msg0.__contains__(k2):
 					return v2
 		return msg0
 	else:
-		for k1,v1 in _friendly_map.items():
-			if kind==k1:
-				for k2,v2 in v1.items():
+		for k1, v1 in _friendly_map.items():
+			if kind == k1:
+				for k2, v2 in v1.items():
 					if msg0.__contains__(k2):
 						return v2
 				return msg0
@@ -51,6 +51,7 @@ def get_friendly_msg(msg0,kind='all'):
 请求session保持
 '''
 _session_context_manager = dict()
+
 
 def get_task_session(key):
 	s = _session_context_manager.get(key, requests.session())
@@ -64,6 +65,7 @@ def clear_task_session(key):
 		del _session_context_manager[key]
 	except:
 		pass
+
 
 '''通用配置查询
 '''
@@ -82,10 +84,10 @@ def set_top_common_config(taskid, value, kind='db', src=None):
 	print('===[%s]设置缓存通用配置%s->%s=>%s' % (src, taskid, kind, value))
 	cache = _task_context_manager.get(taskid, {})
 	dbcache = cache.get(kind, None)
-	if dbcache is None:
-		cache[kind] = value
-		_task_context_manager[taskid] = cache
-
+	# if dbcache is None:  加上以后优先级变成 计划>用例。。。
+	cache[kind] = value
+	_task_context_manager[taskid] = cache
+	
 	print(_task_context_manager.get(taskid))
 
 
@@ -111,11 +113,11 @@ def _addtestdata(callername, stepid, adddata):
 	testdata.db_check = adddata.get('db_check', '')
 	testdata.params = adddata.get('params', '')
 	print('参数信息=>', testdata.params)
-
+	
 	cur = querytestdata(callername, stepid, trigger='add')
 	cur.append(testdata)
 	_settestdata(callername, stepid, cur)
-
+	
 	res = querytestdata(callername, stepid, trigger='www')
 	print('res=>', [x.params for x in res])
 
@@ -123,7 +125,7 @@ def _addtestdata(callername, stepid, adddata):
 def _copytestdata(callername, stepid, vid):
 	key = "%s_%s" % (callername, stepid)
 	cur = querytestdata(callername, stepid, trigger='copy')
-
+	
 	copyit = None
 	for business in cur:
 		print('curbit=>', business.id)
@@ -138,7 +140,7 @@ def _copytestdata(callername, stepid, vid):
 			print('[复制测试数据]vid=%s' % vid)
 			_settestdata(callername, stepid, cur)
 			return
-
+	
 	print('[复制测试数据]没发现指定复制对象 vid=%s' % vid)
 
 
@@ -147,7 +149,7 @@ def _settestdata(callername, stepid, setdata):
 		key = "%s_%s" % (callername, stepid)
 		_user_step_testdata_manager[key] = setdata
 		print("[设置缓存]key=%s value=%s" % (key, str(setdata)))
-
+	
 	except:
 		print("[设置缓存]异常")
 		print(traceback.format_exc())
@@ -166,7 +168,7 @@ def _deltestdata(callername, stepid, vids):
 	# else:
 	# 	print('忽略id=>',str(x.id),len(str(x.id)))
 	print('删除后缓存=>', curtmp)
-
+	
 	_settestdata(callername, stepid, curtmp)
 
 
@@ -182,21 +184,23 @@ def _edittestdata(callername, stepid, editdata):
 			x.params = editdata.get('params')
 			print('x=>', x.itf_check)
 			break;
-
+	
 	print('编辑后数据=>', cur)
-
+	
 	_settestdata(callername, stepid, cur)
 
 
 def _cleartestdata(callername, stepid):
 	key = "%s_%s" % (callername, stepid)
 	try:
-
+		
 		del _user_step_testdata_manager[key]
 		print('[清除缓存]key=%s' % key)
 	except:
 		print('[清除缓存异常]key=%s' % key)
-	# print(traceback.format_exc())
+
+
+# print(traceback.format_exc())
 
 
 def querytestdata(callername, stepid, trigger='query'):
@@ -212,7 +216,7 @@ def querytestdata(callername, stepid, trigger='query'):
 			print('[新增步骤异常]')
 			error = traceback.format_exc()
 			print(error)
-
+	
 	else:
 		key = "%s_%s" % (callername, stepid)
 		res = _user_step_testdata_manager.get(key, [])
@@ -256,7 +260,7 @@ def mounttestdata(callername, stepid, trigger='add'):
 			print('删除不在缓存中的业务数据id=>', todelids)
 			for x in todelids:
 				step.businessdatainfo.remove(x)
-
+		
 		# print('cache=>',cache)
 		for x in cache:
 			if str(x.id).startswith('vid_'):
@@ -267,7 +271,7 @@ def mounttestdata(callername, stepid, trigger='add'):
 				bd.params = x.params
 				# bd.params=x.params.replace('true','True').replace('false','False').replace('null','None')
 				bd.save()
-
+				
 				bids.append(bd.id)
 				step = models.Step.objects.get(id=stepid)
 				step.businessdatainfo.add(bd)
@@ -280,17 +284,17 @@ def mounttestdata(callername, stepid, trigger='add'):
 				bd.itf_check = x.itf_check
 				bd.db_check = x.db_check
 				bd.params = x.params
-
+				
 				print('params=>', bd.params)
-
+				
 				print('保存业务数据长度=>', len(bd.params))
 				# bd.params=x.params.replace('true','True').replace('false','False').replace('null','None')
 				bd.save()
-
+		
 		print('[挂载测试数据]成功 stepid=%s 测试数据id=%s' % (stepid, bids))
-
+	
 	# _cleartestdata(callername, stepid)
-
+	
 	except:
 		err = traceback.format_exc()
 		print('[挂载测试数据]异常')
@@ -303,14 +307,14 @@ def gettestdataparams(businessdata_id):
 		msg, step = gettestdatastep(businessdata_id)
 		if msg is not 'success':
 			return (msg, step)
-
+		
 		businessdatainst.params = businessdatainst.params.replace('null', 'None').replace(':false', ':False').replace(
 			':true', ':True')
-
+		
 		if step.step_type == 'interface':
 			if step.content_type == 'xml':
 				return ('success', businessdatainst.params)
-
+			
 			elif step.content_type == 'urlencode':
 				if businessdatainst.params.startswith("{"):
 					return ('success', eval(businessdatainst.params))
@@ -318,8 +322,8 @@ def gettestdataparams(businessdata_id):
 					return ('success', businessdatainst.params)
 			else:
 				return ('success', eval(businessdatainst.params))
-
-
+		
+		
 		elif step.step_type == 'function':
 			return ('success', businessdatainst.params.split(','))
 	except:
@@ -338,7 +342,7 @@ def gettestdatastep(businessdata_id):
 		stepid = models.Order.objects.get(follow_id=businessdata_id, kind='step_business').main_id
 		step = models.Step.objects.get(id=stepid)
 		return ('success', step)
-
+	
 	except:
 		print(traceback.format_exc())
 		return ('error', '获取业务数据所属步骤异常 业务ID=%s' % businessdata_id)
@@ -352,7 +356,7 @@ redis key格式=>console.msg::username::taskid
 
 def viewcache(taskid, username, kind=None, *msg):
 	taskmsg = ""
-
+	
 	if kind is not None:
 		##定时任务不加入redis队列
 		return
@@ -366,10 +370,10 @@ def viewcache(taskid, username, kind=None, *msg):
 		# f = open(logname, "a")
 		# f.write(what + "<br>\n")
 		# f.close
-
-		with open(logname, 'a',encoding='UTF-8') as f:
-			f.write(what+'<br>\n')
-
+		
+		with open(logname, 'a', encoding='UTF-8') as f:
+			f.write(what + '<br>\n')
+		
 		print(what)
 		con = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
 		key = "console.msg::%s::%s" % (username, taskid)
@@ -381,6 +385,7 @@ def viewcache(taskid, username, kind=None, *msg):
 	except Exception as e:
 		print("viewcache异常")
 		print(traceback.format_exc())
+
 
 def remotecache(key, linemsg):
 	con = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)

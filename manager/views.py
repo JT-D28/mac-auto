@@ -2431,21 +2431,17 @@ def edittag(request):
 @csrf_exempt
 def querytaglist(request):
 	namelist = []
-	userid=request.POST.get('userid')
+	userid = request.POST.get('userid')
 	try:
-		# for _ in list(Tag.objects.all()):
-		# 	namelist.append({
-		# 		'id': _.id,
-		# 		'name': _.name,
-		# 	})
-		userid = userid if userid != '0' else str(
-			User.objects.values('id').get(name=request.session.get('username'))['id'])
-		
 		with connection.cursor() as cursor:
-			sql = '''
-				SELECT tag from manager_variable where tag !='' and author_id=%s
-			'''
-			cursor.execute(sql,[userid])
+			if userid != '-1':
+				userid = userid if userid != '0' else str(
+					User.objects.values('id').get(name=request.session.get('username'))['id'])
+				sql = "SELECT tag from manager_variable where tag !='' and author_id=%s"
+				cursor.execute(sql, [userid])
+			elif userid == '-1':
+				sql = "SELECT tag from manager_variable where tag !=''"
+				cursor.execute(sql)
 			rows = cursor.fetchall()
 		for i in rows:
 			m = list(i)[0].split(';')[:-1]
@@ -2453,7 +2449,7 @@ def querytaglist(request):
 				if x not in namelist:
 					namelist.append(x)
 		print('tag列表：', namelist)
-		data = [{'id': 0, 'name': '全部标签'}]
+		data = [{'id': 0, 'name': '全部标记'}]
 		for m, n in enumerate(namelist):
 			data.append({'id': str(m + 1) + '_' + n, 'name': n})
 	except:
@@ -2465,30 +2461,29 @@ def querytaglist(request):
 
 @csrf_exempt
 def querytag(request):
-	searchvalue = request.POST.get('tagid')
-	print(searchvalue)
-	if searchvalue:
-		code, data = 0, Tag.objects.values('name').get(id=searchvalue)
-		print(data)
-		data = data['name'].split(';')[:-1]
-	else:
-		code, data = 0, ''
-	return JsonResponse({'code': code, 'data': data})
+	# 查询tag最近一次更新，避免重复填写
+	userid = str(User.objects.values('id').get(name=request.session.get('username'))['id'])
+	try:
+		varhis = list(Variable.objects.values('tag').filter(author_id=userid).order_by('-updatetime')[0:1])[0]
+		code=0
+	except:
+		code, data = 1, '出错了！'
+	return JsonResponse({'code': 0, 'data': varhis['tag'].split(';')[:-1]})
 
 
 @csrf_exempt
 def varBatchEdit(request):
-	ids=request.POST.getlist('ids[]')
-	tags=request.POST.get('tags')
+	ids = request.POST.getlist('ids[]')
+	tags = request.POST.get('tags')
 	print(ids)
 	print(tags)
 	for id in ids:
 		try:
-			var=Variable.objects.get(id=id)
-			var.tag=tags
+			var = Variable.objects.get(id=id)
+			var.tag = tags
 			var.save()
 		except:
-			return JsonResponse({'code':1,'msg':'变量'+var.description+'标签更改失败！'})
+			return JsonResponse({'code': 1, 'msg': '变量' + var.description + '标签更改失败！'})
 	return JsonResponse({'code': 0, 'msg': 'success'})
 
 

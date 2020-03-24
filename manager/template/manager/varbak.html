@@ -101,8 +101,8 @@
         <div class="layui-inline">
             <button class="layui-btn btn" id='addbtn'>新增</button>
             <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
-            <el-tooltip class="item" effect="dark" content="批量替换标签！" placement="top">
-                <button class="layui-btn btn" id='editbtn'>编辑</button>
+            <el-tooltip class="item" effect="dark" content="批量替换标记！" placement="top">
+                <button class="layui-btn btn" id='editbtn'>标记</button>
             </el-tooltip>
         </div>
         <div class="layui-inline" style="float: right;width: 80%;">
@@ -163,9 +163,10 @@
 
         <div class="layui-form-item" id='tag'>
             <div class="layui-inline" style="width: 100%">
-                <label class="layui-form-label">标签</label>
+                <label class="layui-form-label">标记</label>
                 <div class="layui-input-block">
-                    <button type="button" @click="addtagbtn" class="layui-btn layui-btn-radius layui-btn-primary">添加标签
+                    <button type="button" id="addtagbtn" @click="addtagbtn(0)"
+                            class="layui-btn layui-btn-radius layui-btn-primary">添加标记
                     </button>
                     <blockquote class="layui-inline" v-html="wantTag" style="margin-bottom:0px">
                     </blockquote>
@@ -181,11 +182,11 @@
             </div>
         </div>
     </form>
-    <el-dialog title="标签" :visible.sync="tagFormVisible" width="50%" height="100%">
+    <el-dialog title='标记' :visible.sync="tagFormVisible" width="50%" height="100%">
         <el-form :model="tagform" ref="tagform" label-width="100px" class="demo-dynamic">
             <el-form-item
                     v-for="(tag, index) in tagform.tags"
-                    :label="'标签' + index"
+                    :label="'标记' + index"
                     :key="tag.key"
                     :prop="'tags.' + index + '.value'">
                 <el-input v-model="tag.value" maxlength="8" show-word-limit></el-input>
@@ -193,7 +194,7 @@
             </el-form-item>
             <el-form-item>
                 <el-button id='tagsubmit' type="primary" @click="tagSubmit('tagform',0)">提交</el-button>
-                <el-button @click="addtag">新增标签</el-button>
+                <el-button @click="addtag">新增标记</el-button>
             </el-form-item>
         </el-form>
     </el-dialog>
@@ -210,6 +211,7 @@
 
     var app = new Vue({
         el: '#var',
+        delimiters: ['${', '}'],
         data() {
             return {
                 tagform: {
@@ -217,6 +219,7 @@
                         value: ''
                     }],
                 },
+                tagtitle: '标记新增',
                 tagvalues: [],
                 form: {
                     tagvalue: '',
@@ -348,7 +351,7 @@
                     , {field: 'description', width: '20%', title: '描述', sort: true}
                     , {field: 'value', width: '15%', title: '值'}
                     , {field: 'gain', width: '15%', title: '获取方式'}
-                    , {field: 'tag', width: '15%', title: '标签'}
+                    , {field: 'tag', width: '15%', title: '标记'}
                     , {field: 'author', width: '8%', title: '创建者', sort: true}
                     , {align: 'center', toolbar: '#toolbar', fixed: 'right'}
                 ]],

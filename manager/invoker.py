@@ -25,8 +25,6 @@ try:
 except ImportError:
     import xml.etree.ElementTree as ET
 
-
-
 ##支持的运算
 _op=('>=','<=','!=','==','>','<','$')
 #用户变量缓存 key=user.varname
@@ -49,11 +47,8 @@ def db_connect(config):
     测试数据库连接
     '''
     print('==测试数据库连接===')
-
     conn=None
-
     try:
-
         # print(len(conname),len(conname.strip()))
         description=config['description']
         dbtype=config['dbtype']
@@ -117,8 +112,6 @@ def _get_full_case_name(case_id,curent_case_name):
         cname=Case.objects.get(id=olist[0].main_id).description
         curent_case_name="%s_%s"%(cname,curent_case_name)
         return _get_full_case_name(olist[0].main_id,curent_case_name)
-
-
 
 def gettaskresult(taskid):
     from .cm import getchild
@@ -544,8 +537,10 @@ def _runcase(username,taskid,case0,plan,planresult,is_verify,kind):
                             elif 'omit' in result:
                                 continue
                             else:
-                                if error is False:
+                                print('err msg=>',error)
+                                if str(error).upper() is 'FALSE':
                                     error='表达式不成立'
+
                                 viewcache(taskid,username,kind,"步骤执行结果%s 原因=>%s"%(result,error))
 
             except:
@@ -814,20 +809,23 @@ def _step_process_check(callername,taskid,order,kind):
             headers=[]
 
             text,statuscode,itf_msg='',-1,''
+            
 
+            # print('cur tmp=>',_tempinfo)
             if step.content_type=='xml':
                 text,statuscode,itf_msg=_callsocket(taskid, user, step.url,body=str(paraminfo))
+                viewcache(taskid,username,kind,"<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>"%text)
             else:
                 headers,text,statuscode,itf_msg=_callinterface(taskid,user,step.url,str(paraminfo),step.method,step.headers,step.content_type,step.temp,kind)
+                viewcache(taskid,username,kind,"<span style='color:#009999;'>请求响应=><i style='color:#009999;'>%s</i></span>"%text)
 
-
-            viewcache(taskid,username,kind,"<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>"%text)
+           
 
             if len(str(statuscode))==0:
                 return ('fail',itf_msg)
             elif statuscode==200:
 
-                ##后置操作
+                ##接口后置操作
                 status,res=_call_extra(user,postplist,taskid=taskid,kind='后置操作')###????
                 if status is not 'success':
                     return (status,res)
@@ -856,9 +854,9 @@ def _step_process_check(callername,taskid,order,kind):
                 return ('fail','statuscode=%s'%statuscode)
 
 
-            if itf_msg:
-                print('################itf-msg###############'*20)
-                return ('fail',itf_msg)
+            # if itf_msg:
+            #     print('################itf-msg###############'*20)
+            #     return ('fail',itf_msg)
 
         elif step.step_type=="function":
             viewcache(taskid,username,kind,"数据校验配置=>%s"%db_check)
@@ -993,7 +991,6 @@ def _callsocket(taskid,user,url,body=None,kind=None,timeout=1024):
 
         body=body_rp[1]
 
-
         cs=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         # cs.setblocking(False)
         socket.setdefaulttimeout(30)
@@ -1002,10 +999,6 @@ def _callsocket(taskid,user,url,body=None,kind=None,timeout=1024):
         port=url.split(':')[1].strip()
         time.sleep(2)
         cs.connect((str(host),int(port)))
-        # ms=re.findall('\<\/.*?\>', body)
-        # for m in ms:
-        #   body=body.replace(m, m+'\n')
-
 
         length=str(len(body.encode('GBK'))).rjust(8)
         print('Content-Length=>',length)
@@ -1015,23 +1008,9 @@ def _callsocket(taskid,user,url,body=None,kind=None,timeout=1024):
         viewcache(taskid, user.name,None,"<span style='color:#009999;'>请求IP=>%s</span>"%host)
         viewcache(taskid, user.name,None,"<span style='color:#009999;'>请求端口=>%s</span>"%port)
         viewcache(taskid, user.name,None,"<span style='color:#009999;'>发送报文=><xmp style='color:#009999;'>%s</xmp></span>"%sendmsg)
-        # viewcache(taskid, user.name,None,"<span style='color:#009999;'>body=>%s</span>"%sendmsg)
-
         cs.sendall(bytes(sendmsg,encoding='GBK'))
 
-        # recv_bytes=cs.recv(1024)
-        # responsexml=b''
-
-        # while True:
-        #   recv_bytes =cs.recv(1024)
-        #   print(2222)
-        #   responsexml+=recv_bytes
-        #   if not len(recv_bytes):
-        #       break;
-
         return _getback(cs),200,''
-
-
     except:
         cs.close()
         err=traceback.format_exc()
@@ -1047,31 +1026,32 @@ def _callinterface(taskid,user,url,body=None,method=None,headers=None,content_ty
     viewcache(taskid,user.name,kind,"执行接口请求=>")
     if content_type=='formdata':
         return ('','','','form-data方式暂不支持..')
+
+    viewcache(taskid,user.name,kind,"<span style='color:#009999;'>method=>%s</span>"%method)
     viewcache(taskid,user.name,kind,"<span style='color:#009999;'>content_type=>%s</span>"%content_type)
-    viewcache(taskid, user.name, kind, "<span style='color:#009999;'>原始url=>%s</span>" % url)
+
+    viewcache(taskid, user.name, kind, "<span style='color:#009999;'>【old】url=>%s</span>" % url)
+    viewcache(taskid,user.name,kind,"<span style='color:#009999;'>【old】params=>%s</span>"%body)
+    viewcache(taskid,user.name,kind,"<span style='color:#009999;'>【old】headers=>%s</span>"%(headers))
+
     url_rp=_replace_property(user,url)
     if url_rp[0] is not 'success':
         return ('','','',url_rp[1])
     url_rv=_replace_variable(user,url_rp[1],taskid=taskid)
     if url_rv[0] is not 'success':
         return('','','',url_rv[1])
-    url=url_rv[1]
-    viewcache(taskid,user.name,kind,"<span style='color:#009999;'>url=>%s</span>"%url)
 
-    viewcache(taskid,user.name,kind,"<span style='color:#009999;'>原始params=>%s</span>"%body)
+    # viewcache(taskid,user.name,kind,"<span style='color:#009999;'>【last】url=>%s</span>"%url_rv[1])
+   
     data_rp=_replace_property(user,body)
     if data_rp[0] is not 'success':
         return('','','',data_rp[1])
     data_rv=_replace_variable(user,data_rp[1],taskid=taskid)
     if data_rv[0] is not 'success':
         return ('','','',data_rv[1])
-    body=data_rv[1]
-    viewcache(taskid,user.name,kind,"<span style='color:#009999;'>params=>%s</span>"%body)
 
-    #body=json.loads(body)
-
-    #print(type(headers))
-    viewcache(taskid,user.name,kind,"<span style='color:#009999;'>原始headers=>%s</span>"%(headers))
+    # viewcache(taskid,user.name,kind,"<span style='color:#009999;'>【last】params=>%s</span>"%data_rv[1])
+    
     if headers is None or len(headers.strip())==0:
         headers={}
 
@@ -1082,16 +1062,57 @@ def _callinterface(taskid,user,url,body=None,method=None,headers=None,content_ty
     if headers_rv[0] is not 'success':
         return ('','','',headers_rv[1])
 
-    try:
-        headers=eval(headers_rv[1])
-    except:
-        return ('','','','接口请求头格式不对 请检查')
+
+    ##计算延时属性
+    # save_data(user.name,_tempinfo, 'STEP_INFO',{
+    #     'URL':url_rv[1],
+    #     'HEADERS':{**default,**headers_rv[1]},
+    #     'PARAMS':str(data_rv[1])
+    #     })
+
+    ##替换延时属性
+    # url_rp=_replace_property(user, url_rv[1],is_lazy=False)
+    # data_rp=_replace_property(user, data_rv[1],is_lazy=False)
+    # headers_rp=_replace_property(user, headers_rv[1],is_lazy=False)
+
+    # if url_rp[0] is not 'success':
+    #     return ('','','',url_rp[1])
+    # if body_rp[0] is not 'success':
+    #     return ('','','',body_rp[1])
+    # if headers_rp[0] is not 'success':
+    #     return ('','','',headers_rp[1])
+
+    ##最后调用函数替换
+    url_rf=_replace_function(user, url_rv[1])
+    if url_rf[0] is not 'success':
+        return('','','',url_rf[1])
+
+    data_rf=_replace_function(user, data_rv[1])
+    if data_rf[0] is not 'success':
+        return('','','',data_rf[1])
+
+    headers_rf=_replace_function(user,headers_rv[1])
+    if headers_rf[0] is not 'success':
+        return('','','',headers_rf[1])
+
+    #final 
+    url=url_rf[1]
+    body=data_rf[1]
+    headers=headers_rf[1]
 
     ##
 
+    if not headers:
+        headers={}
+    else:
+        try:
+         headers=eval(headers)
+        except:
+            return ('','','','请求头格式错误请检查.')
+
+###
     default={'User-Agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36"}
-    viewcache(taskid,user.name,kind,"<span style='color:#009999;'>headers=>%s</span>"%{**default,**headers})
-    viewcache(taskid,user.name,kind,"<span style='color:#009999;'>method=>%s</span>"%method)
+    # viewcache(taskid,user.name,kind,"<span style='color:#009999;'>【last】headers=>%s</span>"%{**default,**headers})
 
     if content_type=='json':
         #body=body.encode('utf-8')
@@ -1100,30 +1121,26 @@ def _callinterface(taskid,user,url,body=None,method=None,headers=None,content_ty
     elif content_type=='xml':
         default["Content-Type"]='application/xml'
     elif content_type=='urlencode':
-        #body=body.encode('utf-8')
-        #body=json.loads(body)
         try:
             print('urlencode=>',body)
             if body.startswith("{"):
                 body=eval(body)
             else:
                 body=body.encode('UTF-8')
-
         except :
             print('参数转化异常：',traceback.format_exc())
             return ('','','','接口参数格式不对 请检查..')
         default["Content-Type"]='application/x-www-form-urlencoded;charset=UTF-8'
     elif content_type=='xml':
         isxml=0
-
     else:
         raise NotImplementedError("content_type=%s没实现"%content_type)
 
-    # viewcache(taskid,user.name,kind,"body[old]=%s"%body)
+    ###########
 
-    #print("method=>",method)
+
+    ##
     rps=None
-
     if method=="get":
         session=get_task_session('%s_%s'%(taskid,user.name))
         rps=session.get(url,params=body,headers={**default,**headers})
@@ -1133,7 +1150,6 @@ def _callinterface(taskid,user,url,body=None,method=None,headers=None,content_ty
         #print(body)
         session=get_task_session('%s_%s'%(taskid,user.name))
         rps=session.post(url,data=body,headers={**default,**headers})
-
         #print("textfdafda=>",rps.text)
     else:
         return ('','','',"请求方法%s没实现.."%method)
@@ -1157,9 +1173,8 @@ def _callfunction(user,functionid,call_method_name,call_method_params,taskid=Non
 
     builtinmethods=[x.name for x in getbuiltin() ]
     builtin=(methodname in builtinmethods)
-
     try:
-        print('ff2id=>',functionid)
+        # print('ff2id=>',functionid)
         f=Function.objects.get(id=functionid)
     except:
         pass
@@ -1181,7 +1196,13 @@ def _callfunction(user,functionid,call_method_name,call_method_params,taskid=Non
     if res is not 'success':
         return (res,call_str)
 
-    print('f22=>',f)
+    res,call_str=_replace_property(user,call_str)
+    if res is not 'success':
+        return (res,call_str)
+
+    call_rf=_replace_function(user, call_str)
+    if call_rf[0] is not 'success':
+        return(call_rf[0],call_rf[1])
 
     return Fu.call(f,call_str,builtin=builtin)
 
@@ -1193,16 +1214,17 @@ def _call_extra(user,call_strs,taskid=None,kind='前置操作'):
     builtinmethods=[x.name for x in getbuiltin() ]
     # call_list=call_strs.split('|');
     for s in call_strs:
+
         if not s.strip():
             continue
 
         if s=='None' or s is None:
             continue;
+        viewcache(taskid,user.name,None,"执行[<span style='color:#009999;'>%s</span>]%s"%(kind,s))
 
         status,call_str=_replace_variable(user, s)
         if status is not 'success':
             return (status,res)
-
 
         methodname=''
         try:
@@ -1226,12 +1248,9 @@ def _call_extra(user,call_strs,taskid=None,kind='前置操作'):
                 viewcache(taskid,user.name,None,"<span style='color:#FF3333;'>函数库中发现多个匹配函数 这里使用第一个匹配项</span>")
 
         status,res=Fu.call(f,call_str,builtin=isbuiltin)
-        viewcache(taskid,user.name,None,"执行[<span style='color:#009999;'>%s</span>]%s"%(kind,s))
+        # viewcache(taskid,user.name,None,"执行[<span style='color:#009999;'>%s</span>]%s"%(kind,s))
         if status is not 'success':
             return (status,res)
-
-
-            #viewcache(taskid,username,kind,"数据校验配置=>%s"%db_check)
 
     return ('success','操作[%s]全部执行完毕'%call_strs)
 
@@ -1250,10 +1269,12 @@ def _compute(taskid,user,checkexpression,type=None,target=None,kind=None,parse_t
         resultlist=[]
         if type=='db_check':
             for item in checklist:
+                print('执行数据校验=>',item)
                 old=item
                 item=_legal(item)
-                ress=_eval_expression(user,item,taskid=taskid)
-                print('ress1=>',ress)
+                #ress=_eval_expression(user,item,taskid=taskid)
+                ress=_eval_expression(user,item,need_chain_handle=True,data='',taskid=taskid,parse_type=parse_type,rps_header=rps_header)
+               # print('ress1=>',ress)
 
                 if ress[0] is 'success':
                     viewcache(taskid,user.name,None,"校验表达式[<span style='color:#009999;'>%s</span>] 结果[<span style='color:#009999;'>%s</span>]"%(old,ress[0]))
@@ -1264,7 +1285,6 @@ def _compute(taskid,user,checkexpression,type=None,target=None,kind=None,parse_t
 
         elif type=="itf_check":
             #
-
             for item in checklist:
                 old=item
                 item=_legal(item)
@@ -1277,7 +1297,6 @@ def _compute(taskid,user,checkexpression,type=None,target=None,kind=None,parse_t
                     if msg is False:
                         msg='表达式不成立'
                     viewcache(taskid,user.name,None,"校验表达式[<span style='color:#FF6666;'>%s</span>] 结果[<span style='color:#FF6666;'>%s</span>] 原因[<span style='color:#FF6666;'>%s</span>]"%(old,ress[0],msg))
-
 
                 resultlist.append(ress)
 
@@ -1372,8 +1391,6 @@ def _get_hearder_key(r):
     rs=[_upper_first(str(_)) for _ in r.split('_')]
     return '-'.join(rs)
 
-
-
 def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direction='left',taskid=None,parse_type='json',rps_header=None):
     """返回情况
     返回(success,'')
@@ -1395,9 +1412,7 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
 
         #print("ourexpression=>",ourexpression)
         exp_rp=_replace_property(user, ourexpression)
-        # print('qqqqq=>',exp_rp)
 
-        # print('exp-pr=>',exp_rp)
         if exp_rp[0] is not 'success':
             return exp_rp
 
@@ -1406,15 +1421,25 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
             return exp_rv
         # print('exp_rv=<',exp_rv)
 
-        exp=exp_rv[1]
+        exp_rf=_replace_function(user, exp_rv[1])
+        if exp_rf[0] is not 'success':
+            return exp_rf
+
+        exp=exp_rf[1]
 
         res=None
 
+        rr=False
+
+        #print('=>1')
+
         if need_chain_handle is True:
+            #print('=>2')
 
             k,v,op=_separate_expression(exp)
             print('获取的项=>',k,v,op)
-            data=data.replace('null',"'None'").replace('true',"'True'").replace("false","'False'")
+            if data:
+                data=data.replace('null',"'None'").replace('true',"'True'").replace("false","'False'")
             # print('data=>',data)
 
             if 'response.text'==k:
@@ -1424,6 +1449,7 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
                         return('success','')
                     else:
                         return('fail','表达式%s校验失败'%ourexpression)
+
             elif k.startswith('response.header'):
 
                 ak=k.split('.')[-1].lower()
@@ -1446,12 +1472,8 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
                 else:
                     return('fail','表达式%s校验失败'%ourexpression)
 
-
-
-
-
             else:
-
+                #print('=>3')
                 p=None
 
                 if parse_type=='json':
@@ -1535,16 +1557,13 @@ def _eval_expression(user,ourexpression,need_chain_handle=False,data=None,direct
                     else:
                         return('fail',res)
 
-
             return('fail','')
-
         except:
             print('表达式计算异常.')
             return ('error','表达式[%s]计算异常[%s]'%(ourexpression,traceback.format_exc()))
 
 
-
-def _replace_variable(user,str_,src=1,taskid=None):
+def _replace_variable(user,str_,src=1,taskid=None,is_lazy=False):
     """
     返回(success,替换后的新字符串)
     返回(fail,错误消息)
@@ -1559,14 +1578,15 @@ def _replace_variable(user,str_,src=1,taskid=None):
             # try:
             #print("变量名称=>%s"%varname)
             #print("查找变量 author=%s key=%s"%(user.name,varname))
+            print('带匹配数据=>',varname)
             var=Variable.objects.get(key=varname)
-            gain_rv=_replace_variable(user,var.gain,src=src,taskid=taskid)
+            gain_rv=_replace_variable(user,var.gain,src=src,taskid=taskid,is_lazy=is_lazy)
             if gain_rv[0] is not 'success':
                 #print(11)
                 return gain_rv
             gain=gain_rv[1]
 
-            value_rv=_replace_variable(user, var.value,src=src,taskid=taskid)
+            value_rv=_replace_variable(user, var.value,src=src,taskid=taskid,is_lazy=is_lazy)
             if value_rv[0] is not 'success':
                 #print(1221)
                 return value_rv
@@ -1600,8 +1620,6 @@ def _replace_variable(user,str_,src=1,taskid=None):
                             v=v[1]
                         old=old.replace('{{%s}}'%varname,str(v))
                         viewcache(taskid,user.name,None,'替换变量 {{%s}}=>%s'%(varname,v))
-
-
 
                 else:
                     v=_gain_compute(user,gain,src=src,taskid=taskid)
@@ -1642,7 +1660,6 @@ def is_valid_where_sql(call_str):
         if sql[-1]==ch:
             return False
 
-
     return True
 
 def is_valid_gain_value(gain,value):
@@ -1671,8 +1688,6 @@ def _is_valid_where_symmetric(input):
     for x in range(size/2):
         if m[x]!=m[size-x-1]:
             return False
-
-
 
     return True
 
@@ -1705,6 +1720,15 @@ def _gain_compute(user,gain_str,src=1,taskid=None):
         # from builtin import *
         # res=re.findall("\w{1,}\([\w,]*\)",gain_str)
         # print('匹配结果=>',res,gain_str)
+
+        builtinmethods=[x.name for x in getbuiltin()]
+        gainmethodlist=re.findall('(.*?)\(', gain_str)
+        isbuiltin=False
+
+        if len(gainmethodlist):
+            methodname=gainmethodlist[0]
+            isbuiltin=(lambda:True if methodname in builtinmethods else False)()
+
         if _is_function_call(gain_str):
             ##是方法调用
             # tzm=Fu.tzm_compute(gain_str,"(.*?)\((.*?)\)")
@@ -1731,8 +1755,8 @@ def _gain_compute(user,gain_str,src=1,taskid=None):
             call_method_name=a[0][0]
             call_method_params=a[0][1].split(',')
 
-            if functionid is None:
-                return ('error','没查到匹配函数请先定义[%s,%s]'%(gain_str,flag))
+            if functionid is None and not isbuiltin:
+                return ('error','没查到匹配函数请先定义[%s]'%(gain_str))
             else:
                 print('functionid=>',functionid)
             # return _callfunction(user, functionid, gain_str)
@@ -1750,7 +1774,11 @@ def _gain_compute(user,gain_str,src=1,taskid=None):
             if gain_str_rv[0] is not 'success':
                 return gain_str_rv
 
-            gain_str=gain_str_rv[1]
+            gain_str_rf=_replace_function(user, gain_str_rv[1])
+            if gain_str_rf[0] is not 'success':
+                return gain_str_rf
+
+            gain_str=gain_str_rf[1]
             if src==1:
                 if ';' in gain_str:
                     return op.db_execute2(gain_str,taskid=taskid,callername=user.name)
@@ -1759,18 +1787,17 @@ def _gain_compute(user,gain_str,src=1,taskid=None):
             else:
                 return ('success','"%s"'%gain_str.strip())
 
-
     except Exception as e:
     #traceback.print_exc()
         return ('error',traceback.format_exc())
 
 
-def _replace_property(user,str_):
+_LAZY_COMPUTE_PROPERTY=['STEP_INFO']
+def _replace_property(user,str_,is_lazy=True):
     """
     属性右替换
     返回(success,替换后新值)
     返回(fail,错误消息)
-
     """
     cur=None
     try:
@@ -1778,22 +1805,22 @@ def _replace_property(user,str_):
         username=user.name
         #username=user.name
         #a=re.findall("\$(.*)=", str_)
-
-        print('str_=>',str_)
+        #print('str_=>',str_)
         b=re.findall("\$\{(.*?)\}", str_)
         #viewcache("b length=>",len(b))
         #c=a+b
         c=b
         for it in c:
-            #viewcache("key=>",it)
-            #print('tmp==>',it)
+            if is_lazy:
+                for x in _LAZY_COMPUTE_PROPERTY:
+                    if it.__contains__(x):
+                        continue;
+
             cur=it
 
             print("取属性==")
             print(_tempinfo,username,it)
             v=_tempinfo.get(username).get(it)
-
-
             #viewcache("vvv=>",v)
             if v is None:
                 #raise RuntimeError('没有定义属性$%s 请先定义'%it)
@@ -1806,6 +1833,44 @@ def _replace_property(user,str_):
     except Exception as e:
         print(traceback.format_exc())
         return ('error','请检查是否定义属性%s 错误消息:%s'%(cur,traceback.format_exc()))
+
+def _replace_function(user,str_):
+    '''计算函数引用表达式
+    '''
+    # print('--计算引用表达式=>',str_)
+
+    resultlist=[]
+    builtinmethods=[x.name for x in getbuiltin()]
+    str_=str(str_)
+
+    call_str_list=re.findall('\$\[(.*?)\]',str_)
+
+    if len(call_str_list)==0:return ('success',str_)
+
+    for call_str in call_str_list:
+        fname=re.findall('(.*?)\(', call_str)
+        f=None
+        try:
+            f=Function.objects.get(name=fname[0])
+        except:
+            pass
+
+        status,res=Fu.call(f,call_str,builtin=(lambda:True if fname in builtinmethods else False)())
+        resultlist.append((status,res))
+
+        if status is 'success':
+            print('替换函数引用 %s => %s '%('$[%s]'%call_str,str(res)))
+            str_=str_.replace('$[%s]'%call_str,str(res))
+
+
+    if len([x for x in resultlist if x[0] is 'success'])==len(resultlist):
+        print('--成功计算引用表达式=>',str_)
+        return ('success',str_)
+    else:
+        alist=[x[1] for x in resultlist if x[0] is not 'success']
+        print('--异常计算引用表达式=>',alist[0])
+        return ('error',alist[0])
+
 
 def _save_builtin_property(taskid,username):
     '''
@@ -1829,7 +1894,6 @@ def _save_builtin_property(taskid,username):
         print('==内置属性赋值提前结束，执行结果表无数据')
         return
 
-
     base_url=settings.BASE_URL
     url="%s/manager/querytaskdetail/?taskid=%s"%(base_url,taskid)
     save_data(username,_tempinfo,'TASK_ID', detail['taskid'])
@@ -1846,7 +1910,11 @@ def _save_builtin_property(taskid,username):
     save_data(username,_tempinfo, 'PLAN_STEP_SKIP_COUNT', detail['skip'])
     save_data(username,_tempinfo, 'PLAN_SUCCESS_RATE', detail['success_rate'])
 
-
+def _save_builtin_dynamic_property(username,k,v):
+    '''
+    '''
+    #print('====缓存动态内置属性 [%s]====='%k)
+    save_data(username, _tempinfo, k, v)
 def _find_and_save_property(user,dict_str,reponsetext):
     """
     属性保存 如响应json中没相关字段 则当做字符串
@@ -1890,10 +1958,8 @@ def save_data(username,d,k,v):
 
         d[username][k]=v
 
-        print('存属性==')
-        print(username,k,v)
+        print('[%s]缓存属性[%s->%s]'%(username,k,v))
 
-        viewcache(username,"用户%s缓存数据=> %s=%s"%(username,k,v))
 
     except:
         raise RuntimeError("存property失败=>%s"%k)
@@ -2057,14 +2123,6 @@ class JSONParser(Struct):
             return chainstr
 
 
-    # def check(self,chainstr,expected):
-
-    #   #print(type(self.getValue(chainstr)),type(expected))
-
-    #   return str(self.getValue(chainstr))==str(expected)
-
-
-
 
 class MainSender:
 
@@ -2179,13 +2237,22 @@ class MainSender:
             if rich_text_rp[0] is 'success':
                 rich_text_rv=_replace_variable(user,rich_text_rp[1],taskid=taskid)
                 if rich_text_rv[0] is 'success':
-                    rich_text=rich_text_rv[1]
+
+                   # rich_text=rich_text_rv[1]
+                    rich_text_rf=_replace_function(user, rich_text_rv[1])
+
+                    if rich_text_rf[0] is not 'success':
+                        ret=1
+                        error="函数引用替换异常"
+                    else:
+                        rich_text=rich_text_rf[1]
+
                 else:
                     ret=1
-                    error='变量替换异常,检查变量是否已定义'
+                    error='变量引用替换异常,检查变量是否已定义'
             else:
                 ret=1
-                error='属性替换异常 可用属性'
+                error='属性引用替换异常 可用属性'
 
             smtp_host=configs.EMAIL_HOST        #"smtp.qq.com"
             smtp_port=configs.EMAIL_PORT            #465
@@ -2195,7 +2262,13 @@ class MainSender:
             if description_rp[0] is 'success':
                 description_rv=_replace_variable(user,description_rp[1],taskid=taskid)
                 if description_rv[0] is 'success':
-                    subject=description_rv[1]
+
+                    description_rf=_replace_function(user,description_rv[1])
+                    if description_rf[0] is 'success':
+                        subject=description_rf[1]
+                    else:
+                        ret=1
+                        error='函数引用替换异常'
                 else:
                     ret=1
                     error='变量替换异常,检查变量是否已定义'
@@ -2216,17 +2289,10 @@ class MainSender:
             server.sendmail(sender_name,list(to_receive.split(',')),msg.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
             server.quit()  # 关闭连接
 
-
-
-
-
-
         except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
             print(traceback.format_exc())
             ret=2
             error=traceback.format_exc()
-
-
 
         return cls._getdescrpition(mail_config.to_receive,ret,error)
 
@@ -2248,8 +2314,6 @@ class MainSender:
             res='发送失败[%s]'%error
 
         return '========================发送邮件 收件人:%s 结果：%s'%(to_receive,res)
-
-
 
     @classmethod
     def dingding(cls, taskid, user, mail_config):
@@ -2379,6 +2443,12 @@ class Transformer:
                 act_data=self._get_workbook_sheet_cache(dwb,'执行数据')
 
                 for rowdata in act_data:
+                    vs=''
+                    for v in rowdata.values():
+                        vs+=str(v).strip()
+                    if not vs:
+                        continue;
+
                     step=Step()
                     step.author=User.objects.get(name=self.callername)
                     func_field_value=rowdata['函数名称']
@@ -2386,8 +2456,11 @@ class Transformer:
                     #print('canshu=>',rowdata['参数值'])
                     if '：' not in  rowdata['参数值'] and ':' not in rowdata['参数值']:
                         funcname=rowdata['函数名称']
+
                         #print('h=>',funcname)
                         if funcname not in(all_function_name):
+                            #print('row=>',rowdata)
+                            print('all_function_name',all_function_name)
                             return ('fail','执行数据页没定义函数[%s],请先定义'%funcname)
 
             #检查变量定义获取方式
@@ -2398,6 +2471,7 @@ class Transformer:
                     print('gain=>',gain)
                     methodname=re.findall('(.*?)\(.*?\)', gain)[0]
                     if methodname not in all_function_name:
+                        print('all_function_name',all_function_name)
                         
                         return ('fail','变量定义页没定义函数[%s],请先定义'%methodname)
 
@@ -2480,7 +2554,7 @@ class Transformer:
                 res[rowdata['脚本简称']]={
                 'path':path,
                 'method':method,
-                'content_type':content_type
+                'content_type':(lambda:'urlencode' if content_type=='iphone' else content_type)()
                 }
             except:
                 print(traceback.format_exc())
@@ -2507,9 +2581,13 @@ class Transformer:
             row_map={}
             row=sheet.row_values(rowindex)
             for cellindex in range(len(row)):
+                ctype=sheet.cell(rowindex,cellindex).ctype
+                
                 k=title_order_map[str(cellindex)]
                 v=row[cellindex]
                 #print('%s->%s'%(k,v))
+                if 2==ctype:
+                    v=int(v)
                 row_map[k]=v
 
             cache.append(row_map)
@@ -2630,13 +2708,13 @@ class Transformer:
                         c+='<%s>%s</%s>'%(k,vv,k)
 
 
-        with open('header.txt','a+') as f:
-            f.write('<head>%s</head>\n\n'%c)
+        # with open('header.txt','a+') as f:
+        #     f.write('<Head>%s</Head>\n\n'%c)
 
 
 
 
-        return '<head>%s</head>'%c
+        return '<Head>%s</Head>'%c
 
 
 
@@ -2661,10 +2739,11 @@ class Transformer:
             }
 
             ##接口业务数据
+            print('--开始添加接口业务数据')
 
             for sheetname,cache in self._get_business_sheet_cache().items():
 
-                print('sss=>',sheetname)
+                print('sss=>',sheetname,cache)
 
                 if sheetname.__contains__('head') or sheetname.__contains__('报文说明'):
                     continue;
@@ -2673,6 +2752,7 @@ class Transformer:
                 sheet_index=1#sheet明细行号
                 for rowdata in cache:
                    #s print('rowdata=>',rowdata)
+                    #print('=>1')
 
                     xmlcontent=''
                     params={}
@@ -2693,57 +2773,59 @@ class Transformer:
                     business=BusinessData()
                     business.businessname='%s_%s_%s'%(sheetname,sheet_index,self.transform_id)
                     sheet_index+=1
+
+                    #print('=>2')
                     for fieldname,value in rowdata.items():
-                        if fieldname  in _m:
-                            # if fieldname =='测试点':
-                            #     business.businessname="%s_%s"%(value.strip(),self.transform_id)
-                            #     #business.businessname="%s"%(value.strip())
-                            #     continue
-                            if fieldname=='DB检查数据':
-                                #business.db_check=self._replace_var(value)
-                                dck=self._replace_var(value)
-                                dck=dck.replace('\n','')
-                                if dck:
-                                    if dck.__contains__('sleep'):
-                                        business.db_check='|'.join(dck.split('|')[1:])
-                                        business.postposition=dck.split('|')[0]
+                        #print('=>3')
+                        try:
+                            if fieldname  in _m:
+                                #print('=>4')
+                                # if fieldname =='测试点':
+                                #     business.businessname="%s_%s"%(value.strip(),self.transform_id)
+                                #     #business.businessname="%s"%(value.strip())
+                                #     continue
+                                if fieldname=='DB检查数据':
+                                    #business.db_check=self._replace_var(value)
+                                    dck=self._replace_var(value)
+                                    dck=dck.replace('\n','')
+                                    if dck:
+                                        if dck.__contains__('sleep'):
+                                            business.db_check='|'.join(dck.split('|')[1:])
+                                            business.postposition=dck.split('|')[0]
 
-                                continue
-                            elif fieldname=='接口检查数据':
-                                business.itf_check=self._replace_var(value)
-                                continue
-                        else:
-                            ##hhhh
-                            #print('==========fdafda=>',self._is_xml_h())
-                            if self._is_xml_h():
+                                    continue
+                                elif fieldname=='接口检查数据':
+                                    business.itf_check=self._replace_var(value)
+                                    continue
+                            else:
+                                #print('=>5')
+                                ##hhhh
+                                #print('==========fdafda=>',self._is_xml_h())
+                                if self._is_xml_h():
 
-                                nodeinfo=''
-                                if fieldname.startswith('<'):
-                                    xmlcontent+=fieldname
+                                    nodeinfo=''
+                                    if fieldname.startswith('<'):
+                                        xmlcontent+=fieldname
+
+                                    else:
+                                        xmlcontent+='<%s>%s</%s>'%(fieldname,value,fieldname)
 
                                 else:
-                                    xmlcontent+='<%s>%s</%s>'%(fieldname,value,fieldname)
+                                    params[fieldname]=value
+                        except:
+                            print(traceback.format_exc())
 
-                            else:
-                                params[fieldname]=value.replace('\n','')
-
-                                # if fieldname=='sortType':
-
-                                #     print('[%s]sortType=>%s'%(sheet_index,value))
-
-
+                    #print('=>6')
                     if  params.get('json',None):
                         params=params.get('json')
-
-
-
+                    #print('=>7')
                     params=(str(params)).replace('"',"'").replace('\n','')
-                    print('[%s]params=>%s'%(sheet_index,str(params)))
+                    #print('[%s]params=>%s'%(sheet_index,str(params)))
 
                     if xmlcontent == '':
-                        business.params=self._replace_var(params)
+                        business.params=self._replace_var(params,sheet_index+1,rowindex+1)
                     else:
-                        xmlcontent='<root>#head#%s</root>'%xmlcontent
+                        xmlcontent='<Root>#head#%s</Root>'%xmlcontent
                         xmlcontent=xmlcontent.replace('#head#',self._get_header(hid,**headm))
                         
                         business.params=self._replace_var(xmlcontent)
@@ -2753,6 +2835,7 @@ class Transformer:
                     self._businessid_cache['%s:%s'%(sheetname,rowindex+1)]=business.id
                     rowindex=rowindex+1
 
+            print('---开始添加函数业务数据')
             ##函数业务数据
             aaindex=0
             for rowdata in self.act_data:
@@ -2785,7 +2868,7 @@ class Transformer:
         return [x for x in self.data_workbook.sheet_names() if x not in('变量定义','执行数据')]
 
 
-    def _replace_var(self,old):
+    def _replace_var(self,old,si=None,li=None):
         '''
         1.执行数据参数值
         2.DB检查数据
@@ -2795,12 +2878,14 @@ class Transformer:
         # print('【变量转化】=>',old)
         varlist=re.findall('{[ru,].*?}', old)
         if len(varlist)>0:
-
-
             for x in varlist:
                 varname=re.findall('{[ru],(.*?)}', x)
                 # print(varname)
-                old=old.replace(x,'{{%s_%s}}'%(varname[0],self.transform_id))
+                if x.__contains__('lv_Signature') and si and li:
+                    old=old.replace(x,'{{%s_%s_%s_%s}}'%(str(varname[0]).split('$')[0],si,li,self.transform_id))
+                    print('替换签名变量名=>','{{%s_%s_%s_%s}}'%(str(varname[0]).split('$')[0],si,li,self.transform_id))
+                else:
+                    old=old.replace(x,'{{%s_%s}}'%(varname[0],self.transform_id))
 
         # print('转换后=>',old)
         return old
@@ -2830,7 +2915,7 @@ class Transformer:
 
                 elif 'gv_dbuser' in varname:
                     con.username=rowdata['值']
-                elif 'gv_dbpwd' in varname:
+                elif 'gv_dbpwd' in varname or 'gv_dbpasswd' in varname:
                     con.password=rowdata['值']
                 elif 'gv_dbhost' in varname:
                     con.host=rowdata['值']
@@ -2886,8 +2971,8 @@ class Transformer:
                         elif rowdata['参数值'].__contains__('：'):
                             bkname=rowdata['参数值'].split('：')[0]
 
-                        print('bkname3=>',rowdata['参数值'].split('：'))
-                        print('bkname2=>',bkname)
+                        # print('bkname3=>',rowdata['参数值'].split('：'))
+                        # print('bkname2=>',bkname)
 
                         ##多条
                         if rowdata['参数值'].__contains__('-'):
@@ -2902,6 +2987,7 @@ class Transformer:
 
                             #count=int(end)-int(start)+1
                             for i in range(int(start),int(end)+1):
+                                print('==多条=')
 
                                 step=Step()
                                 step.temp=''
@@ -2949,9 +3035,18 @@ class Transformer:
                                            # print('9'*100)
                                            pass
                                 else:
+                                    print('==非xml')
+                                    print('basic_config=>',basic_config)
                                     if basic_config:
-                                        #step.url="%s%s"%(basic_config.get('host',''),detail_config.get(funcname).get('path',''))
-                                        step.url="%s%s"%('base_url_%s'%self.transform_id,detail_config.get(funcname).get('path',''))
+                                        print('=有基础配置=')
+                                        try:
+
+                                            #step.url="%s%s"%(basic_config.get('host',''),detail_config.get(funcname).get('path',''))
+                                            step.url="%s%s"%('{{base_url_%s}}'%self.transform_id,detail_config.get(funcname).get('path',''))
+                                           # print('$$'*100)   
+                                            print('step.url=>',step.url)
+                                        except:
+                                            print(traceback.format_exc())
                                         ##
                                         try:
 
@@ -2972,13 +3067,15 @@ class Transformer:
                                 is_exist=len(list(Step.objects.filter(description=step.description)))
                                 if is_exist==0:
                                     step.save()
+                                    print('添加步骤=>',step)
                                 else:
                                     step=Step.objects.get(description=step.description)
 
                                 ##step关联业务数据
                                 self.add_case_step_relation(case.id, step.id)
+                                print('--尝试获取业务id=>','%s_I0_%s_%s'%(bkname,i,self.transform_id))
                                 b=BusinessData.objects.get(businessname='%s_I0_%s_%s'%(bkname,i,self.transform_id))
-                                print('获取业务id=>%s'%b)
+                                print('--成功获取业务id=>%s'%b)
                                
 
                                 
@@ -3024,7 +3121,25 @@ class Transformer:
 
                             else:
                                 if basic_config:
-                                    step.url="%s%s"%(basic_config.get('host',''),detail_config.get(funcname).get('path',''))
+                                    #step.url="%s%s"%(basic_config.get('host',''),detail_config.get(funcname).get('path',''))
+                                    step.url="%s%s"%('{{base_url_%s}}'%self.transform_id,detail_config.get(funcname).get('path',''))
+                                    try:
+                                        if not self._has_create_var:
+                                            v=Variable()
+                                            v.author=User.objects.get(name=self.callername)
+                                            v.key='base_url_%s'%self.transform_id
+                                            v.value=basic_config.get('host','')
+                                            v.description='迁移url'
+                                            v.gain=''
+                                            v.save()
+
+                                            self._has_create_var=True
+                                    except:
+                                       # print('9'*100)
+                                       pass                      
+
+
+
 
                             # print('url=>',step.url)
                             # step.url=self._replace_var(step.url)
@@ -3032,6 +3147,7 @@ class Transformer:
                             is_exist=len(list(Step.objects.filter(description=step.description)))
                             if is_exist==0:
                                 step.save()
+                                print('添加步骤=>',step)
                             else:
                                 step=Step.objects.get(description=step.description)
 
@@ -3068,6 +3184,7 @@ class Transformer:
 
                             # l=list(BusinessData.objects.filter(businessname=name))
                             # print('size=>',len(l))
+                            print('待匹配业务名=>',name)
                             businessId=BusinessData.objects.get(businessname=name).id
                             #businessId=BusinessData.objects.get(businessname="%s"%rowdata['测试要点概要'].strip()).id
                             self.add_case_step_relation(case.id, step.id)
@@ -3076,7 +3193,7 @@ class Transformer:
 
                         except:
                             print(traceback.format_exc())
-                            print('没找到关联业务数据[%s]'%name)
+                            print('函数步骤没找到关联业务数据[%s]'%name)
 
             time.sleep(1)
 
@@ -3368,6 +3485,9 @@ class Transformer:
 
     def add_var(self):
         try:
+            signmethodname=''
+
+            ##常规变量
             for dwb in self.data_workbook:
                 var_cache=self._get_workbook_sheet_cache(dwb, '变量定义')
                 for var in var_cache:
@@ -3379,12 +3499,56 @@ class Transformer:
                     var=Variable()
                     var.description=description
                     var.key='%s_%s'%(key,self.transform_id)
+                    if  var.key.__contains__('lv_Signature'):
+                        signmethodname=re.findall('(.*?)\(',gain)[0]
 
                     var.gain=self._get_may_sql_field_value(gain)
-                    var.value=self._get_may_sql_field_value(value)
+                    if var.gain.strip():
+                        var.value=''
+                    else:
+                        var.value=self._get_may_sql_field_value(value)
                     var.author=User.objects.get(name=self.callername)
                     var.save()
                     print('==添加变量[%s]'%var)
+            
+
+            print('签名信息=>',signmethodname)
+            if signmethodname:
+                ##签名变量
+                si=0
+                li=0
+                print('--开始处理签名变量')
+                for dwb in self.data_workbook:
+                    sheets=dwb.sheet_names()
+                    for sheetname in sheets :
+                        si+=1
+                        if sheetname not in ('变量定义','执行数据'):
+                            datalist=self._get_workbook_sheet_cache(dwb, sheetname)
+                            for d in datalist:
+                                li+=1
+                                pa=[]
+                                for key in d:
+                                    if key not in('数据编号','DB检查数据','UI检查数据','接口检查数据','Signature'):
+                                        pa.append("%s='%s'"%(key,self._replace_var(str(d[key]))))
+
+                                    if str(d[key]).__contains__('lv_Signature'):
+                                        f_pa=[]
+                                        f_pa.append("'{{lv_key_%s}}'"%self.transform_id)
+                                        if f_pa.__contains__('WebApi'):
+                                            f_pa.append("'sendPrivateKey.pem.webapi'")
+                                        [f_pa.append(x) for x in pa]
+
+                                        var=Variable()
+                                        var.description=''
+                                        var.key='lv_Signature_%s_%s_%s'%(si,li,self.transform_id)
+                                        var.value=''
+                                        var.gain="%s(%s)"%(signmethodname,','.join(f_pa))
+                                        var.author=User.objects.get(name=self.callername)
+                                        var.save()
+                                        print('--新建签名变量=>%s'%var)
+
+
+
             return ('success','')
         except:
             return ('error','添加变量异常=>%s'%traceback.format_exc())
@@ -3408,7 +3572,7 @@ class Transformer:
                     if '@' in sql:
                         groupid=sql.split('@')[1]
                         length=len(groupid)
-                        print('len=>',length)
+                        #print('len=>',length)
                         new_sql_list.append(sql[0:-int(length+1)])
                     else:
                         new_sql_list.append(sql)

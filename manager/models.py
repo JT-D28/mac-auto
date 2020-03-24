@@ -48,8 +48,9 @@ class Function(Model):
 
 
 class Tag(Model):
-	name=CharField(max_length=16)
-
+	planids=CharField(max_length=128,null=True)
+	customize=TextField(null=True)
+	isglobal=IntegerField(default=0)
 	author=ForeignKey(User, on_delete=CASCADE)
 	createtime=DateTimeField(auto_now_add=True)
 	updatetime=DateTimeField(auto_now=True)
@@ -228,7 +229,7 @@ class ResultDetail(Model):
 class Variable(Model):
 	author=ForeignKey(User, on_delete=CASCADE)
 	description=CharField(max_length=128)
-	tag=TextField(blank=True)
+	tagid=ForeignKey(Tag, on_delete=CASCADE)
 	key=CharField(max_length=255,unique=True)
 	value=TextField(blank=True,null=True)
 	gain=TextField(blank=True,null=True)

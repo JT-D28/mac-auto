@@ -31,4 +31,3 @@ EMAIL_FROM = '1090233097@qq.com'  # 邮件发送者帐号
 # 初次启动时创建管理员账号  用户名默认：admin
 IS_CREATE_SUPERUSER = True
 SUPERUSER_PWD = 'admin#fingard'
-

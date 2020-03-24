@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect,render_to_response
+from django.shortcuts import render, redirect, render_to_response
 from django.conf import settings
 from ME2 import configs
 from . import forms
@@ -6,9 +6,11 @@ from manager.models import *
 from login.models import *
 
 from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse,JsonResponse
+from django.http import HttpResponse, JsonResponse
 from manager.core import *
 from django.db.models import Q
+
+
 # Create your views here
 
 def global_setting(request):
@@ -18,18 +20,19 @@ def global_setting(request):
 	return content
 
 
-def page_not_found(request,exception,**kwargs):
+def page_not_found(request, exception, **kwargs):
 	return render_to_response('manager/404.html')
 
 
 def page_error(rquest):
 	return render_to_response('manager/500.html')
 
-def index(request):
-	if request.session.get('is_login',None):
-		username=request.session.get("username",None)
-		return redirect('/manager/index/')
 
+def index(request):
+	if request.session.get('is_login', None):
+		username = request.session.get("username", None)
+		return redirect('/manager/index/')
+	
 	else:
 		return redirect("/account/login/")
 
@@ -46,32 +49,32 @@ def login(request):
 		# password=login_form.cleaned_data.get('password')
 		username = request.POST.get('username')
 		password = request.POST.get('password')
-
+		
 		try:
-			user=User.objects.get(name=username)
+			user = User.objects.get(name=username)
 		except:
-			message='用户不存在'
-			return render(request, 'login/login.html',locals())
-
-		if EncryptUtils.md5_encrypt(password)==user.password:
+			message = '用户不存在'
+			return render(request, 'login/login.html', locals())
+		
+		if EncryptUtils.md5_encrypt(password) == user.password:
 			request.session.set_expiry(14400)
-			request.session['is_login']=True
-			request.session['username']=username
+			request.session['is_login'] = True
+			request.session['username'] = username
 			print('登录成功')
-
+			
 			return redirect("/manager/index/")
 		else:
-			message='密码错误'
-			return render(request, 'login/login.html',locals())
+			message = '密码错误'
+			return render(request, 'login/login.html', locals())
 	# else:
 	# 	message='验证码错误'
 	# 	return render(request, 'login/login.html',locals())
-
-	login_form=forms.UserForm(request.POST)
-	if request.session.get('is_login',None):
-		username=request.session.get("username",None)
+	
+	login_form = forms.UserForm(request.POST)
+	if request.session.get('is_login', None):
+		username = request.session.get("username", None)
 		return redirect('/manager/index/')
-	return render(request, 'login/login.html',locals())
+	return render(request, 'login/login.html', locals())
 
 
 def logout(request):
@@ -85,107 +88,108 @@ def account(request):
 
 
 def queryaccount(request):
-	searchvalue=request.GET.get('searchvalue')
-	print("searchvalue=>",searchvalue)
-	res=None
+	searchvalue = request.GET.get('searchvalue')
+	print("searchvalue=>", searchvalue)
+	res = None
 	if searchvalue:
 		print("变量查询条件=>")
-		res=list(User.objects.filter(Q(name__icontains=searchvalue)))
+		res = list(User.objects.filter(Q(name__icontains=searchvalue)))
 	else:
-		res=list(User.objects.all())
-
-	limit=request.GET.get('limit')
-	page=request.GET.get('page')
-	res,total=getpagedata(res, page, limit)
-
-	jsonstr=json.dumps(res,cls=UserEncoder,total=total)
-	return JsonResponse(jsonstr,safe=False)
+		res = list(User.objects.all())
+	
+	limit = request.GET.get('limit')
+	page = request.GET.get('page')
+	res, total = getpagedata(res, page, limit)
+	
+	jsonstr = json.dumps(res, cls=UserEncoder, total=total)
+	return JsonResponse(jsonstr, safe=False)
 
 
 @csrf_exempt
 def addaccount(request):
-	code,msg=0,''
+	code, msg = 0, ''
 	try:
-
-		user=User()
-		user.name=request.POST.get('username')
-		user.password=EncryptUtils.md5_encrypt(request.POST.get('password'))
+		
+		user = User()
+		user.name = request.POST.get('username')
+		user.password = EncryptUtils.md5_encrypt(request.POST.get('password'))
 		user.save()
-
-		msg='操作成功'
+		
+		msg = '操作成功'
 	except:
 		print(traceback.format_exc())
-		code=1
-		msg='操作失败'
-
-	return JsonResponse(simplejson(code=code,msg=msg),safe=False)
+		code = 1
+		msg = '操作失败'
+	
+	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
 @csrf_exempt
 def delaccount(request):
-	code,msg=0,''
+	code, msg = 0, ''
 	try:
-		ids=request.POST.get('ids').split(',')
+		ids = request.POST.get('ids').split(',')
 		for id_ in ids:
-			user=User.objects.get(id=id_)
+			user = User.objects.get(id=id_)
 			user.delete()
-
-		msg='操作成功'
-
-
+		
+		msg = '操作成功'
+	
+	
 	except:
-		error=traceback.format_exc()
-		code=4
-		msg='操作异常[%s]'%error
+		error = traceback.format_exc()
+		code = 4
+		msg = '操作异常[%s]' % error
+	
+	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
-	return JsonResponse(simplejson(code=code,msg=msg),safe=False)
 
 @csrf_exempt
 def queryoneaccount(request):
-	code,msg=0,''
+	code, msg = 0, ''
 	try:
-		id_=request.POST.get('uid')
-		user=User.objects.get(id=id_)
-		jsonstr=json.dumps(user,cls=UserEncoder)
-		return JsonResponse(jsonstr,safe=False)
-
-
+		id_ = request.POST.get('uid')
+		user = User.objects.get(id=id_)
+		jsonstr = json.dumps(user, cls=UserEncoder)
+		return JsonResponse(jsonstr, safe=False)
+	
+	
 	except:
-		msg='操作异常[%s]'%traceback.format_exc()
-		return JsonResponse(simplejson(code=4,msg=msg),safe=False)
+		msg = '操作异常[%s]' % traceback.format_exc()
+		return JsonResponse(simplejson(code=4, msg=msg), safe=False)
 
 
 @csrf_exempt
 def editaccount(request):
-	code,msg=0,''
+	code, msg = 0, ''
 	try:
-		user=User.objects.get(id=request.POST.get('uid'))
-		user.name=request.POST.get('username')
-		user.password=request.POST.get('password')
+		user = User.objects.get(id=request.POST.get('uid'))
+		user.name = request.POST.get('username')
+		user.password = request.POST.get('password')
 		user.save()
-		msg='操作成功'
+		msg = '操作成功'
 	except:
-		code=4
-		msg='操作异常[%s]'%traceback.format_exc()
-
-	return JsonResponse(simplejson(code=code,msg=msg),safe=False)
-
-
+		code = 4
+		msg = '操作异常[%s]' % traceback.format_exc()
+	
+	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
 ##测试接口
 '''
 测试表达式
 '''
+
+
 @csrf_exempt
 def testexpress(request):
-	return JsonResponse({'code':1,'bool':True,'str':'hhh','nullstr':None,'spacestr':'','array':[],'data':[{'token':'tokenyyeyye'}],'qibastr':'10,203.30'},safe=False)
-
+	return JsonResponse({'code': 1, 'bool': True, 'str': 'hhh', 'nullstr': None, 'spacestr': '', 'array': [],
+	                     'data': [{'token': 'tokenyyeyye'}], 'qibastr': '10,203.30'}, safe=False)
 
 
 @csrf_exempt
 def testexpress1(request):
-	return JsonResponse([{'linenum':1},{'linenum':2}],safe=False)
+	return JsonResponse([{'linenum': 1}, {'linenum': 2}], safe=False)
 # '''
 # 测试特殊返回字符串
 # '''

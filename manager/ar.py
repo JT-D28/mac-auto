@@ -8,43 +8,30 @@
 def user_operation_intercept(request):
 	'''用户操作拦截
 	'''
-
-
+	
 	##普通url拦截
-
-
+	
 	##拦截的url带指定参数
-
+	
 	##
-
-
-
-
+	
 	##
-
-
+	
 	return {
-	'result':'block',
-	'msg':''
+		'result': 'block',
+		'msg': ''
 	}
-
 
 
 def web_el_intercept(request):
-	'''
+	"""
 	页面元素拦截
-	'''
-	return{
-
-	'result':'pass',
-	'msg':''
+	"""
+	return {
+		
+		'result': 'pass',
+		'msg': ''
 	}
-
-
-
-
-
-
 
 # from .manager.models import *
 # import traceback
@@ -81,15 +68,12 @@ def web_el_intercept(request):
 # 	pass
 
 
-
 # def can_view_varibale(user_id):
 # 	pass
 
 
-
 # def can_view_function(user_id):
 # 	pass
-
 
 
 # def can_view_dbconnect(user_id):

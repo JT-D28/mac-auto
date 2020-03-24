@@ -20,15 +20,14 @@ from . import views
 from manager import views as mv
 
 urlpatterns = [
-    path('login/',views.login),
-    path('index/',views.index),
-    path('user/',views.account),
-    path('logout/',views.logout),
-    path('queryaccount/',views.queryaccount),
-    path('queryoneaccount/',views.queryoneaccount),
-    path('addaccount/',views.addaccount),
-    path('delaccount/',views.delaccount),
-    path('editaccount/',views.editaccount),
-    
+	path('login/', views.login),
+	path('index/', views.index),
+	path('user/', views.account),
+	path('logout/', views.logout),
+	path('queryaccount/', views.queryaccount),
+	path('queryoneaccount/', views.queryoneaccount),
+	path('addaccount/', views.addaccount),
+	path('delaccount/', views.delaccount),
+	path('editaccount/', views.editaccount),
 
 ]

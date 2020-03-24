@@ -14,7 +14,7 @@ from manager.models import *
 from .core import ordered, Fu, getbuiltin, EncryptUtils, genorder, simplejson
 from .db import Mysqloper
 from .context import set_top_common_config, viewcache, gettestdatastep, gettestdataparams, get_task_session, \
-    clear_task_session, get_friendly_msg
+	clear_task_session, get_friendly_msg
 import re, traceback, redis, time, threading, smtplib, requests, json, warnings, datetime, socket
 import copy, base64, datetime, xlrd
 from email.mime.text import MIMEText
@@ -22,9 +22,9 @@ from email.utils import formataddr, parseaddr
 from email.header import Header
 
 try:
-    import xml.etree.cElementTree as ET
+	import xml.etree.cElementTree as ET
 except ImportError:
-    import xml.etree.ElementTree as ET
+	import xml.etree.ElementTree as ET
 
 ##支持的运算
 _op = ('>=', '<=', '!=', '==', '>', '<', '$')
@@ -44,9 +44,9 @@ _taskmap = dict()
 
 
 def db_connect(config):
-	'''
+	"""
     测试数据库连接
-    '''
+    """
 	print('==测试数据库连接===')
 	
 	conn = None
@@ -811,10 +811,11 @@ def _step_process_check(callername, taskid, order, kind):
 			
 			if step.content_type == 'xml':
 				if re.search('webservice', step.url):
-					headers,text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), 'post',None,'xml')
-					text=text.replace('&lt;','<')
+					headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), 'post',
+					                                                    None, 'xml')
+					text = text.replace('&lt;', '<')
 					text = re.findall('(?<=\?>).*?(?=</ns1:out>)', text, re.S)[0]
-					text='\n'+text
+					text = '\n' + text
 				else:
 					text, statuscode, itf_msg = _callsocket(taskid, user, step.url, body=str(paraminfo))
 			else:
@@ -1057,7 +1058,8 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	url = url_rv[1]
 	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>url=>%s</span>" % url)
 	
-	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>原始params=><xmp style='color:#009999;'>%s</xmp></span>" % body)
+	viewcache(taskid, user.name, kind,
+	          "<span style='color:#009999;'>原始params=><xmp style='color:#009999;'>%s</xmp></span>" % body)
 	data_rp = _replace_property(user, body)
 	if data_rp[0] is not 'success':
 		return ('', '', '', data_rp[1])
@@ -1065,7 +1067,8 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	if data_rv[0] is not 'success':
 		return ('', '', '', data_rv[1])
 	body = data_rv[1]
-	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>params=><xmp style='color:#009999;'>%s</xmp></span>" % body)
+	viewcache(taskid, user.name, kind,
+	          "<span style='color:#009999;'>params=><xmp style='color:#009999;'>%s</xmp></span>" % body)
 	
 	# body=json.loads(body)
 	
@@ -1099,7 +1102,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		body = json.dumps(eval(body))
 	elif content_type == 'xml':
 		default["Content-Type"] = 'application/xml'
-		body=body.encode('utf-8')
+		body = body.encode('utf-8')
 	elif content_type == 'urlencode':
 		# body=body.encode('utf-8')
 		# body=json.loads(body)
@@ -1133,7 +1136,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		# print(body)
 		session = get_task_session('%s_%s' % (taskid, user.name))
 		rps = session.post(url, data=body, headers={**default, **headers})
-		
+	
 	# print("textfdafda=>",rps.text)
 	else:
 		return ('', '', '', "请求方法%s没实现.." % method)
@@ -1229,8 +1232,8 @@ def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
 		viewcache(taskid, user.name, None, "执行[<span style='color:#009999;'>%s</span>]%s" % (kind, s))
 		if status is not 'success':
 			return (status, res)
-		
-		# viewcache(taskid,username,kind,"数据校验配置=>%s"%db_check)
+	
+	# viewcache(taskid,username,kind,"数据校验配置=>%s"%db_check)
 	
 	return ('success', '操作[%s]全部执行完毕' % call_strs)
 
@@ -1268,7 +1271,7 @@ def _compute(taskid, user, checkexpression, type=None, target=None, kind=None, p
 			#
 			
 			for item in checklist:
-				print('check',item)
+				print('check', item)
 				old = item
 				item = _legal(item)
 				ress = _eval_expression(user, item, need_chain_handle=True, data=target, taskid=taskid,
@@ -1470,7 +1473,7 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 					# print(data)
 					# 消除content-type首行
 					data = '\n'.join(data.split('\n')[1:])
-					print('reee',data)
+					print('reee', data)
 					p = XMLParser(data)
 				
 				oldk = k
@@ -2064,6 +2067,7 @@ class JSONParser(Struct):
 			print(errms)
 			return chainstr
 
+
 # def check(self,chainstr,expected):
 
 #   #print(type(self.getValue(chainstr)),type(expected))
@@ -2196,7 +2200,7 @@ class MainSender:
 			if description_rp[0] is 'success':
 				description_rv = _replace_variable(user, description_rp[1], taskid=taskid)
 				if description_rv[0] is 'success':
-					subject = description_rv[1]+'————'+str(time.strftime("%m-%d %H:%M", time.localtime()))
+					subject = description_rv[1] + '————' + str(time.strftime("%m-%d %H:%M", time.localtime()))
 				else:
 					ret = 1
 					error = '变量替换异常,检查变量是否已定义'
@@ -2709,10 +2713,10 @@ class Transformer:
 							
 							else:
 								params[fieldname] = value.replace('\n', '')
-							
-							# if fieldname=='sortType':
-							
-							#     print('[%s]sortType=>%s'%(sheet_index,value))
+					
+					# if fieldname=='sortType':
+					
+					#     print('[%s]sortType=>%s'%(sheet_index,value))
 					
 					if params.get('json', None):
 						params = params.get('json')
@@ -2959,8 +2963,8 @@ class Transformer:
 								print('获取业务id=>%s' % b)
 								
 								self.add_step_business_relation(step.id, b.id)
-							# self.add_step_bussiness_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
-							# self.add_case_business_relation2(case.id, self.data_workbook[k],rowdata['参数值'])
+						# self.add_step_bussiness_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
+						# self.add_case_business_relation2(case.id, self.data_workbook[k],rowdata['参数值'])
 						
 						# 单条
 						else:
@@ -3020,8 +3024,8 @@ class Transformer:
 							business_id = BusinessData.objects.get(
 								businessname='%s_I0_%s_%s' % (bkname, lineindex, self.transform_id)).id
 							self.add_step_business_relation(step.id, business_id)
-						# self.add_step_bussiness_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
-						# self.add_case_business_relation2(case.id, self.data_workbook[k],rowdata['参数值'])
+					# self.add_step_bussiness_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
+					# self.add_case_business_relation2(case.id, self.data_workbook[k],rowdata['参数值'])
 					
 					else:
 						# 函数
@@ -3222,7 +3226,7 @@ class Transformer:
 					print('业务名称[%s_%s]查找返回的业务数据有多条' % (testpoint, self.transform_id))
 					business = list(BusinessData.objects.filter(businessname="%s_%s" % (testpoint, self.transform_id)))[
 						0]
-				# business=list(BusinessData.objects.filter(businessname="%s"%testpoint))[0]
+			# business=list(BusinessData.objects.filter(businessname="%s"%testpoint))[0]
 			else:
 				business = BusinessData.objects.get(
 					businessname="%s%s_%s" % (sheetname, x.get('数据编号'), self.transform_id))
@@ -3309,7 +3313,7 @@ class Transformer:
 						print('业务名称[%s_%s]查找返回的业务数据有多条' % (testpoint, self.transform_id))
 						business = \
 							list(BusinessData.objects.filter(businessname='%s_%s' % (testpoint, self.transform_id)))[0]
-					# business=list(BusinessData.objects.filter(businessname='%s'%testpoint))[0]
+				# business=list(BusinessData.objects.filter(businessname='%s'%testpoint))[0]
 				else:
 					print('-查找测试点=>%s_I0%s_%s' % (sheetname, int(x.get('数据编号')), self.transform_id))
 					business = BusinessData.objects.get(
@@ -3325,7 +3329,7 @@ class Transformer:
 				order.save()
 				
 				print('==步骤关联测试点[%s]' % order)
-			# step.businessdatainfo.add(business)
+		# step.businessdatainfo.add(business)
 		except:
 			print(traceback.format_exc())
 	

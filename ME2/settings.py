@@ -15,7 +15,7 @@ import json
 from ME2 import configs
 
 BASE_URL = 'http://' + configs.ME2_URL
-HELP_DOC_URL="%s/static/web/viewer.html?file=%s/static/ME2.pdf"%(BASE_URL,BASE_URL)
+HELP_DOC_URL = "%s/static/web/viewer.html?file=%s/static/ME2.pdf" % (BASE_URL, BASE_URL)
 ##Redis配置
 REDIS_HOST = configs.REDIS_HOST
 REDIS_PORT = configs.REDIS_PORT
@@ -196,8 +196,8 @@ STATICFILES_DIRS = [
 	os.path.join(BASE_DIR, "login/static"),
 	os.path.join(BASE_DIR, 'manager/static'),
 	os.path.join(BASE_DIR, 'homepage/static'),
-	os.path.join(BASE_DIR,'local_reports'),
-	os.path.join(BASE_DIR,'PDF.js')
+	os.path.join(BASE_DIR, 'local_reports'),
+	os.path.join(BASE_DIR, 'PDF.js')
 
 ]
 

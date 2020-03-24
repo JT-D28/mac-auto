@@ -32,8 +32,8 @@ class MessageParser(object):
 			sep = self._parse_format.get('sep')
 			
 			findex = self._parse_format.get(fcode, None)
-			if findex is None:
-				return ('error', '字段[%s]没有配置' % fode)
+			# if findex is None:
+			# 	return ('error', '字段[%s]没有配置' % fode)
 			
 			pf = text.split(sep)[self._parse_format.get(fcode)]
 			return ('success', pf)
@@ -111,7 +111,7 @@ class MessageParser(object):
 		return _ret
 	
 	@classmethod
-	def add_template(cls, **tkws, fkwslist: list):
+	def add_template(cls, **tkws):
 		t = Template()
 		for key in tkws:
 			eval('t.%s=%s' % (key, tkws.get(key)))
@@ -121,7 +121,7 @@ class MessageParser(object):
 		pass
 	
 	@classmethod
-	def edit_template(cls, **tkws, **fkws):
+	def edit_template(cls, **tkws):
 		pass
 	
 	@classmethod

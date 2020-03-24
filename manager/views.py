@@ -378,17 +378,17 @@ def queryvar(request):
 					where (description like %s or `key` like %s or gain like %s) and v.author_id=u.id '''
 		if userid != '-1':
 			sql += 'and author_id=%s'
-			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag, userid])
+			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, userid])
 		else:
 			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag])
 		desc = cursor.description
 		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-		for i in rows:
-			m = ''
-			for j in i['tag'].split(';'):
-				if j != '':
-					m += "<span class='layui-badge' onclick=tagSpanClick(this) style='cursor:pointer;'>" + j + "</span> "
-			i['tag'] = m
+		# for i in rows:
+		# 	m = ''
+		# 	for j in i['tag'].split(';'):
+		# 		if j != '':
+		# 			m += "<span class='layui-badge' onclick=tagSpanClick(this) style='cursor:pointer;'>" + j + "</span> "
+		# 	i['tag'] = m
 		limit = request.POST.get('limit')
 		page = request.POST.get('page')
 		res, total = getpagedata(rows, page, limit)

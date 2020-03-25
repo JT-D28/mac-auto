@@ -93,6 +93,11 @@
             height: 34px;
             line-height: 34px;
         }
+
+        .el-cascader,
+        .el-cascader .el-input {
+            width: 60%;
+        }
     </style>
 </head>
 <body style="height: calc(100% - 40px);padding: 20px">
@@ -101,9 +106,10 @@
         <div class="layui-inline">
             <button class="layui-btn btn" id='addbtn'>新增</button>
             <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
-          <!--  <el-tooltip class="item" effect="dark" content="批量替换标记！" placement="top">
-                <button class="layui-btn btn" id='editbtn'>标记</button>
-            </el-tooltip>-->
+            <button class="layui-btn btn" id='copybtn'>复制</button>
+            <!--  <el-tooltip class="item" effect="dark" content="批量替换标记！" placement="top">
+				  <button class="layui-btn btn" id='editbtn'>标记</button>
+			  </el-tooltip>-->
         </div>
         <div class="layui-inline" style="float: right;width: 80%;">
             <button class="layui-btn btn" id='querybtn' style="float: right;">查询</button>
@@ -111,7 +117,7 @@
                 <input id='search-value' type="text" name="" placeholder="描述|键|获取方式|值"
                        class="layui-input btn">
             </div>
-          <!--  <el-select @change="tagChange" clearable collapse-tags filterable
+            <el-select @change="tagChange" clearable collapse-tags filterable
                        v-model="form.tagvalue" multiple style="width: 30%;float: right;">
                 <el-option
                         v-for="i in tagvalues"
@@ -119,7 +125,7 @@
                         :label="i.name"
                         :value="i.id">
                 </el-option>
-            </el-select>-->
+            </el-select>
             <div class="layui-input-inline" style="margin-bottom: 0px;width: 14%;float: right;">
                 <select name="user" lay-filter="user" lay-verify="required" lay-search style="float: right;">
                     <option value="0">我的变量</option>
@@ -159,20 +165,18 @@
                       class="layui-textarea"></textarea>
             </div>
         </div>
-
-
-        <!--<div class="layui-form-item" id='tag'>
+        <div class="layui-form-item" id='tag'>
             <div class="layui-inline" style="width: 100%">
                 <label class="layui-form-label">标记</label>
                 <div class="layui-input-block">
-                    <button type="button" id="addtagbtn" @click="addtagbtn(0)"
+                    <button type="button" id="addtagbtn" @click="addtagbtn"
                             class="layui-btn layui-btn-radius layui-btn-primary">添加标记
                     </button>
-                    <blockquote class="layui-inline" v-html="wantTag" style="margin-bottom:0px">
+                    <blockquote class="layui-inline" v-html="wantplanids+wantTag" style="margin-bottom:0px">
                     </blockquote>
                 </div>
             </div>
-        </div>-->
+        </div>
 
 
         <div class="layui-form-item">
@@ -183,10 +187,21 @@
         </div>
     </form>
     <el-dialog title='标记' :visible.sync="tagFormVisible" width="50%" height="100%">
+        <label class="layui-form-label">绑定计划</label>
+        <div class="" style="width: 100%">
+            <el-cascader style="width: 100%"
+                         :options="productAndPlan"
+                         v-model="bindplans"
+                         :props="props"
+                         collapse-tags
+                         ref="bindplanslabel"
+                         clearable>
+            </el-cascader>
+        </div>
         <el-form :model="tagform" ref="tagform" label-width="100px" class="demo-dynamic">
             <el-form-item
                     v-for="(tag, index) in tagform.tags"
-                    :label="'标记' + index"
+                    :label="'标记' + (index+1)"
                     :key="tag.key"
                     :prop="'tags.' + index + '.value'">
                 <el-input v-model="tag.value" maxlength="8" show-word-limit></el-input>
@@ -197,6 +212,24 @@
                 <el-button @click="addtag">新增标记</el-button>
             </el-form-item>
         </el-form>
+    </el-dialog>
+    <el-dialog title="变量复制" :visible.sync="copyFormVisible">
+        <div class="" style="text-align: center" v-html="cpoyinfo">asd</div>
+        <label class="layui-form-label">绑定计划</label>
+        <div class="" style="width: 100%">
+            <el-cascader style="width: 100%"
+                         :options="productAndPlan"
+                         v-model="copybindplans"
+                         :props="props"
+                         collapse-tags
+                         ref="copybindplanslabel"
+            >
+            </el-cascader>
+        </div>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="copyFormcancel">取 消</el-button>
+            <el-button type="primary" @click="copyFormSubmit">确 定</el-button>
+        </div>
     </el-dialog>
 </div>
 </body>
@@ -214,23 +247,40 @@
         delimiters: ['${', '}'],
         data() {
             return {
+                str: '',
+                props: {multiple: true},
+                productAndPlan: [],
                 tagform: {
                     tags: [{
                         value: ''
                     }],
                 },
-                tagtitle: '标记新增',
+                bindplans: [],
                 tagvalues: [],
                 form: {
                     tagvalue: '',
                 },
+                copyform: {
+                    name: '',
+                },
                 wantTag: '',
+                wantplanids: '',
                 tagFormVisible: false,
+                copyFormVisible: false,
+                formLabelWidth: '120px',
+                cpoyinfo: '',
+                copybindplans: [],
             }
         },
         methods: {
+            copyFormSubmit() {
+
+            },
+            copyFormcancel(e) {
+                var that = this;
+                that.copyFormVisible = false;
+            },
             tagChange(curdata) {
-                console.log(curdata)
                 if (curdata.indexOf(0) != -1) {
                     if (curdata[curdata.length - 1] == 0) {
                         this.form.tagvalue = [0]
@@ -241,18 +291,31 @@
                 } else if (curdata[0] == 0) {
                     this.form.tagvalue = curdata.shift()
                 }
-                console.log(curdata)
                 $("#querybtn").click()
             },
             addtagbtn() {
                 var that = this;
+                _post_nl('/homepage/queryProductAndPlan/', {}, function (res) {
+                    if (res.code == 0) {
+                        that.productAndPlan = res.data;
+                    } else layer.msg(res.data)
+                });
                 that.tagFormVisible = true
             },
             tagSubmit(formName, action) {
                 //action 0时为新增编辑中的提交，否则为批量替换的提交
                 var that = this;
                 if (action == 0) {
-                    str = '';
+                    that.wantplanids = ''
+                    that.$refs['bindplanslabel'].getCheckedNodes().forEach(function (item, index) {
+                        if (index == 0) {
+                            that.wantplanids += '绑定的计划：'
+                        }
+                        if (item['level'] == 2) {
+                            that.wantplanids += item['label'] + ';'
+                        }
+                    });
+                    var str = ''
                     that.tagform.tags.forEach(function (item, index) {
                         if (item.value != '') {
                             str += '<span class="layui-badge">' + item.value + '</span>&nbsp&nbsp&nbsp&nbsp'
@@ -284,6 +347,9 @@
                 }
             },
             addtag() {
+                if (this.tagform.tags.length > 2) {
+                    return
+                }
                 this.tagform.tags.push({
                     value: '',
                     key: Date.now()
@@ -292,7 +358,7 @@
             querytaglist(up) {
                 var that = this;
                 setTimeout(() => $("#querybtn").click(), 50)
-               /** _post_nl('/manager/querytaglist/', {userid: $("[name='user']").val()}, function (e) {
+                _post_nl('/manager/querytaglist/', {userid: $("[name='user']").val()}, function (e) {
                     if (e.code == 0) {
                         that.tagvalues = e.data;
                         if (up == 1) {
@@ -300,7 +366,7 @@
                             setTimeout(() => $("#querybtn").click(), 50)
                         }
                     }
-                });**/
+                });
             }
         },
         created: function () {
@@ -343,16 +409,17 @@
                 where: {
                     searchvalue: $("#search-value").val(),
                     userid: $("[name='user']").val(),
-                    //tags: app.form.tagvalue
+                    tags: app.form.tagvalue
                 },
                 cols: [[
                     {type: 'checkbox', fixed: 'left'}
                     , {field: 'id', title: 'ID', sort: true, fixed: 'left', hide: true}
-                    , {field: 'key', width: '20%', title: '键名'}
-                    , {field: 'description', width: '20%', title: '描述', sort: true}
-                    , {field: 'value', width: '20%', title: '值'}
-                    , {field: 'gain', width: '20%', title: '获取方式'}
-                    //, {field: 'tag', width: '15%', title: '标记'}
+                    , {field: 'planids', width: '10%', title: '绑定计划'}
+                    , {field: 'key', width: '15%', title: '键名'}
+                    , {field: 'description', width: '15%', title: '描述', sort: true}
+                    , {field: 'value', width: '15%', title: '值'}
+                    , {field: 'gain', width: '15%', title: '获取方式'}
+                    , {field: 'customize', width: '10%', title: '标记'}
                     , {field: 'author', width: '8%', title: '创建者', sort: true}
                     , {align: 'center', toolbar: '#toolbar', fixed: 'right'}
                 ]],
@@ -362,8 +429,25 @@
             });
         });
 
+        //复制操作
+        $("#copybtn").click(function (e) {
+            var checkStatus = table.checkStatus("table-var");
+            data = checkStatus.data; //获取选中的数据
+            if (data.length == 0) {
+                layer.msg('请选择变量！', {time: 1200});
+                return
+            }
+            _post_nl('/homepage/queryProductAndPlan/', {}, function (res) {
+                if (res.code == 0) {
+                    app.productAndPlan = res.data;
+                    app.cpoyinfo = '你选择了' + data.length + '个变量';
+                    app.copyFormVisible = true
+                } else layer.msg(res.data)
+            });
+        });
+
 //批量编辑(暂时只针对标签)
-    /**    $("#editbtn").click(function (e) {
+        /**    $("#editbtn").click(function (e) {
             var checkStatus = table.checkStatus("table-var");
             data = checkStatus.data; //获取选中的数据
             if (data.length == 0) {
@@ -381,7 +465,7 @@
             }), 20);
 
         });
-**/
+         **/
 //删除功能
         $("#delbtn").click(function (e) {
             var checkStatus = table.checkStatus("table-var");
@@ -405,7 +489,7 @@
                                     where: {
                                         searchvalue: $("#search-value").val(),
                                         userid: $("[name='user']").val(),
-                                        //tags: app.form.tagvalue
+                                        tags: app.form.tagvalue
                                     }
                                 })
                             }, 50);
@@ -445,7 +529,6 @@
                         var len = $('#gain').val().length
                         var last_word = $('#gain').val().charAt(len - 1)
                         if (e.keyCode == 13 && last_word == '@') {
-                            console.log('enter')
                             cur = $("#dblist .active").text();
                             $('#gain').val($('#gain').val() + cur);
                             var e = jQuery.Event("keydown"); //模拟一个键盘事件
@@ -456,23 +539,18 @@
                             return;
                         } else if (e.keyCode == 38) {
                             flag = -1
-                            console.log('up')
                         } else if (e.keyCode == 40) {
                             flag = 1
-                            console.log('down')
                         } else
                             return
                         optionsize = $("#dblist li").length
-                        // console.log(optionsize)
 
                         if ($("#dblist").css('display') == 'block') {
                             cur_active = $('#dblist .active')
                             if (cur_active.length == 0) {
-                                // console.log('h1')
                                 $("#dblist li:eq(0)").addClass('active')
                                 // layui.form.render('ul','addhtml')
                             } else {
-                                // console.log('h2')
                                 index = parseInt(cur_active.attr('index'))
                                 index = index + flag
                                 if (index > optionsize - 1)
@@ -496,10 +574,16 @@
                     zIndex: 1000,
                     btn: ['提交', '取消'],
                     yes: function (index, layero) {
-                        tag = ''
+                        var tag = '';
                         app.tagform.tags.forEach(function (item, index) {
                             if (item.value != '') {
                                 tag += item.value + ';'
+                            }
+                        });
+                        var bindplans = {};
+                        app.$refs['bindplanslabel'].getCheckedNodes().forEach(function (item, index) {
+                            if (item['level'] == 2) {
+                                bindplans[item['label']] = [item['parent']['value'], item['value']]
                             }
                         });
                         success = function (e) {
@@ -518,7 +602,7 @@
                                         where: {
                                             searchvalue: $("#search-value").val(),
                                             userid: $("[name='user']").val(),
-                                            //tags: app.form.tagvalue
+                                            tags: app.form.tagvalue
                                         }
                                     })
                                 }, 50)
@@ -531,17 +615,18 @@
                             'description': $("[name='description']").val(),
                             'gain': $("[name='gain']").val(),
                             'is_cache': $("[name='is_cache']").val(),
-                            //'tag': tag
+                            'tag': tag,
+                            'bindplans': JSON.stringify(bindplans)
                         };
                         _post("/manager/addvariable/", data, success)
                     },
                     btn2: function (index, layero) {
-                        console.log('no')
                     },
                     end: function () {
                         app.tagform.tags.length = 1
                         app.tagform.tags[0].value = ''
                         app.wantTag = ''
+                        app.wantplanids = ''
                     }
                 });
             layer.full(o);
@@ -549,8 +634,6 @@
 
 //tool事件
         table.on("tool(target)", function (e) {
-            // var checkStatus = table.checkStatus("table-var");
-            // data = checkStatus.data; //获取选中的数据
             id = e.data['id']
             if (e.event == 'edit') {
                 success = function (data) {
@@ -558,19 +641,19 @@
                         description = data.data['description']
                         key = data.data['key']
                         gain = data.data['gain']
-                        value = data.data['value']
-                        is_cache = data.data['is_cache']
-                        tag = data.data['tag']
-                        $("[name='description']").val(description)
-                        $("[name='key']").val(key)
-                        $("[name='value']").val(value)
-                        $("[name='gain']").val(gain)
-                        $("[name='is_cache']").val(is_cache)
+                        value = data.data['value'];
+                        is_cache = data.data['is_cache'];
+                        $("[name='description']").val(description);
+                        $("[name='key']").val(key);
+                        $("[name='value']").val(value);
+                        $("[name='gain']").val(gain);
+                        $("[name='is_cache']").val(is_cache);
                         //处理标签
-                        app.tagform.tags.length = 0
-                        tags = tag.split(';')
-                        tags.pop()
-                        str = ''
+                        app.tagform.tags.length = 0;
+                        tags = data.tags['customize'];
+                        tags = tags.split(';')
+                        tags.pop();
+                        str = '';
                         tags.forEach(function (item, index) {
                             str += '<span class="layui-badge">' + item + '</span>&nbsp&nbsp&nbsp&nbsp'
                             app.tagform.tags.push({
@@ -578,7 +661,19 @@
                                 key: Date.now()
                             });
                         });
+                        var ids = new Array();
+                        var length = data.tags['ids'].length;
+                        for (var i = 0; i < length; i++) {
+                            ids[i] = new Array();
+                            for (var j = 0; j < 2; j++) {
+                                ids[i][j] = data.tags['ids'][i][j];
+                            }
+                        }
+                        setTimeout(() => app.bindplans = ids, 5);
+                        app.wantplanids = data.tags['des'];
                         app.wantTag = str;
+                        app.bindplans.length = 0
+
                         //打开表单
                         var o = layer.open({
                             type: 1,
@@ -590,6 +685,12 @@
                                 tagedit = ''
                                 app.tagform.tags.forEach(function (item, index) {
                                     tagedit += item.value + ';'
+                                });
+                                var bindplans = {};
+                                app.$refs['bindplanslabel'].getCheckedNodes().forEach(function (item, index) {
+                                    if (item['level'] == 2) {
+                                        bindplans[item['label']] = [item['parent']['value'], item['value']]
+                                    }
                                 });
                                 success = function (e) {
                                     // alert(e)
@@ -606,13 +707,14 @@
                                             },
                                             where: {
                                                 searchvalue: $("#search-value").val(),
-                                                userid: $("[name='user']").val()
+                                                userid: $("[name='user']").val(),
+                                                tags: app.form.tagvalue
                                             }
                                         });
                                     } else
                                         layer.alert(e.msg, {icon: 2})
 
-                                }
+                                };
                                 _post('/manager/editvariable/', {
                                     'id': id,
                                     'description': $("[name='description']").val(),
@@ -620,7 +722,8 @@
                                     'gain': $("[name='gain']").val(),
                                     'value': $("[name='value']").val(),
                                     'is_cache': $("[name='is_cache']").val(),
-                                    //'tag': tagedit
+                                    'tag': tagedit,
+                                    'bindplans': JSON.stringify(bindplans)
                                 }, success)
 
                             },

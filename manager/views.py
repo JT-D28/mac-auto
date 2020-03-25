@@ -344,13 +344,21 @@ def queryonevar(request):
 	res = None
 	try:
 		res = Variable.objects.get(id=request.POST.get('id'))
-		# if str(res.author) != request.session.get('username'):
-		# 	code = 1
-		# 	msg = '不是创建人，没有编辑权限'
-		# else:
+		tag = Tag.objects.values('planids', 'customize').get(var=res)
+		print(tag['customize'])
+		planids = json.loads(tag['planids'])
+		des = ''
+		ids = []
+		for k, v in planids.items():
+			des += k + ';'
+			ids.append(v)
+		tag['des'] = des
+		tag['ids'] = ids
 		jsonstr = json.dumps(res, cls=VarEncoder)
+		jsonstr['tags'] = tag
 		return JsonResponse(jsonstr, safe=False)
 	except:
+		print(traceback.format_exc())
 		code = 1
 		msg = '查询异常[%s]' % traceback.format_exc()
 		return JsonResponse({'code': code, 'msg': msg})
@@ -373,27 +381,33 @@ def queryvar(request):
 	print("searchvalue=>", searchvalue)
 	
 	with connection.cursor() as cursor:
-		sql = '''SELECT v.id,description,`key`,gain,value,DATE_FORMAT(v.createtime,'%%m-%%d %%H:%%i') AS createtime,
+		sql = '''SELECT t.customize ,t.planids,v.id,description,`key`,gain,value,DATE_FORMAT(v.createtime,'%%m-%%d %%H:%%i') AS createtime,
 					DATE_FORMAT(v.updatetime,'%%m-%%d %%H:%%i') AS updatetime,is_cache,u.name as author FROM `manager_variable` v,login_user u
-					where (description like %s or `key` like %s or gain like %s) and v.author_id=u.id '''
+					,manager_tag t where (description like %s or `key` like %s or gain like %s)
+					and t.customize like %s and v.author_id=u.id AND t.var_id=v.id '''
 		if userid != '-1':
-			sql += 'and author_id=%s'
-			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, userid])
+			sql += 'and v.author_id=%s'
+			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag, userid])
 		else:
-			cursor.execute(sql, [searchvalue, searchvalue, searchvalue])
+			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag])
 		desc = cursor.description
 		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-		# for i in rows:
-		# 	m = ''
-		# 	for j in i['tag'].split(';'):
-		# 		if j != '':
-		# 			m += "<span class='layui-badge' onclick=tagSpanClick(this) style='cursor:pointer;'>" + j + "</span> "
-		# 	i['tag'] = m
+		for i in rows:
+			m = ''
+			for j in i['customize'].split(';'):
+				if j != '':
+					m += "<span class='layui-badge' onclick=tagSpanClick(this) style='cursor:pointer;'>" + j + "</span> "
+			i['customize'] = m
+		for i in rows:
+			n = ''
+			x = json.loads(i['planids'])
+			for k, v in x.items():
+				n += "<span class='layui-badge' onclick=planSpanClick(this) style='cursor:pointer;'>" + k + "</span> "
+			i['planids'] = n
 		limit = request.POST.get('limit')
 		page = request.POST.get('page')
 		res, total = getpagedata(rows, page, limit)
 		jsonstr = json.dumps(res, cls=VarEncoder, total=total)
-	
 	return JsonResponse(jsonstr, safe=False)
 
 
@@ -467,10 +481,15 @@ def editvar(request):
 			var.is_cache = True
 		else:
 			var.is_cache = False
-		
-		var.tag = request.POST.get('tag')
-		
 		var.save()
+		tags = request.POST.get('tag') if request.POST.get('tag') != ';' else ''
+		bindplans = request.POST.get('bindplans')
+		tag = Tag.objects.get(var=var)
+		tag.planids = bindplans
+		tag.customize = tags
+		if bindplans == '{}':
+			tag.isglobal = 1
+		tag.save()
 		msg = '编辑成功'
 		code = 0
 	except:
@@ -508,8 +527,18 @@ def addvar(request):
 			var.is_cache = True
 		else:
 			var.is_cache = False
-		var.tag = request.POST.get('tag') if request.POST.get('tag') != ';' else ''
 		var.save()
+		
+		tags = request.POST.get('tag') if request.POST.get('tag') != ';' else ''
+		bindplans = request.POST.get('bindplans')
+		tag = Tag()
+		tag.planids = bindplans
+		tag.customize = tags
+		tag.author = User.objects.get(name=request.session.get('username', None))
+		if bindplans == '{}':
+			tag.isglobal = 1
+		tag.var = var
+		tag.save()
 		msg = '新增成功'
 	except:
 		print(traceback.format_exc())
@@ -2437,10 +2466,10 @@ def querytaglist(request):
 			if userid != '-1':
 				userid = userid if userid != '0' else str(
 					User.objects.values('id').get(name=request.session.get('username'))['id'])
-				sql = "SELECT tag from manager_variable where author_id=%s"
-				cursor.execute(sql, [userid])
+				sql = "SELECT customize from manager_tag where customize!=''"
+				cursor.execute(sql)
 			elif userid == '-1':
-				sql = "SELECT tag from manager_variable "
+				sql = "SELECT customize from manager_tag "
 				cursor.execute(sql)
 			rows = cursor.fetchall()
 		for i in rows:
@@ -2465,7 +2494,7 @@ def querytag(request):
 	userid = str(User.objects.values('id').get(name=request.session.get('username'))['id'])
 	try:
 		varhis = list(Variable.objects.values('tag').filter(author_id=userid).order_by('-updatetime')[0:1])[0]
-		code=0
+		code = 0
 	except:
 		code, data = 1, '出错了！'
 	return JsonResponse({'code': 0, 'data': varhis['tag'].split(';')[:-1]})

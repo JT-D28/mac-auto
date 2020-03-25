@@ -1,3 +1,5 @@
+import threading
+
 from django.shortcuts import render, redirect, render_to_response
 from django.conf import settings
 from ME2 import configs
@@ -39,6 +41,7 @@ def index(request):
 
 @csrf_exempt
 def login(request):
+	threading.Thread(target=Variable.oldVarBindTag, args=()).start()
 	if configs.IS_CREATE_SUPERUSER:
 		User.create_superuser(EncryptUtils.md5_encrypt(configs.SUPERUSER_PWD))
 	if request.method == 'POST':

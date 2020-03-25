@@ -618,3 +618,24 @@ def jenkinsJobRun(request):
 			return JsonResponse({'code': 0, 'data': '任务已开始执行'})
 		except:
 			return JsonResponse({'code': 1, 'data': "可能出现了问题，可以前往jenkins检查"})
+
+
+@csrf_exempt
+def queryProductAndPlan(request):
+	list_ = list(Product.objects.all())
+	data=[]
+	try:
+		for i,x in enumerate(list_):
+			o = dict()
+			o['value'] = str(x.id)
+			o['label'] = x.description
+			p=[]
+			plans = cm.getchild('product_plan', x.id)
+			for plan in plans:
+				p.append({'value': str(plan.id),'label': plan.description})
+			o['children']=p
+			data.append(o)
+		return JsonResponse({'code': 0, 'data': data})
+	except:
+		print(traceback.format_exc())
+		return JsonResponse({'code': 1, 'data': '获取计划失败'})

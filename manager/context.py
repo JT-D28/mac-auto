@@ -426,4 +426,4 @@ def getRunningInfo(username='', planid='', type='latest_taskid'):
 	elif type == 'isrunning':
 		planinfo = _runninginfo.get(str(planid), {})
 		isrunning = planinfo.get('isrunning',0)
-		return isrunning
+		return str(isrunning)

@@ -266,7 +266,7 @@ def run(request):
 	for planid in planids:
 		plan = mm.Plan.objects.get(id=planid)
 		taskid = gettaskid(plan.__str__())
-		if plan.is_running in (1, '1'):
+		if getRunningInfo(callername, planid, 'isrunning')=='1':
 			return {
 				'status': 'fail',
 				'msg': '任务已在运行，稍后再试！'

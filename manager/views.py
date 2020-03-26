@@ -894,7 +894,7 @@ def third_party_call(request):
 	callername = res['callername']
 	is_verify = request.GET.get('is_verify')
 	
-	if plan.is_running in (1, '1'):
+	if getRunningInfo(callername, planid, 'isrunning')=='1':
 		return JsonResponse(simplejson(code=1, msg="调用失败，任务正在运行中，稍后再试！"), safe=False)
 	
 	print('调用方=>', callername)
@@ -1091,9 +1091,10 @@ def runtask(request):
 	list_ = [int(x) for x in planids.split(",")]
 	for planid in list_:
 		plan = Plan.objects.get(id=planid)
-		if plan.is_running in (1, '1'):
-			return JsonResponse(simplejson(code=1, msg="任务已在运行，请稍后！"), safe=False)
 		username = request.session.get('username')
+		if getRunningInfo(username, planid, 'isrunning')=='1':
+			return JsonResponse(simplejson(code=1, msg="任务已在运行，请稍后！"), safe=False)
+		
 		taskid = gettaskid(plan.__str__())
 		is_verify = request.POST.get('is_verify')
 		runplans(username, taskid, list_, is_verify)

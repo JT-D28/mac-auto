@@ -23,6 +23,7 @@ urlpatterns = [
 	path('', views.homepage),
 	path('queryproduct/', views.queryproduct),
 	path('queryplan/', views.queryplan),
+	path('queryallplan/', views.queryallplan),
 	path('querytaskid/', views.querytaskid),
 	path('globalsetting/', views.globalsetting),
 	path('restart/', views.restart),

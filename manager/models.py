@@ -220,7 +220,7 @@ class ResultDetail(Model):
 class Variable(Model):
 	author = ForeignKey(User, on_delete=CASCADE)
 	description = CharField(max_length=128)
-	key = CharField(max_length=255, unique=True)
+	key = CharField(max_length=255)
 	value = TextField(blank=True, null=True)
 	gain = TextField(blank=True, null=True)
 	is_cache = BooleanField(default=True)
@@ -240,8 +240,10 @@ class Variable(Model):
 				tag.var=var
 				tag.customize=''
 				tag.planids='{}'
+				tag.isglobal=1
 				tag.save()
 				print(str(var.id)+'更新成功')
+		print('变量tag更新完成')
 # class priority(Model):
 # 	"""
 # 	测试步骤优先级或测试用例优先级

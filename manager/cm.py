@@ -3,7 +3,9 @@
 # @Date    : 2019-10-12 09:42:34
 # @Author  : Blackstone
 # @to      :用例管理
-
+import json
+import threading
+from .models import Tag
 import traceback, datetime
 from django.db.models import Q
 from manager import models as mm
@@ -130,7 +132,7 @@ def addplan(request):
 		if plan.run_type == '定时运行':
 			config = request.POST.get('config')
 			crontab = mm.Crontab()
-			crontab.taskid = gettaskid()
+			crontab.taskid = gettaskid(plan.__str__())
 			crontab.value = config
 			# crontab.status='close'
 			crontab.author = plan.author
@@ -187,19 +189,33 @@ def delplan(request):
 		}
 
 
+def handlebindplans(olddescription, newdescription, id_):
+	print("处理计划名修改后的标签中绑定的计划名称")
+	oldtags = Tag.objects.values('id', 'planids').filter(Q(planids__contains=olddescription))
+	for oldtag in oldtags:
+		planids = json.loads(oldtag['planids'])
+		if olddescription in planids and id_ in planids[olddescription]:
+			edittag=Tag.objects.get(id=oldtag['id'])
+			ol=json.loads(edittag.planids)
+			ol[newdescription] = ol.pop(olddescription)
+			edittag.planids=str(ol).replace("'",'"')
+			edittag.save()
+			print(str(edittag.id)+'更新完成')
+
 def editplan(request):
 	id_ = request.POST.get('uid').split('_')[1]
+	newdescription = request.POST.get('description')
 	msg = ''
 	try:
 		is_send_mail = request.POST.get("is_send_mail")
 		is_send_dingding = request.POST.get("is_send_dingding")
 		plan = mm.Plan.objects.get(id=id_)
-		plan.description = request.POST.get('description')
+		olddescription = plan.description
+		plan.description = newdescription
 		plan.db_id = request.POST.get('dbid')
 		print('description=>', plan.description)
 		plan.run_type = request.POST.get('run_type')
 		plan.save()
-		print(plan.mail_config_id)
 		if plan.mail_config_id == '' or plan.mail_config_id is None:  # 针对老任务，没有邮箱配置
 			mail_config = mm.MailConfig()
 			if is_send_mail == 'true':
@@ -225,6 +241,10 @@ def editplan(request):
 				mail_config.is_send_dingding = 'close'
 			mail_config.save()
 		msg = '编辑成功'
+		
+		if olddescription != newdescription:
+			threading.Thread(target=handlebindplans, args=(olddescription, newdescription, id_)).start()
+		
 		return {
 			'status': 'success',
 			'msg': '编辑[%s]成功' % plan.description,
@@ -241,17 +261,17 @@ def editplan(request):
 
 def run(request):
 	callername = request.session.get('username')
-	taskid = gettaskid()
 	planids = [x.split('_')[1] for x in request.POST.get('ids').split(',')]
 	is_verify = request.POST.get('is_verify')
 	for planid in planids:
 		plan = mm.Plan.objects.get(id=planid)
+		taskid = gettaskid(plan.__str__())
 		if plan.is_running in (1, '1'):
 			return {
 				'status': 'fail',
 				'msg': '任务已在运行，稍后再试！'
 			}
-	runplans(callername, taskid, planids, is_verify)
+		runplans(callername, taskid, planids, is_verify)
 	
 	return {
 		'status': 'success',
@@ -834,7 +854,6 @@ def delrelation(kind, callername, main_id, follow_id):
 	
 	# if kind=='plan_case' and length==0:
 	# 	Order.objects.get(kind='case_case',follow_id=follow_id).delete()
-	
 	
 	except:
 		print('==删除节点关联报错')

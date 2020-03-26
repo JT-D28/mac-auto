@@ -974,10 +974,10 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
 	try:
 		
 		##
-		body_rv = _replace_variable(user, body);
+		body_rv = _replace_variable(user, body,taskid=taskid);
 		if body_rv[0] is not 'success':
 			return ('', '', body_rv[1])
-		body_rp = _replace_variable(user, body_rv[1])
+		body_rp = _replace_variable(user, body_rv[1],taskid=taskid)
 		if body_rp[0] is not 'success':
 			return ('', '', body_rp[1])
 		
@@ -1185,7 +1185,7 @@ def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
 		if s == 'None' or s is None:
 			continue;
 		
-		status, call_str = _replace_variable(user, s)
+		status, call_str = _replace_variable(user, s,taskid=taskid)
 		if status is not 'success':
 			return (status, res)
 		

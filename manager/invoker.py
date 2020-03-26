@@ -14,7 +14,7 @@ from manager.models import *
 from .core import ordered, Fu, getbuiltin, EncryptUtils, genorder, simplejson
 from .db import Mysqloper
 from .context import set_top_common_config, viewcache, gettestdatastep, gettestdataparams, get_task_session, \
-	clear_task_session, get_friendly_msg
+	clear_task_session, get_friendly_msg, setRunningInfo, getRunningInfo
 import re, traceback, redis, time, threading, smtplib, requests, json, warnings, datetime, socket
 import copy, base64, datetime, xlrd
 from email.mime.text import MIMEText
@@ -556,13 +556,13 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind):
 		          "结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-red'>fail</span>" % case0.description)
 
 
+
 def runplan(callername, taskid, planid, is_verify, kind=None):
-	'''
-    '''
 	groupskip = []
 	username = callername
 	try:
 		plan = Plan.objects.get(id=planid)
+		setRunningInfo(callername,planid,taskid,1)
 		print('plan=>', plan)
 		plan.is_running = 1
 		plan.save()
@@ -592,12 +592,14 @@ def runplan(callername, taskid, planid, is_verify, kind=None):
 		
 		if planre:
 			plan.last = 'success'
+			setRunningInfo(callername, planid, taskid, 0)
 			plan.is_running = 0
 			plan.save()
 			viewcache(taskid, username, kind,
 			          "结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-green'>success</span>" % plan.description)
 		else:
 			plan.last = 'fail'
+			setRunningInfo(callername, planid, taskid, 0)
 			plan.is_running = 0
 			plan.save()
 			viewcache(taskid, username, kind,
@@ -984,10 +986,10 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
 	try:
 		
 		##
-		body_rv = _replace_variable(user, body);
+		body_rv = _replace_variable(user, body,taskid=taskid);
 		if body_rv[0] is not 'success':
 			return ('', '', body_rv[1])
-		body_rp = _replace_variable(user, body_rv[1])
+		body_rp = _replace_variable(user, body_rv[1],taskid=taskid)
 		if body_rp[0] is not 'success':
 			return ('', '', body_rp[1])
 		
@@ -1201,7 +1203,7 @@ def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
 		if s == 'None' or s is None:
 			continue;
 		
-		status, call_str = _replace_variable(user, s)
+		status, call_str = _replace_variable(user, s,taskid=taskid)
 		if status is not 'success':
 			return (status, res)
 		
@@ -1560,15 +1562,31 @@ def _replace_variable(user, str_, src=1, taskid=None):
     src:同_gain_compute()
 
     """
+	if taskid is not None:
+		pid = taskid.split('__')[0]
+		pname = taskid.split('__')[1]
 	try:
 		old = str_
 		varnames = re.findall('{{(.*?)}}', str_)
-		# print(varnames)
 		for varname in varnames:
-			# try:
-			# print("变量名称=>%s"%varname)
-			# print("查找变量 author=%s key=%s"%(user.name,varname))
-			var = Variable.objects.get(key=varname)
+			vars = Variable.objects.filter(key=varname)
+			var = None
+			for m in vars:
+				x = json.loads(Tag.objects.get(var=m).planids)
+				if pname in x and pid in x.get(pname):
+					var = m
+					viewcache(taskid, user.name, None, '找到局部变量，将使用局部变量 %s 描述：%s' % (varname,var.description))
+					break
+			if var is None:
+				for m in vars:
+					try:
+						var = Tag.objects.get(var=m, isglobal=1).var
+						viewcache(taskid, user.name, None, '未找到局部变量，将使用全局变量 %s 描述：%s' % (varname,var.description))
+					except:
+						pass
+				if var is None:
+					return ('error', '字符串[%s]变量替换异常[%s] 请检查包含变量是否已配置' % (str_, traceback.format_exc()))
+				
 			gain_rv = _replace_variable(user, var.gain, src=src, taskid=taskid)
 			if gain_rv[0] is not 'success':
 				# print(11)

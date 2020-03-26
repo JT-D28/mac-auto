@@ -377,6 +377,9 @@ def queryvar(request):
 		elif i != '0':
 			strtag += i.split('_')[1] + '%'
 	print(strtag)
+	
+	bindplan = request.POST.get('bindplan') if request.POST.get('bindplan') != '' else ''
+	bindstr = '%","' + bindplan + '"]%' if bindplan !='' else '%%'
 	userid = userid if userid != '0' else str(User.objects.values('id').get(name=request.session.get('username'))['id'])
 	print("searchvalue=>", searchvalue)
 	
@@ -384,12 +387,12 @@ def queryvar(request):
 		sql = '''SELECT t.customize ,t.planids,v.id,description,`key`,gain,value,DATE_FORMAT(v.createtime,'%%m-%%d %%H:%%i') AS createtime,
 					DATE_FORMAT(v.updatetime,'%%m-%%d %%H:%%i') AS updatetime,is_cache,u.name as author FROM `manager_variable` v,login_user u
 					,manager_tag t where (description like %s or `key` like %s or gain like %s)
-					and t.customize like %s and v.author_id=u.id AND t.var_id=v.id '''
+					and t.customize like %s and v.author_id=u.id AND t.var_id=v.id  and planids like %s '''
 		if userid != '-1':
 			sql += 'and v.author_id=%s'
-			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag, userid])
+			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag,bindstr,userid])
 		else:
-			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag])
+			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag,bindstr])
 		desc = cursor.description
 		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
 		for i in rows:
@@ -402,7 +405,8 @@ def queryvar(request):
 			n = ''
 			x = json.loads(i['planids'])
 			for k, v in x.items():
-				n += "<span class='layui-badge' onclick=planSpanClick(this) style='cursor:pointer;'>" + k + "</span> "
+				print(v)
+				n += "<span class='layui-badge layui-bg-green' id="+v[1]+" onclick=planSpanClick(this) style='cursor:pointer;'>" + k + "</span> "
 			i['planids'] = n
 		limit = request.POST.get('limit')
 		page = request.POST.get('page')
@@ -459,36 +463,36 @@ def editvar(request):
 	id_ = request.POST.get('id')
 	code = -1
 	msg = ''
+	key = request.POST.get('key')
+	bindplans = request.POST.get('bindplans')
+	state = varRepeatCheck(key, bindplans, id_)
+	if state != '':
+		return JsonResponse(simplejson(code=1, msg=state), safe=False)
+	description = request.POST.get('description')
+	gain = request.POST.get('gain')
+	value = request.POST.get('value')
+	tags = request.POST.get('tag') if request.POST.get('tag') != ';' else ''
+	is_cache = request.POST.get('is_cache')
 	try:
-		var = Variable.objects.get(id=id_)
-		var.description = request.POST.get('description')
-		var.gain = request.POST.get('gain')
-		
-		if is_valid_where_sql(var.gain) is False:
+		if is_valid_where_sql(gain) is False:
 			return JsonResponse(simplejson(code=2, msg='获取方式输入可能有错误 请检查.'), safe=False)
-		
-		var.value = request.POST.get('value')
-		###gain&value 单输入验证
-		c1 = is_valid_gain_value(var.gain, var.value)
+		c1 = is_valid_gain_value(gain, value)
 		if c1 is not True:
 			return JsonResponse(simplejson(code=2, msg=c1), safe=False)
 		
-		# print(var.gain,var.value)
-		var.key = request.POST.get('key')
-		var.is_cache = request.POST.get('is_cache')
-		
-		if var.is_cache is 'ON':
-			var.is_cache = True
-		else:
-			var.is_cache = False
+		var = Variable.objects.get(id=id_)
+		var.value = value
+		var.description = description
+		var.gain = gain
+		var.key = key
+		var.is_cache = is_cache
+		var.is_cache = True if var.is_cache is 'ON' else False
 		var.save()
-		tags = request.POST.get('tag') if request.POST.get('tag') != ';' else ''
-		bindplans = request.POST.get('bindplans')
+		
 		tag = Tag.objects.get(var=var)
 		tag.planids = bindplans
 		tag.customize = tags
-		if bindplans == '{}':
-			tag.isglobal = 1
+		tag.isglobal = 1 if bindplans == '{}' else 0
 		tag.save()
 		msg = '编辑成功'
 		code = 0
@@ -500,51 +504,150 @@ def editvar(request):
 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
+def varRepeatCheck(key, bindplans, editid=0):
+	# 校验重复：同一个key只能最多只能有一个全局变量：isglobal=1;可以有多个绑定了计划的变量，其中绑定的计划不能有重复项
+	print(key, bindplans)
+	bindplans = json.loads(bindplans)
+	state = '变量重复校验出错！'
+	try:
+		if editid != 0:
+			vars = Variable.objects.filter(key=key).exclude(id=editid)
+		else:
+			vars = Variable.objects.filter(key=key)
+		print(vars)
+		if vars:
+			# 如果没有传入绑定的计划id，先判断是否有全局变量
+			if not bindplans:
+				for var in vars:
+					try:
+						tag = Tag.objects.get(var=var, isglobal=1)
+						if tag:
+							state = "已经存在相同键名的全局变量！"
+							break
+					except:
+						state = ''
+			else:
+				str = ''
+				for var in vars:
+					try:
+						tag = Tag.objects.get(var=var, isglobal=0)
+						if tag:
+							planids = json.loads(tag.planids)
+							for k, v in planids.items():
+								if k in bindplans and bindplans[k] == v:
+									str += k + '<br>'
+					except:
+						tag = Tag.objects.get(var=var, isglobal=1)
+						if tag:
+							print('没有绑定计划的变量,有全局变量;')
+							state = ''
+				state = "变量已经绑定过计划：<br>%s" % (str) if str != '' else ''
+		
+		else:
+			state = ''
+	except:
+		print(traceback.format_exc())
+		state = traceback.format_exc()
+	finally:
+		print(state)
+		return state
+
+
 @csrf_exempt
 def addvar(request):
 	code = 0
 	msg = ''
 	try:
-		var = Variable()
-		var.description = request.POST.get('description')
-		var.key = request.POST.get('key')
-		var.value = request.POST.get('value')
-		var.gain = request.POST.get("gain")
-		var.gain = var.gain.replace("\n", "")  ##修复前端联想bug
-		# print('gain=>',var.gain.__contains__('\n'))
-		##gain为sql时格式验证
-		
-		if is_valid_where_sql(var.gain) is False:
+		key = request.POST.get('key')
+		bindplans = request.POST.get('bindplans')
+		state = varRepeatCheck(key, bindplans)
+		if state != '':
+			return JsonResponse(simplejson(code=1, msg=state), safe=False)
+		description = request.POST.get('description')
+		value = request.POST.get('value')
+		gain = request.POST.get("gain").replace("\n", "")  # 修复前端联想bug
+		is_cache = request.POST.get('is_cache')
+		tags = request.POST.get('tag') if request.POST.get('tag') != ';' else ''
+		author = User.objects.get(name=request.session.get('username', None))
+		# gain为sql时格式验证
+		if is_valid_where_sql(gain) is False:
 			return JsonResponse(simplejson(code=2, msg='获取方式输入可能有错误 请检查.'), safe=False)
-		
-		###gain&value 单输入验证
-		c1 = is_valid_gain_value(var.gain, var.value)
+		# gain&value 单输入验证
+		c1 = is_valid_gain_value(gain, value)
 		if c1 is not True:
 			return JsonResponse(simplejson(code=2, msg=c1), safe=False)
-		var.author = User.objects.get(name=request.session.get('username', None))
 		
-		if request.POST.get('is_cache') == 'ON':
-			var.is_cache = True
-		else:
-			var.is_cache = False
+		var = Variable()
+		var.description = description
+		var.key = key
+		var.value = value
+		var.gain = gain
+		var.author = author
+		var.is_cache = True if is_cache == 'ON' else False
 		var.save()
 		
-		tags = request.POST.get('tag') if request.POST.get('tag') != ';' else ''
-		bindplans = request.POST.get('bindplans')
 		tag = Tag()
 		tag.planids = bindplans
 		tag.customize = tags
-		tag.author = User.objects.get(name=request.session.get('username', None))
-		if bindplans == '{}':
-			tag.isglobal = 1
+		tag.isglobal = 1 if bindplans == '{}' else 0
 		tag.var = var
 		tag.save()
 		msg = '新增成功'
 	except:
 		print(traceback.format_exc())
 		code = 1
-		msg = '已存在相同键名' if "UNIQUE constraint failed" in traceback.format_exc() else "新增失败"
+		msg = "新增失败"
 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+
+
+@csrf_exempt
+def copyVar(request):
+	code = 0
+	msg = ''
+	varids = request.POST.getlist('varids[]')
+	bindplans = request.POST.get('bindplans')
+	action = request.POST.get('action')
+	print(varids, bindplans)
+	if action == '1':
+		for varid in varids:
+			key = Variable.objects.get(id=varid).key
+			state = varRepeatCheck(key, bindplans)
+			if state != '':
+				return JsonResponse({'code': 1, 'msg': state})
+			try:
+				var = Variable.objects.get(id=varid)
+				copyvar = Variable()
+				tag = Tag()
+				copyvar.description = var.description
+				copyvar.key = var.key
+				copyvar.gain = var.gain
+				copyvar.is_cache = var.is_cache
+				copyvar.value = var.value
+				copyvar.author = User.objects.get(name=request.session.get('username', None))
+				copyvar.save()
+				tag.var = copyvar
+				tag.isglobal = 1 if bindplans == '{}' else 0
+				tag.customize = Tag.objects.get(var=var).customize
+				tag.planids = bindplans
+				tag.save()
+			except:
+				msg = traceback.format_exc()
+				print(traceback.format_exc())
+	elif action == '0':
+		for varid in varids:
+			key = Variable.objects.get(id=varid).key
+			state = varRepeatCheck(key, bindplans, varid)
+			if state != '':
+				return JsonResponse({'code': 1, 'msg': state})
+			try:
+				tag = Tag.objects.get(var=Variable.objects.get(id=varid))
+				tag.planids = bindplans
+				tag.save()
+			except:
+				msg = traceback.format_exc()
+				print(traceback.format_exc())
+	print(msg)
+	return JsonResponse({'code': code, 'msg': msg})
 
 
 """
@@ -783,14 +886,14 @@ def transform(request):
 
 def third_party_call(request):
 	res = decrypt_third_invoke_url_params(request.GET.get('v'))
-	taskid = gettaskid()
+	planid = request.GET.get('planid')
+	plan = Plan.objects.get(id=planid)
+	taskid = gettaskid(plan.__str__())
 	# taskid=res['taskid']
 	clear_task_before(taskid)
 	callername = res['callername']
-	planid = request.GET.get('planid')
 	is_verify = request.GET.get('is_verify')
 	
-	plan = Plan.objects.get(id=planid)
 	if plan.is_running in (1, '1'):
 		return JsonResponse(simplejson(code=1, msg="调用失败，任务正在运行中，稍后再试！"), safe=False)
 	
@@ -925,7 +1028,7 @@ def addplan(request):
 		if plan.run_type == '定时运行':
 			config = request.POST.get('config')
 			crontab = Crontab()
-			crontab.taskid = gettaskid()
+			crontab.taskid = gettaskid(plan.__str__())
 			crontab.value = config
 			# crontab.status='close'
 			crontab.author = plan.author
@@ -990,11 +1093,10 @@ def runtask(request):
 		plan = Plan.objects.get(id=planid)
 		if plan.is_running in (1, '1'):
 			return JsonResponse(simplejson(code=1, msg="任务已在运行，请稍后！"), safe=False)
-	
-	username = request.session.get('username')
-	taskid = gettaskid()
-	is_verify = request.POST.get('is_verify')
-	runplans(username, taskid, list_, is_verify)
+		username = request.session.get('username')
+		taskid = gettaskid(plan.__str__())
+		is_verify = request.POST.get('is_verify')
+		runplans(username, taskid, list_, is_verify)
 	return JsonResponse(simplejson(code=0, msg="你的任务正在运行中", taskid=taskid), safe=False)
 
 
@@ -1009,10 +1111,10 @@ def changetocrontab(request):
 	code = 0
 	msg = ""
 	try:
-		taskid = gettaskid()
 		planid = request.POST.get("planid")
 		author = User.get(name=request.session.get('username', None))
 		plan = Plan.objects.get(id=planid)
+		taskid = gettaskid(plan.__str__())
 		config = Crontab()
 		config.plan = plan
 		config.taskid = taskid
@@ -1035,9 +1137,9 @@ def changetonormal(request):
 	code = 0
 	msg = ""
 	try:
-		taskid = gettaskid()
 		planid = request.POST.get('planid')
 		plan = Plan.objects.get(id=planid)
+		taskid = gettaskid(plan.__str__())
 		config = Crontab.get(plan=plan)
 		config.delete()
 		
@@ -2466,8 +2568,8 @@ def querytaglist(request):
 			if userid != '-1':
 				userid = userid if userid != '0' else str(
 					User.objects.values('id').get(name=request.session.get('username'))['id'])
-				sql = "SELECT customize from manager_tag where customize!=''"
-				cursor.execute(sql)
+				sql = "SELECT customize FROM manager_variable v,manager_tag t where author_id=%s and t.var_id=v.id"
+				cursor.execute(sql, [userid])
 			elif userid == '-1':
 				sql = "SELECT customize from manager_tag "
 				cursor.execute(sql)

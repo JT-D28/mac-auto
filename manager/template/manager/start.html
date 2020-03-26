@@ -230,12 +230,13 @@
         var curtaskindex = 0
 
         $("#console").click(function () {
-            _post_nl('/homepage/querytaskid/', {'console': 1}, function (data) {
+            _post_nl('/homepage/querytaskid/', {'action': 'lastest'}, function (data) {
+                data=JSON.parse(data)
                 let consoleSocket = new WebSocket("ws://" + host + "/ws/consolemsg/");
                 consoleSocket.onopen = function () {
                     // var username=$("#username").text()
                     console.log("开始获取" + username + "控制台消息..")
-                    consoleSocket.send('console.msg::read::' + username + '::' + data.taskid)
+                    consoleSocket.send('console.msg::read::' + username + '::' + data.data)
                 }
                 consoleSocket.onmessage = function (e) {
                     console.log(e.data);

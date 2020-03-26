@@ -391,3 +391,39 @@ def remotecache(key, linemsg):
 	con = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
 	con.lpush(key, linemsg)
 	con.close()
+
+
+# 运行中的任务 以及taskid
+_runninginfo = dict()
+
+
+def setRunningInfo(username, planid, taskid, isrunning):
+	if 'lastest_taskid' not in _runninginfo:
+		_runninginfo['lastest_taskid']={}
+	lastest_taskid=_runninginfo.get('lastest_taskid',{})
+	lastest_taskid[username]=taskid
+	
+	if str(planid) not in _runninginfo:
+		_runninginfo[str(planid)] = {}
+	planinfo = _runninginfo.get(str(planid), {})
+	planinfo['taskid']=taskid
+	planinfo['isrunning']=isrunning
+	print("储存运行信息", _runninginfo)
+
+
+def getRunningInfo(username='', planid='', type='latest_taskid'):
+	print(username,planid,type)
+	if type == 'latest_taskid':
+		print("123213321",_runninginfo)
+		latest_taskids = _runninginfo.get('lastest_taskid',{})
+		print(latest_taskids)
+		latest_taskid = latest_taskids.get(username,None)
+		return latest_taskid
+	elif type == 'plan_taskid':
+		planinfo = _runninginfo.get(str(planid), {})
+		taskid = planinfo.get('taskid',None)
+		return taskid
+	elif type == 'isrunning':
+		planinfo = _runninginfo.get(str(planid), {})
+		isrunning = planinfo.get('isrunning',0)
+		return isrunning

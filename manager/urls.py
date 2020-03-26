@@ -36,6 +36,7 @@ urlpatterns = [
 	path('addvariable/', views.addvar),
 	path('delvar/', views.delvar),
 	path('editvariable/', views.editvar),
+	path('copyvar/',views.copyVar),
 	
 	path('step/', views.step),
 	path('queryonestep/', views.queryonestep),

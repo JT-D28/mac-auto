@@ -1427,7 +1427,7 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 			
 			k, v, op = _separate_expression(exp)
 			print('获取的项=>', k, v, op)
-			data = data.replace('null', "'None'").replace('true', "'True'").replace("false", "'False'").replace('\n','')
+			data = data.replace('null', "'None'").replace('true', "'True'").replace("false", "'False'")
 			# print('data=>',data)
 			
 			if 'response.text' == k:
@@ -1519,7 +1519,7 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 	except:
 		print(traceback.format_exc())
 		print('表达式等号两边加单引号后尝试判断..')
-		exp = exp.replace("<br>", '')
+		exp = exp.replace("<br>", '').replace('\n','').replace('\r', '')
 		# return ('error','表达式[%s]计算异常[%s]'%(ourexpression,traceback.format_exc()))
 		try:
 			print('_op=>', _op)
@@ -1533,7 +1533,7 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 					res = None
 					if op == '$':
 						res = eval(
-							"'%s'.__contains__('%s')" % (str(key).replace('\n', '').replace('\r', ''), str(value)))
+							"'%s'.__contains__('%s')" % (str(key), str(value)))
 					
 					elif op == '>=':
 						res = eval('''"%s"%s"%s"''' % (str(key), '>=', str(value)))

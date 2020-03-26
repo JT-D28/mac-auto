@@ -284,7 +284,7 @@ def querydblist(request):
 		for x in list_:
 			o = dict()
 			o['id'] = x.id
-			o['name'] = x.description
+			o['name'] = x.description if len(x.description)<15 else x.description[0:14]+'...'
 			res.append(o)
 		
 		return JsonResponse(simplejson(code=0, msg='操作成功', data=res), safe=False)

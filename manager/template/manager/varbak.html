@@ -434,7 +434,7 @@
                 $("[name='allplan']").append("<option value='" + data[i]['id'] + "'>" + data[i]['planname'] + "</option>")
             }
             layui.form.render('select');
-            $("#querybtn").click()
+            app.querytaglist(1)
         })
         form.on('select(user)', function () {
             app.querytaglist(1)

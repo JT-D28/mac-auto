@@ -66,7 +66,6 @@ class TemplateField(Model):
 	end=IntegerField()
 	index=IntegerField()
 
-	order=IntegerField()
 
 
 class Template(Model):
@@ -78,22 +77,10 @@ class Template(Model):
 	author=ForeignKey(User, on_delete=CASCADE)
 	createtime=DateTimeField(auto_now_add=True)
 	updatetime=DateTimeField(auto_now=True)
-	content_url=TextField(blank=True)#报文来源接口
 	fieldinfo=ManyToManyField(TemplateField,blank=True,db_column='field_id')
 
 	def __str__(self):
 		return '[%s]%s'%(self.id,self.name)
-
-
-
-
-#
-# class Scheme(Model):
-# 	name=CharField(max_length=18)
-# 	description=CharField(max_length=64)
-# 	t1=IntegerField()
-# 	t2=IntegerField()
-
 
 
 
@@ -376,20 +363,6 @@ class MailConfig(Model):
 	updatetime=DateTimeField(auto_now=True,null=True)
 
 
-# class RemoteLog(Model):
-#
-# 	description=CharField(max_length=64)
-# 	host=CharField(max_length=32)
-# 	port=CharField(max_length=6)
-# 	username=CharField(max_length=32,blank=True)
-# 	password=CharField(max_length=32,blank=True)
-#
-# 	author=ForeignKey(User, on_delete=CASCADE)
-# 	createtime=DateTimeField(auto_now_add=True)
-# 	updatetime=DateTimeField(auto_now=True)
-
-
-
 class Product(Model):
 	'''
 	产品表
@@ -402,6 +375,16 @@ class Product(Model):
 
 	def __str__(self):
 		return '[%s]%s'%(self.id,self.description)
+
+
+class OperateLog(Model):
+	'''操作日志
+	'''
+	opcode=CharField(max_length=32)
+	opname=CharField(max_length=32)
+	description=TextField(blank=True,null=True)
+	author=ForeignKey(User, on_delete=CASCADE)
+	createtime=DateTimeField(auto_now_add=True)
 
 
 # class CommonConfig(Model):
@@ -439,3 +422,14 @@ class Product(Model):
 
 
 
+# class RemoteLog(Model):
+#
+# 	description=CharField(max_length=64)
+# 	host=CharField(max_length=32)
+# 	port=CharField(max_length=6)
+# 	username=CharField(max_length=32,blank=True)
+# 	password=CharField(max_length=32,blank=True)
+#
+# 	author=ForeignKey(User, on_delete=CASCADE)
+# 	createtime=DateTimeField(auto_now_add=True)
+# 	updatetime=DateTimeField(auto_now=True)

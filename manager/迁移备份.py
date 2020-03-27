@@ -1034,7 +1034,6 @@ class Transformer(object):
         通过参数列定位业务数据
 
         '''
-<<<<<<< HEAD
         from .cm import getnextvalue
 
         try:

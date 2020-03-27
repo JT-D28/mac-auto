@@ -23,6 +23,8 @@ urlpatterns = [
 	path('index/',views.index),
 
     path('datamove/',views.datamove),
+    path('uploadfile/', views.uploadfile),
+    path('delfile/', views.delfiles),
     path('upload/',views.upload),
     path('querymovedata/',views.querymovedata),
 
@@ -112,6 +114,7 @@ urlpatterns = [
     path('queryonebusiness/',views.queryonebusiness),
     path('queryonebusinessdata/',views.queryonebusinessdata),
     path('querybusinessdatalist/',views.querybusinessdatalist),
+    path('queryUser/', views.queryUser),
 
     #
     path('tag/',views.tag),
@@ -135,6 +138,7 @@ urlpatterns = [
     path('deltemplatefield/',views.deltemplatefield),
     path('edittemplatefield/',views.edittemplatefield),
     path('queryfielddetail/', views.queryfielddetail),
+    path('queryuserfile/',views.queryuserfile),
 
     
     path('queryoneproduct/',views.queryoneproduct),

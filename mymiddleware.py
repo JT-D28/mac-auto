@@ -7,6 +7,7 @@
 from django.shortcuts import HttpResponseRedirect
 from django.http import HttpResponse, JsonResponse
 from manager import models
+from login import models as lm
 from manager.core import simplejson
 import re, os, traceback
 
@@ -70,8 +71,13 @@ class Interceptor(MiddlewareMixin):
 				actionV = request.POST.get(_meta[mkey])
 				callstr = "list(models.%s.objects.filter(%s='%s'))" % (mkey, _meta[mkey], actionV)
 				if mkey == 'Function':
-					callstr = "list(models.Function.objects.filter(name='%s'))" % \
-					          re.findall('def (.*?)\(.*?\)', request.POST.get('body'))[0]
+
+					callstr=''
+					try:
+						callstr = "list(models.Function.objects.filter(name='%s'))" % \
+							re.findall('def (.*?)\(.*?\)', request.POST.get('body'))[0]
+					except:
+						return ('error','函数定义代码错误')
 				
 				qssize = len(eval(callstr))
 				print('callstr=>%s size=%s' % (callstr, qssize))
@@ -119,7 +125,7 @@ class Interceptor(MiddlewareMixin):
 		'''
 		session校验
 		'''
-		_meta = ('/account/login/', '/manager/querytaskdetail/', '/test_expression/', '/test_expression1/',
+		_meta = ('/account/login/', '/manager/querytaskdetail/', '/test_expression/', '/test_expression1/','/test_xml/',
 		         '/manager/third_party_call/')
 		if request.path not in _meta and not request.path.startswith('/captcha/image/'):
 			if request.session.get('username', None):
@@ -129,6 +135,28 @@ class Interceptor(MiddlewareMixin):
 				return False
 
 		return True
+
+
+	def _log_operation(self,request):
+		'''操作日志记录
+		'''
+		opcode=''
+		url=request.path
+		params={**dict(request.GET),**dict(request.POST)}
+		for ok in params:
+			params[ok]=params.get(ok)[0]
+
+		##tree操作
+		if url.__contains__('treecontrol'):
+			opcode=params.get('action')
+			ol=models.OperateLog()
+			ol.opcode=opcode
+			op.opname=''
+			ol.description=''
+			ol.author=lm.User.objects.get(name=request.session.get('username'))
+			op.save()
+
+		
 
 
 
@@ -162,3 +190,4 @@ def getkey(d,key):
 		if key.lower() == k.lower():
 			return k
 	return None
+

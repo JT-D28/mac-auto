@@ -11,10 +11,17 @@
         cursor: pointer;
       }
 
+      .sort_display{
+        display: {{is_sort_display}}
+      }
+      .start_display{
+        display: {{is_start_display}}
+      }
+
 
     </style>
 </head>
-<body style="height: 100%">
+<body style="height:calc(100% - 40px);padding: 20px">
 
 <div class="layui-inline"> 
     <div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="字段名称" class="layui-input"></div>
@@ -26,27 +33,21 @@
 <table id='table-template' class="layui-table" lay-data="{height: 'full-80',cellMinWidth:'180',page: true, limit:10, url:'/manager/querytemplatefield/?tid={{tid}}'}" lay-filter='target'>
   <thead>
     <tr>
-      <th lay-data="{type:'checkbox',width:'5%'}"></th>
+      <th lay-data="{type:'checkbox'}"></th>
       <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
-      <th lay-data="{field: 'index', sort: true}">排序</th>
+<!--       <th lay-data="{field: 'index', sort: true}">排序</th> -->
       <th lay-data="{field: 'fieldcode', sort: true}">字段名</th>
       <th lay-data="{field: 'description', sort: true}">描述</th>
    <!--    <th lay-data="{field: 'len', sort: true}">长度</th> -->
 
 
-      <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar'}">操作</th>
+      <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:160}">操作</th>
  
     </tr>
   </thead>
 </table>
 
 <form id='addhtml' hidden=true class="layui-form" style="padding: 10px;" lay-filter='addhtml'>
-  <div class="layui-form-item">
-    <label class="layui-form-label">排序</label>
-    <div class="layui-input-block">
-      <input type="text" name="index" placeholder="请输入" autocomplete="off" class="layui-input">
-    </div>
-  </div>
   <div class="layui-form-item">
     <label class="layui-form-label">字段code</label>
     <div class="layui-input-block">
@@ -59,7 +60,9 @@
       <input type="textarea" name="description" placeholder="请输入" autocomplete="off" class="layui-textarea">
     </div>
   </div>
-  <div class="layui-form-item">
+
+
+  <div class="layui-form-item start_display" >
     <div class="layui-inline" style="width:45%">
       <label class="layui-form-label">开始</label>
       <div class="layui-input-block">
@@ -71,6 +74,14 @@
       <div class="layui-input-block">
         <input type="textarea" name="end" placeholder="请输入" autocomplete="off" class="layui-input">
       </div>
+    </div>
+  </div>
+
+
+  <div class="layui-form-item sort_display ">
+    <label class="layui-form-label">排序</label>
+    <div class="layui-input-block">
+      <input type="text" name="index" placeholder="请输入" autocomplete="off" class="layui-input">
     </div>
   </div>
 
@@ -206,6 +217,7 @@ layui.use(['table','layer'], function(){
           
           data={
             'tid':'{{tid}}',
+            'kind':'{{kind}}',
             'fieldcode':$("[name='fieldcode']").val(),
             'description':$("[name='description']").val(),
             'start':$("[name='start']").val(),

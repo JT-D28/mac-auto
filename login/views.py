@@ -190,6 +190,10 @@ def testexpress(request):
 @csrf_exempt
 def testexpress1(request):
 	return JsonResponse([{'linenum': 1}, {'linenum': 2}], safe=False)
+
+@csrf_exempt
+def testxml(request):
+	return render(request,'manager/test.xml',content_type="application/xml")
 # '''
 # 测试特殊返回字符串
 # '''

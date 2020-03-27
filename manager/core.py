@@ -422,7 +422,10 @@ class XJsonEncoder(json.JSONEncoder):
 		return _map
 	
 	def encode(self, obj):
-		L = eval(super(XJsonEncoder, self).encode(obj))
+		
+		evalstr=super(XJsonEncoder, self).encode(obj)
+		evalstr=evalstr.replace('false', 'False').replace('true','True')
+		L = eval(evalstr)
 		
 		return {
 			"code": 0,
@@ -700,12 +703,12 @@ class DBEncoder(XJsonEncoder):
 class TemplateEncoder(XJsonEncoder):
 
 	def __init__(self,**args):
-		super(TemplateEncoder,self).__init__(['id','kind','name','description','author','createtime','updatetime','content_url'],**args)
+		super(TemplateEncoder,self).__init__(['id','kind','name','description','author','createtime','updatetime'],**args)
 
 
 class TemplateFieldEncoder(XJsonEncoder):
 	def __init__(self,**args):
-		super(TemplateFieldEncoder,self).__init__(['id','fieldcode','description','start','end','index','template','order'],**args)
+		super(TemplateFieldEncoder,self).__init__(['id','fieldcode','description','start','end','index','template'],**args)
 
 def simplejson(code=0, msg='', **kw):
 	_dict = {}
@@ -826,6 +829,8 @@ def getbuiltin(searchvalue=None, filename='builtin.py'):
 		print('builtin methodnames=>', methodnames)
 		if searchvalue is None:
 			for methodname in methodnames:
+				if methodname.startswith('_'):
+					continue;
 				f = Function()
 				f.name = methodname
 				f.description = eval(methodname).__doc__.strip()
@@ -866,7 +871,8 @@ class Fu:
 				author = str(x.author)
 				filename = "func_%s" % x.flag
 				body = x.body
-				path = os.path.join(os.path.dirname(__file__), 'Function', author)
+				#path = os.path.join(os.path.dirname(__file__), 'Function', author)
+				path=os.path.join(os.path.dirname(__file__),'storage','private','Function',author)
 				
 				if not os.path.exists(path):
 					os.makedirs(path)
@@ -880,7 +886,7 @@ class Fu:
 				path = os.path.join(path, filename + '.py')
 				with open(path, 'w', encoding='utf-8') as f:
 					# print("body=>",body)
-					print(type(body))
+					#print(type(body))
 					a = base64.b64decode(body).decode(encoding='utf-8')
 					# print(a)
 					f.write(a)
@@ -935,23 +941,30 @@ class Fu:
 		return cls._md5(final)
 	
 	@classmethod
-	def call(cls, funcobj, call_str, builtin=False):
-		
+	def call(cls, funcobj, call_str, builtin=False,taskid=None,username=None):
+		print('2'*900)
 		# print("内置=>",builtin)
 		# print('调用=》',call_str)
 		try:
 			res = None
-			
 			if builtin is True:
-				# print('callstr=>',call_str)
 				try:
 					call_str = call_str.replace('\n', '')
-					print('调用原表达式=>', call_str)
+					#print('调用原表达式=>', call_str)
 					res = eval(call_str)
-				
-				# if res[0] is not 'success':
-				# 	return res
-				
+					print("调用内置函数表达式:%s 结果为:%s" % (call_str, res))
+					if isinstance(res, (tuple,)):
+						if res[0] is not 'success':
+							return res
+
+					elif isinstance(res, (bool,)):
+						if res is False:
+							return ('fail','[%s]没按预期执行 提前结束'%re.findall('(.*?)\(',call_str)[0])
+					elif res is None:
+						pass
+					else:
+						return ('error','内置函数返回类型{None,bool,tuple}')
+
 				except:
 					try:
 						methodname = call_str.split('(')[0]
@@ -962,7 +975,7 @@ class Fu:
 						s3 = re.findall('callername=(.*?)\)', call_str)[0]  # callername
 						
 						print('s1=%s\ns2=%s\ns3=%s' % (s1, s2, s3))
-						
+			
 						argstr = re.findall('\((.*)\)', call_str)[0]
 						# arglist=argstr.split(',')
 						# print('arglist=>',arglist)
@@ -971,14 +984,18 @@ class Fu:
 						# print('argstr=>',argstr)
 						call_str = ''
 						if argstr.strip():
-							call_str = '%s(\"%s\",taskid=%s,callername=%s)' % (methodname, s1, s2, s3)
-							print('参数加双引号后表达式=>', call_str)
+							if methodname.startswith('db'):
+								call_str = '%s(\"%s\",taskid=%s,callername=%s)' % (methodname, s1, s2, s3)
+								#print('参数加双引号后表达式=>', call_str)
+							else:
+								call_str = '%s(%s,taskid=%s,callername=%s)' % (methodname, s1, s2, s3)
+
 						else:
 							call_str = '%s()' % (methodname,)
 						# call_str1='createPhone()'
 						# print(eval(call_str1))
 						
-						print('最终计算=>', call_str)
+						#print('最终计算=>', call_str)
 						res = eval(call_str)
 						if res[0] is not 'success':
 							return res
@@ -987,23 +1004,20 @@ class Fu:
 						print(traceback.format_exc())
 						return ('error', "非法表达式[%s]" % call_str)
 				
-				print("调用表达式:%s 结果为:%s" % (call_str, res))
+		
 			else:
 				print('fucobj=>', funcobj)
 				user = funcobj.author
 				flag = funcobj.flag
-				f = __import__('manager.Function.%s.func_%s' % (user, flag), fromlist=True)
+				f = __import__('manager.storage.private.Function.%s.func_%s' % (user, flag), fromlist=True)
 				callstr = "f.%s" % (call_str)
 				# print(callstr)
 				res = eval(callstr)
-				print("调用表达式:%s 结果为:%s" % (callstr, res))
+				print("调用用户定义表达式:%s 结果为:%s" % (callstr, res))
+
 			
 			return ('success', res)
 		
-		# if res[0] is 'success':
-		# 	return (res)
-		# else:
-		# 	return('fail',res)
 		except Exception as e:
 			print(traceback.format_exc())
 			return ('error', '调用表达式[%s]异常[%s]' % (call_str, traceback.format_exc()))

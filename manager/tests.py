@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 from collections import OrderedDict
 import re
 class MessageParser(object):
@@ -428,11 +428,9 @@ class MessageParser(object):
             return ('error','获取模板[%s]解析配置异常'%tid)
 
 
-=======
 a = "{'fgMerchantName': '', 'tenantIds': '', 'pageNum': '1', 'pageSize': '10', 'sortName': '{u,lv_special_character}', 'sortType': 'desc'}"
 
 import re
->>>>>>> 6e909c317dcfbd2ae9b81b17acd36b996ecf8557
 
 if __name__=='__main__':
     e=['aa=1111','bb=222']
@@ -441,7 +439,6 @@ if __name__=='__main__':
     'sep':'|',
     'aa':0
 
-<<<<<<< HEAD
     }
     c={
 
@@ -459,7 +456,7 @@ if __name__=='__main__':
    # res=mp.compute()
     res=mp1.compute()
     print(res)
-=======
+
 def _replace_var(old):
 	'''
 	1.执行数据参数值
@@ -484,4 +481,4 @@ def _replace_var(old):
 
 # print(a)
 print(_replace_var(a))
->>>>>>> 6e909c317dcfbd2ae9b81b17acd36b996ecf8557
+

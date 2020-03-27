@@ -47,9 +47,9 @@
         <th lay-data="{field: 'port',width:'10%', sort: true}">端口</th>
         <th lay-data="{field: 'author',width:'8%', sort: true}">创建者</th>
         <!--       <th lay-data="{field: 'username',width:160, sort: true}">账号名</th>
-			  <th lay-data="{field: 'password',width:160, sort: true}">密码</th> -->
+              <th lay-data="{field: 'password',width:160, sort: true}">密码</th> -->
         <!--       <th lay-data="{field: 'createtime', width:160,sort:true}">创建时间</th>
-			  <th lay-data="{field: 'updatetime', width:160}">更改时间</th> -->
+              <th lay-data="{field: 'updatetime', width:160}">更改时间</th> -->
         <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:'12%'}">操作</th>
 
     </tr>
@@ -142,79 +142,6 @@
 
         });
 
-<<<<<<< HEAD
-        e=JSON.parse(e)
-        if(e.code==0){
-          layer.alert(e.msg,{icon:1,time:1500})
-        }else{
-          layer.alert(e.msg,{icon:2})
-        }
-
-      }
-      layer.close(index);
-
-      _post('/manager/delcon/',{'ids':ids.join()},success)
-   
-
-    })
-
-  });
-
-//新增功能
-
-  $("#addbtn").click(function(e){
-    var o=layer.open(
-      {
-        title:'新增数据库连接',
-        type:1,
-        // area:["350px","350px"],
-        content:$('#addhtml'),
-        btn:['测试连接','提交','取消'],
-        yes:function(index, layero){
-
-          // alert($("[name='description']").val())
-          success=function(res){
-            res=JSON.parse(res)
-            if(res.code==0){
-              layer.alert(res.msg,{icon:1})
-
-            }else{
-              layer.alert(res.msg,{icon:2})
-            }
-
-          }
-          data={
-            'description':$("[name='description']").val(),
-            'host':$("[name='host']").val(),
-            'port':$("[name='port']").val(),
-            'dbname':$("[name='dbname']").val(),
-            'accountname':$("[name='accountname']").val(),
-            'password':$("[name='password']").val(),
-            'kind':$("[name='kind']").val()
-          }
-          // console.log(data)
-          
-          _post('/manager/testdbcon/',data,success)
-
-        },
-        btn2: function(index, layero){
-          //按钮【按钮一】的回调
-          console.log('yes')
-
-          // $('#addhtml')[0].reset()
-          // layui.form.render()
-
-          success=function (e) {
-
-            table.reload('table-var',{
-              page:{
-                curr:1
-              },
-              where:{
-                searchvalue:$("#search-value").val()
-
-              }
-=======
 //删除功能
         $("#delbtn").click(function (e) {
 
@@ -227,7 +154,6 @@
             } else {
                 for (var index = 0; index < data.length; index++) {
                     ids.splice(0, 0, data[index]['id'])
->>>>>>> 6e909c317dcfbd2ae9b81b17acd36b996ecf8557
 
                 }
             }

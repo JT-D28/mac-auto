@@ -17,11 +17,17 @@ class MessageParser(object):
     '''
     _SYMBOL=('>=','<=','!=','==','>','<','$')
 
-    def __init__(self,parse_format:dict,get_config:dict,expectlist:list):
+    def __init__(self,parse_format:dict,waitcheckmessage,expectlist:list):
 
         self._parse_format=parse_format
-        self._get_config=get_config
-        self._expectlist=self.expectlist
+        self.message=waitcheckmessage
+        self._expectlist=expectlist
+
+        print('=====解析器初始化=========')
+        print('字段配置=>',self._parse_format)
+        print('带校验消息=>',self.message)
+        print('期望匹配=>',self._expectlist)
+        print('================')
 
 
 
@@ -29,53 +35,37 @@ class MessageParser(object):
         '''
         获取指定字段的值
         '''
-        text=self._get_message_content(self._get_config)
+
+        text=self.message
+        if not text:
+            return ('error','待校验文件内容为空.')
         kind=self._parse_format.get('kind')
 
-        if kind is None or kind=='0':
+        if kind is None or kind=='sepator':
             sep=self._parse_format.get('sep')
             
             findex=self._parse_format.get(fcode,None)
             if findex is None:
                 return('error','字段[%s]没有配置'%fode)
+            idx=self._parse_format.get(fcode)
+            if idx is None :
+                return('error','使用的报文模板没有配置该字段[%s]'%fcode)
 
-            pf=text.split(sep)[self._parse_format.get(fcode)]
+            if idx<1:
+                return('error','字段排序从数字1开始')
+
+            pf=text.split(sep)[idx-1]
+            print('解析模板字段[%s] value=%s'%(fcode,pf))
             return ('success',pf)
 
-        elif kind=='1':
+        elif kind=='length':
             start,end=self._parse_format.get(fcode,(None,None))
             if start is None or end is None:
                 return('error','字段[%s]配置错误')
 
-            return ('success',text.substring(start,end))
+            print('解析模板字段[%s] value=%s'%(fcode,text[int(start-1):int(end)]))
+            return ('success',text[int(start-1):int(end)])
 
-
-    def _get_message_content(self,get_config)->str:
-        '''
-        获取报文消息内容
-        '''
-        messga=''
-        kind=get_config.get('kind')
-        base=get_config.get('location')
-        if kind is None or kind==0:
-            with open(base) as f:
-                messga=f.read()
-
-        elif kind==1:
-            ftp = FTP()
-            ftp.connect(get_config.get('ip'),get_config.get('port'))
-            ftp.login(get_config.get('username'),get_config.get('password'))
-            bufsize = 1024
-            loc_file=os.path.basename(get_config.get('path'))
-            fp = open(loc_file, 'rb')
-            ftp.retrbinaly('RETR '+ get_config.get('path'),fp,bufsize)
-            ftp.set_debuglevel(0)
-            fp.close()
-
-            with open(loc_file) as f:
-                messga=f.read()
-
-        return messga
 
     def _compute_expression(self,child_exp:str):
         '''输入期望子表达式
@@ -84,25 +74,37 @@ class MessageParser(object):
         res=''
         count=len(re.findall('=',child_exp))
         if count==1:
-            res=''' '%s'%s'%s'  '''%(child_exp.split('=')[0],'==',child_exp.split('=')[1])
+            status,value=self._get_f_value(child_exp.split('=')[0])
+            if status is not 'success':
+                return (status,value)
+
+            res=''' '%s'%s'%s'  '''%(value,'==',child_exp.split('=')[1])
+
 
         elif child_exp.__contains__('$'):
-            res=''' '%s'.__contains__('%s') '''%(child_exp.split('$')[0],child_exp.split('$')[1])
+            status,value=self._get_f_value(child_exp.split('$')[0])
+            if status is not 'success':
+                return (status,value)
+
+            res=''' '%s'.__contains__('%s') '''%(value,child_exp.split('$')[1])
 
         
         else:
             for _a in self._SYMBOL:
                 if child_exp.__contains__(_a):
-                    res=''' '%s'%s'%s'  '''%(child_exp.split(_a)[0],_a,child_exp.split(_a)[1])
+                    status,value=self._get_f_value(child_exp.split(_a)[0])
+                    if status is not 'success':
+                        return (status,value)
+                    res=''' '%s'%s'%s'  '''%(value,_a,child_exp.split(_a)[1])
 
             res='非法比较符'
 
         try:
-            return('success',eval(res))
+            print('获取计算表达式=>',res)
+            o=eval(res)
+            return('success',o) if o is True else ('fail','表达式[%s]不成立'%child_exp)
         except:
             return ('error','表达式异常[%s]'%child_exp)
-
-
 
     def compute(self):
         '''
@@ -115,19 +117,21 @@ class MessageParser(object):
             status,msg=self._compute_expression(ex)
             _ret[ex]=(status,msg)
 
+        return _ret
+
 
     @classmethod
     def add_template(cls,**tkws):
         '''
         新建报文模板
         '''
+
         try:
             t=Template()
             t.kind=tkws['kind']
             t.name=tkws['name']
             t.description=tkws['description']
             t.author=tkws['author']
-            t.content_url=tkws['content_url']
 
             t.save()
             return {
@@ -285,14 +289,19 @@ class MessageParser(object):
     def add_field(cls,**fkws):
         try:
             tid=fkws['tid']
+            kind=fkws['kind']
+
             t=Template.objects.get(id=tid)
 
             tf=TemplateField()
             tf.fieldcode=fkws['fieldcode']
             tf.description=fkws['description']
-            tf.start=fkws['start']
-            tf.end=fkws['end']
-            tf.index=fkws['index']
+            if kind=='length':
+                tf.start=fkws['start']
+                tf.end=fkws['end'] 
+            else:
+                tf.index=fkws['index']
+
             tf.save()
 
             t.fieldinfo.add(tf)
@@ -397,30 +406,28 @@ class MessageParser(object):
             }
 
     @classmethod
-    def get_parse_config(cls,tid):
+    def get_parse_config(cls,templatename):
         '''
         获取模板具体的解析配置
 
         '''
         res={}
         try:
-            t=Template.objects.get(id=tid)
+            t=Template.objects.get(name=templatename)
             res['kind']=t.kind
-            res['sep']='|'
-            tflist=list(TemplateField.objects.filter(template=t).order_by('order'))
+            res['sep']='||'
+            tflist=list(TemplateField.objects.filter(template=t).order_by('index','start'))
             for tf in tflist:
-                res[tf.fieldcode]={
-                'order':tf.order,
-                'start':tf.start,
-                'end':tf.end,
-                'index':tf.index,
-                'description':tf.description
-                }
+                if t.kind=='sepator':
+                    res[tf.fieldcode]=tf.index
+                else:
+                    res[tf.fieldcode]=(tf.start,tf.end)
 
 
             return ('success',res)
         except:
-            return ('error','获取模板[%s]解析配置异常'%tid)
+            print(traceback.format_exc())
+            return ('error','获取模板[%s]解析配置异常'%templatename)
 
 
 

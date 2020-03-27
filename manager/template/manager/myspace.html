@@ -11,19 +11,54 @@
     <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
     <title>我的空间</title>
     <style type="text/css">
-      
-      .layui-icon:hover{
-        cursor: pointer;
-      }
+    
+        .layui-icon:hover {
+            cursor: pointer;
+        }
+
+        .btn {
+            height: 34px;
+            line-height: 34px;
+        }
+
+        .layui-table-view {
+            margin: 20px 0;
+        }
     </style>
 </head>
-<body>
+<body style="height: calc(100% - 40px);padding: 20px">
+
+<div class="layui-inline">
+    <button class="layui-btn btn" id='addbtn'>新增</button>
+    <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
+
+</div>
+<div class="layui-inline" style="float: right;">
+    <div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="文件名"class="layui-input"></div>
+    <button class="layui-btn btn" id='querybtn'>查询</button>
+</div>
+<table id='table-file' class="layui-table layui-table-view"
+       lay-data="{height: 'full-100', cellMinWidth: 80, page: true, limit:10, url:'/manager/queryuserfile/'}"
+       lay-filter='target'>
+    <thead>
+    <tr>
+        <th lay-data="{type:'checkbox'}"></th>
+        <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
+        <th lay-data="{field: 'filename', sort: true}">文件名</th>
+        <th lay-data="{field: 'size', sort: true}">大小</th>      
+        <th lay-data="{field: 'createtime', width:240,sort:true}">创建时间</th>
+        <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:100}">操作</th>
+
+    </tr>
+    </thead>
+</table>
 
 
+<div id='upload' style="display: none;">
+<input id="kv-explorer" type="file" multiple>
+</div>
 
-
-
-   <input id="kv-explorer" type="file" multiple>         
+    
 </body>
 
 
@@ -41,6 +76,9 @@
 <script src="{% static 'manager/bootstrap-fileinput-master/themes/fas/theme.js' %}"></script>
 <script src="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.js' %}"></script>
 
+
+
+
 <script type="text/javascript">
 layui.use(['table','layer','upload','element'], function(){
   var table = layui.table;
@@ -49,7 +87,86 @@ layui.use(['table','layer','upload','element'], function(){
   var layer=layui.layer;
   var form = layui.form;
 
+
 //
+
+table.on("tool(target)",function(e){
+  if(e.event=='edit'){
+    layer.alert('暂不支持修改名称',{icon:1})
+
+
+  }
+});
+
+//
+$('#querybtn').click(function(){
+
+    table.reload('table-file',{
+      page:{
+        curr:1
+      },
+      where:{
+        searchvalue:$("#search-value").val()
+
+      }
+
+    });
+});
+
+$('#addbtn').click(function(){
+  layer.open({
+
+    type:1,
+    title:'上传文件',
+    content:$('#upload'),
+    area:['80%','80%']
+
+  });
+});
+
+$('#delbtn').click(function(){
+    var checkStatus = table.checkStatus("table-file");
+    data = checkStatus.data; //获取选中的数据
+    if(data.length==0){
+      layer.alert('你有选择删除的文件么?',{icon:3,time:1500})
+      return
+    }
+
+    layer.confirm('确认删除么?',{
+      btn1:function(index,layero){
+        layer.close(index)
+        success=function(e){
+          // e=JSON.parse(e)
+          if(e.code==0){
+            table.reload('table-file',{
+                page:{
+                  curr:1
+                },
+                where:{
+                  searchvalue:$("#search-value").val()
+                }
+              });
+            layer.alert(e.msg,{icon:1,time:1500})
+          }
+          else
+            layer.alert(e.msg,{icon:2})
+        }
+
+        filenames=[]
+        for(var index=0;index<data.length;index++){
+          filenames.splice(0,0,data[index]['filename'])
+        }
+        //alert(filenames)
+        _post('/manager/delfile/',{'filenames':filenames.join()},success)
+
+
+      },
+  
+    })
+
+
+
+})
 
 $("#kv-explorer").on("filebatchselected",function(event,files){
 
@@ -65,8 +182,6 @@ $("#kv-explorer").on("filebatchselected",function(event,files){
 });
 
 
-
-
 $("#kv-explorer").fileinput({
     'theme': 'explorer-fas',
     'uploadUrl': '/manager/upload/',
@@ -77,7 +192,7 @@ $("#kv-explorer").fileinput({
         var obj = {
 
         };
-        obj.kind='datamovein'
+        obj.kind='personfile'
         obj.content_type='json'
 
         return obj;
@@ -100,6 +215,16 @@ $('#kv-explorer').on('filebatchuploadsuccess', function(event, data, previewId, 
 
  if(response.code==0){
   layer.alert(response.msg,{icon:1})
+        table.reload('table-file',{
+            page:{
+              curr:1
+            },
+            where:{
+              searchvalue:$("#search-value").val()
+
+            }
+
+          });
  }else{
   layer.alert(response.msg,{icon:2})
  }
@@ -119,7 +244,6 @@ $('#kv-explorer').on('filebatchuploadsuccess', function(event, data, previewId, 
 </script>
 
 <script type="text/html" id="toolbar">
-  <i class="layui-icon layui-icon-form" lay-event="detail"></i>
   <i class="layui-icon layui-icon-edit" lay-event="edit"></i>
 
   

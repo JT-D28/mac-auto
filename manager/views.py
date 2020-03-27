@@ -57,27 +57,41 @@ def recvdata(request):
 
 @csrf_exempt
 def datamove(request):
-	return render(request, 'manager/datamove.html')
+	kind='datamovein'
+	return render(request, 'manager/datamove.html',locals())
+
+
+@csrf_exempt
+def uploadfile(request):
+	kind='persionfile'
+	return render(request, 'manager/myspace.html',locals())
 
 
 @csrf_exempt
 def upload(request):
+
+	filemap=dict()
+	filenames=[]
 	content_list = []
 	
 	files = request.FILES.getlist('file_data')
 	for file in files:
 		for chunk in file.chunks():
-			content_list.append(chunk)
+			print('上传文件名称=>',file.name)
+			#content_list.append(chunk)
+			filemap[file.name]=chunk
 	
 	callername = request.session.get('username')
 	kind = request.POST.get('kind')
+
+	print('kind=>',kind)
 	content_type = request.POST.get('content_type')
 	
 	if kind == 'datamovein':
 		
 		taskid = EncryptUtils.md5_encrypt(str(datetime.datetime.now()))
 		
-		t = Transformer(callername, content_list, content_type, taskid)
+		t = Transformer(callername, filemap.values(), content_type, taskid)
 		
 		res = t.transform()
 		# print('res=>',res)
@@ -93,11 +107,20 @@ def upload(request):
 		d = DataMove()
 		productid = request.POST.get('productid').split('_')[1]
 		
-		res = d.import_plan(productid, content_list, request.session.get('username'))
+		res = d.import_plan(productid, filemap.values(), request.session.get('username'))
 		if res[0] == 'success':
 			return JsonResponse(simplejson(code=0, msg='数据导入完成'), safe=False)
 		else:
 			return JsonResponse(simplejson(code=2, msg='数据导入失败[%s]' % res[1]), safe=False)
+	elif kind=='personfile':
+		status,msg=upload_personal_file(filemap, request.session.get('username'))
+		if status is 'success':
+			return JsonResponse(simplejson(code=0, msg='文件上传完成'), safe=False)
+		else:
+			return JsonResponse(simplejson(code=3, msg='文件上传异常'), safe=False)
+
+
+		return JsonResponse(simplejson(code=0,msg='文件上传成功'),safe=False)
 	else:
 		return JsonResponse(simplejson(code=4, msg='kind错误'), safe=False)
 
@@ -374,14 +397,22 @@ def queryvar(request):
 	print("searchvalue=>", searchvalue)
 	
 	with connection.cursor() as cursor:
-		sql = '''SELECT v.id,description,`key`,gain,value,DATE_FORMAT(v.createtime,'%%m-%%d %%H:%%i') AS createtime,
-					DATE_FORMAT(v.updatetime,'%%m-%%d %%H:%%i') AS updatetime,is_cache,u.name as author FROM `manager_variable` v,login_user u
+		# sql = '''SELECT v.id,description,`key`,gain,value,DATE_FORMAT(v.createtime,'%%m-%%d %%H:%%i') AS createtime,
+		# 			DATE_FORMAT(v.updatetime,'%%m-%%d %%H:%%i') AS updatetime,is_cache,u.name as author FROM `manager_variable` v,login_user u
+		# 			where (description like %s or `key` like %s or gain like %s) and v.author_id=u.id '''
+		
+		sql = '''SELECT v.id,description,`key`,gain,value,is_cache,u.name as author,v.createtime as createtime,v.updatetime as updatetime FROM `manager_variable` v,login_user u
 					where (description like %s or `key` like %s or gain like %s) and v.author_id=u.id '''
+		
 		if userid != '-1':
 			sql += 'and author_id=%s'
 			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, userid])
 		else:
 			cursor.execute(sql, [searchvalue, searchvalue, searchvalue])
+
+		print(1111)
+		#print(cursor.fetchall())
+
 		desc = cursor.description
 		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
 		# for i in rows:
@@ -393,6 +424,7 @@ def queryvar(request):
 		limit = request.POST.get('limit')
 		page = request.POST.get('page')
 		res, total = getpagedata(rows, page, limit)
+		print('res=>',res)
 		jsonstr = json.dumps(res, cls=VarEncoder, total=total)
 	
 	return JsonResponse(jsonstr, safe=False)
@@ -2548,6 +2580,18 @@ def querytemplate(request):
 
 def templatefield(request):
 	tid=request.GET.get('tid')
+	is_sort_display=''
+	is_start_display=''
+	kind=Template.objects.get(id=tid).kind
+	if kind=='length':
+		is_sort_display='none'
+
+	else:
+		is_start_display='none'
+
+	print('sort',is_sort_display)
+	print('start',is_start_display)
+
 	return render(request, 'manager/templatefield.html',locals())
 
 
@@ -2920,9 +2964,6 @@ def testaddtask(request):
 	return JsonResponse(simplejson(code=0, msg="fda", yy='dd'), safe=False)
 
 
-def testrmvtask(request):
-	pass
-
 
 def testtable(request):
 	return render(request, 'manager/test-table.html')
@@ -2983,3 +3024,96 @@ def queryUser(request):
 	name = request.session.get('username')
 	user = list(User.objects.values('id', 'name').exclude(name=name))
 	return JsonResponse({'data': user})
+
+'''
+个人空间管理
+'''
+def _formatSize(bytes):
+    try:
+        bytes = float(bytes)
+        kb = bytes / 1024
+    except:
+        print("传入的字节格式不对")
+        return "Error"
+
+    if kb >= 1024:
+        M = kb / 1024
+        if M >= 1024:
+            G = M / 1024
+            return "%.2fG" % (G)
+        else:
+            return "%.2fM" % (M)
+    else:
+        return "%.2fkb" % (kb)
+
+
+# 获取文件大小
+def _getDocSize(path):
+    try:
+        size = os.path.getsize(path)
+        return _formatSize(size)
+    except Exception as err:
+        print(err)
+
+
+# 获取文件夹大小
+def _getFileSize(path):
+    sumsize = 0
+    try:
+        filename = os.walk(path)
+        for root, dirs, files in filename:
+            for fle in files:
+                size = os.path.getsize(path + fle)
+                sumsize += size
+        return _formatSize(sumsize)
+    except Exception as err:
+        print(err)
+@csrf_exempt
+def queryuserfile(request):
+	'''
+	返回个人文件列表
+	'''
+	searchvalue = request.GET.get('searchvalue')
+	mfiles=list()
+	username=request.session.get('username')
+	userdir=os.path.join(os.path.dirname(__file__),'storage','private','File',username)
+	files=os.listdir(userdir)
+	print('files=>',files)
+	for f in files:
+		if searchvalue and not f.__contains__(searchvalue):
+			continue;
+		mfiles.append({
+			'filename':f,
+			'size':_getDocSize(os.path.join(userdir,f)),
+			'createtime':time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(os.path.getctime(os.path.join(userdir,f))))
+			}) 
+
+	mfiles.sort(key=lambda e:e.get('createtime'),reverse=True)
+
+	return JsonResponse({'code':0,'data':mfiles},safe=False)
+
+@csrf_exempt
+def delfiles(request):
+	block_files=[]
+	filenames=request.POST.get('filenames','')
+	print('filenames=>',filenames)
+	filenamelist=filenames.split(',')
+	for filename in filenamelist:
+		filepath=os.path.join(os.path.dirname(__file__),'storage','private','File',request.session.get('username'),filename)
+		try:
+			os.remove(filepath)
+		except:
+			block_files.append(filename)
+			print(traceback.format_exc())
+
+	if len(block_files)==0:
+		return JsonResponse(pkg(code=0,msg='删除成功.'),safe=False)
+	else:
+		return JsonResponse(pkg(code=4,msg='删除失败[%s].'%(',').join(block_files)),safe=False)
+
+
+
+@csrf_exempt
+def edit_file_name(request):
+	pass
+

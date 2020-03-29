@@ -106,7 +106,7 @@ def addplan(request):
 		
 		plan = mm.Plan()
 		plan.description = request.POST.get('description')
-		plan.db_id = request.POST.get('dbid')
+		plan.db_id = request.POST.get('dbid')+'_'+request.POST.get('scheme')
 		
 		plan.author = lm.User.objects.get(name=request.session.get('username', None))
 		
@@ -212,7 +212,7 @@ def editplan(request):
 		plan = mm.Plan.objects.get(id=id_)
 		olddescription = plan.description
 		plan.description = newdescription
-		plan.db_id = request.POST.get('dbid')
+		plan.db_id = request.POST.get('dbid')+'_'+request.POST.get('scheme')
 		print('description=>', plan.description)
 		plan.run_type = request.POST.get('run_type')
 		plan.save()
@@ -300,15 +300,20 @@ def importplan(request):
 def addcase(request):
 	msg = ''
 	try:
-		
+		pid=request.POST.get('pid').split('_')[1]
 		case = mm.Case()
 		case.author = lm.User.objects.get(name=request.session.get('username', None))
 		
+		callstr = "mm.%s.objects.get(id=%s).db_id.split('_')[1]" % (
+			request.POST.get('pid').split('_')[0].capitalize(), pid)
+		print('callstr', callstr)
+		dbscheme = eval(callstr)
+		print(dbscheme)
+		
 		case.description = request.POST.get('description')
-		case.db_id = request.POST.get('dbid')
+		case.db_id = request.POST.get('dbid')+'_'+dbscheme
 		case.save()
 		
-		pid = request.POST.get('pid').split('_')[1]
 		
 		addrelation('plan_case', request.session.get('username'), pid, case.id)
 		return {
@@ -336,7 +341,14 @@ def editcase(request):
 	try:
 		case = mm.Case.objects.get(id=id_)
 		case.description = request.POST.get('description')
-		case.db_id = request.POST.get('dbid')
+		
+		callstr = "mm.%s.objects.get(id=%s).db_id.split('_')[1]" % (
+			request.POST.get('uid').split('_')[0].capitalize(), id_)
+		print('callstr', callstr)
+		dbscheme = eval(callstr)
+		print(dbscheme)
+		
+		case.db_id = request.POST.get('dbid')+'_'+dbscheme
 		case.count = int(request.POST.get('count'))
 		case.save()
 		casename = case.description
@@ -402,25 +414,32 @@ def addstep(request):
 		print("author=>", author)
 		businessdata = request.POST.get('business_data')
 		print('businessdata=>', type(businessdata), businessdata)
-		dbid = request.POST.get('dbid')
+		
+		callstr = "mm.%s.objects.get(id=%s).db_id.split('_')[1]" % (
+			request.POST.get('pid').split('_')[0].capitalize(), pid)
+		print('callstr', callstr)
+		dbscheme = eval(callstr)
+		print(dbscheme)
+		
+		dbid = request.POST.get('dbid')+'_'+dbscheme
 		##
 		if step_type == 'dir':
 			case = mm.Case()
-			case.description = request.POST.get('description')
+			case.description = description
 			
-			case.author = lm.User.objects.get(name=request.session.get('username'))
+			case.author = lm.User.objects.get(name=author)
 			
-			case.db_id = request.POST.get('dbid')
+			case.db_id = dbid
 			case.save()
 			
-			addrelation('case_case', request.session.get('username'), request.POST.get('pid').split('_')[1], case.id)
+			addrelation('case_case', author,pid, case.id)
 			return {
 				'status': 'success',
 				'msg': '新建[%s]成功' % case.description,
 				
 				'data': {
 					'id': 'case_%s' % case.id,
-					'pid': 'case_%s' % request.POST.get('pid').split('_')[1],
+					'pid': 'case_%s' % pid,
 					'name': case.description,
 					'type': 'case',
 					'textIcon': 'fa fa-folder',
@@ -475,7 +494,7 @@ def addstep(request):
 		# 		related_id=funcs[0].id
 		# 		step.related_id=related_id
 		
-		addrelation('case_step', request.session.get('username'), pid, step.id)
+		addrelation('case_step', author, pid, step.id)
 		
 		return {
 			'status': 'success',

@@ -289,21 +289,36 @@ def editcon(request):
 def querydblist(request):
 	code, msg = 0, ''
 	res = []
-	try:
-		list_ = list(DBCon.objects.all())
-		for x in list_:
-			o = dict()
-			o['id'] = x.id
-			o['name'] = x.description if len(x.description) < 15 else x.description[0:14] + '...'
-			res.append(o)
-		
-		return JsonResponse(simplejson(code=0, msg='操作成功', data=res), safe=False)
-	
-	except:
-		print(traceback.format_exc())
-		code = 4
-		msg = '查询数据库列表信息异常'
-		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+	scheme = request.POST.get('schemevalue')
+	id = request.POST.get('id')
+	type = request.POST.get('type')
+	if type is not None:
+		try:
+			res = list(DBCon.objects.filter().distinct().annotate(name=F('description')).values('name'))
+		except:
+			print(traceback.format_exc())
+			code = 4
+			msg = '查询数据库列表信息异常'
+			return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+	else:
+		try:
+			if scheme != '':
+				res = list(DBCon.objects.filter(scheme=scheme).annotate(name=F('description')).values('id', 'name'))
+			elif id != '' and id is not None:
+				callstr = "%s.objects.get(id=%s).db_id.split('_')[1]" % (
+				id.split('_')[0].capitalize(), id.split('_')[1])
+				print('callstr', callstr)
+				dbscheme = eval(callstr)
+				print(dbscheme)
+				res = list(
+					DBCon.objects.filter(scheme=dbscheme).annotate(name=F('description')).values('id', 'name'))
+				print(res)
+		except:
+			print(traceback.format_exc())
+			code = 4
+			msg = '查询数据库列表信息异常'
+			return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+	return JsonResponse(simplejson(code=0, msg='操作成功', data=res), safe=False)
 
 
 @csrf_exempt

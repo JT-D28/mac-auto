@@ -241,7 +241,9 @@
                             type: 'error'
                         });
                     } else {
-                        layer.msg(data.msg)
+                        layer.msg(data.msg);
+                        that.queryDbScheme(0);
+                        $("#querybtn").click();
                         that.copydbVisible = false;
                     }
                 })

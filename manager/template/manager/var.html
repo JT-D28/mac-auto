@@ -365,7 +365,7 @@
                     }
                 });
             }
-            _post('/manager/querydblist/', {}, success);
+            _post_nl('/manager/querydblist/', {type:'onlydes'}, success);
 
             var o = layer.open(
                 {

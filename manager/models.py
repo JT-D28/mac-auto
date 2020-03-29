@@ -232,21 +232,8 @@ class Variable(Model):
 	
 	def __str__(self):
 		return "%s_%s" % (self.author, self.key)
-	
-	@classmethod
-	def oldVarBindTag(cls):
-		vars = Variable.objects.all()
-		for var in vars:
-			if not Tag.objects.filter(var=var).exists():
-				tag=Tag()
-				tag.var=var
-				tag.customize=''
-				tag.planids='{}'
-				tag.isglobal=1
-				tag.save()
-				time.sleep(0.001)
-				print(str(var.id)+'更新成功')
-		print('变量tag更新完成')
+
+
 # class priority(Model):
 # 	"""
 # 	测试步骤优先级或测试用例优先级
@@ -328,17 +315,6 @@ class DBCon(Model):
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 	
-	@classmethod
-	def oldDBConUp(cls):
-		dbcons = DBCon.objects.all()
-		for dbcon in dbcons:
-			if dbcon.scheme is None:
-				dbcon.scheme='全局'
-				dbcon.save()
-				time.sleep(0.001)
-				print(str(dbcon.id) + '更新成功')
-		print('数据连接更新完成')
-
 class Crontab(Model):
 	taskid = CharField(max_length=32)
 	plan = ForeignKey(Plan, on_delete=CASCADE)

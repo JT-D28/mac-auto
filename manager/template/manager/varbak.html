@@ -568,17 +568,19 @@
 
 //新增功能
         $("#addbtn").click(function () {
-            has_select = 0
+            has_select = 0;
             //初始化联想信息
             success = function (d) {
-                data = JSON.parse(d)
-                $("#dblist").empty()
+                data = JSON.parse(d);
+                $("#dblist").empty();
                 for (var index = 0; index < data.data.length; index++) {
-                    $("#dblist").append("<li index='" + index + "' class=''>" + data.data[index]['name'] + "</li>")
+                    d=data.data[index]['name'];
+                    d=d.length>15?d.substr(0,15)+'...':d;
+                    $("#dblist").append("<li index='" + index + "' class=''>" + d+ "</li>")
                 }
                 $("#dblist li").each(function () {
                     $(this).click(function () {
-                        $('#gain').val($('#gain').val() + $(this).text())
+                        $('#gain').val($('#gain').val() + $(this).text());
                         $("#dblist").hide()
                     });
                 });
@@ -623,7 +625,7 @@
                     }
                 );
             };
-            _post('/manager/querydblist/', {}, success);
+            _post('/manager/querydblist/', {type:'onlydes'}, success);
             var o = layer.open(
                 {
                     title: '变量管理 / 新增',

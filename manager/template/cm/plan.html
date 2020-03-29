@@ -1,4 +1,4 @@
-{%load static%}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en" style="height: 100%">
 <head>
@@ -8,55 +8,51 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
     <style type="text/css">
-      .layui-icon:hover{
-        cursor: pointer;
+        .layui-icon:hover {
+            cursor: pointer;
+        }
 
-      }
-      .icon-tool{
-        float: right;
+        .icon-tool {
+            float: right;
+        }
 
-      }
-      .icon-tool-item:hover{
-        cursor: pointer;
-      }
-      .icon-tool-item{
-        margin-left: 5px;
-      }
+        .icon-tool-item:hover {
+            cursor: pointer;
+        }
 
-      #case-selected p{
-        height: 30px;
-        padding: 0;
-       /* text-overflow: ellipsis;*/
-   /*     max-width:200px;*/
-      }
-      #can-select p:hover{
-        background-color: #009688;
-        color: white;
+        .icon-tool-item {
+            margin-left: 5px;
+        }
 
-      }
-      #is-selected p:hover{
-        background-color: #009688;
-        color:white;
+        #case-selected p {
+            height: 30px;
+            padding: 0;
+        }
 
-      }
-      .func_btn{
+        #can-select p:hover {
+            background-color: #009688;
+            color: white;
 
-        font-size: 10px;
-        margin:5px;
-      }
-      .func_btn:hover{
+        }
 
-        cursor: pointer;
-        color:#009688;
-        font-weight:10px;
-      }
-      .func_btn_bar{
+        #is-selected p:hover {
+            background-color: #009688;
+            color: white;
+        }
 
-/*        background-color: red;*/
-      }
-    .mailpadding{
-        padding: 9px 1px;
-    }
+        .func_btn {
+            font-size: 10px;
+            margin: 5px;
+        }
+
+        .func_btn:hover {
+            cursor: pointer;
+            color: #009688;
+        }
+
+        .mailpadding {
+            padding: 9px 1px;
+        }
     </style>
 
 </head>
@@ -64,7 +60,7 @@
 
 <body style="height: 100%">
 <div class="layui-row" style="height: 100%">
-    <div class="layui-col-md12" style="height: 100%;padding:0 15px" >
+    <div class="layui-col-md12" style="height: 100%;padding:0 15px">
         <fieldset style="height:95%">
             <legend style="font-size: 20px;border-top-width:0px !important;">
                 <span class="layui-breadcrumb">
@@ -83,30 +79,38 @@
                 <div class="layui-form-item" pane="">
                     <label class="layui-form-label">报告通知</label>
                     <div class="layui-input-block">
-                      <!-- <div class="layui-inline"> -->
-                         <input type="checkbox" name="dingding" title="钉钉"  id='dingding'  lay-skin='primary'>
-                         <input type="checkbox" name="mail" id='mail' title="邮件" lay-skin="primary" >
-
-
-                     <!--  </div> -->
+                        <input type="checkbox" name="dingding" title="钉钉" id='dingding' lay-skin='primary'>
+                        <input type="checkbox" name="mail" id='mail' title="邮件" lay-skin="primary">
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">计划名称</label>
                     <div class="layui-input-block">
-                        <input type="text" name="description_1" placeholder="请输入" autocomplete="off" class="layui-input">
+                        <input type="text" name="description_1" placeholder="请输入" autocomplete="off"
+                               class="layui-input">
                     </div>
                 </div>
                 <div class="layui-form-item" id='config-set' hidden>
                     <label class="layui-form-label">定时配置</label>
                     <div class="layui-input-block">
-                        <textarea type="text" name="config" placeholder="{'year':'','month':'','day':'','hour':'','minute':'','second':''}" autocomplete="off" class="layui-textarea"></textarea>
+                        <textarea type="text" name="config"
+                                  placeholder="{'year':'','month':'','day':'','hour':'','minute':'','second':''}"
+                                  autocomplete="off" class="layui-textarea"></textarea>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">DB方案</label>
+                    <div class="layui-input-block">
+                        <select name="scheme" lay-verify="scheme" lay-filter="scheme" lay-search>
+                            <option value='全局'>全局</option>
+                        </select>
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">DB选择</label>
                     <div class="layui-input-block">
-                        <select name="db_id" lay-verify="" lay-search></select>
+                        <select name="db_id" lay-verify="" lay-filter="db_id" lay-search>
+                        </select>
                     </div>
                 </div>
                 <div class="layui-form-item">
@@ -115,8 +119,8 @@
             </form>
         </fieldset>
     </div>
-  </div>
- </body>
+</div>
+</body>
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
@@ -130,96 +134,84 @@
 <script src="{% static 'manager/bootstrap-fileinput-master/themes/fas/theme.js' %}"></script>
 <script src="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.js' %}"></script> -->
 <script type="text/javascript">
-  _load_db_dropdownlist()
-  layui.use(['layer','form','element'], function(){
-    element=layui.element
-    form=layui.form
-    form.render('select')
-    uid=_get_query_param('uid')
-    // utid=_get_query_param('utid')
-    pid=_get_query_param('pid')
-    // ptid=_get_query_param('ptid')
-    action=_get_query_param('action')
-    // console.log('action=>'+action)
-    detail='addplan'
 
-    if(action!='view')
-      $('#save').css('visibility','visible')
-    else{
-      $('#save').css('visibility','hidden')
-       _set_form_not_editable()
-    }
-    if(uid){
-      //console.log('编辑计划=>'+uid)
-      detail='editplan'
-      success=function(data){
-         data=data.data[0]
-          //设置addhtml
-          run_type=data['run_type']
-          description=data['description']
-          dbid=data['db_id']
 
-          form.val("addplan", {
-              "mail": data['is_send_mail']==="open"?true:false,
-              "dingding":data['is_send_dingding']==="open"?true:false
+    layui.use(['layer', 'form', 'element'], function () {
+        element = layui.element;
+        form = layui.form;
+        form.render('select');
+        uid = _get_query_param('uid');
+        pid = _get_query_param('pid');
+        action = _get_query_param('action');
+        detail = 'addplan';
+        id = uid === false ? pid : uid;
+
+        form.on('select(scheme)', function () {
+            _load_db_dropdownlist($("[name='scheme']").val());
+        });
+        form.on('select(db_id)', function () {
+            console.log($("[name='db_id']").val())
+        });
+
+        if (action !== 'view')
+            $('#save').css('visibility', 'visible');
+        else {
+            $('#save').css('visibility', 'hidden');
+            _set_form_not_editable()
+        }
+
+
+        if (uid) {
+            _post_nl('/manager/queryDbScheme/', {action: 1}, function (data) {
+                if (data.code === 0) {
+                    d = data.data;
+                    for (var index = 1; index < d.length; index++) {
+                        $("[name='scheme']").append("<option value='" + d[index]['value'] + "'>" + d[index]['value'] + "</option>")
+                    }
+                    _load_db_dropdownlist('', uid)
+                    detail = 'editplan';
+                    success = function (data) {
+                        data = data.data[0];
+                        run_type = data['run_type'];
+                        description = data['description'];
+                        dbid = data['db_id'].split('_')[0];
+                        scheme = data['db_id'].split('_')[1];
+                        form.val("addplan", {
+                            "mail": data['is_send_mail'] === "open",
+                            "dingding": data['is_send_dingding'] === "open"
+                        });
+                        $("[name='scheme']").val(scheme);
+                        $("[name='db_id']").val(dbid);
+                        layui.form.render('select');
+                        $("[value='" + run_type + "']").attr('checked', 'checked');
+                        layui.form.render('radio');
+                        if ('定时运行' === run_type) {
+                            $("#config-set").show()
+                        } else {
+                            $("#config-set").hide()
+                        }
+                        $("[name='description_1']").val(description);
+                    };
+                    _post('/manager/queryoneplan/', {id: uid}, success)
+                }
             });
-
-
-          $("[name='db_id']").val(dbid)
-          layui.form.render('select')
-          //alert(description)
-
-          //alert(run_type)
-
-          $("[value='"+run_type+"']").attr('checked','checked')
-          layui.form.render('radio');
-
-          if('定时运行'==run_type){
-            $("#config-set").show()
-          }else
-          {
-            $("#config-set").hide()
-          }
-
-          // alert(description)
-          $("[name='description_1']").val(description)
-
-
-      }
-      _post('/manager/queryoneplan/',{id:uid},success)
-    };
-
-
-    form.on('switch(switchmail)', function(data){
-        data.elem.checked?$('#editmail').show():$('#editmail').hide()
-    });
-
-
-$('#add_product').click(function(e){
-  layer.prompt({
-    formType: 0,
-    value: '',
-    title: '新建产品'
-  }, function(value, index, elem){
-
-    layer.close(index);
-    _post('/manager/treecontrol/',{'description':value,'action':'addproduct'},function(data){
-      if(data.code==0)
-        layer.alert(data.msg,{icon:1,time:2000})
-      else
-        layer.alert(data.msg,{icon:2})
-
-    })
-  })
-
-
-})
+        } else {
+            _post_nl('/manager/queryDbScheme/', {action: 1}, function (data) {
+                if (data.code === 0) {
+                    d = data.data;
+                    for (var index = 1; index < d.length; index++) {
+                        $("[name='scheme']").append("<option value='" + d[index]['value'] + "'>" + d[index]['value'] + "</option>")
+                    }
+                    _load_db_dropdownlist('全局')
+                }
+            });
+        }
 
         //save
         btn = $('#save')
         if (btn) btn.bind('click', function () {
             description = $("[name='description_1']").val();
-            if (description.indexOf('__') != -1) {
+            if (description.indexOf('__') !== -1) {
                 alert("计划名中不能有‘__’");
                 return false
             }
@@ -231,22 +223,23 @@ $('#add_product').click(function(e){
                 'run_type': $("[name='method']:checked").val(),
                 'config': $("[name='config']").val(),
                 'dbid': $("[name='db_id']").val(),
+                'scheme': $("[name='scheme']").val(),
                 'is_send_dingding': $("[name='dingding']").is(':checked'),
                 'is_send_mail': $("[name='mail']").is(':checked')
             }, function (e) {
-                if (e.code == 0) {
+                if (e.code === 0) {
                     // console.log(window)
                     var treeObj = parent.$.fn.zTree.getZTreeObj('case-manager');
-                    console.log('name=>', e.data)
-                    if (detail == 'addplan') {
+                    console.log('name=>', e.data);
+                    if (detail === 'addplan') {
                         var node = treeObj.getNodeByParam('id', pid);
-                        console.log('addplan=>' + JSON.stringify(e.data))
+                        console.log('addplan=>' + JSON.stringify(e.data));
                         treeObj.addNodes(node, e.data);
                         treeObj.expandNode(node, true)
                     } else {
                         var node = treeObj.getNodeByParam('id', uid);
                         // console.log('search tid '+utid+'=>'+node)
-                        node.name = e.data['name']
+                        node.name = e.data['name'];
                         treeObj.updateNode(node)
                     }
                     layer.alert(e.msg, {icon: 1, time: 2000})

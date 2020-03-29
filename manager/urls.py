@@ -86,11 +86,11 @@ urlpatterns = [
 	path("queryafteradd/", views.queryafteradd),
 	path("queryafterdel/", views.queryafterdel),
 	
-	path("testgenorder/", views.testgenorder),
 	path("changepos/", views.changepos),
 	path("aftergroup/", views.aftergroup),
 	
 	path('dbcon/', views.dbcon),
+	path('queryDbScheme/',views.queryDbScheme),
 	path('testdbcon/', views.testdbcon),
 	path('querydb/', views.querydb),
 	path('queryonedb/', views.queryonedb),
@@ -99,6 +99,7 @@ urlpatterns = [
 	path('editdbcon/', views.editcon),
 	path('querydblist/', views.querydblist),
 	path('querydblistdefault/', views.querydblistdefault),
+	path('copyDbCon/',views.copyDbCon),
 	
 	path('mailconfig/', views.mailconfig),
 	path('querymailconfig/', views.querymailconfig),
@@ -131,7 +132,6 @@ urlpatterns = [
 	
 	# test
 	path('addsteprelation/', views.addsteprelation),
-	path('getfulltree/', views.getfulltree),
 	path('update/', views.update),
 
 ]

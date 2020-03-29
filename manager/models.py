@@ -1,3 +1,5 @@
+import time
+
 from django.db.models import *
 from login.models import *
 
@@ -242,6 +244,7 @@ class Variable(Model):
 				tag.planids='{}'
 				tag.isglobal=1
 				tag.save()
+				time.sleep(0.001)
 				print(str(var.id)+'更新成功')
 		print('变量tag更新完成')
 # class priority(Model):
@@ -317,14 +320,24 @@ class DBCon(Model):
 	dbname = CharField(max_length=64)
 	host = CharField(max_length=15, blank=True)
 	port = CharField(max_length=5, blank=True)
-	
+	scheme = CharField(max_length=32,blank=True)
 	username = CharField(max_length=15)
 	password = CharField(max_length=15)
 	description = TextField()
 	author = ForeignKey(User, on_delete=CASCADE)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
-
+	
+	@classmethod
+	def oldDBConUp(cls):
+		dbcons = DBCon.objects.all()
+		for dbcon in dbcons:
+			if dbcon.scheme is None:
+				dbcon.scheme='全局'
+				dbcon.save()
+				time.sleep(0.001)
+				print(str(dbcon.id) + '更新成功')
+		print('数据连接更新完成')
 
 class Crontab(Model):
 	taskid = CharField(max_length=32)

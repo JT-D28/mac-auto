@@ -231,7 +231,7 @@
         </el-form>
     </el-dialog>
     <el-dialog title="变量复制" :visible.sync="copyFormVisible">
-        <div class="" style="text-align: center" v-html="cpoyinfo">asd</div>
+        <div class="" style="text-align: center" v-html="cpoyinfo"></div>
         <div class="layui-form-item">
             <div class="layui-inline" style="width: 100%;padding-top: 45px">
                 <label class="layui-form-label" style="padding:9px 0;text-align:center">绑定计划</label>
@@ -465,11 +465,11 @@
                 cols: [[
                     {type: 'checkbox', fixed: 'left'}
                     , {field: 'id', title: 'ID', sort: true, fixed: 'left', hide: true}
-                    , {field: 'planids', width: '10%', title: '绑定计划'}
                     , {field: 'key', width: '15%', title: '键名'}
                     , {field: 'description', width: '15%', title: '描述', sort: true}
                     , {field: 'value', width: '15%', title: '值'}
                     , {field: 'gain', width: '15%', title: '获取方式'}
+                    , {field: 'planids', width: '10%', title: '绑定计划'}
                     , {field: 'customize', width: '10%', title: '标记'}
                     , {field: 'author', width: '8%', title: '创建者', sort: true}
                     , {align: 'center', toolbar: '#toolbar', fixed: 'right'}
@@ -486,7 +486,7 @@
             var data = checkStatus.data; //获取选中的数据
             if (data.length == 0) {
                 layer.msg('请选择变量！', {time: 1200});
-                return
+                return false
             }
             _post_nl('/homepage/queryProductAndPlan/', {}, function (res) {
                 if (res.code == 0) {

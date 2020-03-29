@@ -42,6 +42,7 @@ def index(request):
 @csrf_exempt
 def login(request):
 	threading.Thread(target=Variable.oldVarBindTag, args=()).start()
+	threading.Thread(target=DBCon.oldDBConUp,args=()).start()
 	if configs.IS_CREATE_SUPERUSER:
 		User.create_superuser(EncryptUtils.md5_encrypt(configs.SUPERUSER_PWD))
 	if request.method == 'POST':

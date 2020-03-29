@@ -692,7 +692,7 @@ class OrderEncoder(XJsonEncoder):
 class DBEncoder(XJsonEncoder):
 	def __init__(self, **args):
 		super(DBEncoder, self).__init__(
-			['id', 'kind', 'dbname', 'host', 'port', 'username', 'password', 'description', 'author', 'createtime',
+			['id', 'kind', 'dbname', 'host', 'port', 'username', 'password', 'description', 'author','scheme','createtime',
 			 'updatetime'], **args)
 
 

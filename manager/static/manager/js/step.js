@@ -24,8 +24,7 @@ function loadbusinessdata(businessdata,stepid){
     $("#table-show").append("<span href='#' id='copydata' style=';font-size:5px;margin-left:20px;'>复制</span>")
     $("#table-show").append("<table id='business-table' class='layui-table' lay-filter='business-target' ></table>")
     var tableIns= layui.table.render({
-      // url:'/manager/querytesttable/'
-      elem:'#business-table', 
+      elem:'#business-table',
       id:'business-data', 
       height: 400,
       cols:[[ //表头

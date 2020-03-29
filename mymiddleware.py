@@ -3,7 +3,7 @@
 # @Date    : 2019-11-01 15:39:20
 # @Author  : Blackstone
 # @to      :
-
+from django.db.models import Q
 from django.shortcuts import HttpResponseRedirect
 from django.http import HttpResponse, JsonResponse
 from manager import models
@@ -72,7 +72,16 @@ class Interceptor(MiddlewareMixin):
 				if mkey == 'Function':
 					callstr = "list(models.Function.objects.filter(name='%s'))" % \
 					          re.findall('def (.*?)\(.*?\)', request.POST.get('body'))[0]
-				
+				if mkey == 'DBCon':
+					schemevalue=request.POST.get('schemevalue')
+					description=request.POST.get('description')
+					callstr = "list(models.DBCon.objects.filter(description='%s',scheme='%s'))" % \
+					          (description,schemevalue)
+					qssize = len(eval(callstr))
+					if qssize == 0:
+						return 'success', ''
+					else:
+						return 'fail', "配置方案【%s】下已存在描述为【%s】的数据连接" % (schemevalue, description)
 				qssize = len(eval(callstr))
 				print('callstr=>%s size=%s' % (callstr, qssize))
 				print('url[%s]字段[%s]重复验证 已存在[%s]条' % (request.path, _meta[mkey], qssize))
@@ -93,6 +102,18 @@ class Interceptor(MiddlewareMixin):
 				# print('key=>',key)
 				mkey = getkey(_meta, key)
 				if mkey:
+					if mkey == 'DBCon':
+						schemevalue = request.POST.get('schemevalue')
+						description = request.POST.get('description')
+						id=request.POST.get('id')
+						oldcon = models.DBCon.objects.filter(~Q(id=id) & Q(description=description, scheme=schemevalue))
+						qssize = len(oldcon)
+						print(oldcon)
+						if qssize == 0:
+							return 'success', ''
+						else:
+							msg = "配置方案【%s】下已存在描述为【%s】的数据连接" % (schemevalue, description) if schemevalue!='' else "已存在描述名为【%s】的全局数据连接配置"%description
+							return 'fail', msg
 					actionV = request.POST.get(_meta[mkey])
 					call_str = "models.%s.objects.get(%s='%s').id" % (mkey, _meta[mkey], actionV)
 					print('callstr=>', call_str)

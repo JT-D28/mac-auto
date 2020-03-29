@@ -181,15 +181,23 @@ def queryonedb(request):
 @csrf_exempt
 def querydb(request):
 	searchvalue = request.GET.get('searchvalue')
+	searchvalue = searchvalue if searchvalue not in [None, ''] else ''
 	print("searchvalue=>", searchvalue)
+	queryschemevalue = request.GET.get('querySchemeValue')
+	queryschemevalue = queryschemevalue if queryschemevalue not in [None, ''] else ''
+	print("SchemeValue=>", queryschemevalue)
 	res = None
-	if searchvalue:
-		print("变量查询条件=>")
-		res = list(DBCon.objects.filter(Q(description__icontains=searchvalue) | Q(dbname__icontains=searchvalue) | Q(
-			host__icontains=searchvalue) | Q(port__icontains=searchvalue) | Q(kind__icontains=searchvalue)))
-	else:
-		res = list(DBCon.objects.all())
-	
+	# if searchvalue:
+	# 	print("变量查询条件=>")
+	# 	res = list(DBCon.objects.filter((Q(description__icontains=searchvalue) | Q(dbname__icontains=searchvalue) | Q(
+	# 		host__icontains=searchvalue) | Q(port__icontains=searchvalue) | Q(kind__icontains=searchvalue)) & Q(
+	# 		scheme=queryschemevalue)))
+	# else:
+	# 	res = list(DBCon.objects.filter(Q(scheme__contains=queryschemevalue)))
+	#
+	res = list(DBCon.objects.filter((Q(description__icontains=searchvalue) | Q(dbname__icontains=searchvalue) | Q(
+		host__icontains=searchvalue) | Q(port__icontains=searchvalue) | Q(kind__icontains=searchvalue)) & Q(
+		scheme__contains=queryschemevalue)))
 	limit = request.GET.get('limit')
 	page = request.GET.get('page')
 	res, total = getpagedata(res, page, limit)
@@ -207,7 +215,7 @@ def addcon(request):
 		dbname = request.POST.get('dbname')
 		host = request.POST.get('host')
 		port = request.POST.get('port')
-		
+		schemevalue = request.POST.get('schemevalue')
 		username = request.POST.get('accountname')
 		callername = request.session.get('username', None)
 		password = request.POST.get('password')
@@ -220,6 +228,7 @@ def addcon(request):
 		con.username = username
 		con.password = password
 		con.description = description
+		con.scheme = schemevalue
 		con.author = User.objects.get(name=callername)
 		con.save()
 		msg = '添加成功'
@@ -264,6 +273,7 @@ def editcon(request):
 		con.password = request.POST.get('password')
 		con.host = request.POST.get('host')
 		con.port = request.POST.get('port')
+		con.scheme = request.POST.get('schemevalue')
 		con.save()
 		
 		msg = '编辑成功'
@@ -284,7 +294,7 @@ def querydblist(request):
 		for x in list_:
 			o = dict()
 			o['id'] = x.id
-			o['name'] = x.description if len(x.description)<15 else x.description[0:14]+'...'
+			o['name'] = x.description if len(x.description) < 15 else x.description[0:14] + '...'
 			res.append(o)
 		
 		return JsonResponse(simplejson(code=0, msg='操作成功', data=res), safe=False)
@@ -326,6 +336,69 @@ def querydblistdefault(request):
 		error = traceback.format_exc()
 		print(error)
 		return JsonResponse(simplejson(code=4, msg='库名下拉列表默认值返回异常'), safe=False)
+
+
+@csrf_exempt
+def copyDbCon(request):
+	action = request.POST.get('action')
+	dbids = request.POST.getlist('dbids[]')
+	copyschemevalue = request.POST.get('copyschemevalue')
+	s = dbconRepeatCheck(dbids, copyschemevalue, action)
+	code = 1
+	if s == '':
+		try:
+			code = 0
+			if action == '1':
+				for id in dbids:
+					dbcon = DBCon.objects.get(id=id)
+					newdbcon = DBCon()
+					newdbcon.kind = dbcon.kind
+					newdbcon.dbname = dbcon.dbname
+					newdbcon.host = dbcon.host
+					newdbcon.port = dbcon.port
+					newdbcon.username = dbcon.username
+					newdbcon.password = dbcon.password
+					newdbcon.description = dbcon.description
+					newdbcon.author = User.objects.get(name=request.session.get('username'))
+					newdbcon.scheme = copyschemevalue
+					newdbcon.save()
+				s = '复制成功'
+			elif action == '0':
+				for id in dbids:
+					dbcon = DBCon.objects.get(id=id)
+					dbcon.scheme = copyschemevalue
+					dbcon.save()
+				s = '修改成功'
+		except:
+			code = 1
+			s = traceback.format_exc()
+			print(s)
+	return JsonResponse({'code': code, 'msg': s})
+
+
+def dbconRepeatCheck(dbids, copyschemevalue, action):
+	print(dbids, copyschemevalue, action)
+	s = ''
+	# 一个方案下面描述名不能重复
+	if action == '1':
+		for id in dbids:
+			description = DBCon.objects.get(id=id).description
+			dbcon = DBCon.objects.filter(scheme=copyschemevalue, description=description)
+			if len(dbcon) == 0:
+				continue
+			else:
+				s += "<div class='copyerror'>配置方案【%s】下已存在描述为【%s】的数据连接<br></div>" % (copyschemevalue, description)
+	elif action == '0':
+		for id in dbids:
+			description = DBCon.objects.get(id=id).description
+			oldcon = DBCon.objects.filter(~Q(id=id) & Q(description=description, scheme=copyschemevalue))
+			if len(oldcon) == 0:
+				continue
+			else:
+				s += "<div class='copyerror'>配置方案【%s】下已存在描述为【%s】的数据连接<br></div>" % (
+					copyschemevalue,
+					description) if copyschemevalue != '' else "<div class='copyerror'>已存在描述名为【%s】的全局数据连接配置<br></div>" % description
+	return s
 
 
 """
@@ -379,7 +452,7 @@ def queryvar(request):
 	print(strtag)
 	
 	bindplan = request.POST.get('bindplan') if request.POST.get('bindplan') != '' else ''
-	bindstr = '%","' + bindplan + '"]%' if bindplan !='' else '%%'
+	bindstr = '%","' + bindplan + '"]%' if bindplan != '' else '%%'
 	userid = userid if userid != '0' else str(User.objects.values('id').get(name=request.session.get('username'))['id'])
 	print("searchvalue=>", searchvalue)
 	
@@ -390,9 +463,9 @@ def queryvar(request):
 					and t.customize like %s and v.author_id=u.id AND t.var_id=v.id  and planids like %s '''
 		if userid != '-1':
 			sql += 'and v.author_id=%s'
-			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag,bindstr,userid])
+			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag, bindstr, userid])
 		else:
-			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag,bindstr])
+			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag, bindstr])
 		desc = cursor.description
 		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
 		for i in rows:
@@ -405,8 +478,8 @@ def queryvar(request):
 			n = ''
 			x = json.loads(i['planids'])
 			for k, v in x.items():
-				print(v)
-				n += "<span class='layui-badge layui-bg-green' id="+v[1]+" onclick=planSpanClick(this) style='cursor:pointer;'>" + k + "</span> "
+				n += "<span class='layui-badge layui-bg-green' id=" + v[
+					1] + " onclick=planSpanClick(this) style='cursor:pointer;'>" + k + "</span> "
 			i['planids'] = n
 		limit = request.POST.get('limit')
 		page = request.POST.get('page')
@@ -894,7 +967,7 @@ def third_party_call(request):
 	callername = res['callername']
 	is_verify = request.GET.get('is_verify')
 	
-	if getRunningInfo(callername, planid, 'isrunning')=='1':
+	if getRunningInfo(callername, planid, 'isrunning') == '1':
 		return JsonResponse(simplejson(code=1, msg="调用失败，任务正在运行中，稍后再试！"), safe=False)
 	
 	print('调用方=>', callername)
@@ -1092,7 +1165,7 @@ def runtask(request):
 	for planid in list_:
 		plan = Plan.objects.get(id=planid)
 		username = request.session.get('username')
-		if getRunningInfo(username, planid, 'isrunning')=='1':
+		if getRunningInfo(username, planid, 'isrunning') == '1':
 			return JsonResponse(simplejson(code=1, msg="任务已在运行，请稍后！"), safe=False)
 		
 		taskid = gettaskid(plan.__str__())
@@ -2972,93 +3045,34 @@ def update(request):
 	return JsonResponse(pkg(code=0))
 
 
-def getfulltree(request):
-	data = cm.get_full_tree()
-	print(len(data))
-	
-	return JsonResponse(pkg(data=data))
-
-
-def testgenorder(request):
-	code = 0
-	msg = ''
-	
-	genorder("case", 1, 1)
-	return JsonResponse(simplejson(code=code, msg=""), safe=False)
-
-
-def testaddtask(request):
-	from .cron import Cron
-	
-	# scheduler.add_job(test, 'interval', seconds=3)
-	username = request.session.get('username', None)
-	Cron._addcrontab(runplans, 'interval', seconds=15, args=['tester', gettaskid(), ['1'], '定时'], id='')
-	Cron._addcrontab(runplans, args=[username, crontaskid, [plan.id], '定时'], taskid=crontaskid, **cfg)
-	# scheduler.add_job(runplans, 'interval', seconds=15,args=['tester',gettaskid(),['1'],'定时'],id='')
-	
-	return JsonResponse(simplejson(code=0, msg="fda", yy='dd'), safe=False)
-
-
-def testrmvtask(request):
-	pass
-
-
-def testtable(request):
-	return render(request, 'manager/test-table.html')
-
-
-def querytesttable(request):
-	data = {}
-	data['code'] = 0
-	data['msg'] = ''
-	# data['count']=5
-	data['data'] = [{
-		'id': 1,
-		'businessname': '业务名称_1',
-		'itf_check': '',
-		'db_check': '',
-		
-	}]
-	
-	title = []
-	title_map = {
-		'itf_check': '接口校验',
-		'db_check': '数据校验',
-		'businessname': '业务名称'}
-	
-	findex = {}
-	# findex['fixed']='left'
-	findex['templet'] = '#index'
-	findex['title'] = '序号'
-	
-	title.append(findex)
-	
-	for x in data.get('data')[0]:
-		fobj = {}
-		
-		if x == 'id':
-			fobj['hide'] = True
-		fobj['field'] = x
-		fobj['title'] = x
-		fobj['edit'] = True
-		
-		if title_map.get(x):
-			fobj['title'] = title_map.get(x)
-		# fobj['width']='50px'
-		title.append(fobj)
-	
-	fop = {}
-	fop['fixed'] = 'right'
-	fop['toolbar'] = '#business-toolbar'
-	fop['title'] = '操作'
-	title.append(fop)
-	
-	data['title'] = title
-	return JsonResponse(data, safe=False)
-
-
 @csrf_exempt
 def queryUser(request):
 	name = request.session.get('username')
 	user = list(User.objects.values('id', 'name').exclude(name=name))
 	return JsonResponse({'data': user})
+
+
+@csrf_exempt
+def queryDbScheme(request):
+	action = request.POST.get('action')
+	sql = "SELECT distinct scheme as 'value',scheme as 'label' FROM `manager_dbcon` where scheme not in ('全局','')"
+	with connection.cursor() as cursor:
+		cursor.execute(sql)
+		desc = cursor.description
+		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+	if action == '1':
+		data = [{
+			'value': '全局',
+			'label': '全局'
+		}]
+	else:
+		data = [{
+			'value': '',
+			'label': '全部'
+		}, {
+			'value': '全局',
+			'label': '全局'
+		}]
+	for row in rows:
+		data.append(row)
+	return JsonResponse({'code': 0, 'data': data})

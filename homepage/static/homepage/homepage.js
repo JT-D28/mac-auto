@@ -264,7 +264,7 @@ var app = new Vue({
                     type: 'error', center: true
                 });
             } else {
-                _post_nl('/homepage/querytaskid/', {'planid': planid}, function (data) {
+                _post_nl('/homepage/querytaskid/', {'planid': planid,'action':'plan'}, function (data) {
                     data = JSON.parse(data)
                     taskid = data.data
                     if (data.code != 0) {
@@ -354,7 +354,7 @@ var app = new Vue({
                     type: 'error', center: true
                 });
             } else {
-                _post_nl('/homepage/querytaskid/', {planid: planid}, function (data) {
+                _post_nl('/homepage/querytaskid/', {'planid': planid,'action':'plan'}, function (data) {
                     data = JSON.parse(data)
                     taskid = data.data
                     is_running = data.is_running
@@ -775,7 +775,7 @@ var app = new Vue({
                     type: 'error', center: true
                 });
             } else {
-                _post_nl('/homepage/querytaskid/', {planid: planid}, function (data) {
+                _post_nl('/homepage/querytaskid/', {'planid': planid,'action':'plan'}, function (data) {
                     var res = JSON.parse(data);
                     if (res.code == 0) {
                         const req = new XMLHttpRequest();
@@ -802,7 +802,7 @@ var app = new Vue({
         },
         downloadRunlog() {
             var that = this;
-            _post_nl('/homepage/querytaskid/', {planid: that.form.plan.substr(5)}, function (data) {
+            _post_nl('/homepage/querytaskid/', {'planid': that.form.plan.substr(5),'action':'plan'}, function (data) {
                 var res = JSON.parse(data);
                 if (res.code == 0) {
                     const req = new XMLHttpRequest();

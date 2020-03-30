@@ -14,7 +14,8 @@ from manager.models import *
 from .core import ordered, Fu, getbuiltin, EncryptUtils, genorder, simplejson
 from .db import Mysqloper
 from .context import set_top_common_config, viewcache, gettestdatastep, gettestdataparams, get_task_session, \
-    clear_task_session, get_friendly_msg
+    clear_task_session, get_friendly_msg, setRunningInfo, getRunningInfo
+
 import re, traceback, redis, time, threading, smtplib, requests, json, warnings, datetime, socket
 import copy, base64, datetime, xlrd,os
 from email.mime.text import MIMEText
@@ -556,13 +557,14 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind):
                   "结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-red'>fail</span>" % case0.description)
 
 
+
 def runplan(callername, taskid, planid, is_verify, kind=None):
-    '''
-    '''
+
     groupskip = []
     username = callername
     try:
         plan = Plan.objects.get(id=planid)
+        setRunningInfo(callername,planid,taskid,1)
         print('plan=>', plan)
         plan.is_running = 1
         plan.save()
@@ -592,12 +594,14 @@ def runplan(callername, taskid, planid, is_verify, kind=None):
         
         if planre:
             plan.last = 'success'
+            setRunningInfo(callername, planid, taskid, 0)
             plan.is_running = 0
             plan.save()
             viewcache(taskid, username, kind,
                       "结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-green'>success</span>" % plan.description)
         else:
             plan.last = 'fail'
+            setRunningInfo(callername, planid, taskid, 0)
             plan.is_running = 0
             plan.save()
             viewcache(taskid, username, kind,
@@ -632,131 +636,6 @@ def runplan(callername, taskid, planid, is_verify, kind=None):
     
     finally:
         clear_data(username, _tempinfo)
-
-
-# def runplan(callername,taskid,planid,kind=None):
-#   '''
-#   '''
-#   groupskip=[]
-#   username=callername
-#   try:
-#       plan=Plan.objects.get(id=planid)
-
-#       dbid=plan.db_id
-#       if dbid:
-#           desp=DBCon.objects.get(id=int(dbid)).description
-#           set_top_common_config(taskid, desp,src='plan')
-
-#       viewcache(taskid,username,kind,"开始执行计划[<span style='color:#FF3399'>%s</span>]"%plan.description)
-#       cases=[Case.objects.get(id=x.follow_id)  for x in ordered(list(Order.objects.filter(main_id=planid,kind='plan_case')))]
-
-#       result,error="",""
-#       caseresult=[]
-#       planresult=[]
-
-#       for case in cases:
-#           dbid=case.db_id
-#           if dbid:
-#               desp=DBCon.objects.get(id=int(dbid)).description
-#               set_top_common_config(taskid, desp,src='case')
-
-#           groupskip=[]
-#           viewcache(taskid,username,kind,"开始执行用例[<span style='color:#FF3399'>%s</span>]"%case.description)
-#           steporderlist=ordered(list(Order.objects.filter(kind='case_step',main_id=case.id)))
-#           print('ccc=>',steporderlist)
-#           for o in steporderlist:
-#               stepid=o.follow_id
-#               print('stepfdafasdadfa=>',Step.objects.get(id=stepid).description)
-#               businessorderlist=list(Order.objects.filter(kind='step_business',main_id=stepid))
-
-#               print('bbb=>',businessorderlist)
-#               for order in businessorderlist:
-#                   groupid=order.value.split(".")[0]
-#                   # step=Step.objects.get(id=order.follow_id)
-#                   start=time.time()
-#                   spend=0
-#                   if groupid not in groupskip:
-#                       result,error=_step_process_check(callername,taskid,order,kind)
-#                       spend=int((time.time()-start)*1000)
-
-#                       if result is not 'success':
-#                           groupskip.append(groupid)
-#                   else:
-#                       result,error='skip','skip'
-
-#                   ##保存结果
-#                   print("准备保存结果===")
-#                   detail=ResultDetail()
-#                   detail.taskid=taskid
-#                   detail.plan=plan
-#                   detail.case=case
-#                   detail.step=Step.objects.get(id=o.follow_id)
-#                   detail.businessdata=BusinessData.objects.get(id=order.follow_id)
-#                   detail.result=result
-#                   detail.error=error
-#                   detail.spend=spend
-#                   detail.save()
-#                   ##
-#                   caseresult.append(result)
-#                   ##
-#                   if "success" in result:
-#                       result="<span class='layui-bg-green'>%s</span>"%result
-
-#                   elif "fail" in result:
-#                       result="<span class='layui-bg-red'>%s</span>"%result
-#                   elif "skip" in result:
-#                       result="<span class='layui-bg-orange'>%s</span>"%result
-#                   ##
-#                   #print(len(result),len('success'),result=='success')
-#                   if 'success' in result:
-#                       viewcache(taskid,username,kind,"执行结果%s"%(result))
-#                   else:
-#                       if error is False:
-#                           error='表达式不成立'
-#                       viewcache(taskid,username,kind,"执行结果%s 原因=>%s"%(result,error))
-
-
-#           casere=(len([x for x in caseresult if x=='success'])==len([x for x in caseresult]))
-#           planresult.append(casere)
-#           if casere:
-#               viewcache(taskid, username,kind,"结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-green'>success</span>"%case.description)
-#           else:
-#               viewcache(taskid, username,kind,"结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-red'>fail</span>"%case.description)
-
-#       #plan
-#       planre=(len([x for x in planresult])==len([x for x in planresult if x==True]))
-
-#       if planre:
-#           plan.last='success'
-#           plan.save()
-#           viewcache(taskid, username,kind,"结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-green'>success</span>"%plan.description)
-#       else:
-#           plan.last='fail'
-#           plan.save()
-#           viewcache(taskid, username,kind,"结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-red'>fail</span>"%plan.description)
-
-#       ##清除请求session
-#       clear_task_session('%s_%s'%(taskid,callername))
-#       ##
-
-#       _save_builtin_property(taskid,username)
-#       ##发送报告
-#       config_id=plan.mail_config_id
-#       if config_id:
-#           mail_config=MailConfig.objects.get(id=config_id)
-#           user=User.objects.get(name=username)
-#           mail_res=MainSender.send(taskid,user,mail_config)
-#           print("发送邮件 结果[%s]"%mail_res)
-#           viewcache(taskid,username,kind,mail_res)
-
-#   except Exception as e:
-#       #traceback.print_exc()
-#       print(traceback.format_exc())
-#       viewcache(taskid,username,kind,'执行计划未知异常[%s]'%traceback.format_exc())
-
-#   finally:
-#       clear_data(username, _tempinfo)
-
 
 def _step_process_check(callername, taskid, order, kind):
     """
@@ -828,7 +707,6 @@ def _step_process_check(callername, taskid, order, kind):
             if len(str(statuscode)) == 0:
                 return ('fail', itf_msg)
             elif statuscode == 200:
-                
                 ##后置操作
                 status, res = _call_extra(user, postplist, taskid=taskid, kind='后置操作')  ###????
                 if status is not 'success':
@@ -900,65 +778,6 @@ def _step_process_check(callername, taskid, order, kind):
         print(traceback.format_exc())
         return ("error", "执行任务[%s] 未处理的异常[%s]" % (taskid, traceback.format_exc()))
 
-
-# def getstepparaminfo(businessdatainst,kind='db'):
-#   '''
-#   函数->数组
-#   接口->字典
-#   '''
-
-#   if businessdatainst is None:
-#       return ('success',[])
-
-
-#   if kind=='db':
-#       status,stepinst=gettestdatastep(businessdatainst)
-
-#       if status is not 'success':
-#           return (status,stepinst)
-
-#       if stepinst.step_type=='interface':
-#           res={}
-#           paraminfo=list(businessdatainst.params.all())
-#           for p in paraminfo:
-#               #print(p.key,p.value)
-#               if p.key=='LAY_TABLE_INDEX':
-#                   continue;
-#               res[p.key]=p.value
-#           return ('success',res)
-#       elif stepinst.step_type=='function':
-#           print('bussinessid=>',businessdatainst.id)
-#           paraminfo=list(businessdatainst.params.all())
-#           return ('success',[ str(p.value) for p in paraminfo])
-
-#       else:
-#           return('error','步骤类型异常=>%s'%stepinst.step_type)
-
-#   else:
-
-#       #需要剔除无用key
-#       _filter=list(_businessdatatmp.keys())
-#       res=[]
-
-#       sb=eval(str(businessdatainst))[0]
-
-#       for k,v in sb.items():
-#           if k not in _filter and k is not 'LAY_TABLE_INDEX':
-#               res.append(v)
-
-#       return ('success',res)
-
-
-# def gettestdatastep(businessdatainst):
-#   try:
-#       steps=Step.objects.all()
-#       step=[step for step in steps if businessdatainst in list(step.businessdatainfo.all())][0]
-#       return ('success',step)
-#   except:
-#       print(traceback.format_exc())
-#       return ('error','获取业务数据所属步骤异常 业务ID=%s'%businessdatainst.id)
-
-
 def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
     """
     xml报文请求
@@ -981,21 +800,34 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
             sock.close()
             return recvdata
     
+    cs=None
     try:
+
+        url_rv=_replace_variable(user, url,taskid=taskid)
+        if url_rv[0] is not 'success':
+            return ('','',url_rv[1])
+        url_rp=_replace_property(user, url_rv[1],taskid=taskid)
+        if url_rp[0] is not 'success':
+            return ('','',url_rp[1])
+
+        url=url_rp[1]
         
         ##
-        body_rv = _replace_variable(user, body);
+        body_rv = _replace_variable(user, body,taskid=taskid);
         if body_rv[0] is not 'success':
             return ('', '', body_rv[1])
-        body_rp = _replace_variable(user, body_rv[1])
+        body_rp = _replace_property(user, body_rv[1],taskid=taskid)
         if body_rp[0] is not 'success':
             return ('', '', body_rp[1])
         
         body = body_rp[1]
+
+
+
         
         cs = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # cs.setblocking(False)
-        socket.setdefaulttimeout(30)
+        # socket.setdefaulttimeout(30)
         cs.settimeout(timeout)
         url = url.replace('http://', '')
         host = url.split(':')[0].strip()
@@ -1030,13 +862,13 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
         #       break;
         
         return _getback(cs), 200, ''
-    
-    
     except:
-        cs.close()
+        if cs:
+            cs.close()
         err = traceback.format_exc()
         print(err)
         return ('', '', err)
+
 
 
 def _callinterface(taskid, user, url, body=None, method=None, headers=None, content_type=None, props=None, kind=None):
@@ -1237,6 +1069,7 @@ def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
     return ('success', '操作[%s]全部执行完毕' % call_strs)
 
 
+
 def _compute(taskid, user, checkexpression, type=None, target=None, kind=None, parse_type='json', rps_header=None):
     """
     计算各种校验表达式
@@ -1398,7 +1231,6 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
     接口校验需要开启need_chain_handle=True
     接口验证时 direction=left ,临时变量设置时 为right
     """
-    
     # res=None
     exp = None
     try:
@@ -1597,17 +1429,37 @@ def _replace_variable(user, str_, src=1, taskid=None):
     返回(success,替换后的新字符串)
     返回(fail,错误消息)
     src:同_gain_compute()
-
     """
+    if taskid is not None:
+        pid = taskid.split('__')[0]
+        pname = taskid.split('__')[1]
     try:
         old = str_
         varnames = re.findall('{{(.*?)}}', str_)
-        # print(varnames)
+
+
         for varname in varnames:
-            # try:
-            # print("变量名称=>%s"%varname)
-            # print("查找变量 author=%s key=%s"%(user.name,varname))
-            var = Variable.objects.get(key=varname)
+
+
+            
+            vars = Variable.objects.filter(key=varname)
+            var = None
+            for m in vars:
+                x = json.loads(Tag.objects.get(var=m).planids)
+                if pname in x and pid in x.get(pname):
+                    var = m
+                    viewcache(taskid, user.name, None, '找到局部变量，将使用局部变量 %s 描述：%s' % (varname,var.description))
+                    break
+            if var is None:
+                for m in vars:
+                    try:
+                        var = Tag.objects.get(var=m, isglobal=1).var
+                        viewcache(taskid, user.name, None, '未找到局部变量，将使用全局变量 %s 描述：%s' % (varname,var.description))
+                    except:
+                        pass
+                if var is None:
+                    return ('error', '字符串[%s]变量替换异常[%s] 请检查包含变量是否已配置' % (str_, traceback.format_exc()))
+                
             gain_rv = _replace_variable(user, var.gain, src=src, taskid=taskid)
             if gain_rv[0] is not 'success':
                 # print(11)
@@ -1668,6 +1520,7 @@ def _replace_variable(user, str_, src=1, taskid=None):
     except Exception as e:
         print(traceback.format_exc())
         return ('error', '字符串[%s]变量替换异常[%s] 请检查包含变量是否已配置' % (str_, traceback.format_exc()))
+
 
 
 def is_valid_where_sql(call_str):
@@ -1812,7 +1665,7 @@ def _gain_compute(user, gain_str, src=1, taskid=None):
         return ('error', traceback.format_exc())
 
 
-def _replace_property(user, str_):
+def _replace_property(user, str_,taskid=None):
     """
     属性右替换
     返回(success,替换后新值)

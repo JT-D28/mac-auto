@@ -3,7 +3,7 @@
 <html >
 <head>
     <meta charset="utf-8">
-    <title>ME2.0_web版本</title>
+    <title>ME2_V2.0</title>
     <meta name="renderer" content="webkit">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta http-equiv="Access-Control-Allow-Origin" content="*">
@@ -235,12 +235,13 @@
         var curtaskindex = 0
 
         $("#console").click(function () {
-            _post_nl('/homepage/querytaskid/', {'console': 1}, function (data) {
+            _post_nl('/homepage/querytaskid/', {'action': 'lastest'}, function (data) {
+                data=JSON.parse(data)
                 let consoleSocket = new WebSocket("ws://" + host + "/ws/consolemsg/");
                 consoleSocket.onopen = function () {
                     // var username=$("#username").text()
                     console.log("开始获取" + username + "控制台消息..")
-                    consoleSocket.send('console.msg::read::' + username + '::' + data.taskid)
+                    consoleSocket.send('console.msg::read::' + username + '::' + data.data)
                 }
                 consoleSocket.onmessage = function (e) {
                     console.log(e.data);

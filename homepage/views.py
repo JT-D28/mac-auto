@@ -6,6 +6,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import jenkins
 from ME2 import configs
+from manager.context import getRunningInfo
 from manager.invoker import gettaskresult, MainSender
 from manager import cm
 from manager.core import *
@@ -66,6 +67,22 @@ def queryproduct(request):
 
 
 @csrf_exempt
+def queryallplan(request):
+	sql=''
+	if configs.dbtype=='mysql':
+		sql = '''SELECT plan.id,CONCAT(pro.description,'-',plan.description) as planname 
+		FROM `manager_plan` plan,manager_product pro,manager_order o WHERE pro.id=o.main_id AND plan.id=o.follow_id order by pro.id'''
+	else:
+		sql='''SELECT plan.id, pro.description||'-'||plan.description as planname  FROM `manager_plan` plan,manager_product pro,manager_order o WHERE pro.id=o.main_id AND plan.id=o.follow_id order by pro.id   '''
+
+	with connection.cursor() as cursor:
+		cursor.execute(sql)
+		desc = cursor.description
+		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+	return JsonResponse({'code': 0, 'data': rows})
+
+
+@csrf_exempt
 def queryplan(request):
 	code, msg = 0, ''
 	pid = request.POST.get('id')
@@ -117,29 +134,43 @@ def queryplan(request):
 def querytaskid(request):  # 查询验证任务最新id
 	code = 0
 	msg = ''
-	taskids = []
+	# taskids = []
 	is_running = ''
-	try:
-		if request.POST.get('console') == '1':
-			sql = '''SELECT taskid FROM `manager_resultdetail` order by createtime desc LIMIT 1'''
-			with connection.cursor() as cursor:
-				cursor.execute(sql)
-				row = cursor.fetchone()
-			return JsonResponse({'taskid': row[0]})
-		else:
-			planid = request.POST.get('planid')
-			plan = Plan.objects.get(id=planid)
-			is_running = plan.is_running
-			taskids = list(ResultDetail.objects.values('taskid').filter(plan=plan, is_verify=1).order_by('-createtime'))
-			if taskids:
-				taskids = taskids[0]["taskid"]
-			else:
-				code = 1
-				msg = "任务还没有运行过！"
-	except:
-		code = 1
-		msg = "出错了！"
-	return JsonResponse(simplejson(code=code, msg=msg, data=taskids, is_running=is_running), safe=False)
+	username = request.session.get("username")
+	action = request.POST.get('action')
+	if action == 'plan':
+		planid = request.POST.get('planid')
+		taskid = getRunningInfo(username, planid, 'plan_taskid')
+		print(taskid)
+		is_running = getRunningInfo(username, planid, 'isrunning')
+	elif action == 'lastest':
+		taskid = getRunningInfo(username, '', 'latest_taskid')
+		print("控制台获取的最新taskid", taskid)
+	
+	if taskid is None:
+		print('内存中查找不到taskid，从数据库中找')
+		try:
+			if action == 'lastest':
+				sql = '''SELECT taskid FROM `manager_resultdetail` order by createtime desc LIMIT 1'''
+				with connection.cursor() as cursor:
+					cursor.execute(sql)
+					row = cursor.fetchone()
+					taskid = row[0]
+			elif action == 'plan':
+				planid = request.POST.get('planid')
+				plan = Plan.objects.get(id=planid)
+				is_running = plan.is_running
+				taskids = list(
+					ResultDetail.objects.values('taskid').filter(plan=plan, is_verify=1).order_by('-createtime'))
+				if taskids:
+					taskid = taskids[0]["taskid"]
+				else:
+					code = 1
+					msg = "任务还没有运行过！"
+		except:
+			code = 1
+			msg = "出错了！"
+	return JsonResponse(simplejson(code=code, msg=msg, data=taskid, is_running=is_running), safe=False)
 
 
 @csrf_exempt
@@ -618,3 +649,24 @@ def jenkinsJobRun(request):
 			return JsonResponse({'code': 0, 'data': '任务已开始执行'})
 		except:
 			return JsonResponse({'code': 1, 'data': "可能出现了问题，可以前往jenkins检查"})
+
+
+@csrf_exempt
+def queryProductAndPlan(request):
+	list_ = list(Product.objects.all())
+	data = []
+	try:
+		for i, x in enumerate(list_):
+			o = dict()
+			o['value'] = str(x.id)
+			o['label'] = x.description
+			p = []
+			plans = cm.getchild('product_plan', x.id)
+			for plan in plans:
+				p.append({'value': str(plan.id), 'label': plan.description})
+			o['children'] = p
+			data.append(o)
+		return JsonResponse({'code': 0, 'data': data})
+	except:
+		print(traceback.format_exc())
+		return JsonResponse({'code': 1, 'data': '获取计划失败'})

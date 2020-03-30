@@ -23,6 +23,7 @@ urlpatterns = [
 	path('', views.homepage),
 	path('queryproduct/', views.queryproduct),
 	path('queryplan/', views.queryplan),
+	path('queryallplan/', views.queryallplan),
 	path('querytaskid/', views.querytaskid),
 	path('globalsetting/', views.globalsetting),
 	path('restart/', views.restart),
@@ -41,4 +42,5 @@ urlpatterns = [
 	path('planforceStop/', views.planforceStop),
 	path('query_third_call/', views.query_third_call),
 	path('jenkinsJobRun/', views.jenkinsJobRun),
+	path('queryProductAndPlan/',views.queryProductAndPlan)
 ]

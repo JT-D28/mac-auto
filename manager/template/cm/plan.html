@@ -215,57 +215,47 @@ $('#add_product').click(function(e){
 
 })
 
-    //save
-    btn=$('#save')
-    if(btn)btn.bind('click',function(){
-      url='/manager/treecontrol/'
-      // alert(detail)
-      data={
-        'uid':uid,
-        'pid':pid,
-        'action':detail,
-        'description':$("[name='description_1']").val(),
-        'run_type':$("[name='method']:checked").val(),
-        'config':$("[name='config']").val(),
-        'dbid':$("[name='db_id']").val(),
-        'is_send_dingding':$("[name='dingding']").is(':checked'),
-          'is_send_mail':$("[name='mail']").is(':checked')
-      }
-
-      _post(url,data,function(e){
-        if(e.code==0){
-          // console.log(window)
-            var treeObj = parent.$.fn.zTree.getZTreeObj('case-manager');
-            console.log('name=>',e.data)
-            if(detail=='addplan'){
-              var node = treeObj.getNodeByParam('id',pid); 
-              console.log('addplan=>'+JSON.stringify(e.data)) 
-              treeObj.addNodes(node,e.data);
-              treeObj.expandNode(node,true)
-
-            }else{
-              var node = treeObj.getNodeByParam('id',uid);
-              // console.log('search tid '+utid+'=>'+node)
-              node.name=e.data['name']
-              treeObj.updateNode(node)
-
+        //save
+        btn = $('#save')
+        if (btn) btn.bind('click', function () {
+            description = $("[name='description_1']").val();
+            if (description.indexOf('__') != -1) {
+                alert("计划名中不能有‘__’");
+                return false
             }
-
-          
-          layer.alert(e.msg,{icon:1,time:2000})
-        }
-        else
-          layer.alert(e.msg,{icon:2})
-        
-
-      });
-
-      return false
-
-
+            _post('/manager/treecontrol/', {
+                'uid': uid,
+                'pid': pid,
+                'action': detail,
+                'description': description,
+                'run_type': $("[name='method']:checked").val(),
+                'config': $("[name='config']").val(),
+                'dbid': $("[name='db_id']").val(),
+                'is_send_dingding': $("[name='dingding']").is(':checked'),
+                'is_send_mail': $("[name='mail']").is(':checked')
+            }, function (e) {
+                if (e.code == 0) {
+                    // console.log(window)
+                    var treeObj = parent.$.fn.zTree.getZTreeObj('case-manager');
+                    console.log('name=>', e.data)
+                    if (detail == 'addplan') {
+                        var node = treeObj.getNodeByParam('id', pid);
+                        console.log('addplan=>' + JSON.stringify(e.data))
+                        treeObj.addNodes(node, e.data);
+                        treeObj.expandNode(node, true)
+                    } else {
+                        var node = treeObj.getNodeByParam('id', uid);
+                        // console.log('search tid '+utid+'=>'+node)
+                        node.name = e.data['name']
+                        treeObj.updateNode(node)
+                    }
+                    layer.alert(e.msg, {icon: 1, time: 2000})
+                } else
+                    layer.alert(e.msg, {icon: 2})
+            });
+            return false
+        });
     });
-  });
-  
 
 
 </script>

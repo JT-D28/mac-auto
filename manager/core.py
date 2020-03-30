@@ -803,7 +803,7 @@ def ordered(iterator, key='value'):
 """
 
 
-def gettaskid():
+def gettaskid(plan):
 	"""
 	任务id
 	"""
@@ -811,8 +811,7 @@ def gettaskid():
 	# new_md5 = md5()
 	# new_md5.update(s.encode(encoding='utf-8'))
 	# return new_md5.hexdigest()
-	
-	return base64.b64encode(str(time.time()).encode()).decode()
+	return plan.replace('[','').replace(']','__')+'__'+base64.b64encode(str(time.time()).encode()).decode()
 
 
 def getbuiltin(searchvalue=None, filename='builtin.py'):

@@ -29,7 +29,7 @@ class Interceptor(MiddlewareMixin):
 			'Function': 'name',
 			'Interface': 'name',
 			'Tag': 'name',
-			'Variable': 'key',
+			# 'Variable': 'key',
 			'DBCon': 'description',
 			'Step': 'description',
 			'Case': 'description',
@@ -39,7 +39,7 @@ class Interceptor(MiddlewareMixin):
 		_m1 = {
 			'Function': '函数',
 			'Interface': '接口',
-			'Variable': '变量',
+			# 'Variable': '变量',
 			'DBCon': '数据连接',
 			'Step': '步骤',
 			'Case': '用例',

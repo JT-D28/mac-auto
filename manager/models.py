@@ -70,7 +70,7 @@ class BusinessData(Model):
 	preposition=TextField(blank=True,null=True)
 	postposition=TextField(blank=True,null=True)
 
-	parser_id=IntegerField(null=True)#解析器id
+	parser_id=CharField(null=True)#解析器id
 	parser_check=TextField()#解析器校验
 
 

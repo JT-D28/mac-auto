@@ -1458,7 +1458,7 @@ def _replace_variable(user, str_, src=1, taskid=None):
                     except:
                         pass
                 if var is None:
-                    return ('error', '字符串[%s]变量替换异常[%s] 请检查包含变量是否已配置' % (str_, traceback.format_exc()))
+                    return ('error', '字符串[%s]变量替换异常,未在局部变量和全局变量中找到，请检查包含变量是否已配置' % (str_))
                 
             gain_rv = _replace_variable(user, var.gain, src=src, taskid=taskid)
             if gain_rv[0] is not 'success':

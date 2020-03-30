@@ -838,6 +838,8 @@ def getbuiltin(searchvalue=None, filename='builtin.py'):
 				list_.append(f)
 		else:
 			for methodname in methodnames:
+				if methodname.startswith('_'):
+					continue;
 				if (searchvalue in methodname) or (searchvalue in eval(methodname).__doc__.strip()):
 					f = Function()
 					f.name = methodname

@@ -16,8 +16,6 @@ from .context import querytestdata, gettestdatastep, mounttestdata, gettestdatap
 import json ,operator, xlrd, base64, traceback
 from .pa import MessageParser
 
-
-
 # # Create your views here.
 
 @csrf_exempt
@@ -422,10 +420,10 @@ def queryvar(request):
 
 		if userid != '-1':
 			sql += 'and v.author_id=%s'
-			print('查所有人sql=>',sql%(searchvalue, searchvalue, searchvalue, strtag,bindstr,userid))
+			print('查个人sql=>',sql%(searchvalue, searchvalue, searchvalue, strtag,bindstr,userid))
 			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag,bindstr,userid])
 		else:
-			print('查个人执行sql=>',sql%(searchvalue, searchvalue, searchvalue, strtag,bindstr))
+			print('查所有人执行sql=>',sql%(searchvalue, searchvalue, searchvalue, strtag,bindstr))
 			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag,bindstr])
 
 		desc = cursor.description

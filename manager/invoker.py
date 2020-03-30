@@ -898,7 +898,18 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
     data_rv = _replace_variable(user, data_rp[1], taskid=taskid)
     if data_rv[0] is not 'success':
         return ('', '', '', data_rv[1])
-    body = data_rv[1]
+
+    data_rf=_replace_function(user,data_rv[1],taskid=taskid)
+    if data_rf[0] is not 'success':
+        return ('','','',data_rf[1])
+
+    body = data_rf[1]
+
+
+
+
+
+
     viewcache(taskid, user.name, kind,
               "<span style='color:#009999;'>params=><xmp style='color:#009999;'>%s</xmp></span>" % body)
     
@@ -1424,7 +1435,7 @@ def _replace_function(user,str_,taskid=None):
 
 
         
-def _replace_variable(user, str_, src=1, taskid=None):
+def _replace_variable(user, str_, src=1, taskid=None,force=False):
     """
     返回(success,替换后的新字符串)
     返回(fail,错误消息)
@@ -1436,12 +1447,43 @@ def _replace_variable(user, str_, src=1, taskid=None):
     try:
         old = str_
         varnames = re.findall('{{(.*?)}}', str_)
-
-
         for varname in varnames:
+            if varname.strip()=='STEP_PARAMS':
+                is_dict_params=True
+                try:
+                    eval(str_)
+                except:
+                    is_dict_params=False
+
+                if is_dict_params:
+                    print(eval(str_),type(eval(str_)))
+                    evalstr=eval(old)
+                    tmp=copy.deepcopy(evalstr)
+                    for k in evalstr:
+                        if str(evalstr.get(k)).__contains__('STEP_PARAMS'):
+                            del tmp[k]
+                            print('key[%s]包含内置变量STEP_PARAMS')
+                            print('替换内置变量STEP_PARAMS为=>',tmp)
+                            old=old.replace('{{%s}}'%varname,str(tmp))
+                            return ('success',old)
+                else:
+                    splitparms=str_.split('&')
+                    dictparams=dict()
+                    for p in splitparms:
+                        if str(p).__contains__('STEP_PARAMS'):
+                            print()
+                        else:
+                            dictparams[p.split('=')[0]]=p.split('=')[1]
+
+                    print('替换内置变量STEP_PARAMS为=>',dictparams)
+                    old=old.replace('{{%s}}'%varname,str(dictparams))
+                    return('success',old)
 
 
-            
+
+
+
+
             vars = Variable.objects.filter(key=varname)
             var = None
             for m in vars:

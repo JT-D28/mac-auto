@@ -3211,6 +3211,8 @@ def queryuserfile(request):
 	mfiles=list()
 	username=request.session.get('username')
 	userdir=os.path.join(os.path.dirname(__file__),'storage','private','File',username)
+	if not os.path.exists(userdir):
+		os.makedirs(userdir)
 	files=os.listdir(userdir)
 	print('files=>',files)
 	for f in files:

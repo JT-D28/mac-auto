@@ -54,7 +54,7 @@
 </table>
 
 
-<div id='upload' style="display: none;">
+<div id='upload' style="height:calc(100% - 40px);padding: 20px;display: none;">
 <input id="kv-explorer" type="file" multiple>
 </div>
 
@@ -75,9 +75,6 @@
 <script src="{% static 'manager/bootstrap-fileinput-master/js/locales/es.js' %}"></script>
 <script src="{% static 'manager/bootstrap-fileinput-master/themes/fas/theme.js' %}"></script>
 <script src="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.js' %}"></script>
-
-
-
 
 <script type="text/javascript">
 layui.use(['table','layer','upload','element'], function(){

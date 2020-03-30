@@ -1,0 +1,2 @@
+def hujja():
+    return ‘hujj’

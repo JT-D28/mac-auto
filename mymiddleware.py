@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.shortcuts import HttpResponseRedirect
 from django.http import HttpResponse, JsonResponse
 from manager import models
+from login import models as lm
 from manager.core import simplejson
 import re, os, traceback
 
@@ -140,7 +141,7 @@ class Interceptor(MiddlewareMixin):
 		'''
 		session校验
 		'''
-		_meta = ('/account/login/', '/manager/querytaskdetail/', '/test_expression/', '/test_expression1/',
+		_meta = ('/account/login/', '/manager/querytaskdetail/', '/test_expression/', '/test_expression1/','/test_xml/',
 		         '/manager/third_party_call/')
 		if request.path not in _meta and not request.path.startswith('/captcha/image/'):
 			if request.session.get('username', None):
@@ -148,19 +149,45 @@ class Interceptor(MiddlewareMixin):
 			else:
 				print('session校验不通过 跳到登录页面')
 				return False
-		
+
 		return True
-	
-	def _print_call_msg(self, request):
-		print("=============================调用[%s]===============" % request.path)
-		a = dict(request.GET)
-		b = dict(request.POST)
-		print({**a, **b})
+
+
+	def _log_operation(self,request):
+		'''操作日志记录
+		'''
+		opcode=''
+		url=request.path
+		params={**dict(request.GET),**dict(request.POST)}
+		for ok in params:
+			params[ok]=params.get(ok)[0]
+
+		##tree操作
+		if url.__contains__('treecontrol'):
+			opcode=params.get('action')
+			ol=models.OperateLog()
+			ol.opcode=opcode
+			op.opname=''
+			ol.description=''
+			ol.author=lm.User.objects.get(name=request.session.get('username'))
+			op.save()
+
+		
+
+
+
+	def _print_call_msg(self,request):
+		print("=============================调用[%s]==============="%request.path)
+		a=dict(request.GET)
+		b=dict(request.POST)
+		o={**a,**b}
+		for ok in o:
+			o[ok]=o.get(ok)[0]
+		print(o)
+		
 	
 	def process_request(self, request):
-		
-		# print('==进入拦截器==')
-		
+
 		self._print_call_msg(request)
 		
 		session_check_result = self._session_check(request)
@@ -174,8 +201,9 @@ class Interceptor(MiddlewareMixin):
 			return JsonResponse(simplejson(code=101, msg=repeat_check_result[1]), safe=False)
 
 
-def getkey(d, key):
+def getkey(d,key):
 	for k in d:
 		if key.lower() == k.lower():
 			return k
 	return None
+

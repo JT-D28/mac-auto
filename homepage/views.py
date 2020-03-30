@@ -68,8 +68,13 @@ def queryproduct(request):
 
 @csrf_exempt
 def queryallplan(request):
-	sql = '''SELECT plan.id,CONCAT(pro.description,'-',plan.description) as planname
-	FROM `manager_plan` plan,manager_product pro,manager_order o WHERE pro.id=o.main_id AND plan.id=o.follow_id order by pro.id'''
+	sql=''
+	if configs.dbtype=='mysql':
+		sql = '''SELECT plan.id,CONCAT(pro.description,'-',plan.description) as planname 
+		FROM `manager_plan` plan,manager_product pro,manager_order o WHERE pro.id=o.main_id AND plan.id=o.follow_id order by pro.id'''
+	else:
+		sql='''SELECT plan.id, pro.description||'-'||plan.description as planname  FROM `manager_plan` plan,manager_product pro,manager_order o WHERE pro.id=o.main_id AND plan.id=o.follow_id order by pro.id   '''
+
 	with connection.cursor() as cursor:
 		cursor.execute(sql)
 		desc = cursor.description

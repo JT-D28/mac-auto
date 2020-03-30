@@ -19,34 +19,6 @@ class Function(Model):
 	def __str__(self):
 		return self.name
 
-
-# class Interface(Model):
-# 	author=ForeignKey(User, on_delete=CASCADE)
-# 	name=CharField(max_length=64)
-# 	headers=CharField(max_length=128)
-# 	url=CharField(max_length=128)
-# 	method=CharField(max_length=128)
-# 	content_type=CharField(max_length=128)
-# 	version=CharField(max_length=10)
-# 	body=CharField(max_length=500)
-#
-# 	createtime=DateTimeField(auto_now_add=True)
-# 	updatetime=DateTimeField(auto_now=True)
-#
-# 	class Meta:
-# 		unique_together=('url','version')
-#
-# 	def __str__(self):
-# 		return '%s[%s]'%(self.url,self.version)
-#
-# class InterfaceGen(Model):
-# 	interface=ForeignKey(Interface,on_delete=CASCADE)
-# 	kind=CharField(choices=(('step','测试步骤'),('record','录制'),('direct','直接新增接口')),max_length=16)
-# 	by=IntegerField()##
-# 	createtime=DateTimeField(auto_now_add=True)
-# 	updatetime=DateTimeField(auto_now=True)
-
-
 class Tag(Model):
 	planids = CharField(max_length=128, null=True)
 	customize = TextField(null=True)
@@ -55,39 +27,30 @@ class Tag(Model):
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 
+class TemplateField(Model):
+	'''报文字段定义
+	'''
+	fieldcode=CharField(max_length=16)
+	description=TextField()
+	start=IntegerField()##从1算起
+	end=IntegerField()
+	index=IntegerField()
+
 
 class Template(Model):
 	'''报文校验
 	'''
-	kind = IntegerField()  # 0:按长度解析  1：按分隔符解析
-	name = CharField(max_length=16)
-	description = TextField()
-	author = ForeignKey(User, on_delete=CASCADE)
-	createtime = DateTimeField(auto_now_add=True)
-	updatetime = DateTimeField(auto_now=True)
-	
+	kind=CharField(max_length=2)#length/separator
+	name=CharField(max_length=16)
+	description=TextField()
+	author=ForeignKey(User, on_delete=CASCADE)
+	createtime=DateTimeField(auto_now_add=True)
+	updatetime=DateTimeField(auto_now=True)
+	fieldinfo=ManyToManyField(TemplateField,blank=True,db_column='field_id')
+
+
 	def __str__(self):
 		return '[%s]%s' % (self.id, self.name)
-
-
-class TemplateField(Model):
-	'''报文字段定义
-	'''
-	fieldcode = CharField(max_length=16)
-	description = TextField()
-	template = ForeignKey(Template, on_delete=CASCADE)
-	start = IntegerField()
-	end = IntegerField()
-	index = IntegerField()
-
-
-#
-# class Scheme(Model):
-# 	name=CharField(max_length=18)
-# 	description=CharField(max_length=64)
-# 	t1=IntegerField()
-# 	t2=IntegerField()
-
 
 '''
 业务数据定义
@@ -100,15 +63,19 @@ class Param(Model):
 
 
 class BusinessData(Model):
-	count = IntegerField(default=1, null=True)
-	businessname = CharField(max_length=128, null=True)
-	itf_check = TextField(null=True)
-	db_check = TextField(null=True)
-	# params=ManyToManyField(Param,blank=True)
-	params = TextField(blank=True, null=True)
-	preposition = TextField(blank=True, null=True)
-	postposition = TextField(blank=True, null=True)
-	
+	count=IntegerField(default=1,null=True)
+	businessname=CharField(max_length=128,null=True)
+	itf_check=TextField(null=True)
+	db_check=TextField(null=True)
+	#params=ManyToManyField(Param,blank=True)
+	params=TextField(blank=True,null=True)
+	preposition=TextField(blank=True,null=True)
+	postposition=TextField(blank=True,null=True)
+
+	parser_id=CharField(max_length=32,null=True)#解析器id
+	parser_check=TextField()#解析器校验
+
+
 	def __str__(self):
 		return '[%s]%s' % (self.id, self.businessname)
 
@@ -187,17 +154,6 @@ class Plan(Model):
 		return '[%s]%s' % (self.id, self.description)
 
 
-# class Result(Model):
-
-# 	author=ForeignKey(User, on_delete=CASCADE)
-# 	case=ForeignKey(Case, on_delete=CASCADE)
-# 	success=CharField(max_length=16)
-# 	fail=CharField(max_length=16)
-# 	skip=CharField(max_length=16)
-# 	createtime=DateTimeField(auto_now_add=True)
-# 	updatetime=DateTimeField(auto_now=True)
-
-
 class ResultDetail(Model):
 	choice = (('success', 'success'), ('fail', 'fail'))
 	taskid = CharField(max_length=64)
@@ -232,21 +188,22 @@ class Variable(Model):
 	updatetime = DateTimeField(auto_now=True)
 	
 	def __str__(self):
+
 		return "%s_%s" % (self.author, self.key)
-
-
-# class priority(Model):
-# 	"""
-# 	测试步骤优先级或测试用例优先级
-# 	"""
-# 	main_id=IntegerField()
-# 	follow_id=IntegerField()
-# 	kind=CharField(choices=(('plan','计划'),('case','用例')),max_length=16)
-# 	value=IntegerField()
-
-# 	author=ForeignKey(User, on_delete=CASCADE)
-# 	createtime=DateTimeField(auto_now_add=True)
-# 	updatetime=DateTimeField(auto_now=True)
+	
+	@classmethod
+	def oldVarBindTag(cls):
+		vars = Variable.objects.all()
+		for var in vars:
+			if not Tag.objects.filter(var=var).exists():
+				tag=Tag()
+				tag.var=var
+				tag.customize=''
+				tag.planids='{}'
+				tag.isglobal=1
+				tag.save()
+				print(str(var.id)+'更新成功')
+		print('变量tag更新完成')
 
 
 class Order(Model):
@@ -265,36 +222,6 @@ class Order(Model):
 	
 	def __str__(self):
 		return 'kind=%s,main=%s,follow=%s,value=%s' % (self.kind, self.main_id, self.follow_id, self.value)
-
-
-# class RelatedTag(Model):
-# 	"""
-# 	用例或者计划打标签
-# 	"""
-# 	kind=CharField(default='case',max_length=16)#暂时用不上
-# 	related_id=IntegerField()
-# 	tag_id=IntegerField()
-#
-# 	author=ForeignKey(User, on_delete=CASCADE)
-# 	createtime=DateTimeField(auto_now_add=True)
-# 	updatetime=DateTimeField(auto_now=True)
-
-
-#
-# class Rule(Model):
-# 	"""
-# 	通用或者约定俗成的一些配置 如token
-# 	"""
-# 	kind=CharField(max_length=64,choices=(('token','token'),))
-# 	name=CharField(max_length=64)
-# 	description=CharField(max_length=500)
-# 	pick_pattern=CharField(max_length=64)#特征提取
-# 	final_pattern=CharField(max_length=64)##最终样式
-# 	src=CharField(max_length=64)
-# 	dest=CharField(max_length=64)
-# 	ext=CharField(max_length=64)##扩展字段
-# 	ext1=CharField(max_length=64)
-
 
 class Menu(Model):
 	text = CharField(max_length=32)
@@ -349,20 +276,6 @@ class MailConfig(Model):
 	createtime = DateTimeField(auto_now_add=True, null=True)
 	updatetime = DateTimeField(auto_now=True, null=True)
 
-
-# class RemoteLog(Model):
-#
-# 	description=CharField(max_length=64)
-# 	host=CharField(max_length=32)
-# 	port=CharField(max_length=6)
-# 	username=CharField(max_length=32,blank=True)
-# 	password=CharField(max_length=32,blank=True)
-#
-# 	author=ForeignKey(User, on_delete=CASCADE)
-# 	createtime=DateTimeField(auto_now_add=True)
-# 	updatetime=DateTimeField(auto_now=True)
-
-
 class Product(Model):
 	'''
 	产品表
@@ -376,34 +289,18 @@ class Product(Model):
 	def __str__(self):
 		return '[%s]%s' % (self.id, self.description)
 
-# class CommonConfig(Model):
-# 	'''
-# 	'''
-# 	key=CharField(max_length=64)
-# 	value=TextField(blank=True)
-# 	ex_1=CharField(max_length=64,blank=True)
-# 	ex_2=CharField(max_length=64,blank=True)
-# 	ex_3=CharField(max_length=64,blank=True)
-# 	ex_4=CharField(max_length=64,blank=True)
-# 	ex_5=CharField(max_length=64,blank=True)
+class OperateLog(Model):
+	'''操作日志
+	'''
+	opcode=CharField(max_length=32)
+	opname=CharField(max_length=32)
+	description=TextField(blank=True,null=True)
+	author=ForeignKey(User, on_delete=CASCADE)
+	createtime=DateTimeField(auto_now_add=True)
 
 
-# class DataMove(Model):
-# 	'''
-# 	数据迁移记录
-# 	'''
-# 	description=CharField(max_length=64)
-# 	operator=ForeignKey(User, on_delete=CASCADE)
-# 	kind=CharField(max_length=64)
-# 	createtime=DateTimeField(auto_now_add=True)
-# 	updatetime=DateTimeField(auto_now=True)
 
 
-# class HumanResource(Model):
-# 	kind=CharField(max_length=64,default='user')
-# 	product_id=IntegerField()
-# 	user_id=IntegerField()
-# 	group_id=IntegerField()
-#
-# 	createtime=DateTimeField(auto_now_add=True)
-# 	updatetime=DateTimeField(auto_now=True)
+
+
+

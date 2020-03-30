@@ -8,8 +8,53 @@ from django.conf import settings
 from manager import models
 from hashlib import md5
 
+
+
 '''
-提示优化
+操作名映射码
+'''
+_OPERATION={
+	'symbol':{
+		'add':'增加',
+		'del':'删除',
+		'delete':'删除',
+		'update':'更新',
+		'edit':'编辑',
+		'query':'查询',
+	},
+	'entity':{
+		'plan':'计划',
+		'case':'用例',
+		'step':'步骤',
+		'business':'测试点',
+		'businessdata':'测试点',
+		'var':'变量',
+		'variable':'变量',
+		'con':'数据连接',
+		'dbcon':'数据连接',
+		'template':'模板',
+		'templatefield':'模板字段',
+		'tag':'标签',
+	}
+}
+
+def get_symbol_name(key):
+	return _OPERATION['symbol'].get(key,'[%s]未定义'%key)
+
+def get_entity_name(key):
+	return _OPERATION['entity'].get(key,'[%s]未定义'%key)
+
+
+
+'''
+缓存
+'''
+
+
+
+
+'''
+提示语优化
 
 '''
 
@@ -26,7 +71,6 @@ _friendly_map = {
 		'pymysql.err.OperationalError: (1045': '[mysql]账号密码错误',
 	}
 }
-
 
 def get_friendly_msg(msg0, kind='all'):
 	'''

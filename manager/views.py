@@ -12,10 +12,9 @@ from login.models import *
 from .core import *
 from .invoker import *
 from . import cm
-from .context import querytestdata, gettestdatastep, mounttestdata, gettestdataparams, queryafteradd as qa, \
-	queryafterdel as qd, queryafteredit as qe, queryaftercopy as qc
-import json, operator, xlrd, base64, traceback
-
+from .context import querytestdata, gettestdatastep, mounttestdata, gettestdataparams, queryafteradd as qa,queryafterdel as qd, queryafteredit as qe, queryaftercopy as qc
+import json ,operator, xlrd, base64, traceback
+from .pa import MessageParser
 
 # # Create your views here.
 
@@ -56,27 +55,41 @@ def recvdata(request):
 
 @csrf_exempt
 def datamove(request):
-	return render(request, 'manager/datamove.html')
+	kind='datamovein'
+	return render(request, 'manager/datamove.html',locals())
+
+
+@csrf_exempt
+def uploadfile(request):
+	kind='persionfile'
+	return render(request, 'manager/myspace.html',locals())
 
 
 @csrf_exempt
 def upload(request):
+
+	filemap=dict()
+	filenames=[]
 	content_list = []
 	
 	files = request.FILES.getlist('file_data')
 	for file in files:
 		for chunk in file.chunks():
-			content_list.append(chunk)
+			print('上传文件名称=>',file.name)
+			#content_list.append(chunk)
+			filemap[file.name]=chunk
 	
 	callername = request.session.get('username')
 	kind = request.POST.get('kind')
+
+	print('kind=>',kind)
 	content_type = request.POST.get('content_type')
 	
 	if kind == 'datamovein':
 		
 		taskid = EncryptUtils.md5_encrypt(str(datetime.datetime.now()))
 		
-		t = Transformer(callername, content_list, content_type, taskid)
+		t = Transformer(callername, filemap.values(), content_type, taskid)
 		
 		res = t.transform()
 		# print('res=>',res)
@@ -92,11 +105,20 @@ def upload(request):
 		d = DataMove()
 		productid = request.POST.get('productid').split('_')[1]
 		
-		res = d.import_plan(productid, content_list, request.session.get('username'))
+		res = d.import_plan(productid, filemap.values(), request.session.get('username'))
 		if res[0] == 'success':
 			return JsonResponse(simplejson(code=0, msg='数据导入完成'), safe=False)
 		else:
 			return JsonResponse(simplejson(code=2, msg='数据导入失败[%s]' % res[1]), safe=False)
+	elif kind=='personfile':
+		status,msg=upload_personal_file(filemap, request.session.get('username'))
+		if status is 'success':
+			return JsonResponse(simplejson(code=0, msg='文件上传完成'), safe=False)
+		else:
+			return JsonResponse(simplejson(code=3, msg='文件上传异常'), safe=False)
+
+
+		return JsonResponse(simplejson(code=0,msg='文件上传成功'),safe=False)
 	else:
 		return JsonResponse(simplejson(code=4, msg='kind错误'), safe=False)
 
@@ -2423,7 +2445,7 @@ def queryonebusiness(request):
 		# print('business=>', business)
 		# jsonstr = json.dumps(business, cls=BusinessDataEncoder)
 		sql = '''
-		SELECT b.id,count,businessname,itf_check,db_check,params,preposition,postposition,value as weight 
+		SELECT b.id,count,businessname,itf_check,db_check,params,preposition,postposition,value as weight,parser_id,parser_check
 		FROM manager_businessdata b, manager_order o WHERE b.id=%s and o.follow_id=b.id
 		'''
 		with connection.cursor() as cursor:
@@ -2667,6 +2689,7 @@ def edittag(request):
 def querytaglist(request):
 	namelist = []
 	userid = request.POST.get('userid')
+	data=[]
 	try:
 		with connection.cursor() as cursor:
 			if userid != '-1':
@@ -2732,28 +2755,92 @@ def template(request):
 	return render(request, 'manager/template.html')
 
 
-def queryonetemplate(request):
-	pass
+@csrf_exempt
+def querytemplatecommon(request):
+	p=MessageParser.query_template_common(request.POST.get('tid'))
+	return JsonResponse(p,safe=False)
 
 
+	
+@csrf_exempt
 def querytemplatelist(request):
-	pass
+	return JsonResponse(MessageParser.query_template_name_list(),safe=False)
 
 
-def addtemplate(requst):
-	pass
+@csrf_exempt
+def addtemplate(request):
+	pa=get_params(request)
+	pa['author']=User.objects.get(name=request.session.get('username'))
+	p=MessageParser.add_template(**pa)
+	return JsonResponse(p,safe=False)
 
+
+@csrf_exempt
 
 def deltemplate(request):
-	pass
+	return JsonResponse(MessageParser.del_template(request.POST.get('ids')),safe=False)
 
 
+@csrf_exempt
 def edittemplate(request):
-	pass
+	return JsonResponse(MessageParser.edit_template(**get_params(request)),safe=False)
 
-
+@csrf_exempt
 def querytemplate(request):
-	pass
+	searchvalue = request.GET.get('searchvalue')
+	print("searchvalue=>", searchvalue)
+
+	if searchvalue:
+		print("变量查询条件=>")
+		res = list(Template.objects.filter(name__icontains=searchvalue))
+	else:
+		res = list(Template.objects.all())
+
+	limit = request.GET.get('limit')
+	page = request.GET.get('page')
+	# print("res old size=>",len(res))
+	res, total = getpagedata(res, page, limit)
+	jsonstr = json.dumps(res, cls=TemplateEncoder, total=total)
+	return JsonResponse(jsonstr, safe=False)
+
+def templatefield(request):
+	tid=request.GET.get('tid')
+	is_sort_display=''
+	is_start_display=''
+	kind=Template.objects.get(id=tid).kind
+	if kind=='length':
+		is_sort_display='none'
+
+	else:
+		is_start_display='none'
+
+	print('sort',is_sort_display)
+	print('start',is_start_display)
+
+	return render(request, 'manager/templatefield.html',locals())
+
+
+@csrf_exempt
+def querytemplatefield(request):
+	return JsonResponse(MessageParser.query_template_field(**get_params(request)),safe=False)
+
+
+@csrf_exempt
+def addtemplatefield(request):
+	return JsonResponse(MessageParser.add_field(**get_params(request)),safe=False)
+
+@csrf_exempt
+def deltemplatefield(request):
+	return JsonResponse(MessageParser.del_field(request.POST.get('ids')),safe=False)
+
+
+@csrf_exempt
+def edittemplatefield(request):
+	return JsonResponse(MessageParser.edit_field(**get_params(request)),safe=False)
+
+@csrf_exempt
+def queryfielddetail(request):
+	return JsonResponse(MessageParser.query_field_detail(request.POST.get('tid')),safe=False)
 
 
 """
@@ -3075,6 +3162,88 @@ def update(request):
 	return JsonResponse(pkg(code=0))
 
 
+def getfulltree(request):
+	data = cm.get_full_tree()
+	print(len(data))
+	
+	return JsonResponse(pkg(data=data))
+
+
+def testgenorder(request):
+	code = 0
+	msg = ''
+	
+	genorder("case", 1, 1)
+	return JsonResponse(simplejson(code=code, msg=""), safe=False)
+
+
+def testaddtask(request):
+	from .cron import Cron
+	
+	# scheduler.add_job(test, 'interval', seconds=3)
+	username = request.session.get('username', None)
+	Cron._addcrontab(runplans, 'interval', seconds=15, args=['tester', gettaskid(), ['1'], '定时'], id='')
+	Cron._addcrontab(runplans, args=[username, crontaskid, [plan.id], '定时'], taskid=crontaskid, **cfg)
+	# scheduler.add_job(runplans, 'interval', seconds=15,args=['tester',gettaskid(),['1'],'定时'],id='')
+	
+	return JsonResponse(simplejson(code=0, msg="fda", yy='dd'), safe=False)
+
+
+
+def testtable(request):
+	return render(request, 'manager/test-table.html')
+
+
+def querytesttable(request):
+	data = {}
+	data['code'] = 0
+	data['msg'] = ''
+	# data['count']=5
+	data['data'] = [{
+		'id': 1,
+		'businessname': '业务名称_1',
+		'itf_check': '',
+		'db_check': '',
+		
+	}]
+	
+	title = []
+	title_map = {
+		'itf_check': '接口校验',
+		'db_check': '数据校验',
+		'businessname': '业务名称'}
+	
+	findex = {}
+	# findex['fixed']='left'
+	findex['templet'] = '#index'
+	findex['title'] = '序号'
+	
+	title.append(findex)
+	
+	for x in data.get('data')[0]:
+		fobj = {}
+		
+		if x == 'id':
+			fobj['hide'] = True
+		fobj['field'] = x
+		fobj['title'] = x
+		fobj['edit'] = True
+		
+		if title_map.get(x):
+			fobj['title'] = title_map.get(x)
+		# fobj['width']='50px'
+		title.append(fobj)
+	
+	fop = {}
+	fop['fixed'] = 'right'
+	fop['toolbar'] = '#business-toolbar'
+	fop['title'] = '操作'
+	title.append(fop)
+	
+	data['title'] = title
+	return JsonResponse(data, safe=False)
+
+
 @csrf_exempt
 def queryUser(request):
 	name = request.session.get('username')
@@ -3106,3 +3275,98 @@ def queryDbScheme(request):
 	for row in rows:
 		data.append(row)
 	return JsonResponse({'code': 0, 'data': data})
+
+'''
+个人空间管理
+'''
+def _formatSize(bytes):
+    try:
+        bytes = float(bytes)
+        kb = bytes / 1024
+    except:
+        print("传入的字节格式不对")
+        return "Error"
+
+    if kb >= 1024:
+        M = kb / 1024
+        if M >= 1024:
+            G = M / 1024
+            return "%.2fG" % (G)
+        else:
+            return "%.2fM" % (M)
+    else:
+        return "%.2fkb" % (kb)
+
+
+# 获取文件大小
+def _getDocSize(path):
+    try:
+        size = os.path.getsize(path)
+        return _formatSize(size)
+    except Exception as err:
+        print(err)
+
+
+# 获取文件夹大小
+def _getFileSize(path):
+    sumsize = 0
+    try:
+        filename = os.walk(path)
+        for root, dirs, files in filename:
+            for fle in files:
+                size = os.path.getsize(path + fle)
+                sumsize += size
+        return _formatSize(sumsize)
+    except Exception as err:
+        print(err)
+@csrf_exempt
+def queryuserfile(request):
+	'''
+	返回个人文件列表
+	'''
+	searchvalue = request.GET.get('searchvalue')
+	mfiles=list()
+	username=request.session.get('username')
+	userdir=os.path.join(os.path.dirname(__file__),'storage','private','File',username)
+	if not os.path.exists(userdir):
+		os.makedirs(userdir)
+	files=os.listdir(userdir)
+	print('files=>',files)
+	for f in files:
+		if searchvalue and not f.__contains__(searchvalue):
+			continue;
+		mfiles.append({
+			'filename':f,
+			'size':_getDocSize(os.path.join(userdir,f)),
+			'createtime':time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(os.path.getctime(os.path.join(userdir,f))))
+			})
+
+	mfiles.sort(key=lambda e:e.get('createtime'),reverse=True)
+
+	return JsonResponse({'code':0,'data':mfiles},safe=False)
+
+@csrf_exempt
+def delfiles(request):
+	block_files=[]
+	filenames=request.POST.get('filenames','')
+	print('filenames=>',filenames)
+	filenamelist=filenames.split(',')
+	for filename in filenamelist:
+		filepath=os.path.join(os.path.dirname(__file__),'storage','private','File',request.session.get('username'),filename)
+		try:
+			os.remove(filepath)
+		except:
+			block_files.append(filename)
+			print(traceback.format_exc())
+
+	if len(block_files)==0:
+		return JsonResponse(pkg(code=0,msg='删除成功.'),safe=False)
+	else:
+		return JsonResponse(pkg(code=4,msg='删除失败[%s].'%(',').join(block_files)),safe=False)
+
+
+
+@csrf_exempt
+def edit_file_name(request):
+	pass
+

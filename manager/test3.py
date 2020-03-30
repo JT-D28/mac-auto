@@ -1,86 +1,62 @@
-import re
+
+from ftplib import FTP
+import traceback,os
+def ftp_to_local(ip,port,username,password,remotefile,callername):
+    try:
+        ftp = FTP()
+        ftp.set_debuglevel(0)
+        ftp.connect(ip,int(port))
+        ftp.login(username,password)
+        bufsize = 1024
+        #remotefilename=os.sep.split(remotefile)[-1]
+        remotefilename=remotefile.split('/')[-1]
+        print('remotefilename=>',remotefilename)
+        localfile=os.path.join(os.path.dirname(__file__),'storage','private','File',callername,remotefilename)
+        print('localfile=>',localfile)
+        #print(os.path.dirname(__file__))
+        fp = open(localfile,'wb') #以写模式在本地打开文件
+        ftp.retrbinary('RETR ' + remotefile,fp.write,bufsize) 
+        fp.close()
+        ftp.quit()
+
+        return ('success','远程文件[%s] ftp[%s] 本地下载成功.'%(remotefile,','.join((ip,str(port)))))
 
 
-class JSONParser():
-	
-	def __init__(self, data):
-		
-		# print("传入=>",data)
-		self.obj = eval(self._apply_filter(data))
-		
-		# 兼容不同的系统 有些系统喜欢返回JSON字符串 有些json
-		for i in range(5):
-			if isinstance(self.obj, (str,)):
-				self.obj = eval(self.obj)
-		
-		# print('==JSONParser 数据转字典=>',self.obj,type(self.obj))
-		
-		# print("待匹配数据=>",self.obj)
-	
-	def _apply_filter(self, msg):
-		# print("leix=",type(msg))
-		msg = msg.replace("true", "True").replace("false", "False").replace("null", "None")
-		# print(msg)
-		return msg
-	
-	def translate(self, chainstr):
-		
-		def is_ok(chainstr):
-			stages = chainstr.split(".")
-			for x in stages:
-				if len(re.findall("^[0-9]\d+$", x)) == 1:
-					return False
-			return True
-		
-		if is_ok(chainstr) == True:
-			h = ''
-			if isinstance(self.obj, (list,)):
-				if chainstr.startswith('response.json'):
-					startindex = re.findall('response.json\[(.*?)\]', chainstr)[0]
-					h = "[%s]" % startindex
-					chainstr = chainstr.replace('response.json%s.' % h, '')
-			
-			stages = chainstr.split(".")
-			return "self.obj%s." % h + ".".join(
-				["get('%s')[%s" % (stage.split("[")[0], stage.split("[")[1]) if "[" in stage else "get('%s')" % stage
-				 for stage in stages])
-		
-		else:
-			return False
-	
-	def getValue(self, chainstr):
-		errms = '解析数据链[%s]失败 数据链作为值返回' % chainstr
-		xpath = self.translate(chainstr)
-		if xpath:
-			print('==当前数据类型=>%s' % type(self.obj))
-			# try:
-			
-			#     print('flag=>',self.obj.get('data','None'))
-			# except:
-			#     pass
-			print("==xpath查询=>%s" % xpath)
-			try:
-				r = eval(xpath)
-				return r
-			except:
-				print(errms)
-				return chainstr
-		else:
-			print(errms)
-			return chainstr
+    except:
+        return ('error','ftp下载异常[%s]'%traceback.format_exc())
 
 
-_m = [
-	"{'code':1,'a':[{'k':1},{'j':''}]}",
 
-]
 
-_m2 = {
-	"[{'code':1},{'code':2,'vk':'et'}]"
-}
+def local_to_ftp(filename,ip,port,username,password,remotedir,callername):
+    try:
+        ftp = FTP()
+        ftp.set_debuglevel(0)
+        ftp.connect(ip,int(port))
+        ftp.login(username,password)
+        bufsize = 1024
+        localfile=os.path.join(os.path.dirname(__file__),'storage','private','File',callername,filename)
+        if not os.path.exists(localfile):
+            return ('error','本地文件[%s]不存在 请先上传'%localfile)
+        fp = open(localfile, 'rb')
+        remotepath=os.path.join(remotedir,filename)
+        ftp.storbinary('STOR ' + remotepath, fp, bufsize)
+        fp.close()
+        ftp.quit()
 
-for _ in _m2:
-	print(100 * '=')
-	p = JSONParser(_)
-	print(p.getValue('response.json[1].vk'))
-	# print(p.getValue('a[0].j'))
+        return ('success','本地文件[%s] 上传ftp[%s]成功. '%(filename,','.join((ip,str(port),remotepath))      ))
+    except:
+        return ('error','ftp上传异常[%s]'%traceback.format_exc())
+    
+
+ip='172.17.1.30'
+port=8021
+username='PT'
+password='pt123'
+remotefile='/INSURANCE/AS330106/REC/AS330106_212020191101_20191101154417.rd'
+callername='hujj'
+#res=ftp_to_local(ip, port, username, password, remotefile, callername)
+
+filename='AS330106_212020191101_20191101154417.rd'
+res=local_to_ftp(filename,ip,port,username,password,'/INSURANCE',callername)
+print(res)

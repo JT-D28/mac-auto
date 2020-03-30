@@ -25,6 +25,7 @@ urlpatterns = [
 	path('homepage/', include('homepage.urls')),
 	path('test_expression/', views.testexpress),
 	path('test_expression1/', views.testexpress1),
+    path('test_xml/', views.testxml),
 	# path('',views.index),
 
 ]

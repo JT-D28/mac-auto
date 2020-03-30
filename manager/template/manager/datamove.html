@@ -9,7 +9,7 @@
     <link href="{% static 'manager/bootstrap-fileinput-master/css/fileinput.css'%}" media="all" rel="stylesheet" type="text/css"/>
     <link href="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.css'%}" media="all" rel="stylesheet" type="text/css"/>
     <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
-    <title>数据迁移</title>
+    <title>我的空间</title>
     <style type="text/css">
       
       .layui-icon:hover{
@@ -17,13 +17,17 @@
       }
     </style>
 </head>
-<body>
+<body   style="height:calc(100% - 40px);padding: 20px">
 
 
 
-<!-- 上传区域 -->
-<input id="kv-explorer" type="file" multiple>
+
+
+   <input id="kv-explorer" type="file" multiple>         
 </body>
+
+
+
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
 <script src="{% static 'manager/layui/layui.js' %}"></script>
@@ -37,11 +41,8 @@
 <script src="{% static 'manager/bootstrap-fileinput-master/themes/fas/theme.js' %}"></script>
 <script src="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.js' %}"></script>
 
-
-
-
 <script type="text/javascript">
-layui.use(['table','layer','upload'], function(){
+layui.use(['table','layer','upload','element'], function(){
   var table = layui.table;
   var upload=layui.upload;
   var $=layui.jquery
@@ -49,6 +50,21 @@ layui.use(['table','layer','upload'], function(){
   var form = layui.form;
 
 //
+
+$("#kv-explorer").on("filebatchselected",function(event,files){
+
+  // for(var i=0;i<files.length;i++){
+  //   console.log('选择文件=>'+files[i].name)
+  // }
+  len=files.length
+  if(len>0)
+    console.log(files[0].name)
+  else
+    console.log('len=0')
+
+});
+
+
 
 
 $("#kv-explorer").fileinput({
@@ -70,6 +86,7 @@ $("#kv-explorer").fileinput({
     // overwriteInitial: false,
 
 });
+
 
 $('#kv-explorer').on('filebatchuploaderror', function(event, data, msg) {
   layer.alert('转换异常['+msg+']',{icon:2})

@@ -1,0 +1,45 @@
+
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <ns1:outSystemWSResponse xmlns:ns1="http://outsystem.ats.com.cn">
+         <ns1:out><![CDATA[<?xml version="1.0" encoding = "UTF-8"?><MBS>
+  <pub>
+    <SRCOUTSYSTEMCODE>NC</SRCOUTSYSTEMCODE>
+    <SRCBATCHNO>S202000306_03</SRCBATCHNO>
+    <TRANSCODE>PMSQ01</TRANSCODE>
+    <TRANSDATETIME>2020-03-06 10:58:08</TRANSDATETIME>
+    <RESPCODE>0</RESPCODE>
+    <RESPMSG>指令接收成功</RESPMSG>
+  </pub>
+  <resp>
+    <list>
+      <detail>
+        <SRCSERIALNO>S202000306_1111</SRCSERIALNO>
+        <NOTECODE>ZJFK_001004_202003_00001002</NOTECODE>
+        <PAYSTATE>4</PAYSTATE>
+        <PAYINFO>支付中</PAYINFO>
+        <PAYMADEDATE></PAYMADEDATE>
+        <OPPBANKLOCATIONS>甘肃榆中农村合作银行龙泉分理处</OPPBANKLOCATIONS>
+      </detail>
+      <detail>
+        <SRCSERIALNO>S202000306_2222</SRCSERIALNO>
+        <NOTECODE>ZJFK_001004_202003_00001003</NOTECODE>
+        <PAYSTATE>4</PAYSTATE>
+        <PAYINFO>支付中</PAYINFO>
+        <PAYMADEDATE></PAYMADEDATE>
+        <OPPBANKLOCATIONS>甘肃榆中农村合作银行龙泉分理处</OPPBANKLOCATIONS>
+      </detail>
+      <detail>
+        <SRCSERIALNO>S202000304_3333</SRCSERIALNO>
+        <NOTECODE>ZJFK_001004_202003_00001004</NOTECODE>
+        <PAYSTATE>4</PAYSTATE>
+        <PAYINFO>支付中</PAYINFO>
+        <PAYMADEDATE></PAYMADEDATE>
+        <OPPBANKLOCATIONS>甘肃榆中农村合作银行龙泉分理处</OPPBANKLOCATIONS>
+      </detail>
+    </list>
+  </resp>
+</MBS>]]></ns1:out>
+      </ns1:outSystemWSResponse>
+   </soap:Body>
+</soap:Envelope>

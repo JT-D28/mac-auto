@@ -335,22 +335,24 @@ function _get(url, data, success, headers = {}) {
 };
 
 
-function _post(url, data, success) {
 
-    // console.log(getCookie("csrftoken"));
-    var loadIndex = ''
-    var ajaxobj = $.ajax({
-        type: 'POST',
-        // timeout:6000,
-        url: http_base + url,
-        data: data,
-        // headers:{ "X-CSRFtoken":"jjjjfjavvv"},
-        success: success,
-        complete: function (XMLHttpRequest, status) {
-
-            layui.use(['layer'], function () {
-                layer.close(loadIndex);
-            })
+function _post(url,data,success){
+    console.log("【POST】"+url)
+    console.log("【data】"+JSON.stringify(data))
+  // console.log(getCookie("csrftoken"));
+  var loadIndex=''
+    var ajaxobj=$.ajax({
+      type: 'POST',
+      // timeout:6000,
+      url: http_base+url,
+      data: data,
+      // headers:{ "X-CSRFtoken":"jjjjfjavvv"},
+      success: success,
+      complete:function(XMLHttpRequest,status){
+    
+        layui.use(['layer'], function(){
+            layer.close(loadIndex);
+        })
 
 
         },

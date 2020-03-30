@@ -141,7 +141,7 @@ class Step(Model):
 	
 	businessdatainfo = ManyToManyField(BusinessData, blank=True)
 	# businesstitle=CharField(max_length=1000,blank=True)
-	db_id = CharField(max_length=20, blank=True, null=True)
+	db_id = CharField(max_length=64, blank=True, null=True)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 	
@@ -156,7 +156,7 @@ class Case(Model):
 	description = CharField(max_length=128)
 	businessdatainfo = ManyToManyField(BusinessData, blank=True)
 	# steps=ManyToManyField(Step,blank=True)
-	db_id = CharField(max_length=20, blank=True, null=True)
+	db_id = CharField(max_length=64, blank=True, null=True)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 	
@@ -169,7 +169,8 @@ class Plan(Model):
 	author = ForeignKey(User, on_delete=CASCADE)
 	description = CharField(max_length=128)
 	cases = ManyToManyField(Case, blank=True)
-	db_id = CharField(max_length=20, blank=True, null=True)
+	db_id = CharField(max_length=64, blank=True, null=True)
+	schemename=CharField(max_length=64, blank=True, null=True)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 	

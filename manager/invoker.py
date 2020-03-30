@@ -304,7 +304,7 @@ def check_user_task():
 					runplan(planid)
 
 
-def runplans(username, taskid, planids, is_verify, kind=None):
+def runplans(username, taskid, planids, is_verify, kind=None,dbscheme=None):
 	"""
     任务运行
     kind 运行方式 手动其他
@@ -318,7 +318,7 @@ def runplans(username, taskid, planids, is_verify, kind=None):
 	viewcache(taskid, username, kind,
 	          "=======开始%s%s任务【<span style='color:#FF3399'>%s</span>】====" % (kindmsg, verifymsg, taskid))
 	for planid in planids:
-		threading.Thread(target=runplan, args=(username, taskid, planid, is_verify, kind)).start()
+		threading.Thread(target=runplan, args=(username, taskid, planid, is_verify, kind,dbscheme)).start()
 
 
 # def runplan(callername,taskid,planid,kind=None):
@@ -453,8 +453,8 @@ def runplans(username, taskid, planids, is_verify, kind=None):
 
 def _runcase(username, taskid, case0, plan, planresult, is_verify, kind):
 	caseresult = []
-	
-	dbid = case0.db_id
+	dbid = getDbUse(taskid,case0.db_id)
+	# dbid = case0.db_id
 	if dbid:
 		desp = DBCon.objects.get(id=int(dbid)).description
 		set_top_common_config(taskid, desp, src='case')
@@ -556,23 +556,36 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind):
 		          "结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-red'>fail</span>" % case0.description)
 
 
+def getDbUse(taskid, dbname):
+	scheme=getRunningInfo('',taskid.split('__')[0],'scheme')
+	try:
+		dbid = DBCon.objects.get(scheme=scheme, description=dbname).id
+	except:
+		try:
+			dbid = DBCon.objects.get(scheme='全局', description=dbname).id
+		except:
+			dbid = None
+	return dbid
 
-def runplan(callername, taskid, planid, is_verify, kind=None):
+
+def runplan(callername, taskid, planid, is_verify, kind=None,dbscheme=None):
 	groupskip = []
 	username = callername
 	try:
 		plan = Plan.objects.get(id=planid)
-		setRunningInfo(callername,planid,taskid,1)
+		dbscheme=plan.schemename if dbscheme is None else dbscheme
+		setRunningInfo(callername, planid, taskid, 1, dbscheme)
 		print('plan=>', plan)
 		plan.is_running = 1
 		plan.save()
-		dbid = plan.db_id
+		dbid = getDbUse(taskid, plan.db_id)
+		# dbid = plan.db_id
 		if dbid:
 			print('plan dbid=>', dbid)
 			desp = DBCon.objects.get(id=int(dbid)).description
 			set_top_common_config(taskid, desp, src='plan')
 		
-		viewcache(taskid, username, kind, "开始执行计划[<span style='color:#FF3399'>%s</span>]" % plan.description)
+		viewcache(taskid, username, kind, "开始执行计划[<span style='color:#FF3399'>%s</span>,数据连接使用配置：[%s]" % (plan.description,dbscheme))
 		cases = [Case.objects.get(id=x.follow_id) for x in
 		         ordered(list(Order.objects.filter(main_id=planid, kind='plan_case')))]
 		result, error = "", ""
@@ -794,7 +807,8 @@ def _step_process_check(callername, taskid, order, kind):
 		          "开始执行步骤[<span style='color:#FF3399'>%s-%s</span>] 测试点[<span style='color:#FF3399'>%s</span>]" % (
 			          order.value, step.description, businessdata.businessname))
 		
-		dbid = step.db_id
+		dbid=getDbUse(taskid,step.db_id)
+		# dbid = step.db_id
 		if dbid:
 			desp = DBCon.objects.get(id=int(dbid)).description
 			set_top_common_config(taskid, desp, src='step')
@@ -986,10 +1000,10 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
 	try:
 		
 		##
-		body_rv = _replace_variable(user, body,taskid=taskid);
+		body_rv = _replace_variable(user, body, taskid=taskid);
 		if body_rv[0] is not 'success':
 			return ('', '', body_rv[1])
-		body_rp = _replace_variable(user, body_rv[1],taskid=taskid)
+		body_rp = _replace_variable(user, body_rv[1], taskid=taskid)
 		if body_rp[0] is not 'success':
 			return ('', '', body_rp[1])
 		
@@ -1203,7 +1217,7 @@ def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
 		if s == 'None' or s is None:
 			continue;
 		
-		status, call_str = _replace_variable(user, s,taskid=taskid)
+		status, call_str = _replace_variable(user, s, taskid=taskid)
 		if status is not 'success':
 			return (status, res)
 		
@@ -1519,7 +1533,7 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 	except:
 		print(traceback.format_exc())
 		print('表达式等号两边加单引号后尝试判断..')
-		exp = exp.replace("<br>", '').replace('\n','').replace('\r', '')
+		exp = exp.replace("<br>", '').replace('\n', '').replace('\r', '')
 		# return ('error','表达式[%s]计算异常[%s]'%(ourexpression,traceback.format_exc()))
 		try:
 			print('_op=>', _op)
@@ -1575,18 +1589,19 @@ def _replace_variable(user, str_, src=1, taskid=None):
 				x = json.loads(Tag.objects.get(var=m).planids)
 				if pname in x and pid in x.get(pname):
 					var = m
-					viewcache(taskid, user.name, None, '找到局部变量，将使用局部变量 %s 描述：%s' % (varname,var.description))
+					viewcache(taskid, user.name, None, '找到局部变量，将使用局部变量 %s 描述：%s' % (varname, var.description))
 					break
 			if var is None:
 				for m in vars:
 					try:
 						var = Tag.objects.get(var=m, isglobal=1).var
-						viewcache(taskid, user.name, None, '未找到局部变量，将使用全局变量 %s 描述：%s' % (varname,var.description))
+						viewcache(taskid, user.name, None, '未找到局部变量，将使用全局变量 %s 描述：%s' % (varname, var.description))
 					except:
 						pass
 				if var is None:
-					return ('error', '字符串[%s]变量替换异常[%s] 请检查包含变量是否已配置' % (str_, traceback.format_exc()))
-				
+					print(traceback.format_exc())
+					return ('error', '字符串[%s]变量替换异常,未在局部变量和全局变量中找到，请检查是否已正确配置' % str_)
+			
 			gain_rv = _replace_variable(user, var.gain, src=src, taskid=taskid)
 			if gain_rv[0] is not 'success':
 				# print(11)
@@ -3550,7 +3565,7 @@ class DataMove:
 				'password': dbcon.password,
 				'authorname': dbcon.author.name,
 				'kind': dbcon.kind,
-				
+				'scheme': dbcon.scheme
 			})
 		except:
 			print('库中没找到连接 略过=>', sep[-1])

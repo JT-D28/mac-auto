@@ -285,6 +285,24 @@ def editcon(request):
 		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
+def getplan(id, kind):
+	print('get', id, kind)
+	if kind == 'case':
+		try:
+			k = Order.objects.get(follow_id=id, kind='plan_case')
+		except:
+			k = Order.objects.get(follow_id=id, kind='case_case')
+		schemename = getplan(k.main_id, k.kind.split('_')[0])
+		return schemename
+	elif kind == 'step':
+		k = Order.objects.get(follow_id=id, kind='case_step')
+		schemename = getplan(k.main_id, k.kind.split('_')[0])
+		return schemename
+	elif kind == 'plan':
+		schemename = Plan.objects.get(id=id).schemename
+		return schemename
+
+
 @csrf_exempt
 def querydblist(request):
 	code, msg = 0, ''
@@ -303,16 +321,13 @@ def querydblist(request):
 	else:
 		try:
 			if scheme != '':
-				res = list(DBCon.objects.filter(scheme=scheme).annotate(name=F('description')).values('id', 'name'))
-			elif id != '' and id is not None:
-				callstr = "%s.objects.get(id=%s).db_id.split('_')[1]" % (
-				id.split('_')[0].capitalize(), id.split('_')[1])
-				print('callstr', callstr)
-				dbscheme = eval(callstr)
-				print(dbscheme)
-				res = list(
-					DBCon.objects.filter(scheme=dbscheme).annotate(name=F('description')).values('id', 'name'))
+				res = list(DBCon.objects.filter(scheme=scheme).annotate(name=F('description')).values('name'))
 				print(res)
+			elif id != '' and id is not None:
+				dbscheme = getplan(id.split('_')[1], id.split('_')[0])
+				res = list(
+					DBCon.objects.filter(scheme=dbscheme).annotate(name=F('description')).values('name'))
+				print('...', res)
 		except:
 			print(traceback.format_exc())
 			code = 4
@@ -977,7 +992,7 @@ def third_party_call(request):
 	planid = request.GET.get('planid')
 	plan = Plan.objects.get(id=planid)
 	taskid = gettaskid(plan.__str__())
-	# taskid=res['taskid']
+	dbscheme = request.GET.get('scheme')
 	clear_task_before(taskid)
 	callername = res['callername']
 	is_verify = request.GET.get('is_verify')
@@ -987,9 +1002,9 @@ def third_party_call(request):
 	
 	print('调用方=>', callername)
 	print('调用计划=>', planid)
-	
-	runplans(callername, taskid, [planid], is_verify)
-	return JsonResponse(simplejson(code=0, msg="调用成功", taskid=taskid), safe=False)
+	print('调用数据连接方案=>',dbscheme)
+	runplans(callername, taskid, [planid], is_verify,None,dbscheme)
+	return JsonResponse(simplejson(code=0, msg="调用成功,使用DB配置:[%s]"%dbscheme, taskid=taskid), safe=False)
 
 
 @xframe_options_exempt

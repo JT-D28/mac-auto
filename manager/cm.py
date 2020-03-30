@@ -106,7 +106,8 @@ def addplan(request):
 		
 		plan = mm.Plan()
 		plan.description = request.POST.get('description')
-		plan.db_id = request.POST.get('dbid')+'_'+request.POST.get('scheme')
+		plan.db_id = request.POST.get('dbid')
+		plan.schemename = request.POST.get('scheme')
 		
 		plan.author = lm.User.objects.get(name=request.session.get('username', None))
 		
@@ -212,7 +213,8 @@ def editplan(request):
 		plan = mm.Plan.objects.get(id=id_)
 		olddescription = plan.description
 		plan.description = newdescription
-		plan.db_id = request.POST.get('dbid')+'_'+request.POST.get('scheme')
+		plan.db_id = request.POST.get('dbid')
+		plan.schemename = request.POST.get('scheme')
 		print('description=>', plan.description)
 		plan.run_type = request.POST.get('run_type')
 		plan.save()
@@ -303,15 +305,8 @@ def addcase(request):
 		pid=request.POST.get('pid').split('_')[1]
 		case = mm.Case()
 		case.author = lm.User.objects.get(name=request.session.get('username', None))
-		
-		callstr = "mm.%s.objects.get(id=%s).db_id.split('_')[1]" % (
-			request.POST.get('pid').split('_')[0].capitalize(), pid)
-		print('callstr', callstr)
-		dbscheme = eval(callstr)
-		print(dbscheme)
-		
 		case.description = request.POST.get('description')
-		case.db_id = request.POST.get('dbid')+'_'+dbscheme
+		case.db_id = request.POST.get('dbid')
 		case.save()
 		
 		
@@ -341,14 +336,7 @@ def editcase(request):
 	try:
 		case = mm.Case.objects.get(id=id_)
 		case.description = request.POST.get('description')
-		
-		callstr = "mm.%s.objects.get(id=%s).db_id.split('_')[1]" % (
-			request.POST.get('uid').split('_')[0].capitalize(), id_)
-		print('callstr', callstr)
-		dbscheme = eval(callstr)
-		print(dbscheme)
-		
-		case.db_id = request.POST.get('dbid')+'_'+dbscheme
+		case.db_id = request.POST.get('dbid')
 		case.count = int(request.POST.get('count'))
 		case.save()
 		casename = case.description
@@ -414,14 +402,8 @@ def addstep(request):
 		print("author=>", author)
 		businessdata = request.POST.get('business_data')
 		print('businessdata=>', type(businessdata), businessdata)
-		
-		callstr = "mm.%s.objects.get(id=%s).db_id.split('_')[1]" % (
-			request.POST.get('pid').split('_')[0].capitalize(), pid)
-		print('callstr', callstr)
-		dbscheme = eval(callstr)
-		print(dbscheme)
-		
-		dbid = request.POST.get('dbid')+'_'+dbscheme
+		dbid = request.POST.get('dbid')
+
 		##
 		if step_type == 'dir':
 			case = mm.Case()

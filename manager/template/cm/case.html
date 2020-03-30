@@ -119,41 +119,49 @@
 
 
     layui.use(['table', 'layer', 'form', 'element'], function () {
-        uid = _get_query_param('uid');
-        pid = _get_query_param('pid');
         var table = layui.table;
         var $ = layui.jquery;
         var layer = layui.layer;
         var form = layui.form;
-        id= uid ===false?pid:uid;
-        _load_db_dropdownlist('',id);
-        form.render('select');
+        uid = _get_query_param('uid');
+        pid = _get_query_param('pid');
+        id = uid ? uid : pid;
         action = _get_query_param('action');
         detail = 'addcase';
         if (action != 'view')
             $('#save').css('visibility', 'visible');
         else {
-            $('#save').css('visibility', 'hidden')
-            $('#weight_item').removeAttr('hidden')
+            $('#save').css('visibility', 'hidden');
+            $('#weight_item').removeAttr('hidden');
 
             _set_form_not_editable()
         }
         if (uid) {
-            detail = 'editcase'
-
-            success = function (data) {
-
-                // alert(data)
-                description = data.data[0]['description']
-                //alert(description)
-                $("[name='description']").val(description);
-                $("[name='db_id']").val(data.data[0]['db_id'].split('_')[0])
-                $("[name='weight']").val(data.data[0]['weight'])
-                $("[name='count']").val(data.data[0]['count'])
-                layui.form.render('select')
-            };
-
-            _post('/manager/queryonecase/', {id: uid}, success)
+            detail = 'editcase';
+            _post('/manager/querydblist/', {schemevalue: '', id: uid}, function (res) {
+                $("[name='db_id']").empty();
+                res = JSON.parse(res);
+                if (res.code === 0) {
+                    for (var index = 0; index < res.data.length; index++) {
+                        $("[name='db_id']").append("<option value='" + res.data[index]['name'] + "'>" + res.data[index]['name'] + "</option>")
+                    }
+                    console.log('加载数据库信息列表成功')
+                    layui.form.render('select');
+                    _post('/manager/queryonecase/', {id: uid}, function (data) {
+                        description = data.data[0]['description'];
+                        //alert(description)
+                        $("[name='description']").val(description);
+                        $("[name='db_id']").val(data.data[0]['db_id']);
+                        layui.form.render('select')
+                        $("[name='weight']").val(data.data[0]['weight']);
+                        $("[name='count']").val(data.data[0]['count']);
+                    })
+                } else {
+                    layer.alert('数据库信息查询失败', {icon: 2})
+                }
+            });
+        } else {
+            _load_db_dropdownlist('',id)
         }
 
 
@@ -201,8 +209,6 @@
 
             return false;
         });
-
-
     });
 
 </script>

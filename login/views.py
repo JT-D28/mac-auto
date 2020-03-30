@@ -64,45 +64,47 @@ def initDataupdate():
 	plans = Plan.objects.all()
 	for plan in plans:
 		try:
-			if len(plan.db_id.split('_')) != 2:
-				plan.db_id = str(plan.db_id) + '_' + '全局'
-				plan.save()
+			if plan.schemename is None or plan.schemename == '':
+				if plan.db_id is not None and plan.db_id != '':
+					description = DBCon.objects.get(id=plan.db_id).description
+					plan.db_id = description if description is not None else ''
+					plan.schemename = '全局'
+					plan.save()
+					print('计划' + str(plan.id) + '更新成功')
+				else:
+					plan.db_id=''
+					plan.schemename = '全局'
+					plan.save()
 				print('计划' + str(plan.id) + '更新成功')
 		except:
-			if plan.db_id is None:
-				plan.db_id = '_' + '全局'
-				plan.save()
-				print('计划' + str(plan.id) + '更新成功')
-			else:
-				print(traceback.format_exc())
-				print('计划' + str(plan.id) + '更新失败')
-	print('计划的dbid更新完成')
+			print(traceback.format_exc())
+	print('计划更新完成')
 	cases = mm.Case.objects.all()
 	for case in cases:
 		try:
-			if len(case.db_id.split('_')) != 2:
-				case.db_id = str(case.db_id) + '_' + '全局'
+			dbid=case.db_id
+			if dbid.isdigit():
+				case.db_id=DBCon.objects.get(id=dbid).description
 				case.save()
 				print('用例' + str(case.id) + '更新成功')
 		except:
-			if case.db_id is None:
-				case.db_id = '_' + '全局'
+			if dbid is None:
+				dbid = ''
 				case.save()
 				print('用例' + str(case.id) + '更新成功')
 			else:
 				print(traceback.format_exc())
-				print('计划' + str(case.id) + '更新失败')
-	print('用例的dbid更新完成')
+				print('用例' + str(case.id) + '更新失败')
 	steps = Step.objects.all()
 	for step in steps:
 		try:
-			if len(step.db_id.split('_')) != 2:
-				step.db_id = str(step.db_id) + '_' + '全局'
+			if step.db_id.isdigit():
+				step.db_id=DBCon.objects.get(id=step.db_id).description
 				step.save()
 				print('步骤' + str(step.id) + '更新成功')
 		except:
 			if step.db_id is None:
-				step.db_id = '_' + '全局'
+				step.db_id = ''
 				step.save()
 				print('步骤' + str(step.id) + '更新成功')
 			else:

@@ -108,25 +108,33 @@ function add_var_prop_smart_input(elemId) {
                     title: '插入变量'
                 },
                 function (value, index, elem) {
+
                     insertAtCursor(document.getElementById(elemId), '{{' + value + '}}')
+
+
                     layer.close(index);
                 }
             );
             console.log($(this).selectionStart)
+
         } else if (e.keyCode == 88 && e.ctrlKey) {
             console.log('ctrl+X')
             layer.prompt({
                     title: '插入属性'
                 },
                 function (value, index, elem) {
+
                     insertAtCursor(document.getElementById(elemId), '${' + value + '}')
+
                     layer.close(index);
                 }
             );
             console.log($(this).selectionStart)
 
         }
+
     }
+
 }
 
 /**
@@ -134,27 +142,27 @@ function add_var_prop_smart_input(elemId) {
  **/
 
 function _load_db_dropdownlist(kind, id) {
-    var tmp = "<option value='#id#' class='dboption' name='ooo'>#dbname#</option>"
+    $("[name='db_id']").empty();
+    var tmp = "<option value='#id#' class='dboption' name='ooo'>#dbname#</option>";
     success = function (res) {
-        res = JSON.parse(res)
+        res = JSON.parse(res);
         if (res.code == 0) {
-            $("[name='db_id']").empty();
-            console.log(res.data)
             dft = tmp.replace('#dbname#', '请选择').replace('#id#', "")
             $("[name='db_id']").append(dft)
             for (var index = 0; index < res.data.length; index++) {
-                id = res.data[index]['id'];
+                id = res.data[index]['name'];
                 dbname = res.data[index]['name'];
                 t = tmp.replace('#id#', id).replace('#dbname#', dbname);
                 $("[name='db_id']").append(t)
             }
             console.log('加载数据库信息列表成功')
-            layui.form.render('select');
         } else {
             layer.alert('数据库信息查询失败', {icon: 2})
         }
+        layui.form.render('select');
+        return
     };
-    _post_nl('/manager/querydblist/', {schemevalue:kind,id:id}, success)
+    _post('/manager/querydblist/', {schemevalue: kind, id: id}, success)
 }
 
 

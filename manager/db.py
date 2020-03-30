@@ -10,7 +10,7 @@ import time
 import logging, traceback
 import os
 from manager import models
-from .context import get_top_common_config, viewcache
+from .context import get_top_common_config, viewcache, getRunningInfo
 
 os.environ['NLS_LANG'] = 'SIMPLIFIED CHINESE_CHINA.UTF8'
 
@@ -23,12 +23,12 @@ class Mysqloper:
 		self.sqlmax = 499
 		self.sqlcount = 0
 	
-	def db_connect(self, configname):
+	def db_connect(self, configname,scheme):
 		conname = configname
 		if conname is None:
 			raise RuntimeError('传入配置错误 未知数据库连接名！')
 		
-		print('===查询和使用数据库[%s]的配置信息' % (configname))
+		print('===查询和使用配置方案[%s]数据库[%s]的配置信息' % (scheme,configname))
 		
 		# c=Mysqloper._pool.get(str(conname),None)
 		c = None
@@ -43,7 +43,7 @@ class Mysqloper:
 			try:
 				
 				# print(len(conname),len(conname.strip()))
-				dbcon = models.DBCon.objects.get(description=conname.strip())
+				dbcon = models.DBCon.objects.get(description=conname.strip(),scheme=scheme)
 				
 				self.dbtype = dbcon.kind
 				self.dbname = dbcon.dbname
@@ -55,6 +55,7 @@ class Mysqloper:
 				self.pwd = dbcon.password
 				
 				# print("=>没查到可用配置,准备新配一个")
+				print("数据库配置所属方案=>",dbcon.scheme)
 				print("数据库类型=>", self.dbtype)
 				print("数据库名(服务名|SID)=>", self.dbname)
 				print("数据库地址=>", self.host, self.port)
@@ -100,10 +101,10 @@ class Mysqloper:
 				
 				return ('success', conn)
 			except Exception as e:
-				print("数据库配置名=>", conname)
+				print("数据库配置名=>", conname,scheme)
 				error = traceback.format_exc()
 				print(error)
-				return ('error', ("数据库连接失败 请检查数据库[%s]是否正确配置" % (configname, error)))
+				return ('error', ("数据库连接失败 请检查配置方案[%s]下的数据库[%s]是否正确配置" % (scheme,configname)))
 	
 	def db_commit(self):
 		try:
@@ -157,10 +158,12 @@ class Mysqloper:
 			conname = ql[1]
 			
 			dbnamecache = get_top_common_config(taskid)
+			scheme = getRunningInfo(planid=taskid.split('__')[0], type='dbscheme')
 			if dbnamecache == conname:
+				print('使用数据库缓存配置')
 				conname = dbnamecache
 			
-			msg, self.conn = self.db_connect(conname)
+			msg, self.conn = self.db_connect(conname,scheme)
 			if msg is not 'success':
 				return (msg, self.conn)
 			

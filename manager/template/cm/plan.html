@@ -134,84 +134,81 @@
 <script src="{% static 'manager/bootstrap-fileinput-master/themes/fas/theme.js' %}"></script>
 <script src="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.js' %}"></script> -->
 <script type="text/javascript">
-
-
+    _post_nl('/manager/queryDbScheme/', {action: 1}, function (data) {
+        if (data.code === 0) {
+            d = data.data;
+            for (var index = 1; index < d.length; index++) {
+                $("[name='scheme']").append("<option value='" + d[index]['value'] + "'>" + d[index]['value'] + "</option>")
+            }
+        }
+    });
     layui.use(['layer', 'form', 'element'], function () {
-        element = layui.element;
-        form = layui.form;
-        form.render('select');
-        uid = _get_query_param('uid');
-        pid = _get_query_param('pid');
-        action = _get_query_param('action');
-        detail = 'addplan';
-        id = uid === false ? pid : uid;
+        element = layui.element
+        form = layui.form
+        form.render('select')
+        uid = _get_query_param('uid')
+        // utid=_get_query_param('utid')
+        pid = _get_query_param('pid')
+        // ptid=_get_query_param('ptid')
+        action = _get_query_param('action')
+        // console.log('action=>'+action)
+        detail = 'addplan'
+
 
         form.on('select(scheme)', function () {
             _load_db_dropdownlist($("[name='scheme']").val());
         });
-        form.on('select(db_id)', function () {
-            console.log($("[name='db_id']").val())
-        });
 
-        if (action !== 'view')
-            $('#save').css('visibility', 'visible');
+
+        if (action != 'view')
+            $('#save').css('visibility', 'visible')
         else {
-            $('#save').css('visibility', 'hidden');
+            $('#save').css('visibility', 'hidden')
             _set_form_not_editable()
         }
 
 
         if (uid) {
-            _post_nl('/manager/queryDbScheme/', {action: 1}, function (data) {
-                if (data.code === 0) {
-                    d = data.data;
-                    for (var index = 1; index < d.length; index++) {
-                        $("[name='scheme']").append("<option value='" + d[index]['value'] + "'>" + d[index]['value'] + "</option>")
-                    }
-                    _load_db_dropdownlist('', uid)
-                    detail = 'editplan';
-                    success = function (data) {
-                        data = data.data[0];
-                        run_type = data['run_type'];
-                        description = data['description'];
-                        dbid = data['db_id'].split('_')[0];
-                        scheme = data['db_id'].split('_')[1];
-                        form.val("addplan", {
-                            "mail": data['is_send_mail'] === "open",
-                            "dingding": data['is_send_dingding'] === "open"
-                        });
-                        $("[name='scheme']").val(scheme);
-                        $("[name='db_id']").val(dbid);
-                        layui.form.render('select');
-                        $("[value='" + run_type + "']").attr('checked', 'checked');
-                        layui.form.render('radio');
-                        if ('定时运行' === run_type) {
-                            $("#config-set").show()
-                        } else {
-                            $("#config-set").hide()
-                        }
-                        $("[name='description_1']").val(description);
-                    };
-                    _post('/manager/queryoneplan/', {id: uid}, success)
+            _load_db_dropdownlist('',uid);
+            detail = 'editplan';
+            success = function (data) {
+                data = data.data[0];
+                dbid = data['db_id'];
+                scheme = data['schemename'];
+                $("[name='db_id']").val(dbid);
+                $("[name='scheme']").val(scheme);
+                layui.form.render('select');
+                run_type = data['run_type'];
+                description = data['description'];
+                form.val("addplan", {
+                    "mail": data['is_send_mail'] === "open" ? true : false,
+                    "dingding": data['is_send_dingding'] === "open" ? true : false
+                });
+
+                $("[value='" + run_type + "']").attr('checked', 'checked');
+                layui.form.render('radio');
+                if ('定时运行' == run_type) {
+                    $("#config-set").show()
+                } else {
+                    $("#config-set").hide()
                 }
-            });
+                $("[name='description_1']").val(description);
+            }
+            _post('/manager/queryoneplan/', {id: uid}, success)
         } else {
-            _post_nl('/manager/queryDbScheme/', {action: 1}, function (data) {
-                if (data.code === 0) {
-                    d = data.data;
-                    for (var index = 1; index < d.length; index++) {
-                        $("[name='scheme']").append("<option value='" + d[index]['value'] + "'>" + d[index]['value'] + "</option>")
-                    }
-                    _load_db_dropdownlist('全局')
-                }
-            });
+            _load_db_dropdownlist('全局');
         }
+
+
+        form.on('switch(switchmail)', function (data) {
+            data.elem.checked ? $('#editmail').show() : $('#editmail').hide()
+        });
 
         //save
         btn = $('#save')
         if (btn) btn.bind('click', function () {
             description = $("[name='description_1']").val();
-            if (description.indexOf('__') !== -1) {
+            if (description.indexOf('__') != -1) {
                 alert("计划名中不能有‘__’");
                 return false
             }
@@ -223,23 +220,23 @@
                 'run_type': $("[name='method']:checked").val(),
                 'config': $("[name='config']").val(),
                 'dbid': $("[name='db_id']").val(),
-                'scheme': $("[name='scheme']").val(),
                 'is_send_dingding': $("[name='dingding']").is(':checked'),
-                'is_send_mail': $("[name='mail']").is(':checked')
+                'is_send_mail': $("[name='mail']").is(':checked'),
+                'scheme': $("[name='scheme']").val()
             }, function (e) {
-                if (e.code === 0) {
+                if (e.code == 0) {
                     // console.log(window)
                     var treeObj = parent.$.fn.zTree.getZTreeObj('case-manager');
-                    console.log('name=>', e.data);
-                    if (detail === 'addplan') {
+                    console.log('name=>', e.data)
+                    if (detail == 'addplan') {
                         var node = treeObj.getNodeByParam('id', pid);
-                        console.log('addplan=>' + JSON.stringify(e.data));
+                        console.log('addplan=>' + JSON.stringify(e.data))
                         treeObj.addNodes(node, e.data);
                         treeObj.expandNode(node, true)
                     } else {
                         var node = treeObj.getNodeByParam('id', uid);
                         // console.log('search tid '+utid+'=>'+node)
-                        node.name = e.data['name'];
+                        node.name = e.data['name']
                         treeObj.updateNode(node)
                     }
                     layer.alert(e.msg, {icon: 1, time: 2000})

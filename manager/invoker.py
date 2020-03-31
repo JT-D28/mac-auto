@@ -1033,9 +1033,7 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
 	res, call_str = ok[0], ok[1]
 	if res is not 'success':
 		return (res, call_str)
-	
-	print('1' * 900)
-	
+		
 	return Fu.call(f, call_str, builtin=builtin, username=user.name, taskid=taskid)
 
 

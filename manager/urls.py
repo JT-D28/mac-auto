@@ -90,6 +90,7 @@ urlpatterns = [
 	path("queryafteradd/", views.queryafteradd),
 	path("queryafterdel/", views.queryafterdel),
 	
+	path("testgenorder/", views.testgenorder),
 	path("changepos/", views.changepos),
 	path("aftergroup/", views.aftergroup),
 	
@@ -150,6 +151,7 @@ urlpatterns = [
 	
 	# test
 	path('addsteprelation/', views.addsteprelation),
+	path('getfulltree/', views.getfulltree),
 	path('update/', views.update),
 
 

@@ -73,7 +73,7 @@ class BusinessData(Model):
 	postposition=TextField(blank=True,null=True)
 
 	parser_id=CharField(max_length=32,null=True)#解析器id
-	parser_check=TextField()#解析器校验
+	parser_check=TextField(null=True)#解析器校验
 
 
 	def __str__(self):
@@ -191,20 +191,6 @@ class Variable(Model):
 
 		return "%s_%s" % (self.author, self.key)
 	
-	@classmethod
-	def oldVarBindTag(cls):
-		vars = Variable.objects.all()
-		for var in vars:
-			if not Tag.objects.filter(var=var).exists():
-				tag=Tag()
-				tag.var=var
-				tag.customize=''
-				tag.planids='{}'
-				tag.isglobal=1
-				tag.save()
-				print(str(var.id)+'更新成功')
-		print('变量tag更新完成')
-
 
 class Order(Model):
 	"""

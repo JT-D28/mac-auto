@@ -89,7 +89,7 @@ def initDataupdate():
 				print('用例' + str(case.id) + '更新成功')
 		except:
 			if dbid is None:
-				dbid = ''
+				case.db_id = ''
 				case.save()
 				print('用例' + str(case.id) + '更新成功')
 			else:

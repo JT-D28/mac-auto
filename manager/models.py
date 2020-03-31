@@ -40,7 +40,7 @@ class TemplateField(Model):
 class Template(Model):
 	'''报文校验
 	'''
-	kind=CharField(max_length=2)#length/separator
+	kind=CharField(max_length=32)#length/separator
 	name=CharField(max_length=16)
 	description=TextField()
 	author=ForeignKey(User, on_delete=CASCADE)

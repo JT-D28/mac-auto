@@ -55,7 +55,7 @@ def initDataupdate():
 	print('变量tag更新完成')
 	dbcons = DBCon.objects.all()
 	for dbcon in dbcons:
-		if dbcon.scheme is None:
+		if dbcon.scheme is None or dbcon.scheme=='':
 			dbcon.scheme = '全局'
 			dbcon.save()
 			time.sleep(0.001)

@@ -13,4 +13,5 @@
 /login/migrations/__pycache__/
 /local_reports/*.html
 /ME2/configs.py
+/manager/storage/private/Function/*/__pycache__/
 

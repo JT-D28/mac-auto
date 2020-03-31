@@ -459,7 +459,7 @@ def dbconRepeatCheck(dbids, copyschemevalue, action):
 
 
 def var(request):
-	return render(request, 'manager/varbak.html')
+	return render(request, 'manager/var.html')
 
 
 @csrf_exempt

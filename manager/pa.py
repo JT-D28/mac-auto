@@ -159,8 +159,15 @@ class MessageParser(object):
 
                 t=Template.objects.get(id=_)
                 fl=list(t.fieldinfo.all())
-                [_.remove() for _ in fl]
-                t.delete()
+                try:
+                    [_.delete() for _ in fl]
+                except:
+                    pass
+                try:
+                    t.delete()
+                except:
+                    pass
+
 
             return {
             'code':0,
@@ -297,10 +304,23 @@ class MessageParser(object):
             tf.fieldcode=fkws['fieldcode']
             tf.description=fkws['description']
             if kind=='length':
+                if not fkws['start'] or not fkws['end']:
+                    return{
+                    'code':2,
+                    'msg':'开始结束字段必填'
+                    } 
                 tf.start=fkws['start']
                 tf.end=fkws['end'] 
+                tf.index=-1
             else:
+                if not fkws['index']:
+                    return{
+                    'code':2,
+                    'msg':'序号必填'
+                    }
                 tf.index=fkws['index']
+                tf.start=-1
+                tf.end=-1
 
             tf.save()
 
@@ -321,7 +341,11 @@ class MessageParser(object):
     def del_field(cls,ids):
         try:
             for _ in str(ids).split(','):
-                TemplateField.objects.get(id=int(_)).delete()
+                tf=TemplateField.objects.get(id=int(_))
+                # tmpl=list(tf.template_set.all())
+                # print('待删除模板=>',tmpl)
+                # [_.delete() for _ in tmpl]
+                tf.delete()
 
             return {
             'code':0,
@@ -340,9 +364,12 @@ class MessageParser(object):
             tf=TemplateField.objects.get(id=fkws['fid'])
             tf.fieldcode=fkws['fieldcode']
             tf.description=fkws['description']
-            tf.index=fkws['index']
-            tf.start=fkws['start']
-            tf.end=fkws['end']
+            if fkws['index']:
+                tf.index=fkws['index']
+            if fkws['start']:
+                tf.start=fkws['start']
+            if fkws['end']:
+                tf.end=fkws['end']
             tf.save()
 
             return {

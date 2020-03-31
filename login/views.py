@@ -65,7 +65,7 @@ def initDataupdate():
 	for plan in plans:
 		try:
 			if plan.schemename is None or plan.schemename == '':
-				if plan.db_id is not None and plan.db_id != '':
+				if plan.db_id is not None and plan.db_id != '' and plan.db_id.isdigit():
 					description = DBCon.objects.get(id=plan.db_id).description
 					plan.db_id = description if description is not None else ''
 					plan.schemename = '全局'

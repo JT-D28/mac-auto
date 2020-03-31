@@ -943,7 +943,6 @@ class Fu:
 	
 	@classmethod
 	def call(cls, funcobj, call_str, builtin=False,taskid=None,username=None):
-		print('2'*900)
 		# print("内置=>",builtin)
 		# print('调用=》',call_str)
 		try:

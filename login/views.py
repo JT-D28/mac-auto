@@ -1,5 +1,6 @@
 import threading
 
+import redis
 from django.shortcuts import render, redirect, render_to_response
 from django.conf import settings
 from ME2 import configs
@@ -112,6 +113,14 @@ def initDataupdate():
 				print('步骤' + str(step.id) + '更新失败')
 	print('步骤的dbid更新完成')
 
+
+def clearRedisforUser(username):
+	pool = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0, decode_responses=True)
+	con = redis.Redis(connection_pool=pool)
+	keys = con.keys("console.msg::%s::*" % (username))
+	for elem in con.keys():
+		con.delete(elem)
+
 @csrf_exempt
 def login(request):
 	threading.Thread(target=initDataupdate, args=()).start()
@@ -137,7 +146,7 @@ def login(request):
 			request.session['is_login'] = True
 			request.session['username'] = username
 			print('登录成功')
-			
+			clearRedisforUser(username)
 			return redirect("/manager/index/")
 		else:
 			message = '密码错误'

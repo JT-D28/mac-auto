@@ -5,6 +5,7 @@
 /db1.sqlite3
 /ME2/__pycache__/
 /homepage/migrations/__pycache__/
+/manager/migrations/__pycache__/
 /tools/__pycache__/
 /homepage/__pycache__/
 /logs/*.log
@@ -14,4 +15,4 @@
 /local_reports/*.html
 /ME2/configs.py
 /manager/storage/private/Function/*/__pycache__/
-
+/manager/storage/private/__pycache__/*

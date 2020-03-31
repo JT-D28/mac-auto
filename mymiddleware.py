@@ -10,6 +10,7 @@ from manager import models
 from login import models as lm
 from manager.core import simplejson
 import re, os, traceback
+from  manager.context import  get_operate_name
 
 try:
 	from django.utils.deprecation import MiddlewareMixin  # Django 1.10.x
@@ -148,14 +149,17 @@ class Interceptor(MiddlewareMixin):
 
 		##tree操作
 		if url.__contains__('treecontrol'):
+			# if params.get('action') in ['view','loadpage']:
+			# 	return;
+
 			opcode=params.get('action')
 			ol=models.OperateLog()
 			ol.opcode=opcode
-			op.opname=''
+			ol.opname=get_operate_name(opcode)
 			ol.description=''
 			ol.author=lm.User.objects.get(name=request.session.get('username'))
-			op.save()
-
+			ol.save()
+			print('==记录树操作 %s'%ol)
 		
 
 
@@ -173,6 +177,8 @@ class Interceptor(MiddlewareMixin):
 	def process_request(self, request):
 
 		self._print_call_msg(request)
+
+		self._log_operation(request)
 		
 		session_check_result = self._session_check(request)
 		repeat_check_result = self._repeat_check(request)

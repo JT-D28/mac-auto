@@ -44,6 +44,28 @@ def get_symbol_name(key):
 def get_entity_name(key):
 	return _OPERATION['entity'].get(key,'[%s]未定义'%key)
 
+def get_operate_name(interfacename):
+	'''
+	获取操作名字
+
+	'''
+	interfacename=interfacename.split('/')[-1]
+	print('interfacename=>',interfacename)
+	a=''
+	b=''
+	for _ in _OPERATION['symbol']:
+		if _ in interfacename:
+			a=_OPERATION['symbol'][_]
+			break;
+
+	for _ in _OPERATION['entity']:
+		if _ in interfacename:
+			b=_OPERATION['entity'][_]
+			break;
+
+	print('a=>',a)
+	print('b=>',b)
+	return ''.join([a,b])
 
 
 '''

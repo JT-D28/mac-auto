@@ -2649,13 +2649,17 @@ class Transformer(object):
                                 #     #business.businessname="%s"%(value.strip())
                                 #     continue
                                 if fieldname=='DB检查数据':
+
                                     #business.db_check=self._replace_var(value)
                                     dck=self._replace_var(value)
                                     dck=dck.replace('\n','')
                                     if dck:
+                                        print('dbcheck=>',dck)
                                         if dck.__contains__('sleep'):
                                             business.db_check='|'.join(dck.split('|')[1:])
                                             business.postposition=dck.split('|')[0]
+                                        else:
+                                            business.db_check=dck
 
                                     continue
                                 elif fieldname=='接口检查数据':

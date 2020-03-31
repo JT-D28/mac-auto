@@ -1,7 +1,5 @@
 def handle_params(params):
     from hashlib import md5
-    print('$'*200)
-    print('handle_params参数=>',params)
-    keys=list(params.keys())
-    keystr_='_'.join(keys)
-    return md5(keystr_.encode('utf-8')).hexdigest()
+    values=[str(_) for _ in list(params.values())]
+    valuestr_='_'.join(values)
+    return md5(valuestr_.encode('utf-8')).hexdigest()

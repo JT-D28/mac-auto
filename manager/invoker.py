@@ -322,135 +322,6 @@ def runplans(username, taskid, planids, is_verify, kind=None, dbscheme=None):
 		threading.Thread(target=runplan, args=(username, taskid, planid, is_verify, kind, dbscheme)).start()
 
 
-# def runplan(callername,taskid,planid,kind=None):
-#   '''
-
-
-#   '''
-#   groupskip=[]
-
-#   try:
-#       plan=Plan.objects.get(id=planid)
-
-#       dbid=plan.db_id
-#       if dbid:
-#           desp=DBCon.objects.get(id=int(dbid)).description
-#           set_top_common_config(taskid, desp,src='plan')
-
-
-#       #username=plan.author.name
-#       username=callername
-#       # viewcache("username=>",username)
-#       viewcache(taskid,username,kind,"开始执行计划[<span style='color:#FF3399'>%s</span>]"%plan.description)
-#       #cases=list(plan.cases.all())
-#       cases=[Case.objects.get(id=x.follow_id)  for x in ordered(list(Order.objects.filter(main_id=planid,kind='case')))]
-
-#       #print(cases)
-#       result,error="",""
-#       caseresult=[]
-#       planresult=[]
-
-#       for case in cases:
-#           dbid=case.db_id
-#           if dbid:
-#               desp=DBCon.objects.get(id=int(dbid)).description
-#               set_top_common_config(taskid, desp,src='case')
-
-#           groupskip=[]
-#           viewcache(taskid,username,kind,"开始执行用例[<span style='color:#FF3399'>%s</span>]"%case.description)
-#           orderlist=ordered(list(Order.objects.filter(kind='step',main_id=case.id)))
-#           for order in orderlist:
-#               groupid=order.value.split(".")[0]
-#               # step=Step.objects.get(id=order.follow_id)
-#               start=time.time()
-#               spend=0
-#               if groupid not in groupskip:
-#                   result,error=_step_process_check(callername,taskid,order,kind)
-#                   spend=int((time.time()-start)*1000)
-
-#                   if result is not 'success':
-#                       groupskip.append(groupid)
-#               else:
-#                   result,error='skip','skip'
-
-
-#               ##保存结果
-#               print("准备保存结果===")
-#               detail=ResultDetail()
-#               detail.taskid=taskid
-#               detail.plan=plan
-#               detail.case=case
-#               #detail.step=Step.objects.get(id=order.follow_id)
-#               detail.businessdata=BusinessData.objects.get(id=order.follow_id)
-#               detail.result=result
-#               detail.error=error
-#               detail.spend=spend
-#               detail.save()
-
-
-#               ##
-#               caseresult.append(result)
-#               ##
-#               if "success" in result:
-#                   result="<span class='layui-bg-green'>%s</span>"%result
-
-#               elif "fail" in result:
-#                   result="<span class='layui-bg-red'>%s</span>"%result
-#               elif "skip" in result:
-#                   result="<span class='layui-bg-orange'>%s</span>"%result
-
-#               ##
-#               #print(len(result),len('success'),result=='success')
-#               if 'success' in result:
-#                   viewcache(taskid,username,kind,"执行结果%s"%(result))
-#               else:
-#                   if error is False:
-#                       error='表达式不成立'
-#                   viewcache(taskid,username,kind,"执行结果%s 原因=>%s"%(result,error))
-#                   # viewcache(taskid, username,kind,"%s,%s"%('success' in result,result))
-#               # viewcache(taskid,username,kind,"--"*40)
-
-#           casere=(len([x for x in caseresult if x=='success'])==len([x for x in caseresult]))
-#           planresult.append(casere)
-#           if casere:
-#               viewcache(taskid, username,kind,"结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-green'>success</span>"%case.description)
-#           else:
-#               viewcache(taskid, username,kind,"结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-red'>fail</span>"%case.description)
-
-#       #plan
-#       planre=(len([x for x in planresult])==len([x for x in planresult if x==True]))
-
-#       if planre:
-#           plan.last='success'
-#           plan.save()
-#           viewcache(taskid, username,kind,"结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-green'>success</span>"%plan.description)
-#       else:
-#           plan.last='fail'
-#           plan.save()
-#           viewcache(taskid, username,kind,"结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-red'>fail</span>"%plan.description)
-
-#       ##清除请求session
-#       clear_task_session('%s_%s'%(taskid,callername))
-#       ##
-
-#       _save_builtin_property(taskid,username)
-#       ##发送报告
-#       config_id=plan.mail_config_id
-#       if config_id:
-#           mail_config=MailConfig.objects.get(id=config_id)
-#           user=User.objects.get(name=username)
-#           mail_res=MainSender.send(taskid,user,mail_config)
-#           print("发送邮件 结果[%s]"%mail_res)
-#           viewcache(taskid,username,kind,mail_res)
-
-#   except Exception as e:
-#       #traceback.print_exc()
-#       print(traceback.format_exc())
-#       viewcache(taskid,username,kind,'执行计划未知异常[%s]'%traceback.format_exc())
-
-#   finally:
-#       clear_data(username, _tempinfo)
-
 
 def _runcase(username, taskid, case0, plan, planresult, is_verify, kind):
 	caseresult = []
@@ -2115,6 +1986,9 @@ class JSONParser(Struct):
                     startindex = re.findall('response.json\[(.*?)\]', chainstr)[0]
                     h = "[%s]" % startindex
                     chainstr = chainstr.replace('response.json%s.' % h, '')
+            elif isinstance(self.obj,(bool,)):
+            	print('&'*200)
+            	return 'self.obj'
             
             stages = chainstr.split(".")
             return "self.obj%s." % h + ".".join(
@@ -2128,22 +2002,12 @@ class JSONParser(Struct):
         errms = '解析数据链[%s]失败 数据链作为值返回' % chainstr
         xpath = self.translate(chainstr)
         if xpath:
-            print('==当前数据=>%s' % type(self.obj))
+
             try:
-                
-                print('flag=>', self.obj.get('data', 'None'))
-            except:
-                pass
-            print("==xpath查询=>%s" % xpath)
-            try:
-                
+            	# print('==查询源数据=>%s' % (self.obj))
+	            # print('==查询源数据类型=>%s'%type(self.obj))
+	            # print("==xpath查询=>%s" % xpath)
                 r = eval(xpath)
-                # if r is None:
-                #   r=''
-                # print('xpath=>',xpath)
-                # print("hello."
-                # print("type=>",type(r))
-                
                 return r
             except:
                 print(errms)

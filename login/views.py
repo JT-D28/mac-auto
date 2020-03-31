@@ -268,6 +268,10 @@ def testexpress1(request):
 	return JsonResponse([{'linenum': 1}, {'linenum': 2}], safe=False)
 
 @csrf_exempt
+def testexpress2(request):
+	return JsonResponse(False,safe=False)
+
+@csrf_exempt
 def testxml(request):
 	return render(request,'manager/test.xml',content_type="application/xml")
 # '''

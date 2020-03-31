@@ -144,7 +144,8 @@ class Interceptor(MiddlewareMixin):
 		'''
 		_meta = ('/account/login/', '/manager/querytaskdetail/', '/test_expression/', '/test_expression1/','/test_xml/',
 		         '/manager/third_party_call/')
-		if request.path not in _meta and not request.path.startswith('/captcha/image/'):
+		
+		if request.path.__contains__('manager'):
 			if request.session.get('username', None):
 				return True
 			else:

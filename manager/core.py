@@ -962,6 +962,9 @@ class Fu:
 							return ('fail','[%s]没按预期执行 提前结束'%re.findall('(.*?)\(',call_str)[0])
 					elif res is None:
 						pass
+
+					elif isinstance(res,(str,)):
+						pass
 					else:
 						return ('error','内置函数返回类型{None,bool,tuple}')
 

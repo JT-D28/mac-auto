@@ -509,8 +509,7 @@ def queryvar(request):
 	print("searchvalue=>", searchvalue)
 	
 	with connection.cursor() as cursor:
-		sql = '''SELECT t.customize ,t.planids,v.id,description,`key`,gain,value,DATE_FORMAT(v.createtime,'%%m-%%d %%H:%%i') AS createtime,
-					DATE_FORMAT(v.updatetime,'%%m-%%d %%H:%%i') AS updatetime,is_cache,u.name as author FROM `manager_variable` v,login_user u
+		sql = '''SELECT t.customize ,t.planids,v.id,description,`key`,gain,value,is_cache,u.name as author FROM `manager_variable` v,login_user u
 					,manager_tag t where (description like %s or `key` like %s or gain like %s)
 					and t.customize like %s and v.author_id=u.id AND t.var_id=v.id  and planids like %s '''
 		if userid != '-1':

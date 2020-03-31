@@ -1,6 +1,6 @@
-{%load static%}
+{% load static %}
 <!DOCTYPE html>
-<html lang="en"  style="height: 100%">
+<html lang="en" style="height: 100%">
 <head>
     <meta charset="UTF-8">
     <title>测试步骤</title>
@@ -9,176 +9,193 @@
     <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
     <style type="text/css">
 
-      .hide{
-        display:none;
-      }
-      .layui-icon:hover{
-        cursor: pointer;
+        .hide {
+            display: none;
+        }
 
-      }
-      .icon-tool{
-        float: right;
+        .layui-icon:hover {
+            cursor: pointer;
 
-      }
-      .icon-tool-item:hover{
-        cursor: pointer;
-      }
-      .icon-tool-item{
-        margin-left: 5px;
-      }
+        }
 
-      #case-selected p{
-        height: 30px;
-        padding: 0;
-       /* text-overflow: ellipsis;*/
-   /*     max-width:200px;*/
-      }
-      #can-select p:hover{
-        background-color: #009688;
-        color: white;
+        .icon-tool {
+            float: right;
 
-      }
-      #is-selected p:hover{
-        background-color: #009688;
-        color:white;
+        }
 
-      }
-      .func_btn{
+        .icon-tool-item:hover {
+            cursor: pointer;
+        }
 
-        font-size: 10px;
-        margin:5px;
-      }
-      .func_btn:hover{
+        .icon-tool-item {
+            margin-left: 5px;
+        }
 
-        cursor: pointer;
-        color:#009688;
-        font-weight:10px;
-      }
-      .func_btn_bar{
+        #case-selected p {
+            height: 30px;
+            padding: 0;
+            /* text-overflow: ellipsis;*/
+            /*     max-width:200px;*/
+        }
 
-/*        background-color: red;*/
-      }
-    .mailpadding{
-        padding: 9px 1px;
-    }
+        #can-select p:hover {
+            background-color: #009688;
+            color: white;
+
+        }
+
+        #is-selected p:hover {
+            background-color: #009688;
+            color: white;
+
+        }
+
+        .func_btn {
+
+            font-size: 10px;
+            margin: 5px;
+        }
+
+        .func_btn:hover {
+
+            cursor: pointer;
+            color: #009688;
+            font-weight: 10px;
+        }
+
+        .func_btn_bar {
+
+            /*        background-color: red;*/
+        }
+
+        .mailpadding {
+            padding: 9px 1px;
+        }
     </style>
 
 </head>
 <body>
 
 <div class="layui-row" style="height: 100%">
-      <div class="layui-col-md12" style="height: 100%;padding:0 15px" >
-          <fieldset style="height:95%">
-              <legend style="font-size: 20px;border-top-width:0px !important;">
+    <div class="layui-col-md12" style="height: 100%;padding:0 15px">
+        <fieldset style="height:95%">
+            <legend style="font-size: 20px;border-top-width:0px !important;">
                   <span class="layui-breadcrumb">
                       <a href="">用例管理</a>
                       <a href="">测试步骤</a>
                   </span>
-              </legend>
-              <form id='addstep' class="layui-form layui-form-pane" action="">
-                  <div class="layui-form-item" id='weight_item' hidden>
-                      <label class="layui-form-label ">权重</label>
-                      <div class="layui-input-block">
-                          <input id='weight' type="text" name="weight" placeholder="" autocomplete="off" class="layui-input" disabled>
-                      </div>
-                  </div>
-                  <div class="layui-form-item">
+            </legend>
+            <form id='addstep' class="layui-form layui-form-pane" action="">
+                <div class="layui-form-item" id='weight_item' hidden>
+                    <label class="layui-form-label ">权重</label>
+                    <div class="layui-input-block">
+                        <input id='weight' type="text" name="weight" placeholder="" autocomplete="off"
+                               class="layui-input" disabled>
+                    </div>
+                </div>
+                <div class="layui-form-item">
                     <label class="layui-form-label required">执行次数</label>
                     <div class="layui-input-block">
                         <input type="text" name="count" placeholder="请输入" autocomplete="off" class="layui-input"
                                id='count'>
                     </div>
 
-                  </div>
+                </div>
 
 
-                  <div class="layui-form-item" pane="">
-                      <label class="layui-form-label">步骤类型</label>
-                      <div class="layui-input-block">
-                          <input type="radio" name="step_type" value="interface" title="接口"  lay-filter='kind' checked>
-                          <input type="radio" name="step_type" value='function' title="函数"  lay-filter='kind'>
-                          <input type="radio" name="step_type" value='dir' title="文件夹"  lay-filter='kind'>
-                      </div>
-                  </div>
-                  <div class="layui-form-item ">
-                      <label class="layui-form-label required">描述</label>
-                      <div class="layui-input-block">
-                          <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input" lay-verify="required">
-                      </div>
-                  </div>
-                  <div class="layui-form-item">
-                      <label class="layui-form-label required">url</label>
-                      <div class="layui-input-block">
-                          <input id='url' type="text" name="url" placeholder="" autocomplete="off" class="layui-input">
-                      </div>
-                  </div>
-                  <div class="layui-form-item" pane="">
-                      <label class="layui-form-label">content-type</label>
-                      <div class="layui-input-block">
-                          <input type="radio" name="content-type" value="formdata" title="form-data" checked lay-filter='content_type'>
-                          <input type="radio" name="content-type" value="urlencode" title="urlencode" lay-filter='content_type'>
-                          <input type="radio" name="content-type" value='json' title="json" lay-filter='content_type'>
-                          <input type="radio" name="content-type" value='xml' title="xml" lay-filter='content_type'>
-                      </div>
-                  </div>
-                  <div class="layui-form-item" id='header-div'>
-                      <label class="layui-form-label">请求头</label>
-                      <div class="layui-input-block">
-                          <input type="text" id='header' name="header" placeholder="请输入" autocomplete="off" class="layui-input">
-                      </div>
-                  </div>
-                  <div class="layui-form-item" pane="" id='method-div'>
+                <div class="layui-form-item" pane="">
+                    <label class="layui-form-label">步骤类型</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="step_type" value="interface" title="接口" lay-filter='kind' checked>
+                        <input type="radio" name="step_type" value='function' title="函数" lay-filter='kind'>
+                        <input type="radio" name="step_type" value='dir' title="文件夹" lay-filter='kind'>
+                    </div>
+                </div>
+                <div class="layui-form-item ">
+                    <label class="layui-form-label required">描述</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input"
+                               lay-verify="required">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">url</label>
+                    <div class="layui-input-block">
+                        <input id='url' type="text" name="url" placeholder="" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item" pane="">
+                    <label class="layui-form-label">content-type</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="content-type" value="formdata" title="form-data" checked
+                               lay-filter='content_type'>
+                        <input type="radio" name="content-type" value="urlencode" title="urlencode"
+                               lay-filter='content_type'>
+                        <input type="radio" name="content-type" value='json' title="json" lay-filter='content_type'>
+                        <input type="radio" name="content-type" value='xml' title="xml" lay-filter='content_type'>
+                    </div>
+                </div>
+                <div class="layui-form-item" id='header-div'>
+                    <label class="layui-form-label">请求头</label>
+                    <div class="layui-input-block">
+                        <input type="text" id='header' name="header" placeholder="请输入" autocomplete="off"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item" pane="" id='method-div'>
                     <label class="layui-form-label">method</label>
                     <div class="layui-input-block">
-                      <input type="radio" name="method" value="get" title="GET" >
-                      <input type="radio" name="method" value='post' title="POST" checked>
+                        <input type="radio" name="method" value="get" title="GET">
+                        <input type="radio" name="method" value='post' title="POST" checked>
                     </div>
-                  </div>
+                </div>
 
-                  <div class="layui-form-item">
+                <div class="layui-form-item">
                     <label class="layui-form-label">属性</label>
                     <div class="layui-input-block">
-                      <input type="text" id='property' name="property" placeholder="这里定义如{'token':'data.value.token'} 使用时用${token}" autocomplete="off" class="layui-input">
+                        <input type="text" id='property' name="property"
+                               placeholder="这里定义如{'token':'data.value.token'} 使用时用${token}" autocomplete="off"
+                               class="layui-input">
                     </div>
-                  </div>
+                </div>
 
-                  <div class="layui-form-item" hidden>
+                <div class="layui-form-item" hidden>
                     <label class="layui-form-label">标签</label>
                     <div class="layui-input-block">
-                      <select name="tag" lay-verify="">
-                        <option value="">请选择</option>
-                <!--         <option value="mysql">mysql</option>
-                        <option value="oracle">oracle</option> -->
-                <!--         <option value="db2">db2</option> -->
-                      </select>
+                        <select name="tag" lay-verify="">
+                            <option value="">请选择</option>
+                            <!--         <option value="mysql">mysql</option>
+									<option value="oracle">oracle</option> -->
+                            <!--         <option value="db2">db2</option> -->
+                        </select>
                     </div>
-                  </div>
+                </div>
 
 
-                  <div class="layui-form-item" hidden>
+                <div class="layui-form-item" hidden>
                     <label class="layui-form-label required">调用函数</label>
                     <div class="layui-input-block">
-                      <select name='body'></select>
+                        <select name='body'></select>
                     </div>
-                  </div>
+                </div>
 
-                  <div class="layui-form-item">
+                <div class="layui-form-item">
                     <label class="layui-form-label">DB选择</label>
                     <div class="layui-input-block">
-                      <select name="db_id" lay-verify="" lay-search>
-                <!--         <option value="">请选择</option>
-                        <option value="">mysql</option> -->
-                      </select>
+                        <select name="db_id" lay-verify="" lay-search>
+                            <!--         <option value="">请选择</option>
+									<option value="">mysql</option> -->
+                        </select>
                     </div>
-                  </div>
-                  <div class="layui-form-item">
-                      <button class="layui-btn" id='save' style="visibility:hidden;position: center">保存</button>
-                  </div>
-              </form>
+                </div>
+                <div class="layui-form-item">
+                    <button class="layui-btn" id='save' style="visibility:hidden;position: center">保存</button>
+                </div>
+            </form>
         </fieldset>
 
     </div>
-  </div>
+</div>
 
 </body>
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
@@ -188,320 +205,224 @@
 
 
 <script type="text/javascript">
-
-
-// function selectstep(){
-
-//   $("[name='url']").parent().parent().show()
-//   $("[name='header']").parent().parent().show()
-//   $("[name='method']").parent().parent().show()
-//   $("[name='content-type']").parent().parent().show()
-//   $("[name='itf-check']").parent().parent().show()
-//   $("[name='db-check']").parent().parent().show()
-//   $("[name='body']").parent().parent().show()
-//   $("[name='property']").parent().parent().show()
-//   $("[name='db_id']").parent().parent().show()
-
-//   //
-
-//   $("[name='url']").parent().parent().show()
-//   $("[name='body']").parent().parent().hide()
-//   $("[name='header']").parent().parent().show()
-//   $("[name='method']").parent().parent().show()
-//   $("[name='content-type']").parent().parent().show()
-//   $("[name='itf-check']").parent().parent().show()
-
-//   $("[value='function']").removeAttr('checked')
-
-
-
-
-// }
-// function selectcase(){
-
-//   $("[name='url']").parent().parent().hide()
-//   $("[name='header']").parent().parent().hide()
-//   $("[name='method']").parent().parent().hide()
-//   $("[name='content-type']").parent().parent().hide()
-//   $("[name='itf-check']").parent().parent().hide()
-//   $("[name='db-check']").parent().parent().hide()
-//   $("[name='body']").parent().parent().hide()
-//   $("[name='property']").parent().parent().hide()
-//   $("[name='db_id']").parent().parent().hide()
-
-
-
-// }
-
-function selectinterface(){
-  $("[name='url']").parent().parent().show()
-  $("[name='body']").parent().parent().hide()
-  $("[name='header']").parent().parent().show()
-  $("[name='method']").parent().parent().show()
-  $("[name='content-type']").parent().parent().show()
-  $("[name='itf-check']").parent().parent().show()
-
-  $("[value='interface']").attr('checked','checked')
-  $("[value='function']").removeAttr('checked')
-
-}
-function selectfunction(){
-
-  $("[name='url']").parent().parent().hide()
-  $("[name='body']").parent().parent().show()
-  $("[name='header']").parent().parent().hide()
-  $("[name='method']").parent().parent().hide()
-  $("[name='content-type']").parent().parent().hide()
-  $("[name='itf-check']").parent().parent().hide()
-
-  $("[value='function']").attr('checked','checked')
-  $("[value='interface']").removeAttr('checked')
-
-
-
-}
-
-function selectdir(){
-
-  $("[name='url']").parent().parent().hide()
-  $("[name='header']").parent().parent().hide()
-  $("[name='method']").parent().parent().hide()
-  $("[name='content-type']").parent().parent().hide()
-  $("[name='itf-check']").parent().parent().hide()
-  $("[name='db-check']").parent().parent().hide()
-  $("[name='body']").parent().parent().hide()
-  $("[name='property']").parent().parent().hide()
-  $("[name='db_id']").parent().parent().hide()
-
-
-}
-
-_load_db_dropdownlist()
-
-add_var_prop_smart_inputs(['url','header','property'])
-// 
-layui.use(['table','layer','element','form'], function(){
-  var table = layui.table;
-  var $=layui.jquery
-  var layer=layui.layer;
-  var form = layui.form;
-  var element = layui.element;
-  //
-  form.render('select')
-  //
-
-  //加载函数列表
-  success2=function(data){
-      console.log('函数列表信息=>'+data)
-      data=JSON.parse(data)
-      data=data.data
-
-      for(var index=0;index<data.length;index++){
-
-        $("[name='body']").append("<option value='"+data[index]['value']+"'>"+data[index]['description']+"</option>")
-      }
-
-      layui.form.render('select')
-
+    function selectinterface() {
+        $("[name='url']").parent().parent().show();
+        $("[name='body']").parent().parent().hide();
+        $("[name='header']").parent().parent().show();
+        $("[name='method']").parent().parent().show();
+        $("[name='content-type']").parent().parent().show();
+        $("[name='itf-check']").parent().parent().show();
+        $("[value='interface']").attr('checked', 'checked');
+        $("[value='function']").removeAttr('checked')
     }
-   _post('/manager/queryfunclist/',{},success2)
-  form.on('radio(kind)', function (data) {
-    //v=$("[name='step_type']").val()
-    v=data.value
-    // console.log("选择"+v)
-    if(v=='interface')
-      selectinterface()
-    else if(v=='function')
-      selectfunction()
-    else
-      selectdir()
 
-  });
-
-  form.on('radio(content_type)',function (data) {
-    
-    if(data.value=='xml'){
-      $('#header-div').hide()
-      $('#method-div').hide()
-
-
+    function selectfunction() {
+        $("[name='url']").parent().parent().hide();
+        $("[name='body']").parent().parent().show();
+        $("[name='header']").parent().parent().hide();
+        $("[name='method']").parent().parent().hide();
+        $("[name='content-type']").parent().parent().hide();
+        $("[name='itf-check']").parent().parent().hide();
+        $("[value='function']").attr('checked', 'checked');
+        $("[value='interface']").removeAttr('checked')
     }
-    else{
 
-      $('#header-div').show()
-      $('#method-div').show()
-
+    function selectdir() {
+        $("[name='url']").parent().parent().hide();
+        $("[name='header']").parent().parent().hide();
+        $("[name='method']").parent().parent().hide();
+        $("[name='content-type']").parent().parent().hide();
+        $("[name='itf-check']").parent().parent().hide();
+        $("[name='db-check']").parent().parent().hide();
+        $("[name='body']").parent().parent().hide();
+        $("[name='property']").parent().parent().hide();
+        $("[name='db_id']").parent().parent().hide()
     }
-  })
-
-  // form.on('radio(node_type)', function (data) {
-  //   //v=$("[name='step_type']").val()
-  //   v=data.value
-  //   // console.log("选择"+v)
-  //   if(v=='case')
-  //     selectcase()
-  //   else
-  //     selectstep()
-
-  // });
-  //
-  //
-  uid=_get_query_param('uid')
-  pid=_get_query_param('pid')
-  // alert(pid)
-  // console.log('pid='+pid)
-  action=_get_query_param('action')
-
-  // alert(action)
-  detail='addstep'
-  // alert(detail)
-
-  if(action!='view')
-    $('#save').css('visibility','visible')
-  else{
-    $('#save').css('visibility','hidden') 
-    $('#weight_item').removeAttr('hidden')
-
-     _set_form_not_editable()
-  }
-
-  
-  if(uid){
-    detail='editstep'
-    // alert(detail)
-    success=function(data){
-
-        count=data.data[0]['count']
-        weight=data.data[0]['weight']
-        step_type=data.data[0]['step_type']
-        // alert(step_type)
-        description=data.data[0]['description']
-        url=data.data[0]['url']
-        //alert(url)
-        method=data.data[0]['method']
-        headers=data.data[0]['headers']
-        body=data.data[0]['body']
-        content_type=data.data[0]['content_type']
-        itf_check=data.data[0]['itf_check']
-        db_check=data.data[0]['db_check']
-        tmp=data.data[0]['temp']
-        if('interface'==step_type)
-          selectinterface()
-        else if('function'==step_type)
-          selectfunction()
-        else
-          selectdir()
 
 
-        $("[name='count']").val(count)
-        $("[name='weight']").val(weight)
-        $("[name='description']").val(description)
-        $("[name='url']").val(url)
-        $("[value='"+method+"']").attr('checked','checked')
-        // layui.form.render('radio')
-        $("[name='header']").val(headers)
-        $("[name='body']").val(body)
-        //alert(content_type)
-        ///console.log('content_type=>',content_type)
+    add_var_prop_smart_inputs(['url', 'header', 'property']);
+    layui.use(['table', 'layer', 'element', 'form'], function () {
+        var table = layui.table;
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var element = layui.element;
+        uid = _get_query_param('uid');
+        pid = _get_query_param('pid');
+        //加载函数列表
+        _post('/manager/queryfunclist/', {}, function (data) {
+            console.log('函数列表信息=>' + data);
+            data = JSON.parse(data);
+            data = data.data;
+            for (var index = 0; index < data.length; index++) {
+                $("[name='body']").append("<option value='" + data[index]['value'] + "'>" + data[index]['description'] + "</option>")
+            }
+            layui.form.render('select')
+        });
+        form.on('radio(kind)', function (data) {
+            //v=$("[name='step_type']").val()
+            v = data.value;
+            // console.log("选择"+v)
+            if (v === 'interface')
+                selectinterface();
+            else if (v === 'function')
+                selectfunction()
+            else
+                selectdir()
+        });
 
-        $("[value='urlencode']").removeAttr('checked')
-        $("[value='json']").removeAttr('checked')
-        $("[value='xml']").removeAttr('checked')
-        $("[value='"+content_type+"']").attr('checked','checked')
-        if(content_type=='xml'){
-          $('#header-div').hide()
-          $('#method-div').hide()
+        form.on('radio(content_type)', function (data) {
+            if (data.value == 'xml') {
+                $('#header-div').hide();
+                $('#method-div').hide()
+            } else {
+                $('#header-div').show();
+                $('#method-div').show()
+            }
+        });
 
+        action = _get_query_param('action');
+
+        // alert(action)
+        detail = 'addstep';
+        // alert(detail)
+
+        if (action != 'view')
+            $('#save').css('visibility', 'visible');
+        else {
+            $('#save').css('visibility', 'hidden');
+            $('#weight_item').removeAttr('hidden');
+            _set_form_not_editable()
         }
-        layui.form.render('radio')
-        $("[name='itf-check']").val(itf_check)
-        $("[name='db-check']").val(db_check)
-        //alert(tmp)
-        $("[name='property']").val(tmp)
 
-        $("[name='db_id']").val(data.data[0]['db_id'])
-        layui.form.render('select')
 
-        // alert('FILL OVER')
-
-        //
-
-    }
-    _post('/manager/queryonestep/',{id:uid},success);
-  }
+        if (uid) {
+            detail = 'editstep';
+            _post('/manager/querydblist/', {schemevalue: '', id: uid}, function (res) {
+                $("[name='db_id']").empty();
+                res = JSON.parse(res);
+                if (res.code === 0) {
+                    for (var index = 0; index < res.data.length; index++) {
+                        $("[name='db_id']").append("<option value='" + res.data[index]['name'] + "'>" + res.data[index]['name'] + "</option>")
+                    }
+                    console.log('加载数据库信息列表成功');
+                    layui.form.render('select');
+                    success = function (data) {
+                        count = data.data[0]['count'];
+                        weight = data.data[0]['weight'];
+                        step_type = data.data[0]['step_type'];
+                        description = data.data[0]['description'];
+                        url = data.data[0]['url'];
+                        method = data.data[0]['method'];
+                        headers = data.data[0]['headers'];
+                        body = data.data[0]['body'];
+                        content_type = data.data[0]['content_type'];
+                        itf_check = data.data[0]['itf_check'];
+                        db_check = data.data[0]['db_check'];
+                        tmp = data.data[0]['temp'];
+                        if ('interface' === step_type)
+                            selectinterface();
+                        else if ('function' === step_type)
+                            selectfunction();
+                        else
+                            selectdir();
+                        $("[name='count']").val(count);
+                        $("[name='weight']").val(weight);
+                        $("[name='description']").val(description);
+                        $("[name='url']").val(url);
+                        $("[value='" + method + "']").attr('checked', 'checked');
+                        $("[name='header']").val(headers);
+                        $("[name='body']").val(body);
+                        $("[value='urlencode']").removeAttr('checked');
+                        $("[value='json']").removeAttr('checked');
+                        $("[value='xml']").removeAttr('checked');
+                        $("[value='" + content_type + "']").attr('checked', 'checked');
+                        if (content_type === 'xml') {
+                            $('#header-div').hide();
+                            $('#method-div').hide()
+                        }
+                        layui.form.render('radio');
+                        $("[name='itf-check']").val(itf_check);
+                        $("[name='db-check']").val(db_check);
+                        $("[name='property']").val(tmp);
+                        $("[name='db_id']").val(data.data[0]['db_id']);
+                        layui.form.render('select')
+                    };
+                    _post('/manager/queryonestep/', {id: uid}, success);
+                } else {
+                    layer.alert('数据库信息查询失败', {icon: 2})
+                }
+            });
+        } else {
+            _load_db_dropdownlist('', pid)
+        }
 
 //set default
-    if (detail == 'addstep') {
-        $("[name='count']").val(1)
-
-
-    }
+        if (detail === 'addstep') {
+            $("[name='count']").val(1)
+        }
 
 //bind
 
- //save
-    // alert('bind save1')
-    btn=$('#save')
-    // alert('bind save')
+        //save
+        // alert('bind save1')
+        btn = $('#save')
+        // alert('bind save')
 
-    if(btn)btn.bind('click',function(e){
+        if (btn) btn.bind('click', function (e) {
 
-      console.log('step click')
-      data={
-        'uid':uid,
-        'pid':pid,
-        'action':detail,
-        'step_type':$("[name='step_type']:checked").val(),
-        'description':$("[name='description']").val(),
-        'url':$("[name='url']").val(),
-        'method':$("[name='method']:checked").val(),
-        'headers':$("[name='header']").val(),
-        'body':$("[name='body']").val(),
-        'content_type':$("[name='content-type']:checked").val(),
-        'tmp':$("[name='property']").val(),
-        'dbid':$("[name='db_id']").val(),
-        'count':$("[name='count']").val(),
-        // 'node_type':$("[name='node_type']:checked").val(),
+            console.log('step click');
+            data = {
+                'uid': uid,
+                'pid': pid,
+                'action': detail,
+                'step_type': $("[name='step_type']:checked").val(),
+                'description': $("[name='description']").val(),
+                'url': $("[name='url']").val(),
+                'method': $("[name='method']:checked").val(),
+                'headers': $("[name='header']").val(),
+                'body': $("[name='body']").val(),
+                'content_type': $("[name='content-type']:checked").val(),
+                'tmp': $("[name='property']").val(),
+                'dbid': $("[name='db_id']").val(),
+                'count': $("[name='count']").val(),
+                // 'node_type':$("[name='node_type']:checked").val(),
 
-      }
+            };
 
-      // alert(data)
-      _post('/manager/treecontrol/',data,function(e){
+            // alert(data)
+            _post('/manager/treecontrol/', data, function (e) {
 
-        if(e.code==0){
-            var treeObj = parent.$.fn.zTree.getZTreeObj('case-manager');
+                if (e.code === 0) {
+                    var treeObj = parent.$.fn.zTree.getZTreeObj('case-manager');
 
-            if(detail=='addstep'){
-              var node = treeObj.getNodeByParam('id',pid); 
-              console.log('addstep=>'+JSON.stringify(e.data)) 
-              treeObj.addNodes(node,e.data);
-              treeObj.expandNode(node,true)
+                    if (detail === 'addstep') {
+                        var node = treeObj.getNodeByParam('id', pid);
+                        console.log('addstep=>' + JSON.stringify(e.data));
+                        treeObj.addNodes(node, e.data);
+                        treeObj.expandNode(node, true)
 
-            }else{
-              var node = treeObj.getNodeByParam('id',uid);
-              // console.log('search tid '+utid+'=>'+node)
-              node.name=e.data['name']
-              treeObj.updateNode(node)
+                    } else {
+                        var node = treeObj.getNodeByParam('id', uid);
+                        // console.log('search tid '+utid+'=>'+node)
+                        node.name = e.data['name'];
+                        treeObj.updateNode(node)
 
-            }
-          layer.alert(e.msg,{icon:1,time:2000})
-        }
-        else
-          layer.alert(e.msg,{icon:2})
-      });
+                    }
+                    layer.alert(e.msg, {icon: 1, time: 2000})
+                } else
+                    layer.alert(e.msg, {icon: 2})
+            });
 
-      return false
+            return false
+
+        });
+
 
     });
 
 
-
-});
-
-
-
 </script>
-
 
 
 </html>

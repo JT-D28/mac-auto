@@ -107,6 +107,7 @@ def addplan(request):
 		plan = mm.Plan()
 		plan.description = request.POST.get('description')
 		plan.db_id = request.POST.get('dbid')
+		plan.schemename = request.POST.get('scheme')
 		
 		plan.author = lm.User.objects.get(name=request.session.get('username', None))
 		
@@ -213,6 +214,7 @@ def editplan(request):
 		olddescription = plan.description
 		plan.description = newdescription
 		plan.db_id = request.POST.get('dbid')
+		plan.schemename = request.POST.get('scheme')
 		print('description=>', plan.description)
 		plan.run_type = request.POST.get('run_type')
 		plan.save()
@@ -300,15 +302,13 @@ def importplan(request):
 def addcase(request):
 	msg = ''
 	try:
-		
+		pid=request.POST.get('pid').split('_')[1]
 		case = mm.Case()
 		case.author = lm.User.objects.get(name=request.session.get('username', None))
-		
 		case.description = request.POST.get('description')
 		case.db_id = request.POST.get('dbid')
 		case.save()
 		
-		pid = request.POST.get('pid').split('_')[1]
 		
 		addrelation('plan_case', request.session.get('username'), pid, case.id)
 		return {
@@ -386,45 +386,44 @@ def delcase(request):
 def addstep(request):
 	from .core import getbuiltin
 	try:
-
-		pid=request.POST.get('pid').split('_')[1]
-		step_type=request.POST.get('step_type')
-		description=request.POST.get('description')
-		headers=request.POST.get('headers')
-		body=request.POST.get("body")
-		url=request.POST.get('url')
+		pid = request.POST.get('pid').split('_')[1]
+		step_type = request.POST.get('step_type')
+		description = request.POST.get('description')
+		headers = request.POST.get('headers')
+		body = request.POST.get("body")
+		url = request.POST.get('url')
 		if url:
 			url=url.strip()
-		method=request.POST.get('method')
-		content_type=request.POST.get('content_type')
-		db_check=request.POST.get('db_check')
-		itf_check=request.POST.get('itf_check')
-		print('itf_check=>',itf_check)
-		tmp=request.POST.get('tmp')
-		author=request.session.get('username')
-		print("author=>",author)
-		businessdata=request.POST.get('business_data')
-		print('businessdata=>',type(businessdata),businessdata)
-		dbid=request.POST.get('dbid')
-##
-		if step_type=='dir':
-			case=mm.Case()
-			case.description=request.POST.get('description')
+		method = request.POST.get('method')
+		content_type = request.POST.get('content_type')
+		db_check = request.POST.get('db_check')
+		itf_check = request.POST.get('itf_check')
+		print('itf_check=>', itf_check)
+		tmp = request.POST.get('tmp')
+		author = request.session.get('username')
+		print("author=>", author)
+		businessdata = request.POST.get('business_data')
+		print('businessdata=>', type(businessdata), businessdata)
+		dbid = request.POST.get('dbid')
 
-			case.author=lm.User.objects.get(name=request.session.get('username'))
-
-			case.db_id=request.POST.get('dbid')
-
+		##
+		if step_type == 'dir':
+			case = mm.Case()
+			case.description = description
+			
+			case.author = lm.User.objects.get(name=author)
+			
+			case.db_id = dbid
 			case.save()
 			
-			addrelation('case_case', request.session.get('username'), request.POST.get('pid').split('_')[1], case.id)
+			addrelation('case_case', author,pid, case.id)
 			return {
 				'status': 'success',
 				'msg': '新建[%s]成功' % case.description,
 				
 				'data': {
 					'id': 'case_%s' % case.id,
-					'pid': 'case_%s' % request.POST.get('pid').split('_')[1],
+					'pid': 'case_%s' % pid,
 					'name': case.description,
 					'type': 'case',
 					'textIcon': 'fa fa-folder',
@@ -479,7 +478,7 @@ def addstep(request):
 		# 		related_id=funcs[0].id
 		# 		step.related_id=related_id
 		
-		addrelation('case_step', request.session.get('username'), pid, step.id)
+		addrelation('case_step', author, pid, step.id)
 		
 		return {
 			'status': 'success',

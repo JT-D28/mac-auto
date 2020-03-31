@@ -203,15 +203,23 @@ def queryonedb(request):
 @csrf_exempt
 def querydb(request):
 	searchvalue = request.GET.get('searchvalue')
+	searchvalue = searchvalue if searchvalue not in [None, ''] else ''
 	print("searchvalue=>", searchvalue)
+	queryschemevalue = request.GET.get('querySchemeValue')
+	queryschemevalue = queryschemevalue if queryschemevalue not in [None, ''] else ''
+	print("SchemeValue=>", queryschemevalue)
 	res = None
-	if searchvalue:
-		print("变量查询条件=>")
-		res = list(DBCon.objects.filter(Q(description__icontains=searchvalue) | Q(dbname__icontains=searchvalue) | Q(
-			host__icontains=searchvalue) | Q(port__icontains=searchvalue) | Q(kind__icontains=searchvalue)))
-	else:
-		res = list(DBCon.objects.all())
-	
+	# if searchvalue:
+	# 	print("变量查询条件=>")
+	# 	res = list(DBCon.objects.filter((Q(description__icontains=searchvalue) | Q(dbname__icontains=searchvalue) | Q(
+	# 		host__icontains=searchvalue) | Q(port__icontains=searchvalue) | Q(kind__icontains=searchvalue)) & Q(
+	# 		scheme=queryschemevalue)))
+	# else:
+	# 	res = list(DBCon.objects.filter(Q(scheme__contains=queryschemevalue)))
+	#
+	res = list(DBCon.objects.filter((Q(description__icontains=searchvalue) | Q(dbname__icontains=searchvalue) | Q(
+		host__icontains=searchvalue) | Q(port__icontains=searchvalue) | Q(kind__icontains=searchvalue)) & Q(
+		scheme__contains=queryschemevalue)))
 	limit = request.GET.get('limit')
 	page = request.GET.get('page')
 	res, total = getpagedata(res, page, limit)
@@ -229,7 +237,7 @@ def addcon(request):
 		dbname = request.POST.get('dbname')
 		host = request.POST.get('host')
 		port = request.POST.get('port')
-		
+		schemevalue = request.POST.get('schemevalue')
 		username = request.POST.get('accountname')
 		callername = request.session.get('username', None)
 		password = request.POST.get('password')
@@ -242,6 +250,7 @@ def addcon(request):
 		con.username = username
 		con.password = password
 		con.description = description
+		con.scheme = schemevalue
 		con.author = User.objects.get(name=callername)
 		con.save()
 		msg = '添加成功'
@@ -286,6 +295,7 @@ def editcon(request):
 		con.password = request.POST.get('password')
 		con.host = request.POST.get('host')
 		con.port = request.POST.get('port')
+		con.scheme = request.POST.get('schemevalue')
 		con.save()
 		
 		msg = '编辑成功'
@@ -297,25 +307,55 @@ def editcon(request):
 		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
+def getplan(id, kind):
+	print('get', id, kind)
+	if kind == 'case':
+		try:
+			k = Order.objects.get(follow_id=id, kind='plan_case')
+		except:
+			k = Order.objects.get(follow_id=id, kind='case_case')
+		schemename = getplan(k.main_id, k.kind.split('_')[0])
+		return schemename
+	elif kind == 'step':
+		k = Order.objects.get(follow_id=id, kind='case_step')
+		schemename = getplan(k.main_id, k.kind.split('_')[0])
+		return schemename
+	elif kind == 'plan':
+		schemename = Plan.objects.get(id=id).schemename
+		return schemename
+
+
 @csrf_exempt
 def querydblist(request):
 	code, msg = 0, ''
 	res = []
-	try:
-		list_ = list(DBCon.objects.all())
-		for x in list_:
-			o = dict()
-			o['id'] = x.id
-			o['name'] = x.description if len(x.description)<15 else x.description[0:14]+'...'
-			res.append(o)
-		
-		return JsonResponse(simplejson(code=0, msg='操作成功', data=res), safe=False)
-	
-	except:
-		print(traceback.format_exc())
-		code = 4
-		msg = '查询数据库列表信息异常'
-		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+	scheme = request.POST.get('schemevalue')
+	id = request.POST.get('id')
+	type = request.POST.get('type')
+	if type is not None:
+		try:
+			res = list(DBCon.objects.filter().distinct().annotate(name=F('description')).values('name'))
+		except:
+			print(traceback.format_exc())
+			code = 4
+			msg = '查询数据库列表信息异常'
+			return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+	else:
+		try:
+			if scheme != '':
+				res = list(DBCon.objects.filter(scheme=scheme).annotate(name=F('description')).values('name'))
+				print(res)
+			elif id != '' and id is not None:
+				dbscheme = getplan(id.split('_')[1], id.split('_')[0])
+				res = list(
+					DBCon.objects.filter(scheme=dbscheme).annotate(name=F('description')).values('name'))
+				print('...', res)
+		except:
+			print(traceback.format_exc())
+			code = 4
+			msg = '查询数据库列表信息异常'
+			return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+	return JsonResponse(simplejson(code=0, msg='操作成功', data=res), safe=False)
 
 
 @csrf_exempt
@@ -348,6 +388,69 @@ def querydblistdefault(request):
 		error = traceback.format_exc()
 		print(error)
 		return JsonResponse(simplejson(code=4, msg='库名下拉列表默认值返回异常'), safe=False)
+
+
+@csrf_exempt
+def copyDbCon(request):
+	action = request.POST.get('action')
+	dbids = request.POST.getlist('dbids[]')
+	copyschemevalue = request.POST.get('copyschemevalue')
+	s = dbconRepeatCheck(dbids, copyschemevalue, action)
+	code = 1
+	if s == '':
+		try:
+			code = 0
+			if action == '1':
+				for id in dbids:
+					dbcon = DBCon.objects.get(id=id)
+					newdbcon = DBCon()
+					newdbcon.kind = dbcon.kind
+					newdbcon.dbname = dbcon.dbname
+					newdbcon.host = dbcon.host
+					newdbcon.port = dbcon.port
+					newdbcon.username = dbcon.username
+					newdbcon.password = dbcon.password
+					newdbcon.description = dbcon.description
+					newdbcon.author = User.objects.get(name=request.session.get('username'))
+					newdbcon.scheme = copyschemevalue
+					newdbcon.save()
+				s = '复制成功'
+			elif action == '0':
+				for id in dbids:
+					dbcon = DBCon.objects.get(id=id)
+					dbcon.scheme = copyschemevalue
+					dbcon.save()
+				s = '修改成功'
+		except:
+			code = 1
+			s = traceback.format_exc()
+			print(s)
+	return JsonResponse({'code': code, 'msg': s})
+
+
+def dbconRepeatCheck(dbids, copyschemevalue, action):
+	print(dbids, copyschemevalue, action)
+	s = ''
+	# 一个方案下面描述名不能重复
+	if action == '1':
+		for id in dbids:
+			description = DBCon.objects.get(id=id).description
+			dbcon = DBCon.objects.filter(scheme=copyschemevalue, description=description)
+			if len(dbcon) == 0:
+				continue
+			else:
+				s += "<div class='copyerror'>配置方案【%s】下已存在描述为【%s】的数据连接<br></div>" % (copyschemevalue, description)
+	elif action == '0':
+		for id in dbids:
+			description = DBCon.objects.get(id=id).description
+			oldcon = DBCon.objects.filter(~Q(id=id) & Q(description=description, scheme=copyschemevalue))
+			if len(oldcon) == 0:
+				continue
+			else:
+				s += "<div class='copyerror'>配置方案【%s】下已存在描述为【%s】的数据连接<br></div>" % (
+					copyschemevalue,
+					description) if copyschemevalue != '' else "<div class='copyerror'>已存在描述名为【%s】的全局数据连接配置<br></div>" % description
+	return s
 
 
 """
@@ -401,31 +504,20 @@ def queryvar(request):
 	print(strtag)
 	
 	bindplan = request.POST.get('bindplan') if request.POST.get('bindplan') != '' else ''
-	bindstr = '%","' + bindplan + '"]%' if bindplan !='' else '%%'
+	bindstr = '%","' + bindplan + '"]%' if bindplan != '' else '%%'
 	userid = userid if userid != '0' else str(User.objects.values('id').get(name=request.session.get('username'))['id'])
 	print("searchvalue=>", searchvalue)
 	
 	with connection.cursor() as cursor:
-		# sql = '''SELECT t.customize ,t.planids,v.id,description,`key`,gain,value,DATE_FORMAT(v.createtime,'%%m-%%d %%H:%%i') AS createtime,
-		# 			DATE_FORMAT(v.updatetime,'%%m-%%d %%H:%%i') AS updatetime,is_cache,u.name as author FROM `manager_variable` v,login_user u
-		# 			,manager_tag t where (description like %s or `key` like %s or gain like %s)
-		# 			and t.customize like %s and v.author_id=u.id AND t.var_id=v.id  and planids like %s '''
-
-		sql = '''SELECT t.customize ,t.planids,v.id,description,`key`,gain,value,v.createtime AS createtime,
-					v.updatetime
-
-					 AS updatetime,is_cache,u.name as author FROM `manager_variable` v,login_user u
+		sql = '''SELECT t.customize ,t.planids,v.id,description,`key`,gain,value,DATE_FORMAT(v.createtime,'%%m-%%d %%H:%%i') AS createtime,
+					DATE_FORMAT(v.updatetime,'%%m-%%d %%H:%%i') AS updatetime,is_cache,u.name as author FROM `manager_variable` v,login_user u
 					,manager_tag t where (description like %s or `key` like %s or gain like %s)
 					and t.customize like %s and v.author_id=u.id AND t.var_id=v.id  and planids like %s '''
-
 		if userid != '-1':
 			sql += 'and v.author_id=%s'
-			print('查个人sql=>',sql%(searchvalue, searchvalue, searchvalue, strtag,bindstr,userid))
-			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag,bindstr,userid])
+			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag, bindstr, userid])
 		else:
-			print('查所有人执行sql=>',sql%(searchvalue, searchvalue, searchvalue, strtag,bindstr))
-			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag,bindstr])
-
+			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag, bindstr])
 		desc = cursor.description
 		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
 		for i in rows:
@@ -438,13 +530,12 @@ def queryvar(request):
 			n = ''
 			x = json.loads(i['planids'])
 			for k, v in x.items():
-				print(v)
-				n += "<span class='layui-badge layui-bg-green' id="+v[1]+" onclick=planSpanClick(this) style='cursor:pointer;'>" + k + "</span> "
+				n += "<span class='layui-badge layui-bg-green' id=" + v[
+					1] + " onclick=planSpanClick(this) style='cursor:pointer;'>" + k + "</span> "
 			i['planids'] = n
 		limit = request.POST.get('limit')
 		page = request.POST.get('page')
 		res, total = getpagedata(rows, page, limit)
-		print('res=>',res)
 		jsonstr = json.dumps(res, cls=VarEncoder, total=total)
 	return JsonResponse(jsonstr, safe=False)
 
@@ -923,19 +1014,19 @@ def third_party_call(request):
 	planid = request.GET.get('planid')
 	plan = Plan.objects.get(id=planid)
 	taskid = gettaskid(plan.__str__())
-	# taskid=res['taskid']
+	dbscheme = request.GET.get('scheme')
 	clear_task_before(taskid)
 	callername = res['callername']
 	is_verify = request.GET.get('is_verify')
 	
-	if getRunningInfo(callername, planid, 'isrunning')=='1':
+	if getRunningInfo(callername, planid, 'isrunning') == '1':
 		return JsonResponse(simplejson(code=1, msg="调用失败，任务正在运行中，稍后再试！"), safe=False)
 	
 	print('调用方=>', callername)
 	print('调用计划=>', planid)
-	
-	runplans(callername, taskid, [planid], is_verify)
-	return JsonResponse(simplejson(code=0, msg="调用成功", taskid=taskid), safe=False)
+	print('调用数据连接方案=>',dbscheme)
+	runplans(callername, taskid, [planid], is_verify,None,dbscheme)
+	return JsonResponse(simplejson(code=0, msg="调用成功,使用DB配置:[%s]"%dbscheme, taskid=taskid), safe=False)
 
 
 @xframe_options_exempt
@@ -1126,7 +1217,7 @@ def runtask(request):
 	for planid in list_:
 		plan = Plan.objects.get(id=planid)
 		username = request.session.get('username')
-		if getRunningInfo(username, planid, 'isrunning')=='1':
+		if getRunningInfo(username, planid, 'isrunning') == '1':
 			return JsonResponse(simplejson(code=1, msg="任务已在运行，请稍后！"), safe=False)
 		
 		taskid = gettaskid(plan.__str__())
@@ -3159,6 +3250,32 @@ def queryUser(request):
 	user = list(User.objects.values('id', 'name').exclude(name=name))
 	return JsonResponse({'data': user})
 
+
+@csrf_exempt
+def queryDbScheme(request):
+	action = request.POST.get('action')
+	sql = "SELECT distinct scheme as 'value',scheme as 'label' FROM `manager_dbcon` where scheme not in ('全局','')"
+	with connection.cursor() as cursor:
+		cursor.execute(sql)
+		desc = cursor.description
+		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+	if action == '1':
+		data = [{
+			'value': '全局',
+			'label': '全局'
+		}]
+	else:
+		data = [{
+			'value': '',
+			'label': '全部'
+		}, {
+			'value': '全局',
+			'label': '全局'
+		}]
+	for row in rows:
+		data.append(row)
+	return JsonResponse({'code': 0, 'data': data})
+
 '''
 个人空间管理
 '''
@@ -3222,7 +3339,7 @@ def queryuserfile(request):
 			'filename':f,
 			'size':_getDocSize(os.path.join(userdir,f)),
 			'createtime':time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(os.path.getctime(os.path.join(userdir,f))))
-			}) 
+			})
 
 	mfiles.sort(key=lambda e:e.get('createtime'),reverse=True)
 

@@ -581,12 +581,13 @@ def planforceStop(request):
 @csrf_exempt
 def query_third_call(request):
 	planid = request.POST.get('planid')
+	dbscheme = request.POST.get('dbscheme')
 	callername = models.Plan.objects.get(id=planid).author.name
 	mwstr = 'callername=%s&taskid=%s' % (callername, planid)
-	is_verify_url = '%s/manager/third_party_call/?v=%s&is_verify=%s&planid=%s' % (
-		settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 1, planid)
-	debug_url = '%s/manager/third_party_call/?v=%s&is_verify=%s&planid=%s' % (
-		settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 0, planid)
+	is_verify_url = '%s/manager/third_party_call/?v=%s&is_verify=%s&planid=%s&scheme=%s' % (
+		settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 1, planid,dbscheme)
+	debug_url = '%s/manager/third_party_call/?v=%s&is_verify=%s&planid=%s&scheme=%s' % (
+		settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 0, planid,dbscheme)
 	return JsonResponse({'is_verify_url': is_verify_url, 'debug_url': debug_url})
 
 

@@ -108,6 +108,7 @@ var app = new Vue({
             mailcolors: [{id: 1, color: 'blue'}, {id: 2, color: 'red'}],
             products: [],
             plans: [],
+            dbschemes: [],
             services: [],
             runVisible: false,
             productSetVisible: false,
@@ -119,6 +120,7 @@ var app = new Vue({
                 formLabelWidth: '120px',
                 product: '',
                 third_plan: '',
+                third_dbschemes: '',
                 forceStopPlans: '',
                 plan: '',
                 service: '',
@@ -222,6 +224,11 @@ var app = new Vue({
                         layer.msg(data.msg)
                     }
                 })
+                _post_nl('/manager/queryDbScheme/', {action: 1}, function (data) {
+                    if (data.code == 0) {
+                        that.dbschemes = data.data
+                    }
+                })
             }
         },
         jacocoSetSave() {
@@ -264,7 +271,7 @@ var app = new Vue({
                     type: 'error', center: true
                 });
             } else {
-                _post_nl('/homepage/querytaskid/', {'planid': planid,'action':'plan'}, function (data) {
+                _post_nl('/homepage/querytaskid/', {'planid': planid, 'action': 'plan'}, function (data) {
                     data = JSON.parse(data)
                     taskid = data.data
                     if (data.code != 0) {
@@ -296,11 +303,11 @@ var app = new Vue({
             } else {
                 _post_nl('/manager/queryonemailconfig/', {id: planid}, function (data) {
                     if (data.code == 0) {
-                        that.form.reportNoticeSet.color = data.data.color_scheme!='None'?data.data.color_scheme:'';
-                        that.form.reportNoticeSet.to_receive = data.data.to_receive!='None'?data.data.to_receive:'';
-                        that.form.reportNoticeSet.description = data.data.description!='None'?data.data.description:'';
-                        that.form.reportNoticeSet.text = data.data.rich_text!='None'?data.data.rich_text:'';
-                        that.form.reportNoticeSet.dingdingtoken = data.data.dingdingtoken!='None'?data.data.dingdingtoken:''
+                        that.form.reportNoticeSet.color = data.data.color_scheme != 'None' ? data.data.color_scheme : '';
+                        that.form.reportNoticeSet.to_receive = data.data.to_receive != 'None' ? data.data.to_receive : '';
+                        that.form.reportNoticeSet.description = data.data.description != 'None' ? data.data.description : '';
+                        that.form.reportNoticeSet.text = data.data.rich_text != 'None' ? data.data.rich_text : '';
+                        that.form.reportNoticeSet.dingdingtoken = data.data.dingdingtoken != 'None' ? data.data.dingdingtoken : ''
                         that.noticeSetVisible = true;
                     } else {
                         layer.msg(data.msg)
@@ -354,7 +361,7 @@ var app = new Vue({
                     type: 'error', center: true
                 });
             } else {
-                _post_nl('/homepage/querytaskid/', {'planid': planid,'action':'plan'}, function (data) {
+                _post_nl('/homepage/querytaskid/', {'planid': planid, 'action': 'plan'}, function (data) {
                     data = JSON.parse(data)
                     taskid = data.data
                     is_running = data.is_running
@@ -775,7 +782,7 @@ var app = new Vue({
                     type: 'error', center: true
                 });
             } else {
-                _post_nl('/homepage/querytaskid/', {'planid': planid,'action':'plan'}, function (data) {
+                _post_nl('/homepage/querytaskid/', {'planid': planid, 'action': 'plan'}, function (data) {
                     var res = JSON.parse(data);
                     if (res.code == 0) {
                         const req = new XMLHttpRequest();
@@ -802,7 +809,7 @@ var app = new Vue({
         },
         downloadRunlog() {
             var that = this;
-            _post_nl('/homepage/querytaskid/', {'planid': that.form.plan.substr(5),'action':'plan'}, function (data) {
+            _post_nl('/homepage/querytaskid/', {'planid': that.form.plan.substr(5), 'action': 'plan'}, function (data) {
                 var res = JSON.parse(data);
                 if (res.code == 0) {
                     const req = new XMLHttpRequest();
@@ -1115,8 +1122,21 @@ var app = new Vue({
         },
         'form.third_plan': function (id) {
             var that = this;
-            _post_nl('/homepage/query_third_call/', {planid: id.substr(5)}, function (data) {
-                that.form.is_verify_url = data.is_verify_url
+            _post_nl('/homepage/query_third_call/', {
+                planid: id.substr(5),
+                dbscheme: that.form.third_dbschemes
+            }, function (data) {
+                that.form.is_verify_url = data.is_verify_url;
+                that.form.debug_url = data.debug_url
+            })
+        },
+        'form.third_dbschemes': function (name) {
+            var that = this;
+            _post_nl('/homepage/query_third_call/', {
+                planid: that.form.third_plan.substr(5),
+                dbscheme: name
+            }, function (data) {
+                that.form.is_verify_url = data.is_verify_url;
                 that.form.debug_url = data.debug_url
             })
         },

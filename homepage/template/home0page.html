@@ -497,7 +497,11 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                                    :value="plan.id">
                         </el-option>
                     </el-select>
-
+                    <el-select v-model="form.third_dbschemes" filterable placeholder="数据连接方案" style="width: 49%">
+                        <el-option v-for="dbscheme in dbschemes" :key="dbscheme.value" :label="dbscheme.label"
+                                   :value="dbscheme.value">
+                        </el-option>
+                    </el-select>
                     <div style="margin-top: 15px;">
                         <el-input placeholder="验证地址" v-model="form.is_verify_url">
                             <template slot="prepend">验证地址</template>

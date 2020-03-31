@@ -204,8 +204,8 @@
                                 }
                                 _post('/account/editaccount/', {
                                     'uid': id,
-                                    'username': $('#username').val(),
-                                    'password': $('#password').val(),
+                                    'username': $("[name='username']").val(),
+                                    'password': $("[name='password']").val(),
                                 }, success2)
 
                             }

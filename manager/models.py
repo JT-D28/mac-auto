@@ -1,3 +1,5 @@
+import time
+
 from django.db.models import *
 from login.models import *
 
@@ -71,7 +73,7 @@ class BusinessData(Model):
 	postposition=TextField(blank=True,null=True)
 
 	parser_id=CharField(max_length=32,null=True)#解析器id
-	parser_check=TextField()#解析器校验
+	parser_check=TextField(null=True)#解析器校验
 
 
 	def __str__(self):
@@ -106,7 +108,7 @@ class Step(Model):
 	
 	businessdatainfo = ManyToManyField(BusinessData, blank=True)
 	# businesstitle=CharField(max_length=1000,blank=True)
-	db_id = CharField(max_length=20, blank=True, null=True)
+	db_id = CharField(max_length=64, blank=True, null=True)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 	
@@ -121,7 +123,7 @@ class Case(Model):
 	description = CharField(max_length=128)
 	businessdatainfo = ManyToManyField(BusinessData, blank=True)
 	# steps=ManyToManyField(Step,blank=True)
-	db_id = CharField(max_length=20, blank=True, null=True)
+	db_id = CharField(max_length=64, blank=True, null=True)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 	
@@ -134,7 +136,8 @@ class Plan(Model):
 	author = ForeignKey(User, on_delete=CASCADE)
 	description = CharField(max_length=128)
 	cases = ManyToManyField(Case, blank=True)
-	db_id = CharField(max_length=20, blank=True, null=True)
+	db_id = CharField(max_length=64, blank=True, null=True)
+	schemename=CharField(max_length=64, blank=True, null=True)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 	
@@ -188,20 +191,6 @@ class Variable(Model):
 
 		return "%s_%s" % (self.author, self.key)
 	
-	@classmethod
-	def oldVarBindTag(cls):
-		vars = Variable.objects.all()
-		for var in vars:
-			if not Tag.objects.filter(var=var).exists():
-				tag=Tag()
-				tag.var=var
-				tag.customize=''
-				tag.planids='{}'
-				tag.isglobal=1
-				tag.save()
-				print(str(var.id)+'更新成功')
-		print('变量tag更新完成')
-
 
 class Order(Model):
 	"""
@@ -232,15 +221,14 @@ class DBCon(Model):
 	dbname = CharField(max_length=64)
 	host = CharField(max_length=15, blank=True)
 	port = CharField(max_length=5, blank=True)
-	
+	scheme = CharField(max_length=32,blank=True)
 	username = CharField(max_length=15)
 	password = CharField(max_length=15)
 	description = TextField()
 	author = ForeignKey(User, on_delete=CASCADE)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
-
-
+	
 class Crontab(Model):
 	taskid = CharField(max_length=32)
 	plan = ForeignKey(Plan, on_delete=CASCADE)

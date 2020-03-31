@@ -6,7 +6,7 @@ from ME2 import configs
 from . import forms
 from manager.models import *
 from login.models import *
-
+from manager import models as mm
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse
 from manager.core import *
@@ -39,9 +39,82 @@ def index(request):
 		return redirect("/account/login/")
 
 
+def initDataupdate():
+	print('开始更新旧的数据')
+	variables = Variable.objects.all()
+	for var in variables:
+		if not Tag.objects.filter(var=var).exists():
+			tag = Tag()
+			tag.var = var
+			tag.customize = ''
+			tag.planids = '{}'
+			tag.isglobal = 1
+			tag.save()
+			time.sleep(0.001)
+			print('变量' + str(var.id) + '更新成功')
+	print('变量tag更新完成')
+	dbcons = DBCon.objects.all()
+	for dbcon in dbcons:
+		if dbcon.scheme is None:
+			dbcon.scheme = '全局'
+			dbcon.save()
+			time.sleep(0.001)
+			print('数据连接' + str(dbcon.id) + '更新成功')
+	print('数据连接更新完成')
+	plans = Plan.objects.all()
+	for plan in plans:
+		try:
+			if plan.schemename is None or plan.schemename == '':
+				if plan.db_id is not None and plan.db_id != '':
+					description = DBCon.objects.get(id=plan.db_id).description
+					plan.db_id = description if description is not None else ''
+					plan.schemename = '全局'
+					plan.save()
+					print('计划' + str(plan.id) + '更新成功')
+				else:
+					plan.db_id=''
+					plan.schemename = '全局'
+					plan.save()
+				print('计划' + str(plan.id) + '更新成功')
+		except:
+			print(traceback.format_exc())
+	print('计划更新完成')
+	cases = mm.Case.objects.all()
+	for case in cases:
+		try:
+			dbid=case.db_id
+			if dbid.isdigit():
+				case.db_id=DBCon.objects.get(id=dbid).description
+				case.save()
+				print('用例' + str(case.id) + '更新成功')
+		except:
+			if dbid is None:
+				dbid = ''
+				case.save()
+				print('用例' + str(case.id) + '更新成功')
+			else:
+				print(traceback.format_exc())
+				print('用例' + str(case.id) + '更新失败')
+	steps = Step.objects.all()
+	for step in steps:
+		try:
+			if step.db_id.isdigit():
+				step.db_id=DBCon.objects.get(id=step.db_id).description
+				step.save()
+				print('步骤' + str(step.id) + '更新成功')
+		except:
+			if step.db_id is None:
+				step.db_id = ''
+				step.save()
+				print('步骤' + str(step.id) + '更新成功')
+			else:
+				print(traceback.format_exc())
+				print('步骤' + str(step.id) + '更新失败')
+	print('步骤的dbid更新完成')
+
 @csrf_exempt
 def login(request):
-	threading.Thread(target=Variable.oldVarBindTag, args=()).start()
+	threading.Thread(target=initDataupdate, args=()).start()
 	if configs.IS_CREATE_SUPERUSER:
 		User.create_superuser(EncryptUtils.md5_encrypt(configs.SUPERUSER_PWD))
 	if request.method == 'POST':

@@ -501,7 +501,7 @@ class PlanEncoder(XJsonEncoder):
 	def __init__(self, **args):
 		super(PlanEncoder, self).__init__(
 			['id', 'author', 'last', 'description', 'cases', 'createtime', 'updatetime', 'run_type', 'run_value',
-			 'mail_config_id', 'db_id', 'is_send_dingding', 'is_send_mail'], **args)
+			 'mail_config_id', 'db_id', 'is_send_dingding', 'is_send_mail','schemename'], **args)
 	
 	def encode(self, obj):
 		# print('hhhh'*100)
@@ -696,7 +696,7 @@ class OrderEncoder(XJsonEncoder):
 class DBEncoder(XJsonEncoder):
 	def __init__(self, **args):
 		super(DBEncoder, self).__init__(
-			['id', 'kind', 'dbname', 'host', 'port', 'username', 'password', 'description', 'author', 'createtime',
+			['id', 'kind', 'dbname', 'host', 'port', 'username', 'password', 'description', 'author','scheme','createtime',
 			 'updatetime'], **args)
 
 

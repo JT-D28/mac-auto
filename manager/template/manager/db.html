@@ -4,12 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
-
+    <script src="{% static 'homepage/vue.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'homepage/eleui/theme-chalk/index.css' %}">
+    <script src="{% static 'homepage/eleui/index.js' %}"></script>
     <title>数据库管理</title>
     <style type="text/css">
 
         .layui-icon:hover {
             cursor: pointer;
+        }
+
+        .el-select-dropdown {
+            z-index: 20000000;
         }
 
         .btn {
@@ -20,94 +26,175 @@
         .layui-table-view {
             margin: 20px 0;
         }
+
+        .el-input__inner, .el-input__icon {
+            height: 34px;
+            line-height: 34px;
+        }
+
+        .copyerror {
+            padding-bottom: 5px;
+        }
     </style>
 </head>
 <body style="height: calc(100% - 40px);padding: 20px">
-<div class="layui-inline">
-    <button class="layui-btn btn" id='addbtn'>新增</button>
-    <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
+<div id="dbhtml">
+    <div class="layui-inline">
+        <button class="layui-btn btn" id='addbtn'>新增</button>
+        <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
+        <button class="layui-btn btn" id='copybtn'>复制</button>
+    </div>
+
+
+    <div class="layui-inline" style="float: right;width: 80%;">
+        <button class="layui-btn btn" id='querybtn' style="float: right;">查询</button>
+        <div class="layui-input-inline" style="float: right"><input id='search-value' type="text" name=""
+                                                                    placeholder="名称|键|值"
+                                                                    class="layui-input btn"></div>
+        <div class="layui-input-inline" style="margin-bottom: 0px;width: 14%;float: right;">
+            <el-select style="float: right" @change="schemeChange" v-model="querySchemeValue" filterable
+                       placeholder="选择配置方案">
+                <el-option
+                        v-for="item in queryschemeoptions"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value">
+                </el-option>
+            </el-select>
+        </div>
+    </div>
+
+    <table id='table-var' class="layui-table"
+           lay-data="{height: 'full-100', cellMinWidth: 80, page: true, limit:10, url:'/manager/querydb/'}"
+           lay-filter='target'>
+        <thead>
+        <tr>
+            <th lay-data="{type:'checkbox',width:'5%'}"></th>
+            <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
+            <th lay-data="{field: 'description',width:'16%', sort: true}">描述</th>
+            <th lay-data="{field: 'kind',width:'10%', sort: true}">类型</th>
+            <th lay-data="{field: 'dbname',width:'20%', sort: true}">库名/服务名/SID</th>
+            <th lay-data="{field: 'host',width:'12%', sort: true}">主机名</th>
+            <th lay-data="{field: 'port',width:'8%', sort: true}">端口</th>
+            <th lay-data="{field: 'scheme',width:'10%', sort: true}">方案</th>
+            <th lay-data="{field: 'author',width:'7.4%', sort: true}">创建者</th>
+            <!--       <th lay-data="{field: 'username',width:160, sort: true}">账号名</th>
+				  <th lay-data="{field: 'password',width:160, sort: true}">密码</th> -->
+            <!--       <th lay-data="{field: 'createtime', width:160,sort:true}">创建时间</th>
+				  <th lay-data="{field: 'updatetime', width:160}">更改时间</th> -->
+            <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:'12%'}">操作</th>
+
+        </tr>
+        </thead>
+    </table>
+
+    <form id='addhtml' hidden=true class="layui-form" style="padding: 30px 100px 0 30px ;">
+        <div class="layui-form-item">
+            <div class="layui-input-inline" style="width: 50%;margin-right: 0px">
+                <label class="layui-form-label">类型</label>
+                <div class="layui-input-block">
+                    <select name="kind" lay-verify="">
+                        <option value="">请选择</option>
+                        <option value="pgsql">pgsql</option>
+                        <option value="mysql">mysql</option>
+                        <option value="oracle_sid">oracle(SID)</option>
+                        <option value="oracle_servicename">oracle(服务名)</option>
+                        <!--         <option value="db2">db2</option> -->
+                    </select>
+                </div>
+            </div>
+            <div class="layui-input-inline" style="width: 50%;margin-right: 0px;float: right">
+                <label class="layui-form-label">配置方案</label>
+                <div class="layui-input-block">
+                    <el-select
+                            style="width: 100%"
+                            v-model="schemevalue"
+                            filterable
+                            allow-create
+                            default-first-option
+                            placeholder="请选择数据库方案（填入内容并且回车可自定义方案名）">
+                        <el-option
+                                v-for="item in schemeoptions"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value">
+                        </el-option>
+                    </el-select>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">描述</label>
+            <div class="layui-input-block">
+                <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">库名/服务名/SID</label>
+            <div class="layui-input-block">
+                <input type="text" name="dbname" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-inline" style="width: 70%;margin-right: 0px">
+                <label class="layui-form-label">host</label>
+                <div class="layui-input-block">
+                    <input type="text" name="host" placeholder="请输入" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-input-inline" style="width: 30%;margin-right: 0px;float: right">
+                <label class="layui-form-label">port</label>
+                <div class="layui-input-block">
+                    <input type="text" name="port" placeholder="请输入" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">账号名</label>
+            <div class="layui-input-block">
+                <input type="text" name="accountname" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">密码</label>
+            <div class="layui-input-block">
+                <input type="password" name="password" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+    </form>
+
+    <el-dialog title="数据连接配置复制" :visible.sync="copydbVisible">
+        <div class="" style="text-align: center" v-html="cpoydbinfo"></div>
+        <div class="layui-form-item">
+            <div class="layui-inline" style="width: 100%;padding-top: 45px">
+                <label class="layui-form-label" style="padding:9px 0;text-align:center">选择方案</label>
+                <div class="layui-input-inline" style="width: calc(100% - 100px)">
+                    <el-select
+                            style="width: 100%"
+                            v-model="schemevalue"
+                            filterable
+                            allow-create
+                            default-first-option
+                            placeholder="请选择数据库方案（填入内容并且回车可自定义方案名）">
+                        <el-option
+                                v-for="item in schemeoptions"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value">
+                        </el-option>
+                    </el-select>
+                </div>
+            </div>
+        </div>
+        <div slot="footer" class="dialog-footer">
+            <el-button type="primary" id="copydbSubmit">复 制</el-button>
+            <el-button type="primary" id="copydbEdit">仅修改</el-button>
+            <el-button @click="copydbcancel">取 消</el-button>
+        </div>
+    </el-dialog>
 
 </div>
-<div class="layui-inline" style="float: right;">
-    <div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="名称|键|值"
-                                           class="layui-input btn"></div>
-    <button class="layui-btn btn" id='querybtn'>查询</button>
-</div>
-<table id='table-var' class="layui-table"
-       lay-data="{height: 'full-100', cellMinWidth: 80, page: true, limit:10, url:'/manager/querydb/'}"
-       lay-filter='target'>
-    <thead>
-    <tr>
-        <th lay-data="{type:'checkbox',width:'5%'}"></th>
-        <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
-        <th lay-data="{field: 'description',width:'15%', sort: true}">描述</th>
-        <th lay-data="{field: 'kind',width:'10%', sort: true}">类型</th>
-        <th lay-data="{field: 'dbname',width:'20%', sort: true}">库名/服务名/SID</th>
-        <th lay-data="{field: 'host',width:'20%', sort: true}">主机名</th>
-        <th lay-data="{field: 'port',width:'10%', sort: true}">端口</th>
-        <th lay-data="{field: 'author',width:'8%', sort: true}">创建者</th>
-        <!--       <th lay-data="{field: 'username',width:160, sort: true}">账号名</th>
-              <th lay-data="{field: 'password',width:160, sort: true}">密码</th> -->
-        <!--       <th lay-data="{field: 'createtime', width:160,sort:true}">创建时间</th>
-              <th lay-data="{field: 'updatetime', width:160}">更改时间</th> -->
-        <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:'12%'}">操作</th>
-
-    </tr>
-    </thead>
-</table>
-
-<form id='addhtml' hidden=true class="layui-form" style="padding: 30px 100px 0 30px ;">
-    <div class="layui-form-item">
-        <label class="layui-form-label">类型</label>
-        <div class="layui-input-block">
-            <select name="kind" lay-verify="">
-                <option value="">请选择</option>
-                <option value="pgsql">pgsql</option>
-                <option value="mysql">mysql</option>
-                <option value="oracle_sid">oracle(SID)</option>
-                <option value="oracle_servicename">oracle(服务名)</option>
-                <!--         <option value="db2">db2</option> -->
-            </select>
-        </div>
-    </div>
-    <div class="layui-form-item">
-        <label class="layui-form-label">描述</label>
-        <div class="layui-input-block">
-            <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input">
-        </div>
-    </div>
-    <div class="layui-form-item">
-        <label class="layui-form-label">库名/服务名/SID</label>
-        <div class="layui-input-block">
-            <input type="text" name="dbname" placeholder="请输入" autocomplete="off" class="layui-input">
-        </div>
-    </div>
-    <div class="layui-form-item">
-        <label class="layui-form-label">host</label>
-        <div class="layui-input-block">
-            <input type="text" name="host" placeholder="请输入" autocomplete="off" class="layui-input">
-        </div>
-    </div>
-    <div class="layui-form-item">
-        <label class="layui-form-label">port</label>
-        <div class="layui-input-block">
-            <input type="text" name="port" placeholder="请输入" autocomplete="off" class="layui-input">
-        </div>
-    </div>
-    <div class="layui-form-item">
-        <label class="layui-form-label">账号名</label>
-        <div class="layui-input-block">
-            <input type="text" name="accountname" placeholder="请输入" autocomplete="off" class="layui-input">
-        </div>
-    </div>
-    <div class="layui-form-item">
-        <label class="layui-form-label">密码</label>
-        <div class="layui-input-block">
-            <input type="password" name="password" placeholder="请输入" autocomplete="off" class="layui-input">
-        </div>
-    </div>
-
-</form>
 </body>
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/layui/layui.js' %}"></script>
@@ -115,36 +202,129 @@
 
 
 <script type="text/javascript">
+
+
+    var app = new Vue({
+        el: '#dbhtml',
+        delimiters: ['${', '}'],
+        data() {
+            return {
+                copydbVisible: false,
+                schemeoptions: [],
+                schemevalue: '',
+                querySchemeValue: '',
+                queryschemeoptions: [],
+                cpoydbinfo: '',
+            }
+        },
+        methods: {
+            copydbSubmit(data, action) {
+                //1是复制并且修改，0是仅修改
+                var that = this;
+                var dbids = [];
+                for (var index = 0; index < data.length; index++) {
+                    dbids.splice(0, 0, data[index]['id'])
+                }
+                if (app.schemevalue.length === 0) {
+                    this.$message.error('请选择配置方案！');
+                    return false
+                }
+                _post_nl('/manager/copyDbCon/', {
+                    action: action,
+                    dbids: dbids,
+                    copyschemevalue: app.schemevalue
+                }, function (data) {
+                    if (data.code == 1) {
+                        that.$message({
+                            dangerouslyUseHTMLString: true,
+                            message: data.msg,
+                            type: 'error'
+                        });
+                    } else {
+                        layer.msg(data.msg);
+                        that.queryDbScheme(0);
+                        $("#querybtn").click();
+                        that.copydbVisible = false;
+                    }
+                })
+            },
+            copydbcancel() {
+                this.copydbVisible = false
+            },
+            schemeChange() {
+                var that = this;
+                $("#querybtn").click()
+            },
+            queryDbScheme(action) {
+                var that = this;
+                //0的话是外面查询的，1的话是表单填写页面
+                _post_nl('/manager/queryDbScheme/', {action: action}, function (data) {
+                    if (data.code === 0) {
+                        if (action === 1) {
+                            that.schemevalue = '';
+                            that.schemeoptions = data.data;
+                        } else if (action === 0) {
+                            that.queryschemeoptions = data.data;
+                        }
+                    } else {
+                        that.schemeoptions = [{
+                            value: '',
+                            label: ''
+                        }];
+                    }
+                })
+            },
+        },
+        created: function () {
+            this.queryDbScheme(0)
+        }
+    });
+
+
     layui.use(['table', 'layer'], function () {
         var table = layui.table;
-        var $ = layui.jquery
+        var $ = layui.jquery;
         var layer = layui.layer;
         var form = layui.form;
 
 
+        //复制操作
+        $("#copybtn").click(function (e) {
+            var checkStatus = table.checkStatus("table-var");
+            var data = checkStatus.data; //获取选中的数据
+            if (data.length == 0) {
+                layer.msg('请选择数据连接项！', {time: 1000});
+                return false
+            }
+            app.queryDbScheme(1);
+            app.cpoydbinfo = '你选择了' + data.length + '个数据连接配置项';
+            app.copydbVisible = true;
+            $("#copydbSubmit").unbind("click");
+            setTimeout(() => $("#copydbSubmit").click(() => {
+                app.copydbSubmit(data, 1);
+            }), 3);
+            $("#copydbEdit").unbind("click");
+            setTimeout(() => $("#copydbEdit").click(() => {
+                app.copydbSubmit(data, 0);
+            }), 3);
+        });
+
 //查询功能
         $("#querybtn").click(function (e) {
-
             console.log('query var');
-
-
             table.reload('table-var', {
                 page: {
                     curr: 1
                 },
                 where: {
-                    searchvalue: $("#search-value").val()
-
+                    searchvalue: $("#search-value").val(),
+                    querySchemeValue: app.querySchemeValue
                 }
-
             });
-
-
         });
 
 //删除功能
         $("#delbtn").click(function (e) {
-
             var checkStatus = table.checkStatus("table-var");
             data = checkStatus.data;
             ids = []
@@ -154,64 +334,49 @@
             } else {
                 for (var index = 0; index < data.length; index++) {
                     ids.splice(0, 0, data[index]['id'])
-
                 }
             }
 
             layer.confirm('确认删除么?', function (index) {
-
                 success = function (e) {
-                    table.reload('table-var', {
-                        page: {
-                            curr: 1
-                        },
-                        where: {
-                            searchvalue: $("#search-value").val()
-
-                        }
-
-                    });
-
-                    e = JSON.parse(e)
+                    e = JSON.parse(e);
                     if (e.code == 0) {
+                        app.queryDbScheme(0);
+                        $("#querybtn").click()
                         layer.alert(e.msg, {icon: 1, time: 1500})
                     } else {
                         layer.alert(e.msg, {icon: 2})
                     }
-
-                }
-                layer.close(index);
-
+                };
+                //layer.close(index);
                 _post('/manager/delcon/', {'ids': ids.join()}, success)
-
-
             })
-
         });
 
 //新增功能
-
         $("#addbtn").click(function (e) {
+            app.queryDbScheme(1);
+            $('#addhtml')[0].reset();
             var o = layer.open(
                 {
                     title: '数据连接 / 新增',
                     type: 1,
+                    zIndex: 1000,
                     // area:["350px","350px"],
                     content: $('#addhtml'),
                     btn: ['测试连接', '提交', '取消'],
+                    success:function(){
+                        setTimeout(()=>app.schemevalue='全局',20)
+                    },
                     yes: function (index, layero) {
-
-                        // alert($("[name='description']").val())
                         success = function (res) {
-                            res = JSON.parse(res)
-                            if (res.code == 0) {
+                            res = JSON.parse(res);
+                            if (res.code === 0) {
                                 layer.alert(res.msg, {icon: 1})
-
                             } else {
                                 layer.alert(res.msg, {icon: 2})
                             }
-
-                        }
+                        };
                         data = {
                             'description': $("[name='description']").val(),
                             'host': $("[name='host']").val(),
@@ -219,124 +384,99 @@
                             'dbname': $("[name='dbname']").val(),
                             'accountname': $("[name='accountname']").val(),
                             'password': $("[name='password']").val(),
-                            'kind': $("[name='kind']").val()
-                        }
-                        console.log(data)
-
+                            'kind': $("[name='kind']").val(),
+                        };
+                        console.log(data);
                         _post('/manager/testdbcon/', data, success)
-
                     },
                     btn2: function (index, layero) {
                         //按钮【按钮一】的回调
-                        console.log('yes')
-
+                        console.log('yes');
+                        var description = $("[name='description']").val();
+                        var host = $("[name='host']").val();
+                        var port = $("[name='port']").val();
+                        var dbname = $("[name='dbname']").val();
+                        var accountname = $("[name='accountname']").val();
+                        var password = $("[name='password']").val();
+                        var kind = $("[name='kind']").val();
+                        var schemevalue = app.schemevalue;
+                        console.log(description.length, host.length, port.length, dbname.length, accountname.length, password.length, kind.length)
+                        if ((schemevalue.length * description.length * host.length * port.length * dbname.length * accountname.length * password.length * kind.length) === 0) {
+                            layer.msg('请检查是否全部填写');
+                            return false
+                        }
                         // $('#addhtml')[0].reset()
                         // layui.form.render()
-
                         success = function (e) {
-
-                            table.reload('table-var', {
-                                page: {
-                                    curr: 1
-                                },
-                                where: {
-                                    searchvalue: $("#search-value").val()
-
-                                }
-
-                            });
-                            e = JSON.parse(e)
-                            layer.close(index)
-                            // body...
-                            if (e.code == 0)
-                                layer.alert(e.msg, {icon: 1, time: 1500})
-
-                            else {
+                            e = JSON.parse(e);
+                            if (e.code === 0) {
+                                app.queryDbScheme(0);
+                                $("#querybtn").click();
+                                layer.alert(e.msg, {icon: 1, time: 1500});
+                            } else {
                                 layer.alert(e.msg, {icon: 2})
                             }
-                        }
+                        };
                         data = {
-                            'description': $("[name='description']").val(),
-                            'host': $("[name='host']").val(),
-                            'port': $("[name='port']").val(),
-                            'dbname': $("[name='dbname']").val(),
-                            'accountname': $("[name='accountname']").val(),
-                            'password': $("[name='password']").val(),
-                            'kind': $("[name='kind']").val()
-                        }
-
-                        console.log('添加db', data)
+                            'description': description,
+                            'host': host,
+                            'port': port,
+                            'dbname': dbname,
+                            'accountname': accountname,
+                            'password': password,
+                            'kind': kind,
+                            'schemevalue': schemevalue
+                        };
+                        console.log('添加db', data);
                         _post('/manager/adddbcon/', data, success)
-                    },
-                    // btn2: function(index, layero){
-                    //   //按钮【按钮二】的回调
-                    //   //return false 开启该代码可禁止点击该按钮关闭
-                    //   console.log('no')
-                    // },
-
-
+                    }
                 });
-
             layer.full(o);
-
         });
 
 //tool事件
         table.on("tool(target)", function (e) {
-
+            app.queryDbScheme(1)
             console.log(e.event);
-            console.log(e)
-
+            console.log(e);
             // var checkStatus = table.checkStatus("table-var");
             // data = checkStatus.data; //获取选中的数据
             id = e.data['id']
             if (e.event == 'edit') {
-
                 success = function (data) {
-
-                    console.log(data.data)
-                    // data=JSON.parse(data)
-                    // console.log(data.data)
-                    // alert(data.data)
-
-                    //设置addhtml
-
-                    kind = data.data['kind']
-                    description = data.data['description']
-                    dbname = data.data['dbname']
-                    host = data.data['host']
-                    port = data.data['port']
-                    accountname = data.data['username']
-                    password = data.data['password']
-
-
-                    $("[name='kind']").val(kind)
+                    console.log(data.data);
+                    kind = data.data['kind'];
+                    description = data.data['description'];
+                    dbname = data.data['dbname'];
+                    host = data.data['host'];
+                    port = data.data['port'];
+                    accountname = data.data['username'];
+                    password = data.data['password'];
+                    app.schemevalue=data.data['scheme'];
+                    $("[name='kind']").val(kind);
                     layui.form.render('select');
-                    $("[name='description']").val(description)
-                    $("[name='dbname']").val(dbname)
-                    $("[name='host']").val(host)
-                    $("[name='port']").val(port)
-                    $("[name='accountname']").val(accountname)
-                    $("[name='password']").val(password)
-
+                    $("[name='description']").val(description);
+                    $("[name='dbname']").val(dbname);
+                    $("[name='host']").val(host);
+                    $("[name='port']").val(port);
+                    $("[name='accountname']").val(accountname);
+                    $("[name='password']").val(password);
                     //打开表单
-
                     var o = layer.open({
                         type: 1,
                         title: '数据连接 / 编辑',
                         content: $('#addhtml'),
+                        zIndex: 1000,
                         btn: ['测试连接', '提交', '取消'],
                         yes: function (index, layero) {
                             success = function (res) {
-                                res = JSON.parse(res)
+                                res = JSON.parse(res);
                                 if (res.code == 0) {
                                     layer.alert(res.msg, {icon: 1})
-
                                 } else {
                                     layer.alert(res.msg, {icon: 2})
                                 }
-
-                            }
+                            };
                             data = {
                                 'description': $("[name='description']").val(),
                                 'host': $("[name='host']").val(),
@@ -345,66 +485,53 @@
                                 'accountname': $("[name='accountname']").val(),
                                 'password': $("[name='password']").val(),
                                 'kind': $("[name='kind']").val()
-                            }
+                            };
                             _post('/manager/testdbcon/', data, success)
                         },
                         btn2: function (index, layero) {
-
-                            layer.close(index)
-
-                            success = function (e) {
-                                $('#addhtml')[0].reset()
-                                layui.form.render()
-
-                                table.reload('table-var', {
-                                    page: {
-                                        curr: 1
-                                    },
-                                    where: {
-                                        searchvalue: $("#search-value").val()
-
-                                    }
-
-                                });
-
-                                e = JSON.parse(e)
-                                if (e.code == 0)
-                                    layer.alert(e.msg, {icon: 1, time: 1500})
-                                else
-                                    layer.alert(e.msg, {icon: 2})
-
+                            var description = $("[name='description']").val();
+                            var host = $("[name='host']").val();
+                            var port = $("[name='port']").val();
+                            var dbname = $("[name='dbname']").val();
+                            var accountname = $("[name='accountname']").val();
+                            var password = $("[name='password']").val();
+                            var kind = $("[name='kind']").val();
+                            var schemevalue = app.schemevalue;
+                            console.log(description.length, host.length, port.length, dbname.length, accountname.length, password.length, kind.length)
+                            if ((schemevalue.length * description.length * host.length * port.length * dbname.length * accountname.length * password.length * kind.length) === 0) {
+                                layer.msg('请检查是否全部填写');
+                                return false
                             }
+                            success = function (e) {
+                                $('#addhtml')[0].reset();
+                                layui.form.render();
+                                e = JSON.parse(e);
+                                if (e.code == 0) {
+                                    app.queryDbScheme(0);
+                                    $("#querybtn").click();
+                                    layer.alert(e.msg, {icon: 1, time: 1500});
+                                } else
+                                    layer.alert(e.msg, {icon: 2})
+                            };
                             _post('/manager/editdbcon/', {
                                 'id': id,
-                                'kind': $("[name='kind']").val(),
-                                'description': $("[name='description']").val(),
-                                'dbname': $("[name='dbname']").val(),
-                                'host': $("[name='host']").val(),
-                                'port': $("[name='port']").val(),
-                                'accountname': $("[name='accountname']").val(),
-                                'password': $("[name='password']").val()
-
-
+                                'kind': kind,
+                                'description': description,
+                                'dbname': dbname,
+                                'host': host,
+                                'port': port,
+                                'accountname': accountname,
+                                'password': password,
+                                'schemevalue': schemevalue
                             }, success)
-
                         }
-
                     });
-
                     layer.full(o);
-
-
-                }
+                };
                 _post('/manager/queryonedb/', {id: id}, success)
-
-
             } else if (e.event == 'detail') {
-
             }
-
         });
-
-
     });
 
     // $(document).ready(function(){

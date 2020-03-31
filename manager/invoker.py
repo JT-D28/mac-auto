@@ -3475,12 +3475,12 @@ class Transformer(object):
             for business in businesslist:
                 business.delete()
                 try:
-                    Step.objects.get(id=order.main_id).delete()
+                    Step.objects.get(id=o2.main_id).delete()
                 except:
                     pass
 
                 try:
-                    BusinessData.objects.get(id=order.follow_id).delete()
+                    BusinessData.objects.get(id=o2.follow_id).delete()
                 except:
                     pass
 

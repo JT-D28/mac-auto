@@ -32,9 +32,10 @@ class TemplateField(Model):
 	'''
 	fieldcode=CharField(max_length=16)
 	description=TextField()
-	start=IntegerField()##从1算起
-	end=IntegerField()
-	index=IntegerField()
+	start=IntegerField(default=-1)##从1算起
+	end=IntegerField(default=-1)
+	index=IntegerField(default=-1)
+
 
 
 class Template(Model):

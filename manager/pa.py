@@ -190,6 +190,7 @@ class MessageParser(object):
             t.kind=tkws['kind']
             t.name=tkws['name']
             t.description=tkws['description']
+
             t.save()
 
             return {

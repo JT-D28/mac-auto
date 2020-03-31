@@ -218,7 +218,7 @@ layui.use(['table','layer'], function(){
             'kind':$("[name='kind']:checked").val(),
             'description':$("[name='description']").val(),
             'name':$("[name='name']").val(),
-            'content_url':$("[name='parser_url']").val()
+            //'content_url':$("[name='parser_url']").val()
           }
 
           _post("/manager/addtemplate/",data,success)
@@ -255,7 +255,7 @@ layui.use(['table','layer'], function(){
         //设置addhtml
         $("[name='description']").val(data.data['description'])
         $("[name='name']").val(data.data['name'])
-        $("[name='parser_url']").val(data.data['content_url'])
+        //$("[name='parser_url']").val(data.data['content_url'])
         $("[name='kind'][value='"+data.data['kind']+"']").attr('checked','')
         form.render()
         //打开表
@@ -294,7 +294,7 @@ layui.use(['table','layer'], function(){
               'name':$("[name='name']").val(),
               'description':$("[name='description']").val(),
               'kind':$("[name='kind']:checked").val(),
-              'content_url':$("[name='parser_url']").val()
+              //'content_url':$("[name='parser_url']").val()
           
             },success)
 

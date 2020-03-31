@@ -37,7 +37,6 @@ class TemplateField(Model):
 	index=IntegerField(default=-1)
 
 
-
 class Template(Model):
 	'''报文校验
 	'''

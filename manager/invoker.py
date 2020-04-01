@@ -3,6 +3,9 @@
 # @Date    : 2019-09-27 14:45:12
 # @Author  : Blackstone
 # @to      :
+import ast
+from urllib import parse
+
 from django.conf import settings
 from django.db.models import Q
 from django.http import JsonResponse
@@ -830,10 +833,9 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		# body=json.loads(body)
 		try:
 			print('urlencode=>', body)
-			if body.startswith("{"):
-				body = eval(body)
-			else:
-				body = body.encode('UTF-8')
+			if body.startswith("{") and not body.startswith("{{"):
+				body = parse.urlencode(ast.literal_eval(body))
+			body = body.encode('UTF-8')
 		
 		except:
 			print('参数转化异常：', traceback.format_exc())
@@ -920,9 +922,9 @@ def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
 		if s == 'None' or s is None:
 			continue;
 		
-		status, call_str = _replace_variable(user, s)
+		status, call_str = _replace_variable(user, s, 1, taskid)
 		if status is not 'success':
-			return (status, res)
+			return (status, call_str)
 		
 		methodname = ''
 		try:
@@ -1143,6 +1145,8 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 			
 			k, v, op = _separate_expression(exp)
 			print('获取的项=>', k, v, op)
+			for badstr in ['\\n','\\r','\n']:
+				data=data.replace(badstr,'')
 			data = data.replace('null', "'None'").replace('true', "'True'").replace("false", "'False'")
 			# print('data=>',data)
 			

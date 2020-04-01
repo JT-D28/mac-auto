@@ -942,7 +942,7 @@ class Fu:
 		return cls._md5(final)
 	
 	@classmethod
-	def call(cls, funcobj, call_str, builtin=False,taskid=None,username=None):
+	def call(cls, funcobj, call_str, builtin=False,username=None,taskid=None):
 		# print("内置=>",builtin)
 		# print('调用=》',call_str)
 		try:
@@ -951,6 +951,8 @@ class Fu:
 				try:
 					call_str = call_str.replace('\n', '')
 					#print('调用原表达式=>', call_str)
+					if call_str.startswith('dbexecute') and taskid not in call_str:
+						call_str = call_str.replace(')',',taskid="%s",callername="%s")'%(taskid,username))
 					res = eval(call_str)
 					print("调用内置函数表达式:%s 结果为:%s" % (call_str, res))
 					if isinstance(res, (tuple,)):

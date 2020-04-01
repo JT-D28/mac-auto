@@ -24,6 +24,8 @@ def dbexecute(sql, taskid=None, callername=None):
     非查询语句返回执行后影响条数
 
     """
+    if taskid is None:
+        return 'error', 'taskid为空'
     op = Mysqloper()
     if re.search('@', sql) is None:
         sql = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")[0]
@@ -41,10 +43,11 @@ def dbexecute2(sql, taskid=None, callername=None):
     某条执行失败返回失败信息
     否则返回'success'
     """
+    if taskid is None:
+        return 'error', 'taskid为空'
     
-    print('调用内置函数=>dbexecute2')
+    print('调用内置函数=>dbexecute2',taskid)
     d = []
-    
     try:
         if re.search('@.*(;.*@)?', sql) is not None:
             sqls1 = re.split("@", sql)
@@ -151,7 +154,7 @@ def createTransNo(name=None):
     createTransNo： 随机生成流水号 
      参数：name 为字符串，此处表示英文名
      返回：name+当前时间（月日时分秒）+随机数字      共16位
-    ''' 
+    '''
     if name !=None:
         n=16-len(name)
     else:
@@ -176,7 +179,7 @@ def createReqSeqID(name):
         nowtime=time.strftime("%m%d%H%M%S")
         if n <10:
             nowtime=nowtime[:n]
-    n=n-len(nowtime)     
+    n=n-len(nowtime)
     return name+nowtime+''.join(random.choice("0123456789") for i in range(n))
 
 

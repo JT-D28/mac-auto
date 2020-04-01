@@ -3723,8 +3723,9 @@ class DataMove:
 				businessd['id'] = business.id
 				businessd['businessname'] = business.businessname
 				itf_check = business.itf_check if business.itf_check is not None else ''
-				db_check = business.db_check if business.itf_check is not None else ''
-				params = business.params if business.itf_check is not None else ''
+				db_check = business.db_check if business.db_check is not None else ''
+				params = business.params if business.params is not None else ''
+				print("123iijij",business,params)
 				businessd['itf_check'] = itf_check
 				businessd['db_check'] = db_check
 				businessd['params'] = params

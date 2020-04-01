@@ -374,21 +374,14 @@ def gettestdataparams(businessdata_id):
 		if msg is not 'success':
 			return (msg, step)
 		
-		businessdatainst.params = businessdatainst.params.replace('null', 'None').replace(':false', ':False').replace(
-			':true', ':True')
-		
+		data = businessdatainst.params
+
 		if step.step_type == 'interface':
-			if step.content_type == 'xml':
-				return ('success', businessdatainst.params)
-			
-			elif step.content_type == 'urlencode':
-				if businessdatainst.params.startswith("{"):
-					return ('success', eval(businessdatainst.params))
-				else:
-					return ('success', businessdatainst.params)
+			if step.content_type in ['xml','urlencode']:
+				return ('success', data)
 			else:
-				return ('success', eval(businessdatainst.params))
-		
+				data = data.replace('null', 'None').replace('true','True').replace('false','False')
+				return ('success', eval(data))
 		
 		elif step.step_type == 'function':
 			return ('success', businessdatainst.params.split(','))

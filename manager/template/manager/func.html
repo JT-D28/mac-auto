@@ -54,7 +54,7 @@
     </thead>
 </table>
 
-<form id='addhtml' hidden=true class="layui-form" style="padding: 30px 100px 0 30px ;">
+<form id='addhtml' hidden=true class="layui-form" style="padding: 30px 100px 0 30px ;height: calc(100% - 30px)">
 
     <div class="layui-form-item">
         <label class="layui-form-label">描述</label>
@@ -62,11 +62,11 @@
             <input id='desp' type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input">
         </div>
     </div>
-    <div class="layui-form-item">
+    <div class="layui-form-item" style="height: calc(100% - 90px)">
         <label class="layui-form-label">代码定义</label>
-        <div class="layui-input-block" id='code-define'>
+        <div class="layui-input-block" id='code-define' style="height: 100%;">
             <textarea id='code' type="textarea" name="code" placeholder="def sleep(sec).." autocomplete="off"
-                      class="layui-textarea"></textarea>
+                      class="layui-textarea" style="height: 100%;"></textarea>
         </div>
     </div>
 

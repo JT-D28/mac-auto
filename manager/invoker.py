@@ -3651,7 +3651,7 @@ class DataMove:
 						'gain': usevar.gain,
 						'is_cache': usevar.is_cache,
 						'authorname': usevar.author.name,
-						'customize': Tag.objects.get(var=usevar).customize,
+						'customize': Tag.objects.get(var=usevar).customize if Tag.objects.get(var=usevar).customize is not None else '',
 					})
 					
 					##gain中含变量 这里只处理两层嵌套 多的会有问题
@@ -3691,9 +3691,9 @@ class DataMove:
 			stepd['step_type'] = step.step_type
 			stepd['method'] = step.method
 			stepd['description'] = step.description
-			stepd['headers'] = step.headers
-			stepd['body'] = step.body
-			stepd['url'] = step.url
+			stepd['headers'] = step.headers if step.headers is not None else ''
+			stepd['body'] = step.body if step.body is not None else ''
+			stepd['url'] = step.url if step.url is not None else ''
 			stepd['content_type'] = step.content_type
 			stepd['tmp'] = step.temp
 			stepd['authorname'] = step.author.name
@@ -3728,7 +3728,7 @@ class DataMove:
 				businessd['itf_check'] = itf_check
 				businessd['db_check'] = db_check
 				businessd['params'] = params
-				varnames = re.findall('{{(.*?)}}', itf_check + db_check + params)
+				varnames = re.findall('{{(.*?)}}', str(itf_check) + str(db_check) + str(params))
 				self._varkeys = self._varkeys + varnames
 				
 				print('bname=>', businessd['businessname'])
@@ -3740,8 +3740,9 @@ class DataMove:
 					ordervalue = Order.objects.get(kind='step_business', main_id=step.id, follow_id=business.id).value
 					b.append((str(business.id), ordervalue))
 					self._data['relation']['step_business'][str(step.id)] = list(set(b))
-					
-					varnames = re.findall('{{(.*?)}}', step.headers + step.url)
+					headers = step.headers if step.headers is not None else ''
+					url = step.url if step.url is not None else ''
+					varnames = re.findall('{{(.*?)}}', str(headers) + str(url))
 					self._varkeys = self._varkeys + varnames
 				
 				if step.step_type == 'function':
@@ -4172,7 +4173,7 @@ class DataMove:
 				vo.author = author
 				vo.save()
 				tag = Tag()
-				tag.customize = v.get('customize')
+				tag.customize = v.get('customize','')
 				tag.planids = bindplanid
 				tag.isglobal = 0
 				tag.var = vo
@@ -4212,15 +4213,17 @@ class DataMove:
 				cono.author = author
 				cono.save()
 			except:
-				author = [author for author in authors if author.get('name') == con.get('authorname')][0]
-				authoro = User()
-				authoro.name = author.get('name')
-				authoro.password = author.get('password')
-				authoro.email = author.get('email')
-				authoro.sex = author.get('sex')
-				authoro.save()
-				cono.author = authoro
-				cono.save()
+				author = [author for author in authors if author.get('name') == con.get('authorname')]
+				if author:
+					author=author[0]
+					authoro = User()
+					authoro.name = author.get('name')
+					authoro.password = author.get('password')
+					authoro.email = author.get('email')
+					authoro.sex = author.get('sex')
+					authoro.save()
+					cono.author = authoro
+					cono.save()
 		
 		##funcs
 		for f in funcs:

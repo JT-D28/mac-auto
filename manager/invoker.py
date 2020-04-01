@@ -3722,6 +3722,7 @@ class DataMove:
 				businessd = {}
 				businessd['id'] = business.id
 				businessd['businessname'] = business.businessname
+
 				itf_check = business.itf_check if business.itf_check is not None else ''
 				db_check = business.db_check if business.db_check is not None else ''
 				params = business.params if business.params is not None else ''
@@ -3730,6 +3731,7 @@ class DataMove:
 				businessd['db_check'] = db_check
 				businessd['params'] = params
 				varnames = re.findall('{{(.*?)}}', str(itf_check) + str(db_check) + str(params))
+
 				self._varkeys = self._varkeys + varnames
 				
 				print('bname=>', businessd['businessname'])

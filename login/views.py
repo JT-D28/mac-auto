@@ -274,7 +274,7 @@ def testexpress(request):
 
 @csrf_exempt
 def testexpress1(request):
-	return JsonResponse([{'linenum': 1}, {'linenum': 2}], safe=False)
+	return JsonResponse([{'width':95,'name':'节点名称'}, {'width': 98,'name':'节点名称:一审'}], safe=False)
 
 @csrf_exempt
 def testexpress2(request):

@@ -3743,7 +3743,7 @@ class DataMove:
 				businessd['itf_check'] = business.itf_check
 				businessd['db_check'] = business.db_check
 				businessd['params'] = business.params
-				varnames = re.findall('{{(.*?)}}', business.itf_check + business.db_check + business.params)
+				varnames = re.findall('{{(.*?)}}',business.itf_check+business.db_check+business.params )
 				self._varkeys = self._varkeys + varnames
 				
 				print('bname=>', businessd['businessname'])

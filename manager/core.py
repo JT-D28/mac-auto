@@ -1006,8 +1006,7 @@ class Fu:
 					except:
 						print(traceback.format_exc())
 						return ('error', "非法表达式[%s]" % call_str)
-				
-		
+	
 			else:
 				print('fucobj=>', funcobj)
 				user = funcobj.author
@@ -1015,10 +1014,12 @@ class Fu:
 				f = __import__('manager.storage.private.Function.%s.func_%s' % (user, flag), fromlist=True)
 				callstr = "f.%s" % (call_str)
 				# print(callstr)
+				callstr=callstr.replace('\n', '')
+				print('ccc=>\n',callstr)
+				print('\n' in callstr)
 				res = eval(callstr)
 				print("调用用户定义表达式:%s 结果为:%s" % (callstr, res))
 
-			
 			return ('success', res)
 		
 		except Exception as e:

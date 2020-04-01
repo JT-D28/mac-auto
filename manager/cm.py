@@ -1346,12 +1346,16 @@ def get_search_match(searchvalue):
 	   2.匹配的是子节点
 	   3.无匹配结果
 	'''
+	import time
+	print('1=>',time.time())
 	nodes = get_full_tree()
+	print('2=>',time.time())
 	for node in nodes:
 		if searchvalue in node.get('name'):
 			# node['name']="<s>%s</s>"%node['name']
 			# node['name']="<span style='color:red;'>%s</span>"%node['name']
 			_expand_parent(node, nodes)
+	print('3=>',time.time())
 	
 	return nodes
 

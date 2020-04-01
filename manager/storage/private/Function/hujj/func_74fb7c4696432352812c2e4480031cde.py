@@ -1,5 +1,8 @@
 def getRequestDataWithsignKey(parame):
     import hashlib
+    import json
+    from typing import Dict, Any
+    from collections import namedtuple
     signKey = '8f5f5d93af2e4befb23af83c3a6cf210'
     signStr=''
     if parame is not None:

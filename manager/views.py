@@ -518,6 +518,8 @@ def queryvar(request):
 		else:
 			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag, bindstr])
 		desc = cursor.description
+
+		print('desc=>',desc)
 		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
 		for i in rows:
 			m = ''

@@ -11,7 +11,7 @@ from hashlib import md5
 
 
 '''
-操作名映射码
+用户操作记录
 '''
 _OPERATION={
 	'symbol':{
@@ -63,16 +63,9 @@ def get_operate_name(interfacename):
 			b=_OPERATION['entity'][_]
 			break;
 
-	print('a=>',a)
-	print('b=>',b)
+	# print('a=>',a)
+	# print('b=>',b)
 	return ''.join([a,b])
-
-
-'''
-缓存
-'''
-
-
 
 
 '''
@@ -169,202 +162,202 @@ def _getvid():
 	return 'vid_' + md5(str_.encode('utf-8')).hexdigest()
 
 
-def _addtestdata(callername, stepid, adddata):
-	# print('alt=>',adddata)
-	vid = _getvid()
-	testdata = models.BusinessData()
-	testdata.id = vid
-	testdata.businessname = adddata.get('businessname', '')
-	testdata.itf_check = adddata.get('itf_check', '')
-	testdata.db_check = adddata.get('db_check', '')
-	testdata.params = adddata.get('params', '')
-	print('参数信息=>', testdata.params)
+# def _addtestdata(callername, stepid, adddata):
+# 	# print('alt=>',adddata)
+# 	vid = _getvid()
+# 	testdata = models.BusinessData()
+# 	testdata.id = vid
+# 	testdata.businessname = adddata.get('businessname', '')
+# 	testdata.itf_check = adddata.get('itf_check', '')
+# 	testdata.db_check = adddata.get('db_check', '')
+# 	testdata.params = adddata.get('params', '')
+# 	print('参数信息=>', testdata.params)
 	
-	cur = querytestdata(callername, stepid, trigger='add')
-	cur.append(testdata)
-	_settestdata(callername, stepid, cur)
+# 	cur = querytestdata(callername, stepid, trigger='add')
+# 	cur.append(testdata)
+# 	_settestdata(callername, stepid, cur)
 	
-	res = querytestdata(callername, stepid, trigger='www')
-	print('res=>', [x.params for x in res])
+# 	res = querytestdata(callername, stepid, trigger='www')
+# 	print('res=>', [x.params for x in res])
 
 
-def _copytestdata(callername, stepid, vid):
-	key = "%s_%s" % (callername, stepid)
-	cur = querytestdata(callername, stepid, trigger='copy')
+# def _copytestdata(callername, stepid, vid):
+# 	key = "%s_%s" % (callername, stepid)
+# 	cur = querytestdata(callername, stepid, trigger='copy')
 	
-	copyit = None
-	for business in cur:
-		print('curbit=>', business.id)
-		if str(business.id) == str(vid):
-			copyit = models.BusinessData()
-			copyit.id = _getvid()
-			copyit.businessname = '%s_%s' % (business.businessname, str(datetime.datetime.now()))
-			copyit.itf_check = business.itf_check
-			copyit.db_check = business.db_check
-			copyit.params = business.params
-			cur.append(copyit)
-			print('[复制测试数据]vid=%s' % vid)
-			_settestdata(callername, stepid, cur)
-			return
+# 	copyit = None
+# 	for business in cur:
+# 		print('curbit=>', business.id)
+# 		if str(business.id) == str(vid):
+# 			copyit = models.BusinessData()
+# 			copyit.id = _getvid()
+# 			copyit.businessname = '%s_%s' % (business.businessname, str(datetime.datetime.now()))
+# 			copyit.itf_check = business.itf_check
+# 			copyit.db_check = business.db_check
+# 			copyit.params = business.params
+# 			cur.append(copyit)
+# 			print('[复制测试数据]vid=%s' % vid)
+# 			_settestdata(callername, stepid, cur)
+# 			return
 	
-	print('[复制测试数据]没发现指定复制对象 vid=%s' % vid)
+# 	print('[复制测试数据]没发现指定复制对象 vid=%s' % vid)
 
 
-def _settestdata(callername, stepid, setdata):
-	try:
-		key = "%s_%s" % (callername, stepid)
-		_user_step_testdata_manager[key] = setdata
-		print("[设置缓存]key=%s value=%s" % (key, str(setdata)))
+# def _settestdata(callername, stepid, setdata):
+# 	try:
+# 		key = "%s_%s" % (callername, stepid)
+# 		_user_step_testdata_manager[key] = setdata
+# 		print("[设置缓存]key=%s value=%s" % (key, str(setdata)))
 	
-	except:
-		print("[设置缓存]异常")
-		print(traceback.format_exc())
+# 	except:
+# 		print("[设置缓存]异常")
+# 		print(traceback.format_exc())
 
 
-def _deltestdata(callername, stepid, vids):
-	cur = querytestdata(callername, stepid, trigger='del')
-	curtmp = copy.deepcopy(cur)
-	print('删除前缓存=>', cur, len(cur))
-	print('需要删除的业务id=>', vids)
-	for x in cur:
-		# print('id=>',str(x.id))
-		if str(x.id) in vids:
-			print('移除id=>', str(x.id))
-			curtmp.remove(x)
-	# else:
-	# 	print('忽略id=>',str(x.id),len(str(x.id)))
-	print('删除后缓存=>', curtmp)
+# def _deltestdata(callername, stepid, vids):
+# 	cur = querytestdata(callername, stepid, trigger='del')
+# 	curtmp = copy.deepcopy(cur)
+# 	print('删除前缓存=>', cur, len(cur))
+# 	print('需要删除的业务id=>', vids)
+# 	for x in cur:
+# 		# print('id=>',str(x.id))
+# 		if str(x.id) in vids:
+# 			print('移除id=>', str(x.id))
+# 			curtmp.remove(x)
+# 	# else:
+# 	# 	print('忽略id=>',str(x.id),len(str(x.id)))
+# 	print('删除后缓存=>', curtmp)
 	
-	_settestdata(callername, stepid, curtmp)
+# 	_settestdata(callername, stepid, curtmp)
 
 
-def _edittestdata(callername, stepid, editdata):
-	cur = querytestdata(callername, stepid, trigger='edit')
-	vid = editdata.get('id')
-	for x in cur:
-		if str(x.id) == str(vid):
-			print('编辑中...')
-			x.businessname = editdata.get('businessname')
-			x.itf_check = editdata.get('itf_check')
-			x.db_check = editdata.get('db_check')
-			x.params = editdata.get('params')
-			print('x=>', x.itf_check)
-			break;
+# def _edittestdata(callername, stepid, editdata):
+# 	cur = querytestdata(callername, stepid, trigger='edit')
+# 	vid = editdata.get('id')
+# 	for x in cur:
+# 		if str(x.id) == str(vid):
+# 			print('编辑中...')
+# 			x.businessname = editdata.get('businessname')
+# 			x.itf_check = editdata.get('itf_check')
+# 			x.db_check = editdata.get('db_check')
+# 			x.params = editdata.get('params')
+# 			print('x=>', x.itf_check)
+# 			break;
 	
-	print('编辑后数据=>', cur)
+# 	print('编辑后数据=>', cur)
 	
-	_settestdata(callername, stepid, cur)
+# 	_settestdata(callername, stepid, cur)
 
 
-def _cleartestdata(callername, stepid):
-	key = "%s_%s" % (callername, stepid)
-	try:
+# def _cleartestdata(callername, stepid):
+# 	key = "%s_%s" % (callername, stepid)
+# 	try:
 		
-		del _user_step_testdata_manager[key]
-		print('[清除缓存]key=%s' % key)
-	except:
-		print('[清除缓存异常]key=%s' % key)
+# 		del _user_step_testdata_manager[key]
+# 		print('[清除缓存]key=%s' % key)
+# 	except:
+# 		print('[清除缓存异常]key=%s' % key)
 
 
 # print(traceback.format_exc())
 
 
-def querytestdata(callername, stepid, trigger='query'):
-	res = []
-	if trigger == 'query':
-		try:
-			_cleartestdata(callername, stepid)
-			step = models.Step.objects.get(id=stepid)
-			res = list(step.businessdatainfo.all())
-			# 缓存数据
-			_settestdata(callername, stepid, res)
-		except:
-			print('[新增步骤异常]')
-			error = traceback.format_exc()
-			print(error)
+# def querytestdata(callername, stepid, trigger='query'):
+# 	res = []
+# 	if trigger == 'query':
+# 		try:
+# 			_cleartestdata(callername, stepid)
+# 			step = models.Step.objects.get(id=stepid)
+# 			res = list(step.businessdatainfo.all())
+# 			# 缓存数据
+# 			_settestdata(callername, stepid, res)
+# 		except:
+# 			print('[新增步骤异常]')
+# 			error = traceback.format_exc()
+# 			print(error)
 	
-	else:
-		key = "%s_%s" % (callername, stepid)
-		res = _user_step_testdata_manager.get(key, [])
-	return res
+# 	else:
+# 		key = "%s_%s" % (callername, stepid)
+# 		res = _user_step_testdata_manager.get(key, [])
+# 	return res
 
 
-def queryafteradd(callername, stepid, adddata):
-	_addtestdata(callername, stepid, adddata)
-	return querytestdata(callername, stepid, trigger='add')
+# def queryafteradd(callername, stepid, adddata):
+# 	_addtestdata(callername, stepid, adddata)
+# 	return querytestdata(callername, stepid, trigger='add')
 
 
-def queryaftercopy(callername, stepid, vid):
-	_copytestdata(callername, stepid, vid)
-	return querytestdata(callername, stepid, trigger='copy')
+# def queryaftercopy(callername, stepid, vid):
+# 	_copytestdata(callername, stepid, vid)
+# 	return querytestdata(callername, stepid, trigger='copy')
 
 
-def queryafteredit(callername, stepid, editdata):
-	_edittestdata(callername, stepid, editdata)
-	return querytestdata(callername, stepid, trigger='edit')
+# def queryafteredit(callername, stepid, editdata):
+# 	_edittestdata(callername, stepid, editdata)
+# 	return querytestdata(callername, stepid, trigger='edit')
 
 
-def queryafterdel(callername, stepid, vids):
-	_deltestdata(callername, stepid, vids)
-	return querytestdata(callername, stepid, trigger='del')
+# def queryafterdel(callername, stepid, vids):
+# 	_deltestdata(callername, stepid, vids)
+# 	return querytestdata(callername, stepid, trigger='del')
 
 
-def mounttestdata(callername, stepid, trigger='add'):
-	try:
-		key = "%s_%s" % (callername, stepid)
-		bids = []
-		cache = None
-		if trigger == 'add':
-			cache = querytestdata(callername, None, trigger='mount')
-		else:
-			cache = querytestdata(callername, stepid, trigger='mount')
-			##清除step之前关联的 不在缓存中的业务数据
-			step = models.Step.objects.get(id=stepid)
-			allids = [x.id for x in list(step.businessdatainfo.all())]
-			cacheids = [x.id for x in cache]
-			todelids = [x for x in allids if x not in cacheids]
-			print('删除不在缓存中的业务数据id=>', todelids)
-			for x in todelids:
-				step.businessdatainfo.remove(x)
+# def mounttestdata(callername, stepid, trigger='add'):
+# 	try:
+# 		key = "%s_%s" % (callername, stepid)
+# 		bids = []
+# 		cache = None
+# 		if trigger == 'add':
+# 			cache = querytestdata(callername, None, trigger='mount')
+# 		else:
+# 			cache = querytestdata(callername, stepid, trigger='mount')
+# 			##清除step之前关联的 不在缓存中的业务数据
+# 			step = models.Step.objects.get(id=stepid)
+# 			allids = [x.id for x in list(step.businessdatainfo.all())]
+# 			cacheids = [x.id for x in cache]
+# 			todelids = [x for x in allids if x not in cacheids]
+# 			print('删除不在缓存中的业务数据id=>', todelids)
+# 			for x in todelids:
+# 				step.businessdatainfo.remove(x)
 		
-		# print('cache=>',cache)
-		for x in cache:
-			if str(x.id).startswith('vid_'):
-				bd = models.BusinessData()
-				bd.businessname = x.businessname
-				bd.itf_check = x.itf_check
-				bd.db_check = x.db_check
-				bd.params = x.params
-				# bd.params=x.params.replace('true','True').replace('false','False').replace('null','None')
-				bd.save()
+# 		# print('cache=>',cache)
+# 		for x in cache:
+# 			if str(x.id).startswith('vid_'):
+# 				bd = models.BusinessData()
+# 				bd.businessname = x.businessname
+# 				bd.itf_check = x.itf_check
+# 				bd.db_check = x.db_check
+# 				bd.params = x.params
+# 				# bd.params=x.params.replace('true','True').replace('false','False').replace('null','None')
+# 				bd.save()
 				
-				bids.append(bd.id)
-				step = models.Step.objects.get(id=stepid)
-				step.businessdatainfo.add(bd)
-			else:
-				bid = int(x.id)
-				print('修改业务数据id=%s' % bid)
-				bids.append(bid)
-				bd = models.BusinessData.objects.get(id=bid)
-				bd.businessname = x.businessname
-				bd.itf_check = x.itf_check
-				bd.db_check = x.db_check
-				bd.params = x.params
+# 				bids.append(bd.id)
+# 				step = models.Step.objects.get(id=stepid)
+# 				step.businessdatainfo.add(bd)
+# 			else:
+# 				bid = int(x.id)
+# 				print('修改业务数据id=%s' % bid)
+# 				bids.append(bid)
+# 				bd = models.BusinessData.objects.get(id=bid)
+# 				bd.businessname = x.businessname
+# 				bd.itf_check = x.itf_check
+# 				bd.db_check = x.db_check
+# 				bd.params = x.params
 				
-				print('params=>', bd.params)
+# 				print('params=>', bd.params)
 				
-				print('保存业务数据长度=>', len(bd.params))
-				# bd.params=x.params.replace('true','True').replace('false','False').replace('null','None')
-				bd.save()
+# 				print('保存业务数据长度=>', len(bd.params))
+# 				# bd.params=x.params.replace('true','True').replace('false','False').replace('null','None')
+# 				bd.save()
 		
-		print('[挂载测试数据]成功 stepid=%s 测试数据id=%s' % (stepid, bids))
+# 		print('[挂载测试数据]成功 stepid=%s 测试数据id=%s' % (stepid, bids))
 	
-	# _cleartestdata(callername, stepid)
+# 	# _cleartestdata(callername, stepid)
 	
-	except:
-		err = traceback.format_exc()
-		print('[挂载测试数据]异常')
-		print(err)
+# 	except:
+# 		err = traceback.format_exc()
+# 		print('[挂载测试数据]异常')
+# 		print(err)
 
 
 def gettestdataparams(businessdata_id):

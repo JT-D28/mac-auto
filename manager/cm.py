@@ -17,6 +17,7 @@ from .invoker import runplan, DataMove, runplans
 from .core import gettaskid
 
 
+
 ##addproduct
 
 def addproduct(request):
@@ -641,7 +642,7 @@ def addbusiness(request):
 		
 		##funcion类型关联realted_id
 		
-		status, step = gettestdatastep(b.id)
+		status, step = mm.BusinessData.gettestdatastep(b.id)
 		if status is not 'success':
 			return {
 				'status': 'fail',
@@ -662,7 +663,7 @@ def addbusiness(request):
 				if len(businessinfo) > 0:
 					businessdatainst = businessinfo[0]
 				
-				status, res = gettestdataparams(businessdatainst.id)
+				status, res = mm.BusinessData.gettestdataparams(businessdatainst.id)
 				print('gettestdataparams=>%s' % res)
 				if status is not 'success':
 					return {
@@ -735,7 +736,7 @@ def editbusiness(request):
 		
 		b.save()
 		
-		status, step = gettestdatastep(b.id)
+		status, step = mm.BusinessData.gettestdatastep(b.id)
 		if status is not 'success':
 			return {
 				'status': 'fail',
@@ -756,7 +757,7 @@ def editbusiness(request):
 				if len(businessinfo) > 0:
 					businessdatainst = businessinfo[0]
 				
-				status, res = gettestdataparams(businessdatainst.id)
+				status, res = mm.BusinessData.gettestdataparams(businessdatainst.id)
 				if status is not 'success':
 					return (status, res)
 				

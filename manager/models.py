@@ -79,6 +79,46 @@ class BusinessData(Model):
 	def __str__(self):
 		return '[%s]%s' % (self.id, self.businessname)
 
+	@classmethod
+	def gettestdataparams(cls,businessdata_id):
+		try:
+			businessdatainst = models.BusinessData.objects.get(id=businessdata_id)
+			msg, step = gettestdatastep(businessdata_id)
+			if msg is not 'success':
+				return (msg, step)
+			
+			data = businessdatainst.params
+
+			if step.step_type == 'interface':
+				if step.content_type in ['xml','urlencode']:
+					return ('success', data)
+				else:
+					data = data.replace('null', 'None').replace('true','True').replace('false','False')
+					return ('success', eval(data))
+			
+			elif step.step_type == 'function':
+				return ('success', businessdatainst.params.split(','))
+		except:
+			error = '获取测试数据传参信息异常[%s]' % traceback.format_exc()
+			print(error)
+			return ('error', error)
+
+	@classmethod
+	def gettestdatastep(cls,businessdata_id):
+		# print('aa=>',businessdata_id)
+		try:
+			businessdatainst = models.BusinessData.objects.get(id=businessdata_id)
+			# steps=models.Step.objects.all()
+			# step=[step for step in steps if businessdatainst in list(step.businessdatainfo.all())][0]
+			# return ('success',step)
+			stepid = models.Order.objects.get(follow_id=businessdata_id, kind='step_business').main_id
+			step = models.Step.objects.get(id=stepid)
+			return ('success', step)
+		
+		except:
+			print(traceback.format_exc())
+			return ('error', '获取业务数据所属步骤异常 业务ID=%s' % businessdata_id)
+
 
 # class BusinessTitle(Model):
 # 	value=CharField(max_length=1000)

@@ -5,16 +5,17 @@
 # @to      :用例管理
 import json
 import threading
-from django.db import connection
 from .models import Tag
 import traceback, datetime
 from django.db.models import Q
 from manager import models as mm
+from django.db import connection
 
 from login import models as lm
 from .context import *
 from .invoker import runplan, DataMove, runplans
 from .core import gettaskid
+
 
 
 ##addproduct
@@ -641,7 +642,7 @@ def addbusiness(request):
 		
 		##funcion类型关联realted_id
 		
-		status, step = gettestdatastep(b.id)
+		status, step = mm.BusinessData.gettestdatastep(b.id)
 		if status is not 'success':
 			return {
 				'status': 'fail',
@@ -662,7 +663,7 @@ def addbusiness(request):
 				if len(businessinfo) > 0:
 					businessdatainst = businessinfo[0]
 				
-				status, res = gettestdataparams(businessdatainst.id)
+				status, res = mm.BusinessData.gettestdataparams(businessdatainst.id)
 				print('gettestdataparams=>%s' % res)
 				if status is not 'success':
 					return {
@@ -735,7 +736,7 @@ def editbusiness(request):
 		
 		b.save()
 		
-		status, step = gettestdatastep(b.id)
+		status, step = mm.BusinessData.gettestdatastep(b.id)
 		if status is not 'success':
 			return {
 				'status': 'fail',
@@ -756,7 +757,7 @@ def editbusiness(request):
 				if len(businessinfo) > 0:
 					businessdatainst = businessinfo[0]
 				
-				status, res = gettestdataparams(businessdatainst.id)
+				status, res = mm.BusinessData.gettestdataparams(businessdatainst.id)
 				if status is not 'success':
 					return (status, res)
 				
@@ -1348,56 +1349,15 @@ def get_search_match(searchvalue):
 	   3.无匹配结果
 	'''
 	import time
-	s = time.time()
-	# nodes = get_full_tree()
-	nodes = [{'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}]
-	with connection.cursor() as cursor:
-		sqls=['''SELECT CONCAT('product_',pr.id) as id,-1 as pId ,pr.description as name ,'product' as type,'fa fa fa-home' as textIcon from manager_product pr ORDER BY pr.id;''',
-		      '''SELECT CONCAT('plan_',p.id) as id,CONCAT('product_',pr.id) as pId ,p.description as name ,'plan' as type,'fa fa-product-hunt' as textIcon from manager_product pr ,manager_order o,manager_plan p where o.main_id=pr.id and o.follow_id=p.id and o.kind='product_plan' ORDER BY o.`main_id`;''',
-		      '''SELECT CONCAT('case_',c.id) AS id,CONCAT('plan_',p.id) AS pId,c.description AS name,'case' AS type,'fa fa-folder' AS textIcon FROM manager_case c,manager_order o,manager_plan p WHERE o.main_id=p.id AND o.follow_id=c.id AND o.kind='plan_case' ORDER BY CAST(SUBSTR(o.`value`,3) AS DECIMAL (8,5));''',
-		      '''SELECT CONCAT('case_',c1.id) as id,CONCAT('case_',c2.id) as pId ,c1.description as name ,'case' as type,'fa fa-folder' as textIcon from manager_case c1 ,manager_case c2,manager_order o where o.main_id=c2.id and o.follow_id=c1.id and o.kind = 'case_case'  ORDER BY CAST(SUBSTR(o.`value`,3) AS decimal(8,5));''',
-		      '''SELECT CONCAT('step_',s.id) as id,CONCAT('case_',c.id) as pId ,s.description as name ,'step' as type,'fa fa-file-o' as textIcon from manager_case c ,manager_order o,manager_step s where o.main_id=c.id and o.follow_id=s.id and o.kind = 'case_step' ORDER BY CAST(SUBSTR(o.`value`,3) AS decimal(8,5));''',
-		      '''SELECT CONCAT('business_',b.id) as id,CONCAT('step_',s.id) as pId ,b.businessname as name ,'business' as type,'fa fa-leaf' as textIcon from manager_businessdata b ,manager_order o,manager_step s where o.main_id=s.id and o.follow_id=b.id and o.kind = 'step_business'  ORDER BY CAST(SUBSTR(o.`value`,3) AS decimal(8,5));''']
-		print(len(sqls))
-		for i,sql in enumerate(sqls):
-			cursor.execute(str(sql))
-			desc = cursor.description
-			res = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-			for re in res:
-				nodes.append(re)
-	
-	print(len(nodes))
-	# with connection.cursor() as cursor:
-	# 	# 查询产品
-	# 	sql = '''SELECT CONCAT('product_',pr.id) as id,-1 as pId ,pr.description as name ,'product' as type,'fa fa fa-home' as textIcon from manager_product pr ORDER BY pr.id;'''
-	# 	cursor.execute(str(sql))
-	# 	desc = cursor.description
-	# 	products = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-	# 	for product in products:
-	# 		nodes.append(product)
-	# 		sql1 = '''SELECT CONCAT('plan_',p.id) as id,CONCAT('product_',pr.id) as pId ,p.description as name ,'plan' as type,'fa fa-product-hunt' as textIcon from manager_product pr ,manager_order o,manager_plan p where o.main_id=pr.id and o.follow_id=p.id and o.kind='product_plan' and pr.id=%s ORDER BY o.`main_id` ;'''
-	# 		cursor.execute(sql1, [product.get('id').split('_')[1]])
-	# 		desc = cursor.description
-	# 		plans = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-	# 		for plan in plans:
-	# 			nodes.append(plan)
-	# 			sql2 = '''SELECT o.value ,CONCAT('case_',c.id) as id,CONCAT('plan_',p.id) as pId ,c.description as name ,'case' as type,'fa fa-folder' as textIcon from manager_case c ,manager_order o,manager_plan p where o.main_id=p.id and o.follow_id=c.id and o.kind = 'plan_case' and p.id=%s ORDER BY  CAST(SUBSTR(o.`value`,3) AS decimal(8,5));'''
-	# 			cursor.execute(sql2, [plan.get('id').split('_')[1]])
-	# 			desc = cursor.description
-	# 			cases = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-	# 			for case in cases:
-	# 				nodes.append(case)
-	# 				getTreeCase(cursor, case, nodes)
-	
-	e = time.time()
-	print(e - s)
+	print('1=>',time.time())
+	nodes = get_full_tree()
+	print('2=>',time.time())
 	for node in nodes:
-		if searchvalue in node.get('name',''):
+		if searchvalue in node.get('name'):
 			# node['name']="<s>%s</s>"%node['name']
 			# node['name']="<span style='color:red;'>%s</span>"%node['name']
 			_expand_parent(node, nodes)
-	e1 = time.time()
-	print(e1 - e)
+	print('3=>',time.time())
 	return nodes
 
 
@@ -1412,12 +1372,17 @@ icon_map = {
 
 def get_full_tree():
 	nodes = []
-	root = {'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
-	products = list(mm.Product.objects.all())
+	root = {'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
+	#products = list(mm.Product.objects.all())
+	query_product_sql='select description,author_id,id from manager_product'
+	with connection.cursor() as cursor:
+		cursor.execute(query_product_sql)
+		products = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+		#print('products=>',products)
 	for product in products:
-		productname = product.description
+		productname = product['description']
 		productobj = {
-			'id': 'product_%s' % product.id,
+			'id': 'product_%s' % product['id'],
 			'pId': -1,
 			'name': productname,
 			'type': 'product',
@@ -1425,35 +1390,66 @@ def get_full_tree():
 		}
 		
 		nodes.append(productobj)
-		plan_order_list = list(mm.Order.objects.filter(kind='product_plan', main_id=product.id))
+		#plan_order_list = list(mm.Order.objects.filter(kind='product_plan', main_id=product['id']))
+		
+		query_plan_order_list="select * from manager_order where kind='product_plan' and main_id=%s"
+		with connection.cursor() as cursor:
+			cursor.execute(query_plan_order_list,[product['id']])
+			plan_order_list=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+
+		print('$'*200)
+		print('plan_order_list=>',plan_order_list,len(plan_order_list))
 		for order in plan_order_list:
 			try:
-				plan = mm.Plan.objects.get(id=int(order.follow_id))
-			except:
-				print('异常查询 planid=>', order.follow_id)
-			
-			planname = plan.description
-			planobj = {
-				'id': 'plan_%s' % plan.id,
-				'pId': 'product_%s' % product.id,
-				'name': planname,
-				'type': 'plan',
-				'textIcon': icon_map.get('plan')
-			}
-			
-			nodes.append(planobj)
-			case_order_list = ordered(list(mm.Order.objects.filter(kind='plan_case', main_id=plan.id)))
-			for order in case_order_list:
-				case = mm.Case.objects.get(id=order.follow_id)
-				casename = case.description
-				caseobj = {
-					'id': 'case_%s' % case.id,
-					'pId': 'plan_%s' % plan.id,
-					'name': case.description,
-					'type': 'case',
-					'textIcon': icon_map.get('case')
+				#plan = mm.Plan.objects.get(id=int(order.follow_id))
+				query_plan_sql='select * from manager_plan where id=%s'
+				with connection.cursor() as cursor:
+					cursor.execute(query_plan_sql,[order['follow_id']])
+					plan=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()][0]
+
+
+				planname = plan['description']
+				planobj = {
+					'id': 'plan_%s' % plan['id'],
+					'pId': 'product_%s' % product['id'],
+					'name': planname,
+					'type': 'plan',
+					'textIcon': icon_map.get('plan')
 				}
-				nodes.append(caseobj)
+				
+				nodes.append(planobj)
+			except:
+				#print('异常查询 planid=>', order['follow_id'])
+				continue;
+			
+
+			#case_order_list = ordered(list(mm.Order.objects.filter(kind='plan_case', main_id=plan['id'])))
+			
+			query_case_order_list_sql="select * from manager_order where kind='plan_case' and main_id=%s"
+			with connection.cursor() as cursor:
+				cursor.execute(query_case_order_list_sql,[plan['id']])
+				case_order_list=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+				case_order_list.sort(key=lambda e:e.get('value'))
+
+			print('case_order_list=>',case_order_list,len(case_order_list))
+
+			for order in case_order_list:
+				#case = mm.Case.objects.get(id=order.follow_id)
+				query_case_sql='select * from manager_case where id=%s'
+				with connection.cursor() as cursor:
+					cursor.execute(query_case_sql,[order['follow_id']])
+					caselist=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+				if len(caselist)>0:
+					case=caselist[0]
+					casename = case['description']
+					caseobj = {
+						'id': 'case_%s' % case['id'],
+						'pId': 'plan_%s' % plan['id'],
+						'name': case['description'],
+						'type': 'case',
+						'textIcon': icon_map.get('case')
+					}
+					nodes.append(caseobj)
 				_add_next_case_node(plan, case, nodes)
 	
 	nodes.append(root)
@@ -1462,37 +1458,81 @@ def get_full_tree():
 
 def _add_next_case_node(parent, case, nodes):
 	##处理所属单节点
-	step_order_list = ordered(list(mm.Order.objects.filter(kind='case_step', main_id=case.id)))
+	#step_order_list = ordered(list(mm.Order.objects.filter(kind='case_step', main_id=case['id'])))
+	query_step_order_sql='select * from manager_order where kind=%s and main_id=%s'
+	with connection.cursor() as cursor:
+		cursor.execute(query_step_order_sql,['case_step',case['id']])
+		step_order_list=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+		step_order_list.sort(key=lambda e:e.get('value'))
+
+
+	#print('step_order_list11=>',step_order_list,len(step_order_list))
+
+
 	for order in step_order_list:
-		print('stepid=>', order.follow_id)
-		step = mm.Step.objects.get(id=order.follow_id)
-		nodes.append({
-			'id': 'step_%s' % step.id,
-			'pId': 'case_%s' % case.id,
-			'name': step.description,
-			'type': 'step',
-			'textIcon': icon_map.get('step')
-		})
-		
-		business_order_list = ordered(list(mm.Order.objects.filter(kind='step_business', main_id=step.id)))
-		for order in business_order_list:
-			business = mm.BusinessData.objects.get(id=order.follow_id)
+		#print('stepid=>', order['follow_id'])
+		#step = mm.Step.objects.get(id=order['follow_id'])
+		query_step_sql='select * from manager_step where id=%s'
+		with connection.cursor() as cursor:
+			cursor.execute(query_step_sql,[order['follow_id']])
+			steplist=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+
+		# print('#'*200)
+		# print('steplist=>',len(steplist))
+		if len(steplist)>0:
+			step=steplist[0]
 			nodes.append({
-				'id': 'business_%s' % business.id,
-				'pId': 'step_%s' % step.id,
-				'name': business.businessname,
-				'type': 'business',
-				'textIcon': icon_map.get('business')
+				'id': 'step_%s' % step['id'],
+				'pId': 'case_%s' % case['id'],
+				'name': step['description'],
+				'type': 'step',
+				'textIcon': icon_map.get('step')
 			})
-	
+		
+		#business_order_list = ordered(list(mm.Order.objects.filter(kind='step_business', main_id=step['id'])))
+		query_business_order_list_sql="select * from manager_order where kind='step' and main_id=%s"
+		with connection.cursor() as cursor:
+			cursor.execute(query_business_order_list_sql,[step['id']])
+			business_order_list=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+			business_order_list.sort(key=lambda e:e.get('value'))
+
+		for order in business_order_list:
+			#business = mm.BusinessData.objects.get(id=order.follow_id)
+			query_business_sql='select * from manager_businessdata where id=%s'
+
+			with connection.cursor() as cursor:
+				cursor.execute(query_business_sql,[order['follow_id']])
+				businesslist=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+			
+
+			if len(businesslist)>0:
+				business=businesslist[0]
+				nodes.append({
+					'id': 'business_%s' % business['id'],
+					'pId': 'step_%s' % step['id'],
+					'name': business['businessname'],
+					'type': 'business',
+					'textIcon': icon_map.get('business')
+				})
+		
 	##处理多级节点
-	case_order_list = ordered(list(mm.Order.objects.filter(kind='case_case', main_id=case.id)))
+	#case_order_list = ordered(list(mm.Order.objects.filter(kind='case_case', main_id=case['id'])))
+	query_case_order_list_sql="select * from manager_order where kind='case_case' and main_id=%s"
+	with connection.cursor() as cursor:
+		cursor.execute(query_case_order_list_sql,[case['id']])
+		case_order_list=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+		case_order_list.sort(key=lambda e:e.get('value'))
 	for order in case_order_list:
-		case0 = mm.Case.objects.get(id=order.follow_id)
+		#case0 = mm.Case.objects.get(id=order.follow_id)
+		query_case_sql='select * from manager_case where id=%s'
+		with connection.cursor() as cursor:
+			cursor.execute(query_case_sql,[order['follow_id']])
+			case0=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()][0]
+
 		nodes.append({
-			'id': 'case_%s' % case0.id,
-			'pId': 'case_%s' % case.id,
-			'name': case0.description,
+			'id': 'case_%s' % case0['id'],
+			'pId': 'case_%s' % case['id'],
+			'name': case0['description'],
 			'type': 'case',
 			'textIcon': icon_map.get('case')
 		})

@@ -16,7 +16,7 @@ from login.models import *
 from manager.models import *
 from .core import ordered, Fu, getbuiltin, EncryptUtils, genorder, simplejson
 from .db import Mysqloper
-from .context import set_top_common_config, viewcache, gettestdatastep, gettestdataparams, get_task_session, \
+from .context import set_top_common_config, viewcache, get_task_session, \
 	clear_task_session, get_friendly_msg, setRunningInfo, getRunningInfo
 
 import re, traceback, redis, time, threading, smtplib, requests, json, warnings, datetime, socket
@@ -194,7 +194,7 @@ def gettaskresult(taskid):
 			businessobj = {}
 			business = x.businessdata
 			# print('c=>%s'%business.id)
-			status, step = gettestdatastep(business.id)
+			status, step = BusinessData.gettestdatastep(business.id)
 			# print('a=>%s b=>%s'%(case.id,step.id))
 			step_weight = Order.objects.get(main_id=case.id, follow_id=step.id, kind='case_step').value
 			
@@ -224,7 +224,7 @@ def gettaskresult(taskid):
 				businessobj['error'] = error
 				# businessobj['api']=re.findall('\/(.*?)[?]',step.url)[0] or step.body
 				stepinst = None
-				error, stepinst = gettestdatastep(business.id)
+				error, stepinst = BusinessData.gettestdatastep(business.id)
 				if stepinst.url:
 					
 					# print('%s=>%s,%s'%(business.id,error,stepinst))
@@ -541,10 +541,10 @@ def _step_process_check(callername, taskid, order, kind):
 		postplist = businessdata.postposition.split("|") if businessdata.postposition is not None else ''
 		db_check = businessdata.db_check
 		itf_check = businessdata.itf_check
-		status, paraminfo = gettestdataparams(order.follow_id)
+		status, paraminfo = BusinessData.gettestdataparams(order.follow_id)
 		
 		# print('bbid=>',businessdata.id)
-		status1, step = gettestdatastep(businessdata.id)
+		status1, step = BusinessData.gettestdatastep(businessdata.id)
 		
 		username = callername
 		
@@ -1180,10 +1180,7 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 				else:
 					return ('fail', '表达式%s校验失败' % ourexpression)
 			
-			
-			
-			
-			
+		
 			else:
 				
 				p = None
@@ -1545,7 +1542,7 @@ def _replace_variable(user, str_, src=1, taskid=None, force=False):
 				print('==参数替换前=>\n', old)
 				old = old.replace('{{%s}}' % varname, str(dictparams))
 				print('==参数替换后=>\n', old)
-				return ('success', old)
+				continue;
 			
 			vars = Variable.objects.filter(key=varname)
 			var = None
@@ -3756,7 +3753,7 @@ class DataMove:
 					builtin = (funcname in builtinmethods)
 					
 					if builtin is False:
-						status, res = gettestdataparams(business.id)  ###????????????????
+						status, res =BusinessData.gettestdataparams(business.id)  ###????????????????
 						print('%s=>%s' % (business.businessname, business.params))
 						if status is not 'success':
 							return JsonResponse(simplejson(code=3, msg=str(res)))

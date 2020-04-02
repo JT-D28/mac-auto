@@ -12,7 +12,7 @@ from login.models import *
 from .core import *
 from .invoker import *
 from . import cm
-from .context import querytestdata, gettestdatastep, mounttestdata, gettestdataparams, queryafteradd as qa,queryafterdel as qd, queryafteredit as qe, queryaftercopy as qc
+#from .context import querytestdata, gettestdatastep, mounttestdata, gettestdataparams, queryafteradd as qa,queryafterdel as qd, queryafteredit as qe, queryaftercopy as qc
 import json ,operator, xlrd, base64, traceback
 from .pa import MessageParser
 
@@ -32,20 +32,20 @@ def help(request):
 	return redirect(settings.HELP_DOC_URL)
 
 
-@csrf_exempt
-def testjson(request):
-	return HttpResponse("{'a':1}")
+# @csrf_exempt
+# def testjson(request):
+# 	return HttpResponse("{'a':1}")
 
 
-@csrf_exempt
-def recvdata(request):
-	data = request.POST
-	print(data)
-	# case=json.loads(jsonstr)
-	# proxy.Q.push(case)
-	print('入队列=>')
-	print(data)
-	print("*" * 100)
+# @csrf_exempt
+# def recvdata(request):
+# 	data = request.POST
+# 	print(data)
+# 	# case=json.loads(jsonstr)
+# 	# proxy.Q.push(case)
+# 	print('入队列=>')
+# 	print(data)
+# 	print("*" * 100)
 
 
 """
@@ -883,77 +883,77 @@ def queryonecase(request):
 		return JsonResponse(jsonstr, safe=False)
 
 
-@csrf_exempt
-def querycase(request):
-	searchvalue = request.GET.get('searchvalue')
-	print("searchvalue=>", searchvalue)
-	res = None
-	if searchvalue:
-		print("变量查询条件=>")
-		res = list(Case.objects.filter(description__icontains=searchvalue))
-	else:
-		res = list(Case.objects.all())
+# @csrf_exempt
+# def querycase(request):
+# 	searchvalue = request.GET.get('searchvalue')
+# 	print("searchvalue=>", searchvalue)
+# 	res = None
+# 	if searchvalue:
+# 		print("变量查询条件=>")
+# 		res = list(Case.objects.filter(description__icontains=searchvalue))
+# 	else:
+# 		res = list(Case.objects.all())
 	
-	limit = request.GET.get('limit')
-	page = request.GET.get('page')
-	res, total = getpagedata(res, page, limit)
+# 	limit = request.GET.get('limit')
+# 	page = request.GET.get('page')
+# 	res, total = getpagedata(res, page, limit)
 	
-	jsonstr = json.dumps(res, cls=CaseEncoder, total=total)
-	return JsonResponse(jsonstr, safe=False)
+# 	jsonstr = json.dumps(res, cls=CaseEncoder, total=total)
+# 	return JsonResponse(jsonstr, safe=False)
 
 
-@csrf_exempt
-def delcase(request):
-	id_ = request.POST.get('ids')
-	code = 0
-	msg = ''
-	ids = id_.split(',')
-	try:
-		for i in ids:
-			case = Case.objects.get(id=i)
-			if len(list(case.steps.all())) > 0:
-				return JsonResponse(pkg(code=2, msg='已挂载测试步骤'), safe=False)
-			case.delete()
-		return JsonResponse(pkg(code=0, msg='删除成功'), safe=False)
-	except:
-		return JsonResponse(pkg(code=4, msg='删除异常[%s]' % traceback.format_exc()), safe=False)
+# @csrf_exempt
+# def delcase(request):
+# 	id_ = request.POST.get('ids')
+# 	code = 0
+# 	msg = ''
+# 	ids = id_.split(',')
+# 	try:
+# 		for i in ids:
+# 			case = Case.objects.get(id=i)
+# 			if len(list(case.steps.all())) > 0:
+# 				return JsonResponse(pkg(code=2, msg='已挂载测试步骤'), safe=False)
+# 			case.delete()
+# 		return JsonResponse(pkg(code=0, msg='删除成功'), safe=False)
+# 	except:
+# 		return JsonResponse(pkg(code=4, msg='删除异常[%s]' % traceback.format_exc()), safe=False)
 
 
-@csrf_exempt
-def editcase(request):
-	id_ = request.POST.get('id')
-	code = 0
-	msg = ''
-	try:
-		case = Case.objects.get(id=id_)
-		case.description = request.POST.get('description')
-		case.db_id = request.POST.get('dbid')
-		case.save()
-		msg = '编辑成功'
-	except:
-		code = 1
-		msg = "编辑失败[%s]" % traceback.format_exc()
+# @csrf_exempt
+# def editcase(request):
+# 	id_ = request.POST.get('id')
+# 	code = 0
+# 	msg = ''
+# 	try:
+# 		case = Case.objects.get(id=id_)
+# 		case.description = request.POST.get('description')
+# 		case.db_id = request.POST.get('dbid')
+# 		case.save()
+# 		msg = '编辑成功'
+# 	except:
+# 		code = 1
+# 		msg = "编辑失败[%s]" % traceback.format_exc()
 	
-	finally:
-		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+# 	finally:
+# 		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
-@csrf_exempt
-def addcase(request):
-	code = 0
-	msg = ''
-	try:
-		case = Case()
-		case.author = User.objects.get(name=request.session.get('username', None))
-		case.description = request.POST.get('description')
-		case.db_id = request.POST.get('dbid')
+# @csrf_exempt
+# def addcase(request):
+# 	code = 0
+# 	msg = ''
+# 	try:
+# 		case = Case()
+# 		case.author = User.objects.get(name=request.session.get('username', None))
+# 		case.description = request.POST.get('description')
+# 		case.db_id = request.POST.get('dbid')
 		
-		case.save()
-		msg = '新增成功'
-	except Exception as e:
-		code = 1
-		msg = '新增失败:' + str(e)
-	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+# 		case.save()
+# 		msg = '新增成功'
+# 	except Exception as e:
+# 		code = 1
+# 		msg = '新增失败:' + str(e)
+# 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
 """
@@ -1071,101 +1071,101 @@ def queryoneplan(request):
 		return JsonResponse(jsonstr, safe=False)
 
 
-@csrf_exempt
-def queryplan(request):
-	searchvalue = request.GET.get('searchvalue')
-	print("searchvalue=>", searchvalue)
-	res = None
-	if searchvalue:
-		print("变量查询条件=>")
-		res = list(Plan.objects.filter(Q(description__icontains=searchvalue) | Q(run_type__icontains=searchvalue)))
-	else:
-		username = request.session.get('username', None)
-		print(username)
-		author = User.objects.get(name=username)
+# @csrf_exempt
+# def queryplan(request):
+# 	searchvalue = request.GET.get('searchvalue')
+# 	print("searchvalue=>", searchvalue)
+# 	res = None
+# 	if searchvalue:
+# 		print("变量查询条件=>")
+# 		res = list(Plan.objects.filter(Q(description__icontains=searchvalue) | Q(run_type__icontains=searchvalue)))
+# 	else:
+# 		username = request.session.get('username', None)
+# 		print(username)
+# 		author = User.objects.get(name=username)
 		
-		res = list(Plan.objects.filter(author=author))
+# 		res = list(Plan.objects.filter(author=author))
 	
-	limit = request.GET.get('limit')
-	page = request.GET.get('page')
-	res, total = getpagedata(res, page, limit)
+# 	limit = request.GET.get('limit')
+# 	page = request.GET.get('page')
+# 	res, total = getpagedata(res, page, limit)
 	
-	jsonstr = json.dumps(res, cls=PlanEncoder, total=total)
-	return JsonResponse(jsonstr, safe=False)
+# 	jsonstr = json.dumps(res, cls=PlanEncoder, total=total)
+# 	return JsonResponse(jsonstr, safe=False)
 
 
-@csrf_exempt
-def delplan(request):
-	id_ = request.POST.get('ids')
-	code = 0
-	msg = ''
-	ids = id_.split(',')
-	try:
-		for i in ids:
-			i = int(i)
-			plan = Plan.objects.get(id=i)
-			if len(list(plan.cases.all())) > 0:
-				return JsonResponse(pkg(code=2, msg='已挂载测试用例'), safe=False)
-			plan.delete()
+# @csrf_exempt
+# def delplan(request):
+# 	id_ = request.POST.get('ids')
+# 	code = 0
+# 	msg = ''
+# 	ids = id_.split(',')
+# 	try:
+# 		for i in ids:
+# 			i = int(i)
+# 			plan = Plan.objects.get(id=i)
+# 			if len(list(plan.cases.all())) > 0:
+# 				return JsonResponse(pkg(code=2, msg='已挂载测试用例'), safe=False)
+# 			plan.delete()
 	
-	except:
-		print(traceback.format_exc())
-		code = 1
-		return JsonResponse(pkg(code=code, msg=msg), safe=False)
+# 	except:
+# 		print(traceback.format_exc())
+# 		code = 1
+# 		return JsonResponse(pkg(code=code, msg=msg), safe=False)
 	
-	finally:
-		return JsonResponse(pkg(code=code, msg=msg), safe=False)
+# 	finally:
+# 		return JsonResponse(pkg(code=code, msg=msg), safe=False)
 
 
-@csrf_exempt
-def editplan(request):
-	id_ = request.POST.get('id')
-	code = 0
-	msg = ''
-	try:
-		plan = Plan.objects.get(id=id_)
-		plan.description = request.POST.get('description')
-		plan.db_id = request.POST.get('dbid')
-		print('description=>', plan.description)
-		plan.run_type = request.POST.get('run_type')
-		plan.save()
-		msg = '编辑成功'
-	except:
-		code = 1
-		msg = "编辑失败[%s]" % traceback.format_exc()
+# @csrf_exempt
+# def editplan(request):
+# 	id_ = request.POST.get('id')
+# 	code = 0
+# 	msg = ''
+# 	try:
+# 		plan = Plan.objects.get(id=id_)
+# 		plan.description = request.POST.get('description')
+# 		plan.db_id = request.POST.get('dbid')
+# 		print('description=>', plan.description)
+# 		plan.run_type = request.POST.get('run_type')
+# 		plan.save()
+# 		msg = '编辑成功'
+# 	except:
+# 		code = 1
+# 		msg = "编辑失败[%s]" % traceback.format_exc()
 	
-	finally:
-		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+# 	finally:
+# 		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
-@csrf_exempt
-def addplan(request):
-	code = 0
-	msg = ''
-	try:
-		plan = Plan()
-		plan.description = request.POST.get('description')
-		plan.db_id = request.POST.get('dbid')
-		plan.author = User.objects.get(name=request.session.get('username', None))
-		plan.run_type = request.POST.get('run_type')
+# @csrf_exempt
+# def addplan(request):
+# 	code = 0
+# 	msg = ''
+# 	try:
+# 		plan = Plan()
+# 		plan.description = request.POST.get('description')
+# 		plan.db_id = request.POST.get('dbid')
+# 		plan.author = User.objects.get(name=request.session.get('username', None))
+# 		plan.run_type = request.POST.get('run_type')
 		
-		plan.save()
+# 		plan.save()
 		
-		if plan.run_type == '定时运行':
-			config = request.POST.get('config')
-			crontab = Crontab()
-			crontab.taskid = gettaskid(plan.__str__())
-			crontab.value = config
-			# crontab.status='close'
-			crontab.author = plan.author
-			crontab.plan = plan
-			crontab.save()
+# 		if plan.run_type == '定时运行':
+# 			config = request.POST.get('config')
+# 			crontab = Crontab()
+# 			crontab.taskid = gettaskid(plan.__str__())
+# 			crontab.value = config
+# 			# crontab.status='close'
+# 			crontab.author = plan.author
+# 			crontab.plan = plan
+# 			crontab.save()
 		
-		msg = '添加[%s]成功' % plan.description
-	except Exception as e:
-		code = 1
-		msg = '新增失败[%s]' % str(e)
-	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+# 		msg = '添加[%s]成功' % plan.description
+# 	except Exception as e:
+# 		code = 1
+# 		msg = '新增失败[%s]' % str(e)
+# 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
 @csrf_exempt
@@ -1575,206 +1575,206 @@ def step(request):
 	return render(request, 'manager/step.html')
 
 
-@csrf_exempt
-def addstep(request):
-	# print("addstepd")
-	code = 0
-	msg = ''
-	try:
-		step_type = request.POST.get('step_type')
-		description = request.POST.get('description')
-		headers = request.POST.get('headers')
-		body = request.POST.get("body")
-		url = request.POST.get('url')
-		method = request.POST.get('method')
-		content_type = request.POST.get('content_type')
-		db_check = request.POST.get('db_check')
-		itf_check = request.POST.get('itf_check')
-		print('itf_check=>', itf_check)
-		tmp = request.POST.get('tmp')
-		author = request.session.get('username')
-		print("author=>", author)
-		# tagname=request.POST.get('tag')
-		# print("tag=>",tagname)
+# @csrf_exempt
+# def addstep(request):
+# 	# print("addstepd")
+# 	code = 0
+# 	msg = ''
+# 	try:
+# 		step_type = request.POST.get('step_type')
+# 		description = request.POST.get('description')
+# 		headers = request.POST.get('headers')
+# 		body = request.POST.get("body")
+# 		url = request.POST.get('url')
+# 		method = request.POST.get('method')
+# 		content_type = request.POST.get('content_type')
+# 		db_check = request.POST.get('db_check')
+# 		itf_check = request.POST.get('itf_check')
+# 		print('itf_check=>', itf_check)
+# 		tmp = request.POST.get('tmp')
+# 		author = request.session.get('username')
+# 		print("author=>", author)
+# 		# tagname=request.POST.get('tag')
+# 		# print("tag=>",tagname)
 		
-		businessdata = request.POST.get('business_data')
+# 		businessdata = request.POST.get('business_data')
 		
-		print('businessdata=>', type(businessdata), businessdata)
-		dbid = request.POST.get('dbid')
-		# businsesstitle=getbusinesstitle(eval(businessdata))
+# 		print('businessdata=>', type(businessdata), businessdata)
+# 		dbid = request.POST.get('dbid')
+# 		# businsesstitle=getbusinesstitle(eval(businessdata))
 		
-		step = Step()
-		step.step_type = step_type
-		step.description = description
-		step.headers = headers
-		# step.body=body
-		step.url = url
-		step.method = method
-		step.content_type = content_type
-		step.db_check = db_check
-		step.itf_check = itf_check
-		step.temp = tmp
-		step.author = User.objects.get(name=author)
-		step.db_id = dbid
-		# step.businesstitle=businsesstitle
-		step.save()
-		mounttestdata(author, step.id)
+# 		step = Step()
+# 		step.step_type = step_type
+# 		step.description = description
+# 		step.headers = headers
+# 		# step.body=body
+# 		step.url = url
+# 		step.method = method
+# 		step.content_type = content_type
+# 		step.db_check = db_check
+# 		step.itf_check = itf_check
+# 		step.temp = tmp
+# 		step.author = User.objects.get(name=author)
+# 		step.db_id = dbid
+# 		# step.businesstitle=businsesstitle
+# 		step.save()
+# 		mounttestdata(author, step.id)
 		
-		# if tagname is not None and len(tagname.strip())>0:
-		# 	step.tag_id=Tag.objects.get(name=tagname).id
+# 		# if tagname is not None and len(tagname.strip())>0:
+# 		# 	step.tag_id=Tag.objects.get(name=tagname).id
 		
-		if 'function' == step.step_type:
-			step.body = body
+# 		if 'function' == step.step_type:
+# 			step.body = body
 			
-			# funcname=re.findall("(.*?)\(.*?\)", step.body)[0]
-			funcname = step.body.strip()
-			builtinmethods = [x.name for x in getbuiltin()]
-			builtin = (funcname in builtinmethods)
+# 			# funcname=re.findall("(.*?)\(.*?\)", step.body)[0]
+# 			funcname = step.body.strip()
+# 			builtinmethods = [x.name for x in getbuiltin()]
+# 			builtin = (funcname in builtinmethods)
 			
-			if builtin is False:
-				# flag=Fu.tzm_compute(step.body,'(.*?)\((.*?)\)')
-				businessdatainst = None
-				businessinfo = list(step.businessdatainfo.all())
-				if len(businessinfo) > 0:
-					businessdatainst = businessinfo[0]
+# 			if builtin is False:
+# 				# flag=Fu.tzm_compute(step.body,'(.*?)\((.*?)\)')
+# 				businessdatainst = None
+# 				businessinfo = list(step.businessdatainfo.all())
+# 				if len(businessinfo) > 0:
+# 					businessdatainst = businessinfo[0]
 				
-				status, res = gettestdataparams(businessdatainst.id)
-				print('gettestdataparams=>%s' % res)
-				if status is not 'success':
-					return JsonResponse(simplejson(code=3, msg=str(res)))
+# 				status, res = gettestdataparams(businessdatainst.id)
+# 				print('gettestdataparams=>%s' % res)
+# 				if status is not 'success':
+# 					return JsonResponse(simplejson(code=3, msg=str(res)))
 				
-				params = ','.join(res)
+# 				params = ','.join(res)
 				
-				call_str = '%s(%s)' % (funcname, params)
-				flag = Fu.tzm_compute(call_str, '(.*?)\((.*?)\)')
-				funcs = list(Function.objects.filter(flag=flag))
-				if len(funcs) > 1:
-					return JsonResponse(simplejson(code=44, msg='找到多个匹配的自定义函数 请检查'))
+# 				call_str = '%s(%s)' % (funcname, params)
+# 				flag = Fu.tzm_compute(call_str, '(.*?)\((.*?)\)')
+# 				funcs = list(Function.objects.filter(flag=flag))
+# 				if len(funcs) > 1:
+# 					return JsonResponse(simplejson(code=44, msg='找到多个匹配的自定义函数 请检查'))
 				
-				related_id = funcs[0].id
-				step.related_id = related_id
+# 				related_id = funcs[0].id
+# 				step.related_id = related_id
 		
-		step.save()
-		msg = '添加测试步骤成功'
-	# print('flag2')
-	except Exception as e:
-		print(traceback.format_exc())
-		code = 2
-		msg = "添加失败:" + str(e)
-	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+# 		step.save()
+# 		msg = '添加测试步骤成功'
+# 	# print('flag2')
+# 	except Exception as e:
+# 		print(traceback.format_exc())
+# 		code = 2
+# 		msg = "添加失败:" + str(e)
+# 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
-@csrf_exempt
-def delstep(request):
-	'''
-	'''
-	id_ = request.POST.get('ids')
-	code = 0
-	msg = ''
-	ids = id_.split(',')
-	try:
-		for i in ids:
-			step = Step.objects.get(id=i)
-			case_list = list(Case.objects.all())
-			businessdatainfo = list(step.businessdatainfo.all())
-			related_case_list = []
-			for case in case_list:
-				related_case_list = [case for sb in businessdatainfo if sb in [case.businessdatainfo.all()]]
-			size = len(related_case_list)
-			print('已关联用例数：', size)
-			if size > 0:
-				code = 2
-				msg = '用例[%s]已关联该步骤 请先消除引用' % related_case_list[0].description
-				break;
-			else:
-				##
-				step.delete()
-				msg = '删除成功'
+# @csrf_exempt
+# def delstep(request):
+# 	'''
+# 	'''
+# 	id_ = request.POST.get('ids')
+# 	code = 0
+# 	msg = ''
+# 	ids = id_.split(',')
+# 	try:
+# 		for i in ids:
+# 			step = Step.objects.get(id=i)
+# 			case_list = list(Case.objects.all())
+# 			businessdatainfo = list(step.businessdatainfo.all())
+# 			related_case_list = []
+# 			for case in case_list:
+# 				related_case_list = [case for sb in businessdatainfo if sb in [case.businessdatainfo.all()]]
+# 			size = len(related_case_list)
+# 			print('已关联用例数：', size)
+# 			if size > 0:
+# 				code = 2
+# 				msg = '用例[%s]已关联该步骤 请先消除引用' % related_case_list[0].description
+# 				break;
+# 			else:
+# 				##
+# 				step.delete()
+# 				msg = '删除成功'
 	
-	except Exception as e:
-		print(traceback.print_exc(e))
-		code = 1
-		msg = "删除失败[%s]" % traceback.format_exc()
+# 	except Exception as e:
+# 		print(traceback.print_exc(e))
+# 		code = 1
+# 		msg = "删除失败[%s]" % traceback.format_exc()
 	
-	finally:
-		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+# 	finally:
+# 		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
-@csrf_exempt
-def editstep(request):
-	id_ = request.POST.get('id')
-	code = 0
-	msg = ''
-	try:
-		dbid = request.POST.get('dbid')
-		step_type = request.POST.get('step_type')
-		description = request.POST.get('description')
-		headers = request.POST.get('headers')
-		body = request.POST.get("body")
-		url = request.POST.get('url')
-		method = request.POST.get('method')
-		content_type = request.POST.get('content_type')
+# @csrf_exempt
+# def editstep(request):
+# 	id_ = request.POST.get('id')
+# 	code = 0
+# 	msg = ''
+# 	try:
+# 		dbid = request.POST.get('dbid')
+# 		step_type = request.POST.get('step_type')
+# 		description = request.POST.get('description')
+# 		headers = request.POST.get('headers')
+# 		body = request.POST.get("body")
+# 		url = request.POST.get('url')
+# 		method = request.POST.get('method')
+# 		content_type = request.POST.get('content_type')
 		
-		tmp = request.POST.get('tmp')
-		username = request.session.get('username')
-		author = User.objects.get(name=username)
+# 		tmp = request.POST.get('tmp')
+# 		username = request.session.get('username')
+# 		author = User.objects.get(name=username)
 		
-		step = Step.objects.get(id=id_)
+# 		step = Step.objects.get(id=id_)
 		
-		step.step_type = step_type
-		if step_type is None:
-			step.step_type = 'function'
-		step.description = description
-		step.headers = headers
-		step.body = body
-		step.url = url
-		step.method = method
-		step.content_type = content_type
+# 		step.step_type = step_type
+# 		if step_type is None:
+# 			step.step_type = 'function'
+# 		step.description = description
+# 		step.headers = headers
+# 		step.body = body
+# 		step.url = url
+# 		step.method = method
+# 		step.content_type = content_type
 		
-		step.temp = tmp
-		step.db_id = dbid
+# 		step.temp = tmp
+# 		step.db_id = dbid
 		
-		step.save()
-		mounttestdata(username, step.id, trigger='edit')
+# 		step.save()
+# 		mounttestdata(username, step.id, trigger='edit')
 		
-		if 'function' == step.step_type:
+# 		if 'function' == step.step_type:
 			
-			# funcname=re.findall("(.*?)\(.*?\)", step.body)[0]
-			funcname = step.body.strip()
-			builtinmethods = [x.name for x in getbuiltin()]
-			builtin = (funcname in builtinmethods)
+# 			# funcname=re.findall("(.*?)\(.*?\)", step.body)[0]
+# 			funcname = step.body.strip()
+# 			builtinmethods = [x.name for x in getbuiltin()]
+# 			builtin = (funcname in builtinmethods)
 			
-			if builtin is False:
-				businessdatainst = None
-				businessinfo = list(step.businessdatainfo.all())
-				if len(businessinfo) > 0:
-					businessdatainst = businessinfo[0]
+# 			if builtin is False:
+# 				businessdatainst = None
+# 				businessinfo = list(step.businessdatainfo.all())
+# 				if len(businessinfo) > 0:
+# 					businessdatainst = businessinfo[0]
 				
-				status, res = gettestdataparams(businessdatainst.id)
-				if status is not 'success':
-					return JsonResponse(simplejson(code=3, msg=str(res)))
+# 				status, res = gettestdataparams(businessdatainst.id)
+# 				if status is not 'success':
+# 					return JsonResponse(simplejson(code=3, msg=str(res)))
 				
-				params = ','.join(res)
-				calll_str = '%s(%s)' % (step.body.strip(), params)
-				# print('callerstr=>',calll_str)
-				# flag=Fu.tzm_compute(step.body,'(.*?)\((.*?)\)')
-				flag = Fu.tzm_compute(calll_str, '(.*?)\((.*?)\)')
-				funcs = list(Function.objects.filter(flag=flag))
-				if len(funcs) > 1:
-					return JsonResponse(simplejson(code=44, msg='找到多个匹配的自定义函数 请检查'))
+# 				params = ','.join(res)
+# 				calll_str = '%s(%s)' % (step.body.strip(), params)
+# 				# print('callerstr=>',calll_str)
+# 				# flag=Fu.tzm_compute(step.body,'(.*?)\((.*?)\)')
+# 				flag = Fu.tzm_compute(calll_str, '(.*?)\((.*?)\)')
+# 				funcs = list(Function.objects.filter(flag=flag))
+# 				if len(funcs) > 1:
+# 					return JsonResponse(simplejson(code=44, msg='找到多个匹配的自定义函数 请检查'))
 				
-				# print('fsize=>',len(funcs))
-				related_id = funcs[0].id
-				step.related_id = related_id
+# 				# print('fsize=>',len(funcs))
+# 				related_id = funcs[0].id
+# 				step.related_id = related_id
 		
-		step.save()
-		msg = '编辑成功'
+# 		step.save()
+# 		msg = '编辑成功'
 	
-	except Exception as e:
-		code = 4
-		print(traceback.format_exc())
-		msg = "编辑失败[%s]" % traceback.format_exc()
-	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+# 	except Exception as e:
+# 		code = 4
+# 		print(traceback.format_exc())
+# 		msg = "编辑失败[%s]" % traceback.format_exc()
+# 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
 @csrf_exempt
@@ -2018,195 +2018,195 @@ def addordervalue(request):
 	return JsonResponse(simplejson(code=code, msg=""))
 
 
-@csrf_exempt
-def queryafteradd(requests):
-	"""
-	返回添加step|case后的已选信息 如果follow_id无效则忽略
-	"""
+# @csrf_exempt
+# def queryafteradd(requests):
+# 	"""
+# 	返回添加step|case后的已选信息 如果follow_id无效则忽略
+# 	"""
 	
-	try:
-		res0 = {
-			"code": 0,
-			"msg": '',
-			"data": None
-		}
-		main_id = int(requests.POST.get("main_id"))
-		follow_ids = [int(x) for x in (requests.POST.get("follow_ids").split(','))]
-		kind = requests.POST.get("kind")
-		username = requests.session.get('username', None)
-		print('follow_ids=>', follow_ids, type(follow_ids))
+# 	try:
+# 		res0 = {
+# 			"code": 0,
+# 			"msg": '',
+# 			"data": None
+# 		}
+# 		main_id = int(requests.POST.get("main_id"))
+# 		follow_ids = [int(x) for x in (requests.POST.get("follow_ids").split(','))]
+# 		kind = requests.POST.get("kind")
+# 		username = requests.session.get('username', None)
+# 		print('follow_ids=>', follow_ids, type(follow_ids))
 		
-		# print("="*40,"调用queryafteradd接口======\nmain_id=%s\nfollow_ids=%s\nkind=%s"%(main_id,follow_ids,kind))
-		if operator.eq(follow_ids, [-1]):
-			print('只查询')
+# 		# print("="*40,"调用queryafteradd接口======\nmain_id=%s\nfollow_ids=%s\nkind=%s"%(main_id,follow_ids,kind))
+# 		if operator.eq(follow_ids, [-1]):
+# 			print('只查询')
 		
-		else:
-			# 做数据插入
+# 		else:
+# 			# 做数据插入
 			
-			for follow_id in follow_ids:
-				# print(main_id,follow_id,kind,username)f
-				# 建立对应关系manager_plan_case&&manager_case_step&&order表  忽略重复添加
+# 			for follow_id in follow_ids:
+# 				# print(main_id,follow_id,kind,username)f
+# 				# 建立对应关系manager_plan_case&&manager_case_step&&order表  忽略重复添加
 				
-				_list = list(Order.objects.filter(main_id=main_id, follow_id=follow_id, kind=kind))
-				if len(_list) > 0:
-					warnmsg = "数据插入忽略 已存在main_id=%s follow_id=%s" % (main_id, follow_id)
-					print(warnmsg)
-					continue;
-				else:
+# 				_list = list(Order.objects.filter(main_id=main_id, follow_id=follow_id, kind=kind))
+# 				if len(_list) > 0:
+# 					warnmsg = "数据插入忽略 已存在main_id=%s follow_id=%s" % (main_id, follow_id)
+# 					print(warnmsg)
+# 					continue;
+# 				else:
 					
-					# 验证follow_id
-					if kind == 'step' and len(list(BusinessData.objects.filter(id=follow_id))) == 1:
+# 					# 验证follow_id
+# 					if kind == 'step' and len(list(BusinessData.objects.filter(id=follow_id))) == 1:
 						
-						order = Order()
-						order.main_id = main_id
-						order.follow_id = follow_id
-						order.kind = kind
-						order.author = User.objects.get(name=username)
-						order.save()
+# 						order = Order()
+# 						order.main_id = main_id
+# 						order.follow_id = follow_id
+# 						order.kind = kind
+# 						order.author = User.objects.get(name=username)
+# 						order.save()
 						
-						case = Case.objects.get(id=main_id)
-						step = BusinessData.objects.get(id=follow_id)
-						# case.steps.add(step)
-						case.businessdatainfo.add(step)
-						case.save()
+# 						case = Case.objects.get(id=main_id)
+# 						step = BusinessData.objects.get(id=follow_id)
+# 						# case.steps.add(step)
+# 						case.businessdatainfo.add(step)
+# 						case.save()
 					
-					elif kind == 'case' and len(list(Case.objects.filter(id=follow_id))) == 1:
-						order = Order()
-						order.main_id = main_id
-						order.follow_id = follow_id
-						order.kind = kind
-						order.author = User.objects.get(name=username)
-						order.save()
+# 					elif kind == 'case' and len(list(Case.objects.filter(id=follow_id))) == 1:
+# 						order = Order()
+# 						order.main_id = main_id
+# 						order.follow_id = follow_id
+# 						order.kind = kind
+# 						order.author = User.objects.get(name=username)
+# 						order.save()
 						
-						plan = Plan.objects.get(id=main_id)
-						case = Case.objects.get(id=follow_id)
-						plan.cases.add(case)
-						plan.save()
+# 						plan = Plan.objects.get(id=main_id)
+# 						case = Case.objects.get(id=follow_id)
+# 						plan.cases.add(case)
+# 						plan.save()
 			
-			##数据插入后重新生成序号
-			genorder(kind, main_id)
+# 			##数据插入后重新生成序号
+# 			genorder(kind, main_id)
 		
-		#
-		_main_order = ordered(list(Order.objects.filter(main_id=main_id, kind=kind)))
-		# print(_main_order)
-		res = []
-		for item in _main_order:
-			# print("follow_id=>",item.follow_id)
-			# desp=Step.objects.get(id=item.follow_id).description if kind=="step" else Case.objects.get(id=item.follow_id).description
-			desp = None
-			if kind == 'step':
-				print('fff=>', item.follow_id)
-				business = BusinessData.objects.get(id=item.follow_id)
-				status, stepinst = gettestdatastep(item.follow_id)
-				if status is not 'success':
-					return JsonResponse(simplejson(code=3, msg=stepinst), safe=False)
-				desp = "%s_%s" % (stepinst.description, business.businessname)
+# 		#
+# 		_main_order = ordered(list(Order.objects.filter(main_id=main_id, kind=kind)))
+# 		# print(_main_order)
+# 		res = []
+# 		for item in _main_order:
+# 			# print("follow_id=>",item.follow_id)
+# 			# desp=Step.objects.get(id=item.follow_id).description if kind=="step" else Case.objects.get(id=item.follow_id).description
+# 			desp = None
+# 			if kind == 'step':
+# 				print('fff=>', item.follow_id)
+# 				business = BusinessData.objects.get(id=item.follow_id)
+# 				status, stepinst = gettestdatastep(item.follow_id)
+# 				if status is not 'success':
+# 					return JsonResponse(simplejson(code=3, msg=stepinst), safe=False)
+# 				desp = "%s_%s" % (stepinst.description, business.businessname)
 			
-			else:
-				desp = Case.objects.get(id=item.follow_id).description
+# 			else:
+# 				desp = Case.objects.get(id=item.follow_id).description
 			
-			obj = {
-				"id": item.follow_id,
-				"description": desp,
-				"order": Order.objects.get(main_id=main_id, follow_id=item.follow_id, kind=kind).value
-			}
-			res.append(obj)
+# 			obj = {
+# 				"id": item.follow_id,
+# 				"description": desp,
+# 				"order": Order.objects.get(main_id=main_id, follow_id=item.follow_id, kind=kind).value
+# 			}
+# 			res.append(obj)
 		
-		res0["data"] = res
+# 		res0["data"] = res
 		
-		# print("="*40,"调用queryafteradd结束==")
+# 		# print("="*40,"调用queryafteradd结束==")
 		
-		return JsonResponse(json.dumps(res0), safe=False)
-	except Exception as e:
-		print(traceback.format_exc())
-		return JsonResponse(simplejson(code=4, msg='操作异常[%s]' % traceback.format_exc()), safe=False)
+# 		return JsonResponse(json.dumps(res0), safe=False)
+# 	except Exception as e:
+# 		print(traceback.format_exc())
+# 		return JsonResponse(simplejson(code=4, msg='操作异常[%s]' % traceback.format_exc()), safe=False)
 
 
-@csrf_exempt
-def queryafterdel(requests):
-	"""
-	返回删除step|case后的已选信息 如果follow_id无效则忽略
-	"""
-	res0 = {
-		"code": 0,
-		"msg": '',
-		"data": None
-	}
-	main_id = int(requests.POST.get("main_id"))
-	follow_ids = [int(x) for x in requests.POST.get("follow_ids").split(',')]
-	kind = requests.POST.get("kind")
-	username = requests.session.get('username', None)
-	author = User.objects.get(name=username)
-	for follow_id in follow_ids:
+# @csrf_exempt
+# def queryafterdel(requests):
+# 	"""
+# 	返回删除step|case后的已选信息 如果follow_id无效则忽略
+# 	"""
+# 	res0 = {
+# 		"code": 0,
+# 		"msg": '',
+# 		"data": None
+# 	}
+# 	main_id = int(requests.POST.get("main_id"))
+# 	follow_ids = [int(x) for x in requests.POST.get("follow_ids").split(',')]
+# 	kind = requests.POST.get("kind")
+# 	username = requests.session.get('username', None)
+# 	author = User.objects.get(name=username)
+# 	for follow_id in follow_ids:
 		
-		# print(main_id,follow_id,kind,username)
-		# 消除对应关系manager_plan_case&&manager_case_step&&order表  忽略重复添加
+# 		# print(main_id,follow_id,kind,username)
+# 		# 消除对应关系manager_plan_case&&manager_case_step&&order表  忽略重复添加
 		
-		_list = list(Order.objects.filter(main_id=main_id, follow_id=follow_id, kind=kind))
+# 		_list = list(Order.objects.filter(main_id=main_id, follow_id=follow_id, kind=kind))
 		
-		if len(_list) == 0:
-			warnmsg = "order表数据不存在忽略操作 main_id=%s follow_id=%s" % (main_id, follow_id)
-			print(warnmsg)
-			continue
+# 		if len(_list) == 0:
+# 			warnmsg = "order表数据不存在忽略操作 main_id=%s follow_id=%s" % (main_id, follow_id)
+# 			print(warnmsg)
+# 			continue
 		
-		else:
+# 		else:
 			
-			if kind == 'step':
-				if len(list(BusinessData.objects.filter(id=follow_id))) == 1:
-					Order.objects.get(kind=kind, main_id=main_id, follow_id=follow_id).delete()
-					case = Case.objects.get(id=main_id)
-					step = BusinessData.objects.get(id=follow_id)
-					case.businessdatainfo.remove(step)
-					case.save()
+# 			if kind == 'step':
+# 				if len(list(BusinessData.objects.filter(id=follow_id))) == 1:
+# 					Order.objects.get(kind=kind, main_id=main_id, follow_id=follow_id).delete()
+# 					case = Case.objects.get(id=main_id)
+# 					step = BusinessData.objects.get(id=follow_id)
+# 					case.businessdatainfo.remove(step)
+# 					case.save()
 				
-				else:
-					warnmsg = "step表数据不存在或多条忽略操作 main_id=%s follow_id=%s" % (main_id, follow_id)
-					print(warnmsg)
-					continue
+# 				else:
+# 					warnmsg = "step表数据不存在或多条忽略操作 main_id=%s follow_id=%s" % (main_id, follow_id)
+# 					print(warnmsg)
+# 					continue
 			
-			elif kind == 'case':
-				if len(list(Case.objects.filter(id=follow_id))) == 1:
-					Order.objects.get(kind=kind, main_id=main_id, follow_id=follow_id).delete()
-					plan = Plan.objects.get(id=main_id)
-					case = Case.objects.get(id=follow_id)
-					plan.cases.remove(case)
-					plan.save()
-				else:
-					warnmsg = "case表数据不存在或多条忽略操作 main_id=%s follow_id=%s" % (main_id, follow_id)
-					print(warnmsg)
-					continue
+# 			elif kind == 'case':
+# 				if len(list(Case.objects.filter(id=follow_id))) == 1:
+# 					Order.objects.get(kind=kind, main_id=main_id, follow_id=follow_id).delete()
+# 					plan = Plan.objects.get(id=main_id)
+# 					case = Case.objects.get(id=follow_id)
+# 					plan.cases.remove(case)
+# 					plan.save()
+# 				else:
+# 					warnmsg = "case表数据不存在或多条忽略操作 main_id=%s follow_id=%s" % (main_id, follow_id)
+# 					print(warnmsg)
+# 					continue
 			
-			##case 或plan重新生成执行序号
-			genorder(kind, main_id)
+# 			##case 或plan重新生成执行序号
+# 			genorder(kind, main_id)
 	
-	#
-	_main_order = ordered(list(Order.objects.filter(main_id=main_id, kind=kind)))
-	# print(_main_order)
-	res = []
-	for item in _main_order:
-		# print("follow_id=>",item.follow_id)
-		desp = None
+# 	#
+# 	_main_order = ordered(list(Order.objects.filter(main_id=main_id, kind=kind)))
+# 	# print(_main_order)
+# 	res = []
+# 	for item in _main_order:
+# 		# print("follow_id=>",item.follow_id)
+# 		desp = None
 		
-		if kind == 'step':
-			business = BusinessData.objects.get(id=item.follow_id)
-			status, stepinst = gettestdatastep(business.id)
-			if status is not 'success':
-				return JsonResponse(simplejson(code=3, msg=stepinst), safe=False)
+# 		if kind == 'step':
+# 			business = BusinessData.objects.get(id=item.follow_id)
+# 			status, stepinst = gettestdatastep(business.id)
+# 			if status is not 'success':
+# 				return JsonResponse(simplejson(code=3, msg=stepinst), safe=False)
 			
-			desp = "%s_%s" % (stepinst.description, business.businessname)
-		else:
-			desp = Case.objects.get(id=item.follow_id).description
+# 			desp = "%s_%s" % (stepinst.description, business.businessname)
+# 		else:
+# 			desp = Case.objects.get(id=item.follow_id).description
 		
-		obj = {
-			"id": item.follow_id,
-			"description": desp,
-			"order": Order.objects.get(main_id=main_id, follow_id=item.follow_id, kind=kind).value
-		}
-		res.append(obj)
+# 		obj = {
+# 			"id": item.follow_id,
+# 			"description": desp,
+# 			"order": Order.objects.get(main_id=main_id, follow_id=item.follow_id, kind=kind).value
+# 		}
+# 		res.append(obj)
 	
-	res0["data"] = res
+# 	res0["data"] = res
 	
-	return JsonResponse(json.dumps(res0), safe=False)
+# 	return JsonResponse(json.dumps(res0), safe=False)
 
 
 @csrf_exempt
@@ -2283,107 +2283,107 @@ def record(request):
 	return response
 
 
-@csrf_exempt
-def changepos(requests):
-	res0 = {
-		"code": 0,
-		"msg": '',
-		"data": None
-	}
-	try:
+# @csrf_exempt
+# def changepos(requests):
+# 	res0 = {
+# 		"code": 0,
+# 		"msg": '',
+# 		"data": None
+# 	}
+# 	try:
 		
-		# print('KK'*100)
+# 		# print('KK'*100)
 		
-		move_kind = requests.POST.get('move_kind')
-		main_id = requests.POST.get("main_id")
-		follow_id = requests.POST.get("follow_id")
-		kind = requests.POST.get("kind")
-		username = requests.session.get('username', None)
-		move = requests.POST.get("move")
-		aid = requests.POST.get('aid')
-		bid = requests.POST.get('bid')
+# 		move_kind = requests.POST.get('move_kind')
+# 		main_id = requests.POST.get("main_id")
+# 		follow_id = requests.POST.get("follow_id")
+# 		kind = requests.POST.get("kind")
+# 		username = requests.session.get('username', None)
+# 		move = requests.POST.get("move")
+# 		aid = requests.POST.get('aid')
+# 		bid = requests.POST.get('bid')
 		
-		if 'swap' == move_kind:
-			res = swap(kind, main_id, aid, bid)
-			# print('swap结果=>',res)
-			if res[0] is not 'success':
-				raise RuntimeError(res[1])
-		else:
-			changepostion(kind, main_id, follow_id, move)
+# 		if 'swap' == move_kind:
+# 			res = swap(kind, main_id, aid, bid)
+# 			# print('swap结果=>',res)
+# 			if res[0] is not 'success':
+# 				raise RuntimeError(res[1])
+# 		else:
+# 			changepostion(kind, main_id, follow_id, move)
 		
-		_main_order = ordered(list(Order.objects.filter(main_id=main_id, kind=kind)))
-		# print(_main_order)
-		res = []
-		for item in _main_order:
-			# desp=BusinessData.objects.get(id=item.follow_id).businessname if kind=="step" else Case.objects.get(id=item.follow_id).description
-			desp = None
+# 		_main_order = ordered(list(Order.objects.filter(main_id=main_id, kind=kind)))
+# 		# print(_main_order)
+# 		res = []
+# 		for item in _main_order:
+# 			# desp=BusinessData.objects.get(id=item.follow_id).businessname if kind=="step" else Case.objects.get(id=item.follow_id).description
+# 			desp = None
 			
-			if kind == 'step':
-				business = BusinessData.objects.get(id=item.follow_id)
-				status, stepinst = gettestdatastep(business.id)
-				if status is not 'success':
-					return JsonResponse(simplejson(code=3, msg=stepinst), safe=False)
+# 			if kind == 'step':
+# 				business = BusinessData.objects.get(id=item.follow_id)
+# 				status, stepinst = gettestdatastep(business.id)
+# 				if status is not 'success':
+# 					return JsonResponse(simplejson(code=3, msg=stepinst), safe=False)
 				
-				desp = "%s_%s" % (stepinst.description, business.businessname)
-			else:
-				desp = Case.objects.get(id=item.follow_id).description
+# 				desp = "%s_%s" % (stepinst.description, business.businessname)
+# 			else:
+# 				desp = Case.objects.get(id=item.follow_id).description
 			
-			obj = {
-				"id": item.follow_id,
-				"description": desp,
-				"order": Order.objects.get(main_id=main_id, follow_id=item.follow_id, kind=kind).value
-			}
-			res.append(obj)
+# 			obj = {
+# 				"id": item.follow_id,
+# 				"description": desp,
+# 				"order": Order.objects.get(main_id=main_id, follow_id=item.follow_id, kind=kind).value
+# 			}
+# 			res.append(obj)
 		
-		res0["data"] = res
-		res0['msg'] = '操作成功'
+# 		res0["data"] = res
+# 		res0['msg'] = '操作成功'
 		
-		return JsonResponse(json.dumps(res0), safe=False)
-	except:
-		error = traceback.format_exc()
-		return JsonResponse(simplejson(code=4, msg='交换异常[%s]' % error), safe=False)
+# 		return JsonResponse(json.dumps(res0), safe=False)
+# 	except:
+# 		error = traceback.format_exc()
+# 		return JsonResponse(simplejson(code=4, msg='交换异常[%s]' % error), safe=False)
 
 
-@csrf_exempt
-def aftergroup(request):
-	res0 = {
-		"code": 0,
-		"msg": '',
-		"data": None
-	}
+# @csrf_exempt
+# def aftergroup(request):
+# 	res0 = {
+# 		"code": 0,
+# 		"msg": '',
+# 		"data": None
+# 	}
 	
-	main_id = request.POST.get("main_id")
-	follow_id = request.POST.get("follow_id")
-	kind = request.POST.get("kind")
+# 	main_id = request.POST.get("main_id")
+# 	follow_id = request.POST.get("follow_id")
+# 	kind = request.POST.get("kind")
 	
-	genorder(kind, main_id, follow_id)
+# 	genorder(kind, main_id, follow_id)
 	
-	_main_order = ordered(list(Order.objects.filter(main_id=main_id, kind=kind)))
-	# print(_main_order)
-	res = []
-	for item in _main_order:
-		# desp=BusinessData.objects.get(id=item.follow_id).businessdata if kind=="step" else Case.objects.get(id=item.follow_id).description
-		desp = None
+# 	_main_order = ordered(list(Order.objects.filter(main_id=main_id, kind=kind)))
+# 	# print(_main_order)
+# 	res = []
+# 	for item in _main_order:
+# 		# desp=BusinessData.objects.get(id=item.follow_id).businessdata if kind=="step" else Case.objects.get(id=item.follow_id).description
+# 		desp = None
 		
-		if kind == 'step':
-			business = BusinessData.objects.get(id=item.follow_id)
-			status, stepinst = gettestdatastep(business.id)
-			if status is not 'success':
-				return JsonResponse(simplejson(code=3, msg=stepinst), safe=False)
-			desp = "%s_%s" % (stepinst.description, business.businessname)
-		else:
-			desp = Case.objects.get(id=item.follow_id).description
+# 		if kind == 'step':
+# 			business = BusinessData.objects.get(id=item.follow_id)
+# 			status, stepinst = gettestdatastep(business.id)
+# 			if status is not 'success':
+# 				return JsonResponse(simplejson(code=3, msg=stepinst), safe=False)
+# 			desp = "%s_%s" % (stepinst.description, business.businessname)
+# 		else:
+# 			desp = Case.objects.get(id=item.follow_id).description
 		
-		obj = {
-			"id": item.follow_id,
-			"description": desp,
-			"order": Order.objects.get(main_id=main_id, follow_id=item.follow_id, kind=kind).value
-		}
-		res.append(obj)
+# 		obj = {
+# 			"id": item.follow_id,
+# 			"description": desp,
+# 			"order": Order.objects.get(main_id=main_id, follow_id=item.follow_id, kind=kind).value
+# 		}
+# 		res.append(obj)
 	
-	res0["data"] = res
+# 	res0["data"] = res
 	
-	return JsonResponse(json.dumps(res0), safe=False)
+# 	return JsonResponse(json.dumps(res0), safe=False)
 
 
 '''
@@ -2391,48 +2391,48 @@ def aftergroup(request):
 '''
 
 
-@csrf_exempt
-def querybusinessdata(request):
-	code, msg = 0, ''
-	res = []
-	try:
+# @csrf_exempt
+# def querybusinessdata(request):
+# 	code, msg = 0, ''
+# 	res = []
+# 	try:
 		
-		callername = request.session.get('username')
-		stepid = request.POST.get('stepid')
-		flag = request.POST.get('flag')
-		vids_ = request.POST.get('vids')
-		vid = request.POST.get('vid')
-		vids = []
-		if vids_:
-			vids = vids_.split(',')
+# 		callername = request.session.get('username')
+# 		stepid = request.POST.get('stepid')
+# 		flag = request.POST.get('flag')
+# 		vids_ = request.POST.get('vids')
+# 		vid = request.POST.get('vid')
+# 		vids = []
+# 		if vids_:
+# 			vids = vids_.split(',')
 		
-		extdata = {
-			'id': request.POST.get('id'),
-			'businessname': request.POST.get('businessname'),
-			'itf_check': request.POST.get('itf_check'),
-			'db_check': request.POST.get('db_check'),
-			'params': request.POST.get('params')
-		}
+# 		extdata = {
+# 			'id': request.POST.get('id'),
+# 			'businessname': request.POST.get('businessname'),
+# 			'itf_check': request.POST.get('itf_check'),
+# 			'db_check': request.POST.get('db_check'),
+# 			'params': request.POST.get('params')
+# 		}
 		
-		if flag == '0':
-			res = querytestdata(callername, stepid)
-		elif flag == '1':
-			res = qa(callername, stepid, extdata)
-		elif flag == '2':
-			res = qe(callername, stepid, extdata)
-		elif flag == '3':
-			res = qd(callername, stepid, vids)
-		elif flag == '4':
-			res = qc(callername, stepid, vid)
+# 		if flag == '0':
+# 			res = querytestdata(callername, stepid)
+# 		elif flag == '1':
+# 			res = qa(callername, stepid, extdata)
+# 		elif flag == '2':
+# 			res = qe(callername, stepid, extdata)
+# 		elif flag == '3':
+# 			res = qd(callername, stepid, vids)
+# 		elif flag == '4':
+# 			res = qc(callername, stepid, vid)
 		
-		jsonstr = json.dumps(res, cls=BusinessDataEncoder)
-		return JsonResponse(jsonstr, safe=False)
-	except:
-		error = traceback.format_exc()
-		print(error)
-		code = 4
-		msg = '操作异常[%s]' % error
-		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+# 		jsonstr = json.dumps(res, cls=BusinessDataEncoder)
+# 		return JsonResponse(jsonstr, safe=False)
+# 	except:
+# 		error = traceback.format_exc()
+# 		print(error)
+# 		code = 4
+# 		msg = '操作异常[%s]' % error
+# 		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
 @csrf_exempt
@@ -2461,28 +2461,28 @@ def queryonebusiness(request):
 		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
-@csrf_exempt
-def queryonebusinessdata(request):
-	code = 0
-	msg = ''
-	res = None
-	try:
-		callername = request.session.get('username')
-		stepid = request.POST.get('stepid')
-		vid = request.POST.get('vid')
-		res = querytestdata(callername, stepid, trigger='detail')
-		t = [r for r in res if str(r.id) == str(vid)]
-		if len(t) > 0:
-			t = t[0]
-		else:
-			return JsonResponse(simplejson(code=3, msg='查询失败 缓存里没找到id=%s对应测试数据' % vid), safe=False)
+# @csrf_exempt
+# def queryonebusinessdata(request):
+# 	code = 0
+# 	msg = ''
+# 	res = None
+# 	try:
+# 		callername = request.session.get('username')
+# 		stepid = request.POST.get('stepid')
+# 		vid = request.POST.get('vid')
+# 		res = querytestdata(callername, stepid, trigger='detail')
+# 		t = [r for r in res if str(r.id) == str(vid)]
+# 		if len(t) > 0:
+# 			t = t[0]
+# 		else:
+# 			return JsonResponse(simplejson(code=3, msg='查询失败 缓存里没找到id=%s对应测试数据' % vid), safe=False)
 		
-		jsonstr = json.dumps(t, cls=BusinessDataEncoder)
-		return JsonResponse(jsonstr, safe=False)
-	except:
-		code = 1
-		msg = '查询异常[%s]' % traceback.format_exc()
-		return JsonResponse(simplejson(code=4, msg=msg), safe=False)
+# 		jsonstr = json.dumps(t, cls=BusinessDataEncoder)
+# 		return JsonResponse(jsonstr, safe=False)
+# 	except:
+# 		code = 1
+# 		msg = '查询异常[%s]' % traceback.format_exc()
+# 		return JsonResponse(simplejson(code=4, msg=msg), safe=False)
 
 
 @csrf_exempt
@@ -2849,20 +2849,20 @@ def queryfielddetail(request):
 """
 
 
-def addsteprelation(request):
-	cases = list(Case.objects.all())
-	for case in cases:
+# def addsteprelation(request):
+# 	cases = list(Case.objects.all())
+# 	for case in cases:
 		
-		businesses = list(case.businessdatainfo.all())
-		for business in businesses:
-			status, step = gettestdatastep(business.id)
-			if status is not 'success':
-				continue;
-			else:
-				print('case_%s=>step_%s' % (case.id, step.id))
-				case.steps.add(step)
+# 		businesses = list(case.businessdatainfo.all())
+# 		for business in businesses:
+# 			status, step = gettestdatastep(business.id)
+# 			if status is not 'success':
+# 				continue;
+# 			else:
+# 				print('case_%s=>step_%s' % (case.id, step.id))
+# 				case.steps.add(step)
 	
-	return JsonResponse(simplejson(code=0, msg='关联case&step ok.'), safe=False)
+# 	return JsonResponse(simplejson(code=0, msg='关联case&step ok.'), safe=False)
 
 
 # def update(request):
@@ -2966,201 +2966,201 @@ def addsteprelation(request):
 # 	print('==order表修改完成.')
 # 	return JsonResponse(pkg(code=0))
 
-def update(request):
-	from .cm import getnextvalue
-	import copy
-	print('==开始更新==')
-	planids = []
-	delete = []
-	cache = {}
+# def update(request):
+# 	from .cm import getnextvalue
+# 	import copy
+# 	print('==开始更新==')
+# 	planids = []
+# 	delete = []
+# 	cache = {}
 	
-	product_plan = {}
-	plan_case = {}
-	case_step = {}
-	step_business = {}
-	business_step = {}
-	author = User.objects.get(name='admin')
-	##
-	product = Product()
-	product.description = '默认产品'
-	product.author = User.objects.get(name='admin')
-	product.save()
-	productid = product.id
-	##
-	lista = list(Order.objects.filter(kind='case'))
-	listb = list(Order.objects.filter(kind='step'))
-	for order in lista:
-		##
-		plist = list(Plan.objects.filter(id=order.main_id))
-		alist = list(Case.objects.filter(id=order.follow_id))
+# 	product_plan = {}
+# 	plan_case = {}
+# 	case_step = {}
+# 	step_business = {}
+# 	business_step = {}
+# 	author = User.objects.get(name='admin')
+# 	##
+# 	product = Product()
+# 	product.description = '默认产品'
+# 	product.author = User.objects.get(name='admin')
+# 	product.save()
+# 	productid = product.id
+# 	##
+# 	lista = list(Order.objects.filter(kind='case'))
+# 	listb = list(Order.objects.filter(kind='step'))
+# 	for order in lista:
+# 		##
+# 		plist = list(Plan.objects.filter(id=order.main_id))
+# 		alist = list(Case.objects.filter(id=order.follow_id))
 		
-		if len(plist) == 0 or len(alist) == 0:
-			print('计划和用例检查失败 略过.[%s-%s]' % (order.main_id, order.follow_id))
-			continue;
+# 		if len(plist) == 0 or len(alist) == 0:
+# 			print('计划和用例检查失败 略过.[%s-%s]' % (order.main_id, order.follow_id))
+# 			continue;
 		
-		##
-		planid = order.main_id
-		caseid = order.follow_id
+# 		##
+# 		planid = order.main_id
+# 		caseid = order.follow_id
 		
-		##复制实体数据
-		plan = None
-		try:
-			plan = product_plan.get('%s_%s' % (productid, planid), None)
-			if plan is None:
-				plan = Plan.objects.get(id=planid)
-				delete.append(copy.deepcopy(plan))
+# 		##复制实体数据
+# 		plan = None
+# 		try:
+# 			plan = product_plan.get('%s_%s' % (productid, planid), None)
+# 			if plan is None:
+# 				plan = Plan.objects.get(id=planid)
+# 				delete.append(copy.deepcopy(plan))
 				
-				plan.id = None
-				plan.save()
-				product_plan['%s_%s' % (productid, planid)] = plan
+# 				plan.id = None
+# 				plan.save()
+# 				product_plan['%s_%s' % (productid, planid)] = plan
 				
-				order1 = Order()
-				order1.kind = 'product_plan'
-				order1.main_id = productid
-				order1.follow_id = plan.id
-				order1.author = author
-				order1.value = getnextvalue('product_plan', order1.main_id)
-				order1.save()
-		# print('新建产品计划关联=>',order1)
-		except:
-			print('查询失败 略过 planid=>', order.main_id)
-			continue;
+# 				order1 = Order()
+# 				order1.kind = 'product_plan'
+# 				order1.main_id = productid
+# 				order1.follow_id = plan.id
+# 				order1.author = author
+# 				order1.value = getnextvalue('product_plan', order1.main_id)
+# 				order1.save()
+# 		# print('新建产品计划关联=>',order1)
+# 		except:
+# 			print('查询失败 略过 planid=>', order.main_id)
+# 			continue;
 		
-		case = None
-		case = plan_case.get('%s_%s' % (planid, caseid), None)
+# 		case = None
+# 		case = plan_case.get('%s_%s' % (planid, caseid), None)
 		
-		if case is None:
-			case = Case.objects.get(id=caseid)
-			delete.append(copy.deepcopy(case))
-			case.id = None
-			case.save()
-			plan_case['%s_%s' % (planid, caseid)] = case
+# 		if case is None:
+# 			case = Case.objects.get(id=caseid)
+# 			delete.append(copy.deepcopy(case))
+# 			case.id = None
+# 			case.save()
+# 			plan_case['%s_%s' % (planid, caseid)] = case
 			
-			# 新建新的order关系
-			order2 = Order()
-			order2.main_id = plan.id
-			order2.follow_id = case.id
-			order2.kind = 'plan_case'
-			order2.author = author
-			order2.value = getnextvalue('plan_case', order2.main_id)
-			order2.save()
-	# print('建立计划用例关联=>',order2)
-	###
+# 			# 新建新的order关系
+# 			order2 = Order()
+# 			order2.main_id = plan.id
+# 			order2.follow_id = case.id
+# 			order2.kind = 'plan_case'
+# 			order2.author = author
+# 			order2.value = getnextvalue('plan_case', order2.main_id)
+# 			order2.save()
+# 	# print('建立计划用例关联=>',order2)
+# 	###
 	
-	for order in listb:
-		flag1 = 0
-		flag2 = 0
+# 	for order in listb:
+# 		flag1 = 0
+# 		flag2 = 0
 		
-		caseid = order.main_id
-		businessid = order.follow_id
-		stepid = None
+# 		caseid = order.main_id
+# 		businessid = order.follow_id
+# 		stepid = None
 		
-		steps = list(Step.objects.all())
-		for step0 in steps:
-			buslist = list(step0.businessdatainfo.all())
-			for business0 in buslist:
-				if business0.id == businessid:
-					stepid = step0.id
-					break;
-		##
-		if stepid is None:
-			print('不正确的order关系step[%s_%s] 略过' % (caseid, businessid))
-			continue;
+# 		steps = list(Step.objects.all())
+# 		for step0 in steps:
+# 			buslist = list(step0.businessdatainfo.all())
+# 			for business0 in buslist:
+# 				if business0.id == businessid:
+# 					stepid = step0.id
+# 					break;
+# 		##
+# 		if stepid is None:
+# 			print('不正确的order关系step[%s_%s] 略过' % (caseid, businessid))
+# 			continue;
 		
-		# step=case_step.get('%s_%s'%(caseid,stepid),None)
-		# if step is None:
-		step = Step.objects.get(id=stepid)
-		# print('获得老的step=>',step)
-		delete.append(copy.deepcopy(step))
-		step.id = None
-		step.save()
-		# print('获得新的step=>',step)
-		print("新建步骤%s 来源=>[%s,%s]" % (step, order.main_id, order.follow_id))
-		# case_step['%s_%s'%(case.id,stepid)]=step
+# 		# step=case_step.get('%s_%s'%(caseid,stepid),None)
+# 		# if step is None:
+# 		step = Step.objects.get(id=stepid)
+# 		# print('获得老的step=>',step)
+# 		delete.append(copy.deepcopy(step))
+# 		step.id = None
+# 		step.save()
+# 		# print('获得新的step=>',step)
+# 		print("新建步骤%s 来源=>[%s,%s]" % (step, order.main_id, order.follow_id))
+# 		# case_step['%s_%s'%(case.id,stepid)]=step
 		
-		case_new_id = None
+# 		case_new_id = None
 		
-		for key in plan_case:
-			if '_%s' % caseid in key:
-				case_new_id = plan_case[key].id
+# 		for key in plan_case:
+# 			if '_%s' % caseid in key:
+# 				case_new_id = plan_case[key].id
 		
-		if case_new_id is None:
-			print('case_new_id不合理 略过[%s->%s]' % (order.main_id, order.follow_id))
-			continue;
+# 		if case_new_id is None:
+# 			print('case_new_id不合理 略过[%s->%s]' % (order.main_id, order.follow_id))
+# 			continue;
 		
-		order3 = Order()
-		order3.kind = 'case_step'
-		order3.main_id = case_new_id
-		order3.follow_id = step.id
-		order3.author = author
-		order3.value = getnextvalue('case_step', order3.main_id)
-		order3.save()
-		# print('建立用例步骤关联=>',order3)
+# 		order3 = Order()
+# 		order3.kind = 'case_step'
+# 		order3.main_id = case_new_id
+# 		order3.follow_id = step.id
+# 		order3.author = author
+# 		order3.value = getnextvalue('case_step', order3.main_id)
+# 		order3.save()
+# 		# print('建立用例步骤关联=>',order3)
 		
-		step_new_id = step.id
-		# business=step_business.get('%s_%s'%(stepid,businessid), None)
-		# if business is None:
-		business = BusinessData.objects.get(id=businessid)
+# 		step_new_id = step.id
+# 		# business=step_business.get('%s_%s'%(stepid,businessid), None)
+# 		# if business is None:
+# 		business = BusinessData.objects.get(id=businessid)
 		
-		business.id = None
-		business.save()
-		# print('新建测试点=>',business)
-		step_business['%s_%s' % (stepid, businessid)] = business
+# 		business.id = None
+# 		business.save()
+# 		# print('新建测试点=>',business)
+# 		step_business['%s_%s' % (stepid, businessid)] = business
 		
-		order4 = Order()
-		order4.kind = 'step_business'
-		order4.main_id = step_new_id
-		order4.follow_id = business.id
-		order4.author = author
-		order4.value = getnextvalue('step_business', order4.main_id)
-		order4.save()
+# 		order4 = Order()
+# 		order4.kind = 'step_business'
+# 		order4.main_id = step_new_id
+# 		order4.follow_id = business.id
+# 		order4.author = author
+# 		order4.value = getnextvalue('step_business', order4.main_id)
+# 		order4.save()
 	
-	# print('建立步骤测试点关联=>',order4)
+# 	# print('建立步骤测试点关联=>',order4)
 	
-	##删除老的order关系
-	print('==清除老的order关系')
-	orderlist = list(Order.objects.filter(Q(kind='case') | Q(kind='step')))
-	print('待删除数据=>', orderlist)
-	for order in orderlist:
-		order.delete()
+# 	##删除老的order关系
+# 	print('==清除老的order关系')
+# 	orderlist = list(Order.objects.filter(Q(kind='case') | Q(kind='step')))
+# 	print('待删除数据=>', orderlist)
+# 	for order in orderlist:
+# 		order.delete()
 	
-	print('==清除完成.')
+# 	print('==清除完成.')
 	
-	##删除报告表
-	reportlist = list(ResultDetail.objects.all())
-	for report in reportlist:
-		report.delete()
-	print('==清除报告表')
+# 	##删除报告表
+# 	reportlist = list(ResultDetail.objects.all())
+# 	for report in reportlist:
+# 		report.delete()
+# 	print('==清除报告表')
 	
-	##删除包含关系
-	print('==删除包含关系')
-	planlist = list(Plan.objects.all())
-	for plan in list(set(planlist)):
-		plan.cases.clear()
+# 	##删除包含关系
+# 	print('==删除包含关系')
+# 	planlist = list(Plan.objects.all())
+# 	for plan in list(set(planlist)):
+# 		plan.cases.clear()
 	
-	caselist = list(Case.objects.all())
-	for case in list(set(caselist)):
-		case.businessdatainfo.clear()
+# 	caselist = list(Case.objects.all())
+# 	for case in list(set(caselist)):
+# 		case.businessdatainfo.clear()
 	
-	steplist = list(Step.objects.all())
-	for step in list(set(steplist)):
-		step.businessdatainfo.clear()
+# 	steplist = list(Step.objects.all())
+# 	for step in list(set(steplist)):
+# 		step.businessdatainfo.clear()
 	
-	# 删除老的实体数据
-	print('==清除老的实体数据')
-	print('待删除数据=>', delete)
-	for i in delete:
-		try:
-			i.delete()
-		except:
-			# print(traceback.format_exc())
-			print('删除异常=>', i)
+# 	# 删除老的实体数据
+# 	print('==清除老的实体数据')
+# 	print('待删除数据=>', delete)
+# 	for i in delete:
+# 		try:
+# 			i.delete()
+# 		except:
+# 			# print(traceback.format_exc())
+# 			print('删除异常=>', i)
 	
-	print('==清除完成')
+# 	print('==清除完成')
 	
-	print('==结束更新==')
+# 	print('==结束更新==')
 	
-	return JsonResponse(pkg(code=0))
+# 	return JsonResponse(pkg(code=0))
 
 
 def getfulltree(request):
@@ -3170,12 +3170,12 @@ def getfulltree(request):
 	return JsonResponse(pkg(data=data))
 
 
-def testgenorder(request):
-	code = 0
-	msg = ''
+# def testgenorder(request):
+# 	code = 0
+# 	msg = ''
 	
-	genorder("case", 1, 1)
-	return JsonResponse(simplejson(code=code, msg=""), safe=False)
+# 	genorder("case", 1, 1)
+# 	return JsonResponse(simplejson(code=code, msg=""), safe=False)
 
 
 def testaddtask(request):
@@ -3191,58 +3191,58 @@ def testaddtask(request):
 
 
 
-def testtable(request):
-	return render(request, 'manager/test-table.html')
+# def testtable(request):
+# 	return render(request, 'manager/test-table.html')
 
 
-def querytesttable(request):
-	data = {}
-	data['code'] = 0
-	data['msg'] = ''
-	# data['count']=5
-	data['data'] = [{
-		'id': 1,
-		'businessname': '业务名称_1',
-		'itf_check': '',
-		'db_check': '',
+# def querytesttable(request):
+# 	data = {}
+# 	data['code'] = 0
+# 	data['msg'] = ''
+# 	# data['count']=5
+# 	data['data'] = [{
+# 		'id': 1,
+# 		'businessname': '业务名称_1',
+# 		'itf_check': '',
+# 		'db_check': '',
 		
-	}]
+# 	}]
 	
-	title = []
-	title_map = {
-		'itf_check': '接口校验',
-		'db_check': '数据校验',
-		'businessname': '业务名称'}
+# 	title = []
+# 	title_map = {
+# 		'itf_check': '接口校验',
+# 		'db_check': '数据校验',
+# 		'businessname': '业务名称'}
 	
-	findex = {}
-	# findex['fixed']='left'
-	findex['templet'] = '#index'
-	findex['title'] = '序号'
+# 	findex = {}
+# 	# findex['fixed']='left'
+# 	findex['templet'] = '#index'
+# 	findex['title'] = '序号'
 	
-	title.append(findex)
+# 	title.append(findex)
 	
-	for x in data.get('data')[0]:
-		fobj = {}
+# 	for x in data.get('data')[0]:
+# 		fobj = {}
 		
-		if x == 'id':
-			fobj['hide'] = True
-		fobj['field'] = x
-		fobj['title'] = x
-		fobj['edit'] = True
+# 		if x == 'id':
+# 			fobj['hide'] = True
+# 		fobj['field'] = x
+# 		fobj['title'] = x
+# 		fobj['edit'] = True
 		
-		if title_map.get(x):
-			fobj['title'] = title_map.get(x)
-		# fobj['width']='50px'
-		title.append(fobj)
+# 		if title_map.get(x):
+# 			fobj['title'] = title_map.get(x)
+# 		# fobj['width']='50px'
+# 		title.append(fobj)
 	
-	fop = {}
-	fop['fixed'] = 'right'
-	fop['toolbar'] = '#business-toolbar'
-	fop['title'] = '操作'
-	title.append(fop)
+# 	fop = {}
+# 	fop['fixed'] = 'right'
+# 	fop['toolbar'] = '#business-toolbar'
+# 	fop['title'] = '操作'
+# 	title.append(fop)
 	
-	data['title'] = title
-	return JsonResponse(data, safe=False)
+# 	data['title'] = title
+# 	return JsonResponse(data, safe=False)
 
 
 @csrf_exempt

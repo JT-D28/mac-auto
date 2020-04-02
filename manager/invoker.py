@@ -833,7 +833,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		try:
 			print('urlencode=>', body)
 			if body.startswith("{") and not body.startswith("{{"):
-				body = parse.urlencode(ast.literal_eval(body))
+				body = parse.urlencode(ast.literal_eval(body.replace('\r', '').replace('\n', '').replace('\t','')))
 			body = body.encode('UTF-8')
 		
 		except:

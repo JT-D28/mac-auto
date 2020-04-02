@@ -85,27 +85,30 @@
                   </span>
             </legend>
             <form id='addbusiness' class='layui-form layui-form-pane' style="height: 98%">
-                <div class="layui-form-item " id='weight_item' hidden>
-                    <label class="layui-form-label required">权重</label>
-                    <div class="layui-input-block">
-                        <input type="text" name="weight" placeholder="请输入" autocomplete="off" class="layui-input"
-                               id='weight' disabled>
-                    </div>
-                </div>
                 <div class="layui-form-item">
-                    <div class="layui-inline" style="width: 65%;">
-                    <label class="layui-form-label required">测试点</label>
-                    <div class="layui-input-block">
-                        <input type="text" name="businessname" placeholder="请输入" autocomplete="off" class="layui-input"
-                               lay-verify="required" >
+                    <div id="busname" class="layui-inline" style="width: calc(48% - 20px);">
+                        <label class="layui-form-label required">测试点</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="businessname" placeholder="请输入" autocomplete="off"
+                                   class="layui-input"
+                                   lay-verify="required">
+                        </div>
                     </div>
+                    <div id='weight_item' class="layui-inline"
+                         style="width: 30%;float: right;display: none;margin-right:0px">
+                        <label class="layui-form-label required">权重</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="weight" placeholder="请输入" autocomplete="off"
+                                   class="layui-input"
+                                   id='weight' disabled style="text-align: center;padding-left:0px">
+                        </div>
                     </div>
-                    <div class="layui-inline" style="width: 30%;float: right;margin-right:0">
-                    <label class="layui-form-label required">执行次数</label>
-                    <div class="layui-input-block">
-                        <input type="text" name="count" placeholder="请输入" autocomplete="off" class="layui-input"
-                               id='count'>
-                    </div>
+                    <div class="layui-inline" style="width: 22%;float: right;margin-right:10px">
+                        <label class="layui-form-label required">执行次数</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="count" placeholder="请输入" autocomplete="off" class="layui-input"
+                                   id='count' style="text-align: center;padding-left:0px">
+                        </div>
                     </div>
                 </div>
 
@@ -138,13 +141,13 @@
                     </div>
                 </div>
 <!--                 <div class="layui-form-item ">
-                    
+
                         <label class="layui-form-label required">文件校验</label>
                         <div class="layui-input-block">
                             <input type="text" id='file_check' name="file_check" placeholder="请输入" autocomplete="off"
                                    class="layui-input" lay-verify="required">
                         </div>
-             
+
 
                 </div> -->
 <!--                   <div class="layui-form-item">
@@ -152,7 +155,7 @@
                     <div class="layui-input-block">
                       <select name="template_list" lay-verify="">
 
-                      </select> 
+                      </select>
                     </div>
                   </div> -->
 
@@ -183,29 +186,37 @@
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
 <script type="text/javascript">
+    action = _get_query_param('action')
+    if (action != 'view') {
+        $('#save').css('display', 'block')
+        $('#busname').css('width', 'calc(78% - 20px)')
+    } else {
+        $('#save').css('display', 'none')
+        $('#savaline').css('height', 0)
+        $('#weight_item').css('display', 'block')
+        _set_form_not_editable()
+    }
 
-function load_templates(){
-    success=function(e){
-        if(e.code==0){
-            $("[name='template_list']").empty();
-            $("[name='template_list']").append("<option value='0'>请选择</option>")
+    function load_templates() {
+        success = function (e) {
+            if (e.code == 0) {
+                $("[name='template_list']").empty();
+                $("[name='template_list']").append("<option value='0'>请选择</option>");
 
-            for(var i=0;i<e.data.length;i++){
-                console.log(e.data[i])
-                $("[name='template_list']").append("<option value='"+e.data[i]['value']+"'>"+e.data[i]['name']+"</option>")
+                for (var i = 0; i < e.data.length; i++) {
+                    console.log(e.data[i]);
+                    $("[name='template_list']").append("<option value='" + e.data[i]['value'] + "'>" + e.data[i]['name'] + "</option>")
+
+                }
 
             }
-
+            layui.form.render('select');
         };
-
-        layui.form.render('select');
+        _post('/manager/querytemplatelist/', {}, success);
 
     }
-    _post('/manager/querytemplatelist/',{},success);
 
-}
-
-    add_var_prop_smart_inputs(['pre','post','itf_check','db_check','params'])
+    add_var_prop_smart_inputs(['pre', 'post', 'itf_check', 'db_check', 'params'])
     layui.use(['table', 'element', 'form'], function () {
 
         var table = layui.table;
@@ -216,8 +227,8 @@ function load_templates(){
         load_templates()
         uid = _get_query_param('uid')
         pid = _get_query_param('pid')
-        action = _get_query_param('action')
         detail = 'addbusiness'
+
 
         if (action != 'view')
             $('#save').css('display', 'inline')
@@ -249,7 +260,7 @@ function load_templates(){
                 $("[name='template_list']").val(data['parser_id'])
 
                 form.render('select');
-                
+
 
             };
             _post('/manager/queryonebusiness/', {'vid': uid}, success);
@@ -276,8 +287,8 @@ function load_templates(){
                 'preposition': $("[name='pre']").val(),
                 'postposition': $("[name='post']").val(),
                 'count': $("[name='count']").val(),
-                'file_check':$("[name='file_check']").val(),
-                'parser_id':$("[name='template_list']").val()
+                'file_check': $("[name='file_check']").val(),
+                'parser_id': $("[name='template_list']").val()
                 //'parser_id':$("[name='template_list']").attr('value'),
 
             }
@@ -315,10 +326,10 @@ function load_templates(){
 
         //文件校验
 
-        $("#detail_btn").click(function(){
+        $("#detail_btn").click(function () {
             $('#detail_config').toggleClass('hide')
 
-            
+
         });
 
     })

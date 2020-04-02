@@ -833,7 +833,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		try:
 			print('urlencode=>', body)
 			if body.startswith("{") and not body.startswith("{{"):
-				body = parse.urlencode(ast.literal_eval(body.replace('\r', '').replace('\n', '').replace('\t','')))
+				body = parse.urlencode(ast.literal_eval(body.replace('\r', '').replace('\n', '').replace('\t', '')))
 			body = body.encode('UTF-8')
 		
 		except:
@@ -2995,8 +2995,8 @@ class Transformer(object):
 								print('--成功获取业务id=>%s' % b)
 								
 								self.add_step_business_relation(step.id, b.id)
-								# self.add_step_bussiness_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
-								# self.add_case_business_relation2(case.id, self.data_workbook[k],rowdata['参数值'])
+							# self.add_step_bussiness_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
+							# self.add_case_business_relation2(case.id, self.data_workbook[k],rowdata['参数值'])
 						
 						# 单条
 						else:
@@ -3091,8 +3091,8 @@ class Transformer(object):
 							business_id = BusinessData.objects.get(
 								businessname='%s_I0_%s_%s' % (bkname, lineindex, self.transform_id)).id
 							self.add_step_business_relation(step.id, business_id)
-							# self.add_step_bussiness_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
-							# self.add_case_business_relation2(case.id, self.data_workbook[k],rowdata['参数值'])
+						# self.add_step_bussiness_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
+						# self.add_case_business_relation2(case.id, self.data_workbook[k],rowdata['参数值'])
 					
 					else:
 						# 函数
@@ -3121,7 +3121,7 @@ class Transformer(object):
 							# businessId=BusinessData.objects.get(businessname="%s"%rowdata['测试要点概要'].strip()).id
 							self.add_case_step_relation(case.id, step.id)
 							self.add_step_business_relation(step.id, businessId)
-							# self.add_case_businss_relation(case.id, businessId)
+						# self.add_case_businss_relation(case.id, businessId)
 						
 						except:
 							print(traceback.format_exc())
@@ -3268,16 +3268,16 @@ class Transformer(object):
 			if testpoint:
 				try:
 					business = BusinessData.objects.get(businessname="%s_%s" % (testpoint, self.transform_id))
-					# business=BusinessData.objects.get(businessname="%s"%testpoint)
+				# business=BusinessData.objects.get(businessname="%s"%testpoint)
 				except:
 					print('业务名称[%s_%s]查找返回的业务数据有多条' % (testpoint, self.transform_id))
 					business = list(BusinessData.objects.filter(businessname="%s_%s" % (testpoint, self.transform_id)))[
 						0]
-					# business=list(BusinessData.objects.filter(businessname="%s"%testpoint))[0]
+				# business=list(BusinessData.objects.filter(businessname="%s"%testpoint))[0]
 			else:
 				business = BusinessData.objects.get(
 					businessname="%s%s_%s" % (sheetname, x.get('数据编号'), self.transform_id))
-				# business=BusinessData.objects.get(businessname="%s%s"%(sheetname,x.get('数据编号')))
+			# business=BusinessData.objects.get(businessname="%s%s"%(sheetname,x.get('数据编号')))
 			
 			case.businessdatainfo.add(business)
 			
@@ -3355,17 +3355,17 @@ class Transformer(object):
 				if testpoint:
 					try:
 						business = BusinessData.objects.get(businessname='%s_%s' % (testpoint, self.transform_id))
-						# business=BusinessData.objects.get(businessname='%s'%testpoint)
+					# business=BusinessData.objects.get(businessname='%s'%testpoint)
 					except:
 						print('业务名称[%s_%s]查找返回的业务数据有多条' % (testpoint, self.transform_id))
 						business = \
 							list(BusinessData.objects.filter(businessname='%s_%s' % (testpoint, self.transform_id)))[0]
-						# business=list(BusinessData.objects.filter(businessname='%s'%testpoint))[0]
+					# business=list(BusinessData.objects.filter(businessname='%s'%testpoint))[0]
 				else:
 					print('-查找测试点=>%s_I0%s_%s' % (sheetname, int(x.get('数据编号')), self.transform_id))
 					business = BusinessData.objects.get(
 						businessname="%s_I0%s_%s" % (sheetname, x.get('数据编号'), self.transform_id))
-					# business=BusinessData.objects.get(businessname="%s%s"%(sheetname,x.get('数据编号')))
+				# business=BusinessData.objects.get(businessname="%s%s"%(sheetname,x.get('数据编号')))
 				
 				order = Order()
 				order.kind = 'step_business'
@@ -3376,7 +3376,7 @@ class Transformer(object):
 				order.save()
 				
 				print('==步骤关联测试点[%s]' % order)
-				# step.businessdatainfo.add(business)
+			# step.businessdatainfo.add(business)
 		except:
 			print(traceback.format_exc())
 	
@@ -3651,7 +3651,8 @@ class DataMove:
 						'gain': usevar.gain,
 						'is_cache': usevar.is_cache,
 						'authorname': usevar.author.name,
-						'customize': Tag.objects.get(var=usevar).customize if Tag.objects.get(var=usevar).customize is not None else '',
+						'customize': Tag.objects.get(var=usevar).customize if Tag.objects.get(
+							var=usevar).customize is not None else '',
 					})
 					
 					##gain中含变量 这里只处理两层嵌套 多的会有问题
@@ -3722,16 +3723,16 @@ class DataMove:
 				businessd = {}
 				businessd['id'] = business.id
 				businessd['businessname'] = business.businessname
-
+				
 				itf_check = business.itf_check if business.itf_check is not None else ''
 				db_check = business.db_check if business.db_check is not None else ''
 				params = business.params if business.params is not None else ''
-				print("123iijij",business,params)
+				print("123iijij", business, params)
 				businessd['itf_check'] = itf_check
 				businessd['db_check'] = db_check
 				businessd['params'] = params
 				varnames = re.findall('{{(.*?)}}', str(itf_check) + str(db_check) + str(params))
-
+				
 				self._varkeys = self._varkeys + varnames
 				
 				print('bname=>', businessd['businessname'])
@@ -4176,7 +4177,7 @@ class DataMove:
 				vo.author = author
 				vo.save()
 				tag = Tag()
-				tag.customize = v.get('customize','')
+				tag.customize = v.get('customize', '')
 				tag.planids = bindplanid
 				tag.isglobal = 0
 				tag.var = vo
@@ -4218,7 +4219,7 @@ class DataMove:
 			except:
 				author = [author for author in authors if author.get('name') == con.get('authorname')]
 				if author:
-					author=author[0]
+					author = author[0]
 					authoro = User()
 					authoro.name = author.get('name')
 					authoro.password = author.get('password')

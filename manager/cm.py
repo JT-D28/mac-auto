@@ -5,6 +5,7 @@
 # @to      :用例管理
 import json
 import threading
+from django.db import connection
 from .models import Tag
 import traceback, datetime
 from django.db.models import Q
@@ -1347,16 +1348,56 @@ def get_search_match(searchvalue):
 	   3.无匹配结果
 	'''
 	import time
-	print('1=>',time.time())
-	nodes = get_full_tree()
-	print('2=>',time.time())
+	s = time.time()
+	# nodes = get_full_tree()
+	nodes = [{'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}]
+	with connection.cursor() as cursor:
+		sqls=['''SELECT CONCAT('product_',pr.id) as id,-1 as pId ,pr.description as name ,'product' as type,'fa fa fa-home' as textIcon from manager_product pr ORDER BY pr.id;''',
+		      '''SELECT CONCAT('plan_',p.id) as id,CONCAT('product_',pr.id) as pId ,p.description as name ,'plan' as type,'fa fa-product-hunt' as textIcon from manager_product pr ,manager_order o,manager_plan p where o.main_id=pr.id and o.follow_id=p.id and o.kind='product_plan' ORDER BY o.`main_id`;''',
+		      '''SELECT CONCAT('case_',c.id) AS id,CONCAT('plan_',p.id) AS pId,c.description AS name,'case' AS type,'fa fa-folder' AS textIcon FROM manager_case c,manager_order o,manager_plan p WHERE o.main_id=p.id AND o.follow_id=c.id AND o.kind='plan_case' ORDER BY CAST(SUBSTR(o.`value`,3) AS DECIMAL (8,5));''',
+		      '''SELECT CONCAT('case_',c1.id) as id,CONCAT('case_',c2.id) as pId ,c1.description as name ,'case' as type,'fa fa-folder' as textIcon from manager_case c1 ,manager_case c2,manager_order o where o.main_id=c2.id and o.follow_id=c1.id and o.kind = 'case_case'  ORDER BY CAST(SUBSTR(o.`value`,3) AS decimal(8,5));''',
+		      '''SELECT CONCAT('step_',s.id) as id,CONCAT('case_',c.id) as pId ,s.description as name ,'step' as type,'fa fa-file-o' as textIcon from manager_case c ,manager_order o,manager_step s where o.main_id=c.id and o.follow_id=s.id and o.kind = 'case_step' ORDER BY CAST(SUBSTR(o.`value`,3) AS decimal(8,5));''',
+		      '''SELECT CONCAT('business_',b.id) as id,CONCAT('step_',s.id) as pId ,b.businessname as name ,'business' as type,'fa fa-leaf' as textIcon from manager_businessdata b ,manager_order o,manager_step s where o.main_id=s.id and o.follow_id=b.id and o.kind = 'step_business'  ORDER BY CAST(SUBSTR(o.`value`,3) AS decimal(8,5));''']
+		print(len(sqls))
+		for i,sql in enumerate(sqls):
+			cursor.execute(str(sql))
+			desc = cursor.description
+			res = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+			for re in res:
+				nodes.append(re)
+	
+	print(len(nodes))
+	# with connection.cursor() as cursor:
+	# 	# 查询产品
+	# 	sql = '''SELECT CONCAT('product_',pr.id) as id,-1 as pId ,pr.description as name ,'product' as type,'fa fa fa-home' as textIcon from manager_product pr ORDER BY pr.id;'''
+	# 	cursor.execute(str(sql))
+	# 	desc = cursor.description
+	# 	products = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+	# 	for product in products:
+	# 		nodes.append(product)
+	# 		sql1 = '''SELECT CONCAT('plan_',p.id) as id,CONCAT('product_',pr.id) as pId ,p.description as name ,'plan' as type,'fa fa-product-hunt' as textIcon from manager_product pr ,manager_order o,manager_plan p where o.main_id=pr.id and o.follow_id=p.id and o.kind='product_plan' and pr.id=%s ORDER BY o.`main_id` ;'''
+	# 		cursor.execute(sql1, [product.get('id').split('_')[1]])
+	# 		desc = cursor.description
+	# 		plans = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+	# 		for plan in plans:
+	# 			nodes.append(plan)
+	# 			sql2 = '''SELECT o.value ,CONCAT('case_',c.id) as id,CONCAT('plan_',p.id) as pId ,c.description as name ,'case' as type,'fa fa-folder' as textIcon from manager_case c ,manager_order o,manager_plan p where o.main_id=p.id and o.follow_id=c.id and o.kind = 'plan_case' and p.id=%s ORDER BY  CAST(SUBSTR(o.`value`,3) AS decimal(8,5));'''
+	# 			cursor.execute(sql2, [plan.get('id').split('_')[1]])
+	# 			desc = cursor.description
+	# 			cases = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+	# 			for case in cases:
+	# 				nodes.append(case)
+	# 				getTreeCase(cursor, case, nodes)
+	
+	e = time.time()
+	print(e - s)
 	for node in nodes:
-		if searchvalue in node.get('name'):
+		if searchvalue in node.get('name',''):
 			# node['name']="<s>%s</s>"%node['name']
 			# node['name']="<span style='color:red;'>%s</span>"%node['name']
 			_expand_parent(node, nodes)
-	print('3=>',time.time())
-	
+	e1 = time.time()
+	print(e1 - e)
 	return nodes
 
 
@@ -1371,7 +1412,7 @@ icon_map = {
 
 def get_full_tree():
 	nodes = []
-	root = {'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
+	root = {'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
 	products = list(mm.Product.objects.all())
 	for product in products:
 		productname = product.description

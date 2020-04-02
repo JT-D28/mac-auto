@@ -5,6 +5,7 @@
 # @to      :
 
 # coding=utf-8
+import base64
 import re
 import time
 import logging, traceback
@@ -158,7 +159,7 @@ class Mysqloper:
 			conname = ql[1]
 			
 			dbnamecache = get_top_common_config(taskid)
-			scheme = getRunningInfo(planid=taskid.split('__')[0], type='dbscheme')
+			scheme = getRunningInfo(planid=base64.b64decode(taskid).decode().split('__')[0], type='dbscheme')
 			if dbnamecache == conname:
 				print('使用数据库缓存配置')
 				conname = dbnamecache

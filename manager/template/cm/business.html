@@ -67,21 +67,24 @@
         .mailpadding {
             padding: 9px 1px;
         }
+        .layui-form-item .layui-inline{
+            margin-bottom: 0px;
+        }
     </style>
 
 </head>
-<body>
+<body style="height: 100%">
 
 <div class="layui-row" style="height: 100%">
     <div class="layui-col-md12" style="height: 100%;padding:0 15px">
-        <fieldset style="height:95%">
+        <fieldset style="height:100%">
             <legend style="font-size: 20px;border-top-width:0px !important;">
                   <span class="layui-breadcrumb">
                       <a href="">用例管理</a>
                       <a href="">业务数据</a>
                   </span>
             </legend>
-            <form id='addbusiness' class='layui-form layui-form-pane'>
+            <form id='addbusiness' class='layui-form layui-form-pane' style="height: 98%">
                 <div class="layui-form-item " id='weight_item' hidden>
                     <label class="layui-form-label required">权重</label>
                     <div class="layui-input-block">
@@ -106,7 +109,7 @@
                     </div>
                 </div>
 
-                <div class="layui-form-item ">
+                <div class="layui-form-item">
                     <label class="layui-form-label">前置操作</label>
                     <div class="layui-input-block">
                         <input type="text" id='pre' name="pre" placeholder="单个使用sleep(4),多个sleep(4)|dbexecute2(变量引用)"
@@ -156,16 +159,16 @@
 
 
 
-                <div class="layui-form-item ">
+                <div class="layui-form-item " style="height: calc(100% - 350px)">
                     <label class="layui-form-label required">参数信息</label>
-                    <div class="layui-input-block">
+                    <div class="layui-input-block" style="height: 100%;">
                         <textarea name="params" id='params' placeholder="接口时输入json字符串 函数时直接输入参数,多个时,分隔"
                                   autocomplete="off" class="layui-textarea" lay-verify="required"
-                                  style="min-height:140px!important;"></textarea>
+                                  style="min-height:100px!important;height: 100%;"></textarea>
                     </div>
                 </div>
                 <div class="layui-form-item" id="savaline">
-                    <button class="layui-btn" id='save' style="visibility:hidden;">保存</button>
+                    <button class="layui-btn" id='save' style="display:none;">保存</button>
                 </div>
             </form>
         </fieldset>
@@ -217,11 +220,11 @@ function load_templates(){
         detail = 'addbusiness'
 
         if (action != 'view')
-            $('#save').css('visibility', 'visible')
+            $('#save').css('display', 'inline')
         else {
-            $('#save').css('visibility', 'hidden')
+            $('#save').css('visibility', 'none')
             $('#savaline').css('height',0)
-            $('#weight_item').removeAttr('hidden')
+            $('#weight_item').removeAttr('none')
 
             _set_form_not_editable()
         }

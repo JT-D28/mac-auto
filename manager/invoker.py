@@ -1544,7 +1544,7 @@ def _replace_variable(user, str_, src=1, taskid=None, force=False):
 				print('==参数替换前=>\n', old)
 				old = old.replace('{{%s}}' % varname, str(dictparams))
 				print('==参数替换后=>\n', old)
-				return ('success', old)
+				continue;
 			
 			vars = Variable.objects.filter(key=varname)
 			var = None

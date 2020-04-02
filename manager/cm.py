@@ -9,6 +9,7 @@ from .models import Tag
 import traceback, datetime
 from django.db.models import Q
 from manager import models as mm
+from django.db import connection
 
 from login import models as lm
 from .context import *
@@ -1356,7 +1357,6 @@ def get_search_match(searchvalue):
 			# node['name']="<span style='color:red;'>%s</span>"%node['name']
 			_expand_parent(node, nodes)
 	print('3=>',time.time())
-	
 	return nodes
 
 
@@ -1372,11 +1372,16 @@ icon_map = {
 def get_full_tree():
 	nodes = []
 	root = {'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
-	products = list(mm.Product.objects.all())
+	#products = list(mm.Product.objects.all())
+	query_product_sql='select description,author_id,id from manager_product'
+	with connection.cursor() as cursor:
+		cursor.execute(query_product_sql)
+		products = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+		#print('products=>',products)
 	for product in products:
-		productname = product.description
+		productname = product['description']
 		productobj = {
-			'id': 'product_%s' % product.id,
+			'id': 'product_%s' % product['id'],
 			'pId': -1,
 			'name': productname,
 			'type': 'product',
@@ -1384,35 +1389,66 @@ def get_full_tree():
 		}
 		
 		nodes.append(productobj)
-		plan_order_list = list(mm.Order.objects.filter(kind='product_plan', main_id=product.id))
+		#plan_order_list = list(mm.Order.objects.filter(kind='product_plan', main_id=product['id']))
+		
+		query_plan_order_list="select * from manager_order where kind='product_plan' and main_id=%s"
+		with connection.cursor() as cursor:
+			cursor.execute(query_plan_order_list,[product['id']])
+			plan_order_list=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+
+		print('$'*200)
+		print('plan_order_list=>',plan_order_list,len(plan_order_list))
 		for order in plan_order_list:
 			try:
-				plan = mm.Plan.objects.get(id=int(order.follow_id))
-			except:
-				print('异常查询 planid=>', order.follow_id)
-			
-			planname = plan.description
-			planobj = {
-				'id': 'plan_%s' % plan.id,
-				'pId': 'product_%s' % product.id,
-				'name': planname,
-				'type': 'plan',
-				'textIcon': icon_map.get('plan')
-			}
-			
-			nodes.append(planobj)
-			case_order_list = ordered(list(mm.Order.objects.filter(kind='plan_case', main_id=plan.id)))
-			for order in case_order_list:
-				case = mm.Case.objects.get(id=order.follow_id)
-				casename = case.description
-				caseobj = {
-					'id': 'case_%s' % case.id,
-					'pId': 'plan_%s' % plan.id,
-					'name': case.description,
-					'type': 'case',
-					'textIcon': icon_map.get('case')
+				#plan = mm.Plan.objects.get(id=int(order.follow_id))
+				query_plan_sql='select * from manager_plan where id=%s'
+				with connection.cursor() as cursor:
+					cursor.execute(query_plan_sql,[order['follow_id']])
+					plan=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()][0]
+
+
+				planname = plan['description']
+				planobj = {
+					'id': 'plan_%s' % plan['id'],
+					'pId': 'product_%s' % product['id'],
+					'name': planname,
+					'type': 'plan',
+					'textIcon': icon_map.get('plan')
 				}
-				nodes.append(caseobj)
+				
+				nodes.append(planobj)
+			except:
+				#print('异常查询 planid=>', order['follow_id'])
+				continue;
+			
+
+			#case_order_list = ordered(list(mm.Order.objects.filter(kind='plan_case', main_id=plan['id'])))
+			
+			query_case_order_list_sql="select * from manager_order where kind='plan_case' and main_id=%s"
+			with connection.cursor() as cursor:
+				cursor.execute(query_case_order_list_sql,[plan['id']])
+				case_order_list=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+				case_order_list.sort(key=lambda e:e.get('value'))
+
+			print('case_order_list=>',case_order_list,len(case_order_list))
+
+			for order in case_order_list:
+				#case = mm.Case.objects.get(id=order.follow_id)
+				query_case_sql='select * from manager_case where id=%s'
+				with connection.cursor() as cursor:
+					cursor.execute(query_case_sql,[order['follow_id']])
+					caselist=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+				if len(caselist)>0:
+					case=caselist[0]
+					casename = case['description']
+					caseobj = {
+						'id': 'case_%s' % case['id'],
+						'pId': 'plan_%s' % plan['id'],
+						'name': case['description'],
+						'type': 'case',
+						'textIcon': icon_map.get('case')
+					}
+					nodes.append(caseobj)
 				_add_next_case_node(plan, case, nodes)
 	
 	nodes.append(root)
@@ -1421,37 +1457,81 @@ def get_full_tree():
 
 def _add_next_case_node(parent, case, nodes):
 	##处理所属单节点
-	step_order_list = ordered(list(mm.Order.objects.filter(kind='case_step', main_id=case.id)))
+	#step_order_list = ordered(list(mm.Order.objects.filter(kind='case_step', main_id=case['id'])))
+	query_step_order_sql='select * from manager_order where kind=%s and main_id=%s'
+	with connection.cursor() as cursor:
+		cursor.execute(query_step_order_sql,['case_step',case['id']])
+		step_order_list=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+		step_order_list.sort(key=lambda e:e.get('value'))
+
+
+	#print('step_order_list11=>',step_order_list,len(step_order_list))
+
+
 	for order in step_order_list:
-		print('stepid=>', order.follow_id)
-		step = mm.Step.objects.get(id=order.follow_id)
-		nodes.append({
-			'id': 'step_%s' % step.id,
-			'pId': 'case_%s' % case.id,
-			'name': step.description,
-			'type': 'step',
-			'textIcon': icon_map.get('step')
-		})
-		
-		business_order_list = ordered(list(mm.Order.objects.filter(kind='step_business', main_id=step.id)))
-		for order in business_order_list:
-			business = mm.BusinessData.objects.get(id=order.follow_id)
+		#print('stepid=>', order['follow_id'])
+		#step = mm.Step.objects.get(id=order['follow_id'])
+		query_step_sql='select * from manager_step where id=%s'
+		with connection.cursor() as cursor:
+			cursor.execute(query_step_sql,[order['follow_id']])
+			steplist=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+
+		# print('#'*200)
+		# print('steplist=>',len(steplist))
+		if len(steplist)>0:
+			step=steplist[0]
 			nodes.append({
-				'id': 'business_%s' % business.id,
-				'pId': 'step_%s' % step.id,
-				'name': business.businessname,
-				'type': 'business',
-				'textIcon': icon_map.get('business')
+				'id': 'step_%s' % step['id'],
+				'pId': 'case_%s' % case['id'],
+				'name': step['description'],
+				'type': 'step',
+				'textIcon': icon_map.get('step')
 			})
-	
+		
+		#business_order_list = ordered(list(mm.Order.objects.filter(kind='step_business', main_id=step['id'])))
+		query_business_order_list_sql="select * from manager_order where kind='step' and main_id=%s"
+		with connection.cursor() as cursor:
+			cursor.execute(query_business_order_list_sql,[step['id']])
+			business_order_list=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+			business_order_list.sort(key=lambda e:e.get('value'))
+
+		for order in business_order_list:
+			#business = mm.BusinessData.objects.get(id=order.follow_id)
+			query_business_sql='select * from manager_businessdata where id=%s'
+
+			with connection.cursor() as cursor:
+				cursor.execute(query_business_sql,[order['follow_id']])
+				businesslist=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+			
+
+			if len(businesslist)>0:
+				business=businesslist[0]
+				nodes.append({
+					'id': 'business_%s' % business['id'],
+					'pId': 'step_%s' % step['id'],
+					'name': business['businessname'],
+					'type': 'business',
+					'textIcon': icon_map.get('business')
+				})
+		
 	##处理多级节点
-	case_order_list = ordered(list(mm.Order.objects.filter(kind='case_case', main_id=case.id)))
+	#case_order_list = ordered(list(mm.Order.objects.filter(kind='case_case', main_id=case['id'])))
+	query_case_order_list_sql="select * from manager_order where kind='case_case' and main_id=%s"
+	with connection.cursor() as cursor:
+		cursor.execute(query_case_order_list_sql,[case['id']])
+		case_order_list=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+		case_order_list.sort(key=lambda e:e.get('value'))
 	for order in case_order_list:
-		case0 = mm.Case.objects.get(id=order.follow_id)
+		#case0 = mm.Case.objects.get(id=order.follow_id)
+		query_case_sql='select * from manager_case where id=%s'
+		with connection.cursor() as cursor:
+			cursor.execute(query_case_sql,[order['follow_id']])
+			case0=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()][0]
+
 		nodes.append({
-			'id': 'case_%s' % case0.id,
-			'pId': 'case_%s' % case.id,
-			'name': case0.description,
+			'id': 'case_%s' % case0['id'],
+			'pId': 'case_%s' % case['id'],
+			'name': case0['description'],
 			'type': 'case',
 			'textIcon': icon_map.get('case')
 		})

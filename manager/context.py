@@ -3,7 +3,7 @@
 # @Date    : 2019-11-19 09:51:22
 # @Author  : Blackstone
 # @to      :
-import time, traceback, redis, datetime, requests, copy
+import time, traceback, redis, datetime, requests, copy,os
 from django.conf import settings
 from manager import models
 from hashlib import md5
@@ -421,11 +421,11 @@ def viewcache(taskid, username, kind=None, *msg):
 		# f = open(logname, "a")
 		# f.write(what + "<br>\n")
 		# f.close
+		if os.path.exists(logname):
+			with open(logname, 'a', encoding='UTF-8') as f:
+				f.write(what + '<br>\n')
 		
-		with open(logname, 'a', encoding='UTF-8') as f:
-			f.write(what + '<br>\n')
-		
-		print(what)
+		# print(what)
 		con = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
 		key = "console.msg::%s::%s" % (username, taskid)
 		# data={}

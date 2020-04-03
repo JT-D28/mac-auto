@@ -1,4 +1,4 @@
-import time
+import time,traceback
 
 from django.db.models import *
 from login.models import *
@@ -82,8 +82,8 @@ class BusinessData(Model):
 	@classmethod
 	def gettestdataparams(cls,businessdata_id):
 		try:
-			businessdatainst = models.BusinessData.objects.get(id=businessdata_id)
-			msg, step = gettestdatastep(businessdata_id)
+			businessdatainst = BusinessData.objects.get(id=businessdata_id)
+			msg, step = cls.gettestdatastep(businessdata_id)
 			if msg is not 'success':
 				return (msg, step)
 			
@@ -107,12 +107,12 @@ class BusinessData(Model):
 	def gettestdatastep(cls,businessdata_id):
 		# print('aa=>',businessdata_id)
 		try:
-			businessdatainst = models.BusinessData.objects.get(id=businessdata_id)
+			businessdatainst = BusinessData.objects.get(id=businessdata_id)
 			# steps=models.Step.objects.all()
 			# step=[step for step in steps if businessdatainst in list(step.businessdatainfo.all())][0]
 			# return ('success',step)
-			stepid = models.Order.objects.get(follow_id=businessdata_id, kind='step_business').main_id
-			step = models.Step.objects.get(id=stepid)
+			stepid = Order.objects.get(follow_id=businessdata_id, kind='step_business').main_id
+			step = Step.objects.get(id=stepid)
 			return ('success', step)
 		
 		except:

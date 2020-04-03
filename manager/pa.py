@@ -61,7 +61,7 @@ class MessageParser(object):
         elif kind=='length':
             start,end=self._parse_format.get(fcode,(None,None))
             if start is None or end is None:
-                return('error','字段[%s]配置错误')
+                return('error','字段[%s]配置错误'%fcode)
 
             print('解析模板字段[%s] value=%s'%(fcode,text[int(start-1):int(end)]))
             return ('success',text[int(start-1):int(end)])

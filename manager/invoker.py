@@ -196,6 +196,7 @@ def gettaskresult(taskid):
 			# print('c=>%s'%business.id)
 			status, step = BusinessData.gettestdatastep(business.id)
 			# print('a=>%s b=>%s'%(case.id,step.id))
+			if isinstance(step,(str,) ):continue;
 			step_weight = Order.objects.get(main_id=case.id, follow_id=step.id, kind='case_step').value
 			
 			business_index = \
@@ -2223,8 +2224,11 @@ class MainSender:
 	@classmethod
 	def gen_report(cls, taskid, htmlcontent):
 		print('==本地缓存测试报告')
-		with open('./local_reports/report_%s.html' % taskid, 'w') as f:
-			f.write(htmlcontent)
+
+		filepath='./local_reports/report_%s.html' % taskid
+		if os.path.exists(filepath):
+			with open('./local_reports/report_%s.html' % taskid, 'w') as f:
+				f.write(htmlcontent)
 	
 	@classmethod
 	def _getdescrpition(cls, to_receive, send_result, error=None):

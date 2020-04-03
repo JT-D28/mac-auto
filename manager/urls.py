@@ -48,11 +48,11 @@ urlpatterns = [
 	# path('editstep/', views.editstep),
 
 	
-	path('itf/', views.itf),
-	path('addinterface/', views.additf),
-	path('delitf/', views.delitf),
-	path('queryitf/', views.queryitf),
-	path('editinterface/', views.edititf),
+	# path('itf/', views.itf),
+	# path('addinterface/', views.additf),
+	# path('delitf/', views.delitf),
+	# path('queryitf/', views.queryitf),
+	# path('editinterface/', views.edititf),
 	
 	path('case/', views.case),
 	# path('addcase/', views.addcase),
@@ -121,6 +121,7 @@ urlpatterns = [
 	#
 	path('tag/', views.tag),
 	path('querytaglist/', views.querytaglist),
+	path('querytags/', views.querytags),
 	path('addtag/', views.addtag),
 	path('deltag/', views.deltag),
 	path('querytag/', views.querytag),

@@ -159,7 +159,7 @@ class Mysqloper:
 			conname = ql[1]
 			
 			dbnamecache = get_top_common_config(taskid)
-			scheme = getRunningInfo(planid=base64.b64decode(taskid).decode().split('__')[0], type='dbscheme')
+			scheme = getRunningInfo(planid=base64.b64decode(taskid).decode().split('_')[0], type='dbscheme')
 			if dbnamecache == conname:
 				print('使用数据库缓存配置')
 				conname = dbnamecache

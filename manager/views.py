@@ -734,7 +734,17 @@ def copyVar(request):
 	varids = request.POST.getlist('varids[]')
 	bindplans = request.POST.get('bindplans')
 	action = request.POST.get('action')
+	tags=request.POST.get('tags')
 	print(varids, bindplans)
+	
+	repvarkey=[]
+	for varid in varids:
+		key = Variable.objects.get(id=varid).key
+		if key not in repvarkey:
+			repvarkey.append(key)
+		else:
+			return JsonResponse({'code': 1, 'msg': '你选择了多个相同键名的变量'})
+		
 	if action == '1':
 		for varid in varids:
 			key = Variable.objects.get(id=varid).key
@@ -754,7 +764,7 @@ def copyVar(request):
 				copyvar.save()
 				tag.var = copyvar
 				tag.isglobal = 1 if bindplans == '{}' else 0
-				tag.customize = Tag.objects.get(var=var).customize
+				tag.customize = Tag.objects.get(var=var).customize if tags == '' else tag
 				tag.planids = bindplans
 				tag.save()
 			except:
@@ -769,6 +779,8 @@ def copyVar(request):
 			try:
 				tag = Tag.objects.get(var=Variable.objects.get(id=varid))
 				tag.planids = bindplans
+				if tags != '':
+					tag.customize = tags
 				tag.save()
 			except:
 				msg = traceback.format_exc()
@@ -777,85 +789,85 @@ def copyVar(request):
 	return JsonResponse({'code': code, 'msg': msg})
 
 
-"""
-接口相关
-"""
+# """
+# 接口相关
+# """
 
 
-@csrf_exempt
-def itf(request):
-	return render(request, 'manager/interface.html')
+# @csrf_exempt
+# def itf(request):
+# 	return render(request, 'manager/interface.html')
 
 
-@csrf_exempt
-def queryitf(request):
-	searchvalue = request.GET.get('searchvalue')
-	print("searchvalue=>", searchvalue)
-	res = None
-	if searchvalue:
-		print("变量查询条件=>")
-		res = list(Interface.objects.filter(
-			Q(description__icontains=searchvalue) | Q(key__icontains=searchvalue) | Q(value__icontains=searchvalue)))
-	else:
-		res = list(Interface.objects.all())
-	
-	limit = request.GET.get('limit')
-	page = request.GET.get('page')
-	res, total = getpagedata(res, page, limit)
-	jsonstr = json.dumps(res, cls=ItfEncoder, total=total)
-	return JsonResponse(jsonstr, safe=False)
+# @csrf_exempt
+# def queryitf(request):
+# 	searchvalue = request.GET.get('searchvalue')
+# 	print("searchvalue=>", searchvalue)
+# 	res = None
+# 	if searchvalue:
+# 		print("变量查询条件=>")
+# 		res = list(Interface.objects.filter(
+# 			Q(description__icontains=searchvalue) | Q(key__icontains=searchvalue) | Q(value__icontains=searchvalue)))
+# 	else:
+# 		res = list(Interface.objects.all())
+#
+# 	limit = request.GET.get('limit')
+# 	page = request.GET.get('page')
+# 	res, total = getpagedata(res, page, limit)
+# 	jsonstr = json.dumps(res, cls=ItfEncoder, total=total)
+# 	return JsonResponse(jsonstr, safe=False)
 
 
-@csrf_exempt
-def delitf(request):
-	id_ = request.POST.get('id')
-	code = 0
-	msg = ''
-	try:
-		Interface.objects.get(id=id_).delete()
-	except:
-		code = 1
-		msg = "删除失败"
-	
-	finally:
-		return JsonResponse(simplejson(code=code, msg=""))
+# @csrf_exempt
+# def delitf(request):
+# 	id_ = request.POST.get('id')
+# 	code = 0
+# 	msg = ''
+# 	try:
+# 		Interface.objects.get(id=id_).delete()
+# 	except:
+# 		code = 1
+# 		msg = "删除失败"
+#
+# 	finally:
+# 		return JsonResponse(simplejson(code=code, msg=""))
 
+#
+# @csrf_exempt
+# def edititf(request):
+# 	id_ = request.POST.get('id')
+# 	code = 0
+# 	msg = ''
+# 	try:
+# 		Interface.objects.get(id=id_).update()
+# 	except:
+# 		code = 1
+# 		msg = "编辑失败"
+#
+# 	finally:
+# 		return JsonResponse(simplejson(code=code, msg=""))
 
-@csrf_exempt
-def edititf(request):
-	id_ = request.POST.get('id')
-	code = 0
-	msg = ''
-	try:
-		Interface.objects.get(id=id_).update()
-	except:
-		code = 1
-		msg = "编辑失败"
-	
-	finally:
-		return JsonResponse(simplejson(code=code, msg=""))
-
-
-@csrf_exempt
-def additf(request):
-	code = 0
-	msg = ''
-	try:
-		itf = Interface()
-		itf.author = request.POST.get('author')
-		itf.name = request.POST.get('name')
-		itf.headers = request.POST.get('headers')
-		itf.url = request.POST.get("url")
-		itf.method = request.POST.get("method")
-		itf.content_type = request.POST.get("content_type")
-		itf.version = request.POST.get("version")
-		itf.body = request.POST.get("body")
-		
-		itf.save()
-	except:
-		code = 1
-		msg = '新增失败'
-	return JsonResponse(simplejson(code=code, msg=""))
+#
+# @csrf_exempt
+# def additf(request):
+# 	code = 0
+# 	msg = ''
+# 	try:
+# 		itf = Interface()
+# 		itf.author = request.POST.get('author')
+# 		itf.name = request.POST.get('name')
+# 		itf.headers = request.POST.get('headers')
+# 		itf.url = request.POST.get("url")
+# 		itf.method = request.POST.get("method")
+# 		itf.content_type = request.POST.get("content_type")
+# 		itf.version = request.POST.get("version")
+# 		itf.body = request.POST.get("body")
+#
+# 		itf.save()
+# 	except:
+# 		code = 1
+# 		msg = '新增失败'
+# 	return JsonResponse(simplejson(code=code, msg=""))
 
 
 """
@@ -2717,7 +2729,22 @@ def querytaglist(request):
 		print('==获取标签列表异常')
 	finally:
 		return JsonResponse(pkg(code=0, data=data))
-
+	
+@csrf_exempt
+def querytags(request):
+	data=[]
+	s=time.time()
+	with connection.cursor() as cursor:
+		sql = "SELECT customize from manager_tag "
+		cursor.execute(sql)
+		rows = cursor.fetchall()
+	for row in rows:
+		m = list(row)[0].split(';')[:-1]
+		for x in m:
+			if x not in data:
+				data.append(x)
+	print('tag列表：', data)
+	return JsonResponse({'code':0,'data':data})
 
 @csrf_exempt
 def querytag(request):

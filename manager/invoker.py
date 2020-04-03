@@ -431,7 +431,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind):
 
 
 def getDbUse(taskid, dbname):
-	scheme = getRunningInfo('', taskid.split('__')[0], 'scheme')
+	scheme = getRunningInfo('', base64.b64decode(taskid).decode().split('__')[0], 'scheme')
 	try:
 		dbid = DBCon.objects.get(scheme=scheme, description=dbname).id
 	except:
@@ -1529,8 +1529,9 @@ def _replace_variable(user, str_, src=1, taskid=None, force=False):
     src:同_gain_compute()
     """
 	if taskid is not None:
-		pid = taskid.split('__')[0]
-		pname = taskid.split('__')[1]
+		t=base64.b64decode(taskid).decode()
+		pid = t.split('__')[0]
+		pname = t.split('__')[1]
 	try:
 		old = str_
 		varnames = re.findall('{{(.*?)}}', str_)

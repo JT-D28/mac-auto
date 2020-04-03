@@ -147,7 +147,6 @@ def set_top_common_config(taskid, value, kind='db', src=None):
 	cache[kind] = value
 	_task_context_manager[taskid] = cache
 	
-	print(_task_context_manager.get(taskid))
 
 
 '''

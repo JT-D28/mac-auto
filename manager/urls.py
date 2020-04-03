@@ -142,6 +142,8 @@ urlpatterns = [
     path('queryfielddetail/', views.queryfielddetail),
     path('queryuserfile/',views.queryuserfile),
 
+    path('authcontrol/', views.authcontrol),
+
 	#
 	path('queryoneproduct/', views.queryoneproduct),
 	path('tree/', views.treetest),

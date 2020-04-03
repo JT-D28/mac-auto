@@ -278,6 +278,11 @@ function _set_form_not_editable() {
     });
 
 
+    $('form select').each(function(){
+        $(this).attr('disabled', '')
+    })
+
+
 }
 
 function reset_form() {

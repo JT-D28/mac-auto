@@ -3371,3 +3371,11 @@ def delfiles(request):
 def edit_file_name(request):
 	pass
 
+
+'''
+权限控制
+'''
+@csrf_exempt
+def authcontrol(request):
+	return render(request, 'manager/authcontrol.html',locals())
+

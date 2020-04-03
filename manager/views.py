@@ -2716,7 +2716,22 @@ def querytaglist(request):
 		print('==获取标签列表异常')
 	finally:
 		return JsonResponse(pkg(code=0, data=data))
-
+	
+@csrf_exempt
+def querytags(request):
+	data=[]
+	s=time.time()
+	with connection.cursor() as cursor:
+		sql = "SELECT customize from manager_tag "
+		cursor.execute(sql)
+		rows = cursor.fetchall()
+	for row in rows:
+		m = list(row)[0].split(';')[:-1]
+		for x in m:
+			if x not in data:
+				data.append(x)
+	print('tag列表：', data)
+	return JsonResponse({'code':0,'data':data})
 
 @csrf_exempt
 def querytag(request):

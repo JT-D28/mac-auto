@@ -108,153 +108,175 @@
 </head>
 <body style="height: calc(100% - 40px);padding: 20px">
 <div id="var">
-    <div class="layui-form">
-        <div class="layui-inline">
-            <button class="layui-btn btn" id='addbtn'>新增</button>
-            <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
-            <button class="layui-btn btn" id='copybtn'>复制</button>
-            <!--  <el-tooltip class="item" effect="dark" content="批量替换标记！" placement="top">
-				  <button class="layui-btn btn" id='editbtn'>标记</button>
-			  </el-tooltip>-->
-        </div>
-        <div class="layui-inline" style="float: right;width: 80%;">
-            <button class="layui-btn btn" id='querybtn' style="float: right;">查询</button>
-            <div class="layui-input-inline" style="float: right;">
-                <input id='search-value' type="text" name="" placeholder="描述|键|获取方式|值"
-                       class="layui-input btn">
+    <template>
+        <div class="layui-form">
+            <div class="layui-inline">
+                <button class="layui-btn btn" id='addbtn'>新增</button>
+                <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
+                <button class="layui-btn btn" id='copybtn'>复制</button>
+                <!--  <el-tooltip class="item" effect="dark" content="批量替换标记！" placement="top">
+					  <button class="layui-btn btn" id='editbtn'>标记</button>
+				  </el-tooltip>-->
             </div>
-            <el-select @change="tagChange" clearable collapse-tags filterable
-                       v-model="form.tagvalue" multiple style="width: 30%;float: right;">
-                <el-option
-                        v-for="i in tagvalues"
-                        :key="i.id"
-                        :label="i.name"
-                        :value="i.id">
-                </el-option>
-            </el-select>
-            <div class="layui-input-inline" style="margin-bottom: 0px;width: 14%;float: right;">
-                <select name="allplan" lay-filter="allplan" lay-verify="required" lay-search style="float: right;">
-                    <option value="">全部</option>
-                </select>
-            </div>
-            <div class="layui-input-inline" style="margin-bottom: 0px;width: 14%;float: right;">
-                <select name="user" lay-filter="user" lay-verify="required" lay-search style="float: right;">
-                    <option value="0">我的变量</option>
-                    <option value="-1">全部变量</option>
-                </select>
-            </div>
-        </div>
-    </div>
-    <table id='table-var' class="layui-table" lay-filter='target' style="display:none">
-    </table>
-    <form id='addhtml' hidden=true class="layui-form" style="padding: 30px 100px 0 30px ;" lay-filter='addhtml'>
-        <div class="layui-form-item">
-            <label class="layui-form-label">键名</label>
-            <div class="layui-input-block">
-                <input type="text" name="key" placeholder="请输入" autocomplete="off" class="layui-input" width="77.72%">
+            <div class="layui-inline" style="float: right;width: 80%;">
+                <button class="layui-btn btn" id='querybtn' style="float: right;">查询</button>
+                <div class="layui-input-inline" style="float: right;">
+                    <input id='search-value' type="text" name="" placeholder="描述|键|获取方式|值"
+                           class="layui-input btn">
+                </div>
+                <el-select @change="tagChange" clearable collapse-tags filterable
+                           v-model="form.tagvalue" multiple style="width: 30%;float: right;">
+                    <el-option
+                            v-for="i in tagvalues"
+                            :key="i.id"
+                            :label="i.name"
+                            :value="i.id">
+                    </el-option>
+                </el-select>
+                <div class="layui-input-inline" style="margin-bottom: 0px;width: 14%;float: right;">
+                    <select name="allplan" lay-filter="allplan" lay-verify="required" lay-search style="float: right;">
+                        <option value="">全部</option>
+                    </select>
+                </div>
+                <div class="layui-input-inline" style="margin-bottom: 0px;width: 14%;float: right;">
+                    <select name="user" lay-filter="user" lay-verify="required" lay-search style="float: right;">
+                        <option value="0">我的变量</option>
+                        <option value="-1">全部变量</option>
+                    </select>
+                </div>
             </div>
         </div>
-        <div class="layui-form-item">
-            <label class="layui-form-label">描述</label>
-            <div class="layui-input-block">
-                <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input">
+        <table id='table-var' class="layui-table" lay-filter='target' style="display:none">
+        </table>
+        <form id='addhtml' hidden=true class="layui-form" style="padding: 30px 100px 0 30px ;" lay-filter='addhtml'>
+            <div class="layui-form-item">
+                <label class="layui-form-label">键名</label>
+                <div class="layui-input-block">
+                    <input type="text" name="key" placeholder="请输入" autocomplete="off" class="layui-input"
+                           width="77.72%">
+                </div>
             </div>
-        </div>
-        <div class="layui-form-item">
-            <label class="layui-form-label">获取方式</label>
-            <div class="layui-input-block">
+            <div class="layui-form-item">
+                <label class="layui-form-label">描述</label>
+                <div class="layui-input-block">
+                    <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">获取方式</label>
+                <div class="layui-input-block">
             <textarea id="gain" type="text" name="gain"
                       placeholder="方式1=>sql查询如select urid from manager_user@dbname;         方式2=>函数调用如 getDate()"
                       autocomplete="off" class="layui-textarea" style=""></textarea>
-                <ul id='dblist'></ul>
+                    <ul id='dblist'></ul>
+                </div>
             </div>
-        </div>
-        <div class="layui-form-item">
-            <label class="layui-form-label">值</label>
-            <div class="layui-input-block">
+            <div class="layui-form-item">
+                <label class="layui-form-label">值</label>
+                <div class="layui-input-block">
             <textarea id='value' type="text" name="value" placeholder="请输入" autocomplete="off"
                       class="layui-textarea"></textarea>
-            </div>
-        </div>
-        <div class="layui-form-item">
-            <div class="layui-inline" style="width: 60%">
-                <label class="layui-form-label">绑定计划</label>
-                <div class="layui-input-inline" style="width: calc(100% - 120px);">
-                    <el-cascader style="width: 100%"
-                                 :options="productAndPlan"
-                                 v-model="bindplans"
-                                 :props="props"
-                                 collapse-tags
-                                 ref="bindplanslabel"
-                                 clearable>
-                    </el-cascader>
                 </div>
             </div>
-            <div class="layui-inline" style="float: right;">
-                <label class="layui-form-label">缓存</label>
-                <div class="layui-input-inline" style="width: 100px;">
-                    <input type="checkbox" name="is_cache" lay-skin="switch" lay-text="ON|OFF">
+            <div class="layui-form-item">
+                <div class="layui-inline" style="width: 60%">
+                    <label class="layui-form-label">绑定计划</label>
+                    <div class="layui-input-inline" style="width: calc(100% - 120px);">
+                        <el-cascader style="width: 100%"
+                                     :options="productAndPlan"
+                                     v-model="bindplans"
+                                     :props="props"
+                                     collapse-tags
+                                     ref="bindplanslabel"
+                                     clearable>
+                        </el-cascader>
+                    </div>
+                </div>
+                <div class="layui-inline" style="float: right;">
+                    <label class="layui-form-label">缓存</label>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <input type="checkbox" name="is_cache" lay-skin="switch" lay-text="ON|OFF">
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="layui-form-item">
-            <div class="layui-inline" style="width: 100%">
-                <label class="layui-form-label">标记</label>
-                <div class="layui-input-block">
-                    <button type="button" id="addtagbtn" @click="addtagbtn"
-                            class="layui-btn layui-btn-radius layui-btn-primary">添加标记
-                    </button>
-                    <blockquote class="layui-inline" v-html="wantTag" style="margin-bottom:0px">
-                    </blockquote>
+            <div class="layui-form-item">
+                <div class="layui-inline" style="width: 100%">
+                    <label class="layui-form-label">标记</label>
+                    <div class="layui-input-block">
+                        <button type="button" id="addtagbtn" @click="addtagbtn"
+                                class="layui-btn layui-btn-radius layui-btn-primary">添加标记
+                        </button>
+                        <blockquote class="layui-inline" v-html="wantTag" style="margin-bottom:0px">
+                        </blockquote>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="layui-form-item">
+            <div class="layui-form-item">
 
-        </div>
-    </form>
-    <el-dialog title='标记' :visible.sync="tagFormVisible" width="50%" height="100%">
-        <el-form :model="tagform" ref="tagform" label-width="100px" class="demo-dynamic" @submit.native.prevent>
-            <el-form-item
-                    v-for="(tag, index) in tagform.tags"
-                    :label="'标记' + (index+1)"
-                    :key="tag.key"
-                    :prop="'tags.' + index + '.value'">
-                <el-input v-model="tag.value" maxlength="8" show-word-limit></el-input>
-                <el-button @click.prevent="removetag(tag)">删除</el-button>
-            </el-form-item>
-            <el-form-item>
-                <el-button id='tagsubmit' type="primary" @click="tagSubmit('tagform',0)">提交</el-button>
-                <el-button @click="addtag">新增标记</el-button>
-            </el-form-item>
-        </el-form>
-    </el-dialog>
-    <el-dialog title="变量复制" :visible.sync="copyFormVisible">
-        <div class="" style="text-align: center" v-html="cpoyinfo"></div>
-        <div class="layui-form-item">
-            <div class="layui-inline" style="width: 100%;padding-top: 45px">
-                <label class="layui-form-label" style="padding:9px 0;text-align:center">绑定计划</label>
-                <div class="layui-input-inline" style="width: calc(100% - 100px)">
-                    <el-cascader style="width: 100%"
-                                 :options="productAndPlan"
-                                 v-model="copybindplans"
-                                 :props="props"
-                                 collapse-tags
-                                 clearable
-                                 close="copyFormcancel"
-                                 ref="copybindplanslabel"
-                    >
-                    </el-cascader>
+            </div>
+        </form>
+        <el-dialog title='标记' :visible.sync="tagFormVisible" width="50%" height="100%">
+            <el-form :model="tagform" ref="tagform" label-width="100px" class="demo-dynamic" @submit.native.prevent>
+                <label class="el-form-item__label" style="width: 100px">查询</label>
+                <el-select
+                        id="tagquery"
+                        style="margin-bottom: 22px;"
+                        v-model="tagvalue"
+                        filterable
+                        remote
+                        reserve-keyword
+                        @focus="tagfocus"
+                        placeholder="输入标签关键字查询"
+                        :remote-method="remoteMethod"
+                        :loading="loading">
+                    <el-option
+                            v-for="item in options"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value">
+                    </el-option>
+                </el-select>
+                <el-form-item
+                        v-for="(tag, index) in tagform.tags"
+                        :label="'标记' + (index+1)"
+                        :key="tag.key"
+                        :prop="'tags.' + index + '.value'">
+                    <el-input v-model="tag.value" maxlength="8" show-word-limit></el-input>
+                    <el-button @click.prevent="removetag(tag)">删除</el-button>
+                </el-form-item>
+                <el-form-item>
+                    <el-button id='tagsubmit' type="primary" @click="tagSubmit('tagform',0)">提交</el-button>
+                    <el-button @click="addtag">新增标记</el-button>
+                </el-form-item>
+            </el-form>
+        </el-dialog>
+        <el-dialog title="变量复制" :visible.sync="copyFormVisible">
+            <div class="" style="text-align: center" v-html="cpoyinfo"></div>
+            <div class="layui-form-item">
+                <div class="layui-inline" style="width: 100%;padding-top: 45px">
+                    <label class="layui-form-label" style="padding:9px 0;text-align:center">绑定计划</label>
+                    <div class="layui-input-inline" style="width: calc(100% - 100px)">
+                        <el-cascader style="width: 100%"
+                                     :options="productAndPlan"
+                                     v-model="copybindplans"
+                                     :props="props"
+                                     collapse-tags
+                                     clearable
+                                     close="copyFormcancel"
+                                     ref="copybindplanslabel"
+                        >
+                        </el-cascader>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div slot="footer" class="dialog-footer">
-            <el-button type="primary" id="copyFormSubmit">复 制</el-button>
-            <el-button type="primary" id="copyFormEdit">仅修改</el-button>
-            <el-button @click="copyFormcancel">取 消</el-button>
-        </div>
-    </el-dialog>
+            <div slot="footer" class="dialog-footer">
+                <el-button type="primary" id="copyFormSubmit">复 制</el-button>
+                <el-button type="primary" id="copyFormEdit">仅修改</el-button>
+                <el-button @click="copyFormcancel">取 消</el-button>
+            </div>
+        </el-dialog>
+    </template>
 </div>
 </body>
 <script src="{% static 'manager/js/fa.js' %}"></script>
@@ -271,6 +293,11 @@
         delimiters: ['${', '}'],
         data() {
             return {
+                options: [],
+                tagvalue: [],
+                list: [],
+                loading: false,
+                states: [],
                 str: '',
                 props: {multiple: true},
                 productAndPlan: [],
@@ -295,7 +322,52 @@
                 copybindplans: [],
             }
         },
+        mounted() {
+
+        },
         methods: {
+            tagfocus() {
+                var that = this;
+                that.tagvalue='';
+                _post_nl('/manager/querytags/', {}, function (e) {
+                    if (e.code == 0) {
+                        that.states = e.data;
+                        that.list = that.states.map(item => {
+                            return {value: `${item}`, label: `${item}`};
+                        });
+                        setTimeout(() => {
+                            that.loading = false;
+                            that.options = that.list.filter(item => {
+                                return item.label.toLowerCase().indexOf('') > -1;
+                            });
+                        }, 50);
+                    } else {
+                        this.options = [];
+                    }
+                });
+            },
+            remoteMethod(query) {
+                var that = this;
+                if (query !== '') {
+                    that.loading = true;
+                    _post_nl('/manager/querytags/', {}, function (e) {
+                        if (e.code == 0) {
+                            that.states = e.data;
+                            that.list = that.states.map(item => {
+                                return {value: `${item}`, label: `${item}`};
+                            });
+                            setTimeout(() => {
+                                that.loading = false;
+                                that.options = that.list.filter(item => {
+                                    return item.label.toLowerCase().indexOf(query.toLowerCase()) > -1;
+                                });
+                            }, 50);
+                        } else {
+                            this.options = [];
+                        }
+                    });
+                }
+            },
             copyFormSubmit(data, action) {
                 var that = this;
                 var varids = [];
@@ -344,6 +416,7 @@
             },
             addtagbtn() {
                 var that = this;
+                that.tagvalue = '';
                 that.tagFormVisible = true
             },
             tagSubmit(formName, action) {
@@ -411,6 +484,34 @@
                     app.productAndPlan = res.data;
                 } else layer.msg(res.data)
             });
+        },
+        watch: {
+            'tagvalue': function (value) {
+                var that = this;
+                var w = 0;
+                var r = 0;
+                if (value !== '' && that.tagform.tags.length < 3) {
+                    that.tagform.tags.forEach(function (item, index) {
+                        w = item.value === '' ? item : 0;
+                        if (value === item.value) {
+                            r = -1
+                        }
+                    });
+                    if (w === 0 && r === 0) {
+                        that.tagform.tags.push({
+                            value: value,
+                            key: Date.now()
+                        })
+                    } else if (r === 0) {
+                        var index = that.tagform.tags.indexOf(w);
+                        if (index !== -1) {
+                            that.tagform.tags[index].value = value
+                        }
+                    }
+                }
+                $('#tagquery').blur();
+
+            }
         }
     });
 
@@ -574,9 +675,9 @@
                 data = JSON.parse(d);
                 $("#dblist").empty();
                 for (var index = 0; index < data.data.length; index++) {
-                    d=data.data[index]['name'];
-                    d=d.length>15?d.substr(0,15)+'...':d;
-                    $("#dblist").append("<li index='" + index + "' class=''>" + d+ "</li>")
+                    d = data.data[index]['name'];
+                    d = d.length > 15 ? d.substr(0, 15) + '...' : d;
+                    $("#dblist").append("<li index='" + index + "' class=''>" + d + "</li>")
                 }
                 $("#dblist li").each(function () {
                     $(this).click(function () {
@@ -625,7 +726,7 @@
                     }
                 );
             };
-            _post('/manager/querydblist/', {type:'onlydes'}, success);
+            _post('/manager/querydblist/', {type: 'onlydes'}, success);
             var o = layer.open(
                 {
                     title: '变量管理 / 新增',

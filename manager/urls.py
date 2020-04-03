@@ -121,6 +121,7 @@ urlpatterns = [
 	#
 	path('tag/', views.tag),
 	path('querytaglist/', views.querytaglist),
+	path('querytags/', views.querytags),
 	path('addtag/', views.addtag),
 	path('deltag/', views.deltag),
 	path('querytag/', views.querytag),

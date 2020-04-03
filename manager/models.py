@@ -1,4 +1,4 @@
-import time,traceback
+import time,traceback,re
 
 from django.db.models import *
 from login.models import *
@@ -94,7 +94,14 @@ class BusinessData(Model):
 					return ('success', data)
 				else:
 					data = data.replace('null', 'None').replace('true','True').replace('false','False')
-					return ('success', eval(data))
+					
+					if len(re.findall('\$\[(.*?)\((.*?)\)\]', data))>0:
+						##是函数调用
+						pass
+					else:
+						data=eval(data)
+
+					return ('success', data)
 			
 			elif step.step_type == 'function':
 				return ('success', businessdatainst.params.split(','))

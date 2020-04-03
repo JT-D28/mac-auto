@@ -421,9 +421,8 @@ def viewcache(taskid, username, kind=None, *msg):
 		# f = open(logname, "a")
 		# f.write(what + "<br>\n")
 		# f.close
-		if os.path.exists(logname):
-			with open(logname, 'a', encoding='UTF-8') as f:
-				f.write(what + '<br>\n')
+		with open(logname, 'a', encoding='UTF-8') as f:
+			f.write(what + '<br>\n')
 		
 		# print(what)
 		con = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)

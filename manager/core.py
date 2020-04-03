@@ -811,8 +811,7 @@ def gettaskid(plan):
 	# new_md5 = md5()
 	# new_md5.update(s.encode(encoding='utf-8'))
 	# return new_md5.hexdigest()
-	x=plan.replace('[','').replace(']','__')+'__'
-	taskid=base64.b64encode(x.encode()+str(time.time()).encode()).decode()
+	taskid=base64.b64encode((re.findall('(?<=\[).*?(?=])', plan)[0]+'_'+str(time.time())).encode()).decode()
 	return taskid
 
 

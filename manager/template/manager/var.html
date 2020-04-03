@@ -84,7 +84,7 @@
         }
 
         .el-input {
-            width: 70%;
+            width: calc(100% - 100px);
         }
 
         .el-select > .el-input {
@@ -96,6 +96,11 @@
             line-height: 34px;
         }
 
+        .el-cascader .el-input .el-input__inner {
+            height: 34px !important;
+            line-height: 34px;
+        }
+
         .el-cascader,
         .el-cascader .el-input {
             width: 60%;
@@ -104,6 +109,16 @@
         .el-cascader, .el-cascader .el-input {
             width: 100%;
         }
+
+        .el-form-item {
+            margin-bottom: 15px;
+        }
+
+        #varcopy > .el-dialog > .el-dialog__body {
+            padding-top: 0px;
+            padding-bottom: 0px;
+        }
+
     </style>
 </head>
 <body style="height: calc(100% - 40px);padding: 20px">
@@ -251,13 +266,13 @@
                 </el-form-item>
             </el-form>
         </el-dialog>
-        <el-dialog title="变量复制" :visible.sync="copyFormVisible">
+        <el-dialog id="varcopy" title="变量复制" :visible.sync="copyFormVisible">
             <div class="" style="text-align: center" v-html="cpoyinfo"></div>
-            <div class="layui-form-item">
-                <div class="layui-inline" style="width: 100%;padding-top: 45px">
-                    <label class="layui-form-label" style="padding:9px 0;text-align:center">绑定计划</label>
-                    <div class="layui-input-inline" style="width: calc(100% - 100px)">
-                        <el-cascader style="width: 100%"
+            <div class="layui-form-item" style="margin-top: 10px">
+                <el-form :model="tagform" ref="tagform" label-width="100px" class="demo-dynamic" @submit.native.prevent>
+                    <div class="el-form-item">
+                        <label class="el-form-item__label" style="width: 100px">绑定计划</label>
+                        <el-cascader style="width: calc(100% - 200px);"
                                      :options="productAndPlan"
                                      v-model="copybindplans"
                                      :props="props"
@@ -268,7 +283,20 @@
                         >
                         </el-cascader>
                     </div>
-                </div>
+
+
+                    <el-form-item
+                            v-for="(tag, index) in tagform.copytags"
+                            :label="'标记' + (index+1)"
+                            :key="tag.key"
+                            :prop="'tags.' + index + '.value'">
+                        <el-input v-model="tag.value" maxlength="8" show-word-limit></el-input>
+                        <el-button @click.prevent="removetag(tag)">删除</el-button>
+                    </el-form-item>
+                    <el-form-item style="margin-bottom:0px">
+                        <el-button @click="addcopytag">新增标记</el-button>
+                    </el-form-item>
+                </el-form>
             </div>
             <div slot="footer" class="dialog-footer">
                 <el-button type="primary" id="copyFormSubmit">复 制</el-button>
@@ -305,6 +333,9 @@
                     tags: [{
                         value: ''
                     }],
+                    copytags: [{
+                        value: ''
+                    }]
                 },
                 bindplans: [],
                 tagvalues: [],
@@ -328,7 +359,7 @@
         methods: {
             tagfocus() {
                 var that = this;
-                that.tagvalue='';
+                that.tagvalue = '';
                 _post_nl('/manager/querytags/', {}, function (e) {
                     if (e.code == 0) {
                         that.states = e.data;
@@ -375,6 +406,12 @@
                     varids.splice(0, 0, data[index]['id'])
                 }
                 var copybindplans = {};
+                var copytag = '';
+                app.tagform.copytags.forEach(function (item, index) {
+                    if (item.value != '') {
+                        copytag += item.value + ';'
+                    }
+                });
                 app.$refs['copybindplanslabel'].getCheckedNodes().forEach(function (item, index) {
                     if (item['level'] == 2) {
                         copybindplans[item['label']] = [item['parent']['value'], item['value']]
@@ -383,6 +420,7 @@
                 _post_nl('/manager/copyvar/', {
                     varids: varids,
                     bindplans: JSON.stringify(copybindplans),
+                    tags:copytag,
                     action: action
                 }, function (res) {
                     console.log(res)
@@ -459,6 +497,15 @@
                     return
                 }
                 this.tagform.tags.push({
+                    value: '',
+                    key: Date.now()
+                });
+            },
+            addcopytag() {
+                if (this.tagform.copytags.length > 2) {
+                    return
+                }
+                this.tagform.copytags.push({
                     value: '',
                     key: Date.now()
                 });
@@ -583,6 +630,11 @@
 
         //复制操作
         $("#copybtn").click(function (e) {
+            app.tagform.copytags = []
+            app.tagform.copytags.push({
+                value: '',
+                key: Date.now()
+            });
             var checkStatus = table.checkStatus("table-var");
             var data = checkStatus.data; //获取选中的数据
             if (data.length == 0) {

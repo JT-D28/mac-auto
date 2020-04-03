@@ -1147,8 +1147,9 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 			
 			k, v, op = _separate_expression(exp)
 			print('获取的项=>', k, v, op)
-			for badstr in ['\\n', '\\r', '\n']:
-				data = data.replace(badstr, '')
+			if parse_type != 'xml':
+				for badstr in ['\\n', '\\r', '\n']:
+					data = data.replace(badstr, '')
 			data = data.replace('null', "'None'").replace('true', "'True'").replace("false", "'False'")
 			# print('data=>',data)
 			

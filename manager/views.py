@@ -742,7 +742,7 @@ def copyVar(request):
 		if key not in repvarkey:
 			repvarkey.append(key)
 		else:
-			return JsonResponse({'code': 1, 'msg': '你选择了多个相同key的变量'})
+			return JsonResponse({'code': 1, 'msg': '你选择了多个相同键名的变量'})
 		
 	if action == '1':
 		for varid in varids:

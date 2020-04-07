@@ -93,7 +93,7 @@ class BusinessData(Model):
 				if step.content_type in ['xml','urlencode']:
 					return ('success', data)
 				else:
-					data = data.replace('null', 'None').replace('true','True').replace('false','False')
+					data = data.replace('null', 'None').replace('true','True').replace('false','False').replace('\n','').replace('r','')
 					return ('success', eval(data))
 			
 			elif step.step_type == 'function':

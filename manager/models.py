@@ -1,3 +1,4 @@
+import json
 import time,traceback
 
 from django.db.models import *
@@ -93,8 +94,12 @@ class BusinessData(Model):
 				if step.content_type in ['xml','urlencode']:
 					return ('success', data)
 				else:
-					data = data.replace('null', 'None').replace('true','True').replace('false','False').replace('\n','').replace('r','')
-					return ('success', eval(data))
+					try:
+						print(json.loads(data))
+						return ('success', data)
+					except:
+						data = data.replace('null', 'None').replace('true', 'True').replace('false', 'False')
+						return ('success',json.dumps(eval(data)))
 			
 			elif step.step_type == 'function':
 				return ('success', businessdatainst.params.split(','))

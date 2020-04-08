@@ -822,9 +822,9 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>method=>%s</span>" % method)
 	
 	if content_type == 'json':
-		# body=body.encode('utf-8')
+		body=body.encode('utf-8')
 		default["Content-Type"] = 'application/json;charset=UTF-8'
-		body = json.dumps(eval(body))
+		# body = json.dumps(eval(body))
 	elif content_type == 'xml':
 		default["Content-Type"] = 'application/xml'
 		body = body.encode('utf-8')

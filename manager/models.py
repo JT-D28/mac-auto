@@ -1,5 +1,5 @@
-import time,traceback,re
 
+import time,traceback,re,json
 from django.db.models import *
 from login.models import *
 
@@ -93,15 +93,18 @@ class BusinessData(Model):
 				if step.content_type in ['xml','urlencode']:
 					return ('success', data)
 				else:
+
 					data = data.replace('null', 'None').replace('true','True').replace('false','False')
 					
 					if len(re.findall('\$\[(.*?)\((.*?)\)\]', data))>0:
 						##是函数调用
 						pass
 					else:
-						data=eval(data)
+						#data=eval(data)
+						data=json.dumps(eval(data))
 
 					return ('success', data)
+
 			
 			elif step.step_type == 'function':
 				return ('success', businessdatainst.params.split(','))

@@ -566,7 +566,7 @@ class StepEncoder(XJsonEncoder):
 		super(StepEncoder, self).__init__(
 			['id', 'businesstitle', 'author', 'priority', 'interface', 'description', 'headers', 'body', 'db_check',
 			 'itf_check', 'step_type', 'createtime', 'updatetime', 'tag_id', 'temp', 'url', 'content_type', 'method',
-			 'db_id', 'count','encrypt_type'], **args)
+			 'db_id', 'count'], **args)
 	
 	def encode(self, obj):
 		L = eval(super(XJsonEncoder, self).encode(obj))
@@ -591,7 +591,12 @@ class StepEncoder(XJsonEncoder):
 				x['tagname'] = tagname
 			except:
 				x['tagname'] = ''
-		
+
+
+			try:
+				x['encrypt_type']=models.StepAdditional.objects.get(id=int(uid))[0].encrypt_type
+			except:
+				x['encrypt_type']=-1
 		return {
 			"code": 0,
 			"msg": '操作成功',

@@ -546,7 +546,7 @@ def editstep(request):
 		
 		step.temp = tmp
 		step.db_id = dbid
-		step.encrypt_type=encrypt_type
+	
 		
 		step.save()
 

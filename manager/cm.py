@@ -407,6 +407,7 @@ def addstep(request):
 		businessdata = request.POST.get('business_data')
 		print('businessdata=>', type(businessdata), businessdata)
 		dbid = request.POST.get('dbid')
+		encrypt_type=request.POST.get('encrypt_type')
 
 		##
 		if step_type == 'dir':
@@ -448,6 +449,7 @@ def addstep(request):
 		step.author = lm.User.objects.get(name=author)
 		
 		step.db_id = dbid
+		step.encrypt_type=encrypt_type
 		step.save()
 		# mounttestdata(author,step.id)
 		
@@ -506,6 +508,7 @@ def editstep(request):
 	try:
 		count = request.POST.get('count')
 		dbid = request.POST.get('dbid')
+		encrypt_type=request.POST.get('encrypt_type')
 		step_type = request.POST.get('step_type')
 		description = request.POST.get('description')
 		headers = request.POST.get('headers')
@@ -538,6 +541,7 @@ def editstep(request):
 		
 		step.temp = tmp
 		step.db_id = dbid
+		step.encrypt_type=encrypt_type
 		
 		step.save()
 		stepname = description

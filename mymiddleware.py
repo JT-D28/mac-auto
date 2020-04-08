@@ -195,7 +195,7 @@ class Interceptor(MiddlewareMixin):
 
 		self._print_call_msg(request)
 
-		self._log_operation(request)
+		# self._log_operation(request)
 		
 		session_check_result = self._session_check(request)
 		repeat_check_result = self._repeat_check(request)

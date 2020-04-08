@@ -587,8 +587,13 @@ def _step_process_check(callername, taskid, order, kind):
 				else:
 					text, statuscode, itf_msg = _callsocket(taskid, user, step.url, body=str(paraminfo))
 			else:
+				encryptlist=list(StepAdditional.objects.filter(step_id=step.id))
+				encrypttype=-1
+				if len(encryptlist)>0:
+					encrypttype=encryptlist[0].encrypt_type
+
 				headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), step.method,
-				                                                    step.headers, step.content_type, step.temp, kind,step.encrypt_type)
+				                                                    step.headers, step.content_type, step.temp, kind,encrypttype)
 			
 			viewcache(taskid, username, kind,
 			          "<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>" % text)
@@ -764,7 +769,8 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
     """
 	# url data headers过滤
 	viewcache(taskid, user.name, kind, "执行接口请求=>")
-	viewcache(taskid, user.name, kind, "加密方式=>%s"%encrypt_type)
+	if encrypt_type!=-1:
+		viewcache(taskid, user.name, kind, "加密方式=>%s"%encrypt_type)
 	if content_type == 'formdata':
 		return ('', '', '', 'form-data方式暂不支持..')
 	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>content_type=>%s</span>" % content_type)
@@ -832,7 +838,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		try:
 			if body.startswith("{") and not body.startswith("{{"):
 				body=body.replace('\r', '').replace('\n', '').replace('\t', '').replace(' ', '')
-				if encrypt_type is None:
+				if encrypt_type in (None,-1,''):
 					body = parse.urlencode(ast.literal_eval(body))
 					body = body.encode('UTF-8')
 				else:

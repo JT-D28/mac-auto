@@ -449,8 +449,13 @@ def addstep(request):
 		step.author = lm.User.objects.get(name=author)
 		
 		step.db_id = dbid
-		step.encrypt_type=encrypt_type
+		#step.encrypt_type=encrypt_type
 		step.save()
+		if encrypt_type:
+			sa=mm.StepAdditional()
+			sa.step_id=step.id
+			sa.encrypt_type=encrypt_type
+			sa.save()
 		# mounttestdata(author,step.id)
 		
 		# if 'function'==step.step_type:
@@ -544,6 +549,18 @@ def editstep(request):
 		step.encrypt_type=encrypt_type
 		
 		step.save()
+
+		salist=list(mm.StepAdditional.objects.filter(step_id=step.id))
+		if len(salist)==0:
+			sa=mm.StepAdditional()
+			sa.step_id=step.id
+			sa.encrypt_type=encrypt_type
+			sa.save()
+		else:
+			sa=salist[0]
+			sa.encrypt_type=encrypt_type
+			sa.save()
+
 		stepname = description
 		
 		print('step save,count=>', count)

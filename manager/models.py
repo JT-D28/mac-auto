@@ -160,6 +160,11 @@ class Step(Model):
 	def __str__(self):
 		return "[%s]%s" % (self.id, self.description)
 
+class StepAdditional(Model):
+	step_id=IntegerField(null=True)
+	encrypt_type=CharField(max_length=10,default='',blank=True)
+
+
 
 class Case(Model):
 	count = IntegerField(default=1)

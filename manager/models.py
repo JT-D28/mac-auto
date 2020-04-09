@@ -94,14 +94,19 @@ class BusinessData(Model):
 					return ('success', data)
 				else:
 					
-					data = data.replace('null', 'None').replace('true', 'True').replace('false', 'False')
-					
+					# data = data.replace('null', 'None').replace('true', 'True').replace('false', 'False')
 					if len(re.findall('\$\[(.*?)\((.*?)\)\]', data)) > 0:
 						##是函数调用
 						pass
 					else:
+						try:
+							print(json.loads(data))
+							return ('success', data)
+						except:
+							data = data.replace('null', 'None').replace('true', 'True').replace('false', 'False')
+							return ('success', json.dumps(eval(data)))
 						# data=eval(data)
-						data = json.dumps(eval(data))
+						# data = json.dumps(eval(data))
 					
 					return ('success', data)
 			

@@ -593,10 +593,6 @@ class StepEncoder(XJsonEncoder):
 				x['tagname'] = ''
 
 
-			try:
-				x['encrypt_type']=models.StepAdditional.objects.get(id=int(uid))[0].encrypt_type
-			except:
-				x['encrypt_type']=-1
 		return {
 			"code": 0,
 			"msg": '操作成功',

@@ -153,17 +153,11 @@ class Step(Model):
 	businessdatainfo = ManyToManyField(BusinessData, blank=True)
 	# businesstitle=CharField(max_length=1000,blank=True)
 	db_id = CharField(max_length=64, blank=True, null=True)
-	encrypt_type=CharField(max_length=10,default='',blank=True)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 	
 	def __str__(self):
 		return "[%s]%s" % (self.id, self.description)
-
-class StepAdditional(Model):
-	step_id=IntegerField(null=True)
-	encrypt_type=CharField(max_length=10,default='',blank=True)
-
 
 
 class Case(Model):

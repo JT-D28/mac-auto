@@ -1,3 +1,6 @@
 def base64_encrypt(str_):
     import base64
-    return base64.b64encode(str(str_).encode('utf-8')).decode()
+
+    str_=str_['mw']
+    str_=str_.replace('\n','').replace(' ','').replace("'", '"')
+    return base64.b64encode(str_.encode()).decode()

@@ -188,15 +188,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="layui-form-item">
-                    <label class="layui-form-label">参数加密</label>
-                    <div class="layui-input-block">
-                        <select name="ect" lay-verify="" id='ect'>
-                            <option value="-1">无</option>
-                            <option value="base64">base64</option>
-                        </select>
-                    </div>
-                </div>
+
 
                 <div class="layui-form-item">
                     <button class="layui-btn" id='save' style="visibility:hidden;position: center">保存</button>
@@ -356,7 +348,7 @@
                         $("[name='db-check']").val(db_check);
                         $("[name='property']").val(tmp);
                         $("[name='db_id']").val(data.data[0]['db_id']);
-                        $('#ect').val(data.data[0]['encrypt_type']);
+                    
                         layui.form.render('select')
                     };
                     _post('/manager/queryonestep/', {id: uid}, success);
@@ -394,7 +386,6 @@
                 'content_type': $("[name='content-type']:checked").val(),
                 'tmp': $("[name='property']").val(),
                 'dbid': $("[name='db_id']").val(),
-                'encrypt_type':$('#ect').val(),
                 'count': $("[name='count']").val(),
                 // 'node_type':$("[name='node_type']:checked").val(),
 

@@ -587,13 +587,8 @@ def _step_process_check(callername, taskid, order, kind):
 				else:
 					text, statuscode, itf_msg = _callsocket(taskid, user, step.url, body=str(paraminfo))
 			else:
-				encryptlist=list(StepAdditional.objects.filter(step_id=step.id))
-				encrypttype=-1
-				if len(encryptlist)>0:
-					encrypttype=encryptlist[0].encrypt_type
-
 				headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), step.method,
-				                                                    step.headers, step.content_type, step.temp, kind,encrypttype)
+				                                                    step.headers, step.content_type, step.temp, kind)
 			
 			viewcache(taskid, username, kind,
 			          "<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>" % text)
@@ -763,14 +758,12 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
 		return ('', '', err)
 
 
-def _callinterface(taskid, user, url, body=None, method=None, headers=None, content_type=None, props=None, kind=None,encrypt_type=None):
+def _callinterface(taskid, user, url, body=None, method=None, headers=None, content_type=None, props=None, kind=None):
 	"""
     返回(rps.text,rps.status_code,msg)
     """
 	# url data headers过滤
 	viewcache(taskid, user.name, kind, "执行接口请求=>")
-	if encrypt_type!=-1:
-		viewcache(taskid, user.name, kind, "加密方式=>%s"%encrypt_type)
 	if content_type == 'formdata':
 		return ('', '', '', 'form-data方式暂不支持..')
 	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>content_type=>%s</span>" % content_type)
@@ -781,7 +774,12 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	url_rv = _replace_variable(user, url_rp[1], taskid=taskid)
 	if url_rv[0] is not 'success':
 		return ('', '', '', url_rv[1])
-	url = url_rv[1]
+
+	url_rf=_replace_function(user, url_rv[1],taskid=taskid)
+	if url_rf[0] is not 'success':
+		return ('','','',url_rf[1])
+
+	url = url_rf[1]
 	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>url=>%s</span>" % url)
 	
 	viewcache(taskid, user.name, kind,
@@ -828,50 +826,55 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>method=>%s</span>" % method)
 	
 	if content_type == 'json':
-		body=body.encode('utf-8')
 		default["Content-Type"] = 'application/json;charset=UTF-8'
+		body=body.encode('utf-8')
 		# body = json.dumps(eval(body))
 	elif content_type == 'xml':
 		default["Content-Type"] = 'application/xml'
 		body = body.encode('utf-8')
 	elif content_type == 'urlencode':
+		default["Content-Type"] = 'application/x-www-form-urlencoded;charset=UTF-8'
 		try:
 			if body.startswith("{") and not body.startswith("{{"):
 				body=body.replace('\r', '').replace('\n', '').replace('\t', '').replace(' ', '')
-				if encrypt_type in (None,-1,''):
-					body = parse.urlencode(ast.literal_eval(body))
-					body = body.encode('UTF-8')
-				else:
-					body=EncryptUtils.base64_encrypt(body)
-					viewcache(taskid, user.name, kind, "<span style='color:#009999;'>%s加密后参数=> %s</span>" %(encrypt_type,body))
-		
+				body = parse.urlencode(ast.literal_eval(body))
+
+			body = body.encode('UTF-8')
+
 		except:
 			print('参数转化异常：', traceback.format_exc())
-			return ('', '', '', '接口参数格式不对 请检查..')
-		default["Content-Type"] = 'application/x-www-form-urlencoded;charset=UTF-8'
+			return ('', '', '', 'urlencode接口参数格式不对 请检查..')
+		
 	elif content_type == 'xml':
 		isxml = 0
 	else:
 		raise NotImplementedError("content_type=%s没实现" % content_type)
-	
-	# viewcache(taskid,user.name,kind,"body[old]=%s"%body)
-	
 	# print("method=>",method)
 	rps = None
-	
 	if method == "get":
 		session = get_task_session('%s_%s' % (taskid, user.name))
-		rps = session.get(url, params=body, headers={**default, **headers})
+
+		if body:
+			if isinstance(body, (dict,list,bytes)):
+				rps = session.get(url, params=body, headers={**default, **headers})
+			else:
+				return('','','','参数类型不支持[dict,list of tuples,bytes]')
+		else:
+			rps=session.get(url,headers={**default, **headers})
+
 	elif method == 'post':
-		# print(body.decode())
-		# print({**default,**headers})
-		# print(body)
 		session = get_task_session('%s_%s' % (taskid, user.name))
-		rps = session.post(url, data=body, headers={**default, **headers})
+		if body:
+			if isinstance(body,(dict,list,bytes)):
+				rps = session.post(url, data=body, headers={**default, **headers})
+			else:
+				return('','','','参数类型不支持[dict,list of tuples,bytes]')
+		else:
+			rps = session.post(url,headers={**default, **headers})
 	
 	# print("textfdafda=>",rps.text)
 	else:
-		return ('', '', '', "请求方法%s没实现.." % method)
+		return ('', '', '', "请求方法[%s]暂不支持.." % method)
 	
 	###响应报文中props处理
 	status, err = _find_and_save_property(user, props, rps.text)
@@ -1476,7 +1479,7 @@ def _replace_function(user, str_, taskid=None):
 		return ('error', alist[0])
 
 
-def _get_step_params(paraminfo):
+def _get_step_params(paraminfo,taskid,callername):
 	'''
     获取内置变量STEP_PARAMS
 
@@ -1508,28 +1511,33 @@ def _get_step_params(paraminfo):
 					_next(sb, parent=parent, key=key)
 	
 	########################
+	ps=paraminfo
 	try:
 		ps = eval(paraminfo)
 		
 		if isinstance(ps, (dict,)):
 			_next(ps)
+			viewcache(taskid, callername, None, '获取内置变量STEP_PARAMS=> %s ' %str(ps) )
 			return ps
 		
-		elif isinstance(ps, (str,)):
+	except:
+		try:
 			dl = dict()
 			for s1 in ps.split('&'):
 				p1 = s1.split('=')[0]
-				p2 = s1.split('=')[1]
+				p2 = '='.join(s1.split('=')[1:])
 				dl[p1] = p2
 			
 			_next(dl)
+			viewcache(taskid, callername, None, '获取内置变量STEP_PARAMS=> %s ' %str(dl) )
 			return dl
-		
-		else:
-			return ('fail', '')
-	except:
+		except:
+
+			return ('error','a=1&b=2模式获取内置变量STEP_PARAMS异常')
+
+
 		print(traceback.format_exc())
-		return ('error', '')
+		return ('error', traceback.format_exc())
 
 
 def _replace_variable(user, str_, src=1, taskid=None, force=False):
@@ -1547,7 +1555,7 @@ def _replace_variable(user, str_, src=1, taskid=None, force=False):
 		varnames = re.findall('{{(.*?)}}', str_)
 		for varname in varnames:
 			if varname.strip() == 'STEP_PARAMS':
-				dictparams = _get_step_params(str_)
+				dictparams = _get_step_params(str_,taskid,user.name)
 				print('==获取内置变量STEP_PARAMS=>\n', dictparams)
 				print('==参数替换前=>\n', old)
 				old = old.replace('{{%s}}' % varname, str(dictparams))

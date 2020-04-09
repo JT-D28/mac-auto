@@ -416,7 +416,7 @@ def viewcache(taskid, username, kind=None, *msg):
 		logname = "./logs/" + taskid + ".log"
 		what = "".join((msg))
 		# print(username)
-		what = "%s        %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), what)
+		what = "%s        %s" % (time.strftime("[%m-%d %H:%M:%S]", time.localtime()), what)
 		# print("console:",what)
 		# print('redis=>', what)
 		# f = open(logname, "a")

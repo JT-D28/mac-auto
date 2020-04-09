@@ -780,7 +780,21 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	if url_rv[0] is not 'success':
 		return ('', '', '', url_rv[1])
 
-	url_rf=_replace_function(user, url_rv[1],taskid=taskid)
+	url_rf=''
+	if len(url_rv[1].split('?'))>0:
+		print('$'*1000)
+		url_params=url_rv[1].split('?')[1]
+		print('url_params=>',url_params)
+		sep=_replace_function(user, url_params,taskid=taskid)
+		if sep[0] is not 'success':
+			return ('','','',sep[1])
+
+		url_rf=('success',url_rv[1].split('?')[0]+'?'+sep[1])
+
+
+
+	else:
+		url_rf=_replace_function(user, url_rv[1],taskid=taskid)
 	if url_rf[0] is not 'success':
 		return ('','','',url_rf[1])
 
@@ -911,10 +925,13 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
 		pass
 	
 	# flag
-	if call_method_name in ('dbexecute2', 'dbexecute', 'local_to_ftp', 'ftp_to_local', 'local_file_check'):
-		call_method_params.append("taskid='%s'" % taskid)
-		call_method_params.append("callername='%s'" % user.name)
-	
+	# if call_method_name in ('dbexecute2', 'dbexecute', 'local_to_ftp', 'ftp_to_local', 'local_file_check'):
+	# 	call_method_params.append("taskid='%s'" % taskid)
+	# 	call_method_params.append("callername='%s'" % user.name)
+
+	call_method_params.append("taskid='%s'" % taskid)
+	call_method_params.append("callername='%s'" % user.name)
+
 	call_str = '%s(%s)' % (call_method_name, ','.join(call_method_params))
 	
 	print('测试函数调用=>', call_str)
@@ -928,7 +945,7 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
 	
 	print('ttttttttttttttt=>', call_str)
 	
-	return Fu.call(f, call_str, builtin=builtin, username=user.name, taskid=taskid)
+	return Fu.call(f, call_str, builtin=builtin)
 
 
 def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
@@ -970,7 +987,7 @@ def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
 				f = al[0]
 				viewcache(taskid, user.name, None, "<span style='color:#FF3333;'>函数库中发现多个匹配函数 这里使用第一个匹配项</span>")
 		
-		status, res = Fu.call(f, call_str, builtin=isbuiltin, username=user.name, taskid=taskid)
+		status, res = Fu.call(f, call_str, builtin=isbuiltin)
 		viewcache(taskid, user.name, None, "执行[<span style='color:#009999;'>%s</span>]%s" % (kind, s))
 		if status is not 'success':
 			return (status, res)
@@ -1466,20 +1483,23 @@ def _replace_function(user, str_, taskid=None):
 			f = Function.objects.get(name=fname)
 		except:
 			pass
+
+		appendstr=",callername='%s',taskid='%s'"%(user.name,taskid)
+		#计算表达式
+		invstr = '%s(%s%s)' % (fname, call_str[1],appendstr)
+		#替换表达式
+		repstr='%s(%s)'%(fname,call_str[1])
 		
-		invstr = '%s(%s)' % (fname, call_str[1])
-		
-		print('uuuuuuuuuuuu=>', call_str)
-		status, res = Fu.call(f, invstr, builtin=(lambda: True if fname in builtinmethods else False)(),
-		                      username=user.name, taskid=taskid)
+		status, res = Fu.call(f, invstr, builtin=(lambda: True if fname in builtinmethods else False)())
 		resultlist.append((status, res))
 		
 		if status is 'success':
-			print('替换函数引用 %s => %s ' % ('$[%s]' % invstr, str(res)))
-			str_ = str_.replace('$[%s]' % invstr, str(res))
+			print('\n\n')
+			print('替换函数引用 %s\n =>\n %s ' % ('$[%s]' % invstr, str(res)))
+			str_ = str_.replace('$[%s]' % repstr, str(res))
 	
 	if len([x for x in resultlist if x[0] is 'success']) == len(resultlist):
-		print('--成功计算引用表达式=>', str_)
+		print('--成功计算引用表达式 结果=>', str_)
 		return ('success', str_)
 	else:
 		alist = [x[1] for x in resultlist if x[0] is not 'success']
@@ -1534,6 +1554,8 @@ def _get_step_params(paraminfo,taskid,callername):
 			for s1 in ps.split('&'):
 				p1 = s1.split('=')[0]
 				p2 = '='.join(s1.split('=')[1:])
+				if p1.__contains__('?'):
+					p1=p1.split('?')[1]
 				dl[p1] = p2
 			
 			_next(dl)

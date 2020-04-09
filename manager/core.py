@@ -958,8 +958,11 @@ class Fu:
 				try:
 					call_str = call_str.replace('\n', '')
 					# print('调用原表达式=>', call_str)
-					if call_str.startswith('dbexecute') and taskid not in call_str:
-						call_str = call_str.replace(')', ',taskid="%s",callername="%s")' % (taskid, username))
+					#无效代码可以去掉
+					# if call_str.startswith('dbexecute') and taskid not in call_str:
+					# 	call_str = call_str.replace(')', ',taskid="%s",callername="%s")' % (taskid, username))
+					
+
 					res = eval(call_str)
 					print("调用内置函数表达式:%s 结果为:%s" % (call_str, res))
 					if isinstance(res, (tuple,)):

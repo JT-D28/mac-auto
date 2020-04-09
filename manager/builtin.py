@@ -10,22 +10,28 @@ from .context import get_top_common_config, viewcache
 from .db import Mysqloper
 
 
-def _log(msg, taskid=None, callername=None, level='DEBUG'):
+def _log(msg, **kws):
 	'''
 	控制台输出日志
 	'''
+	taskid=kws['taskid']
+	callername=kws['callername']
+	level=kws.get('level','DEBUG')
 	if level == 'DEBUG':
 		msg = "<span style='color:#009999;'>%s</span>" % msg
 		viewcache(taskid, callername, None, msg)
 
 
-def dbexecute(sql, taskid=None, callername=None):
+def dbexecute(sql, **kws):
 	"""
 	执行单条sql
 	单字段查询语句返回查询结果,不支持多字段
 	非查询语句返回执行后影响条数
 
 	"""
+	taskid=kws['taskid']
+	callername=kws['callername']
+
 	if taskid is None:
 		return 'error', 'taskid为空'
 	op = Mysqloper()
@@ -39,12 +45,15 @@ def dbexecute(sql, taskid=None, callername=None):
 		return op.db_execute(sql, taskid=taskid, callername=callername)
 
 
-def dbexecute2(sql, taskid=None, callername=None):
+def dbexecute2(sql, **kws):
 	"""
 	执行多条sql
 	某条执行失败返回失败信息
 	否则返回'success'
 	"""
+	taskid=kws['taskid']
+	callername=kws['callername']
+
 	if taskid is None:
 		return 'error', 'taskid为空'
 	
@@ -98,14 +107,14 @@ def dbexecute2(sql, taskid=None, callername=None):
 		return 'error', '执行内置函数报错sql[%s] error[%s]' % (sql, traceback.format_exc())
 
 
-def getDate():
+def getDate(**kws):
 	'''
 	返回当前的日期格式如2017-08-18
 	'''
 	return str(time.strftime("%Y-%m-%d"))
 
 
-def getNow():
+def getNow(**kws):
 	'''
 	返回时间格式如2019-09-01 12:23:15
 	'''
@@ -113,13 +122,16 @@ def getNow():
 	return "%s-%s-%s %s:%s:%s" % (now[:4], now[5:7], now[8:10], now[11:13], now[14:16], now[17:19])
 
 
-def getSomeDate(num=1, format='%Y-%m-%d'):
+def getSomeDate(**kws):
 	'''
 	返回基于当前时间的前后几天时间,默认格式2019-12-09
 	参数1(num)-1表示前一天,2表示后两天
 	参数2(format)控制返回时间格式 默认'%Y-%m-%d'
 	
 	'''
+	num=kws.get('num',1)
+	format=kws.get('format','%Y-%m-%d')
+
 	num = int(num)
 	numday = datetime.timedelta(days=abs(num))
 	today = datetime.date.today()
@@ -133,7 +145,7 @@ def getSomeDate(num=1, format='%Y-%m-%d'):
 	return v
 
 
-def createPhone():
+def createPhone(**kws):
 	'''
 	说明：随机生成手机号
 	:return: 手机号
@@ -143,19 +155,21 @@ def createPhone():
 	return random.choice(prelist) + "".join(random.choice("0123456789") for i in range(8))
 
 
-def createTenantCode():
+def createTenantCode(**kws):
 	'''
 	返回随机8位数
 	'''
 	return "".join(random.choice("0123456789") for i in range(8))
 
 
-def createTransNo(name=None):
+def createTransNo(**kws):
 	'''
 	createTransNo： 随机生成流水号
 	 参数：name 为字符串，此处表示英文名
 	 返回：name+当前时间（月日时分秒）+随机数字      共16位
+
 	'''
+	name=kws.get('name',None)
 	if name != None:
 		n = 16 - len(name)
 	else:
@@ -167,7 +181,7 @@ def createTransNo(name=None):
 	return name + nowtime + ''.join(random.choice("0123456789") for i in range(n))
 
 
-def createReqSeqID(name):
+def createReqSeqID(name,**kws):
 	'''
 	createReqSeqID：随机生成批次号
 	参数：name为字符串，此处表示英文名
@@ -184,19 +198,19 @@ def createReqSeqID(name):
 	return name + nowtime + ''.join(random.choice("0123456789") for i in range(n))
 
 
-def createOrgName():
+def createOrgName(**kws):
 	'''返回一个随机组织名称 形式如组织_随机数
 	'''
 	return '组织' + str(random.randint(0, 50))
 
 
-def createRoleName():
+def createRoleName(**kws):
 	'''返回一个角色名称 形式如角色_随机数
 	'''
 	return '角色' + str(random.randint(0, 50))
 
 
-def sleep(esc):
+def sleep(esc,**kws):
 	'''
 	休眠函数
 	参数:休眠时间 s
@@ -204,32 +218,41 @@ def sleep(esc):
 	time.sleep(esc)
 
 
-def local_to_ftp(filename, ip, port, username, password, remotedir, callername=None, taskid=None):
+def local_to_ftp(filename, ip, port, username, password, remotedir, **kws):
 	'''
 	本地文件上传ftp
 		例如: local_to_ftp('本地文件','10.22.22.1',8021,'pt','pt123','/bank')
 	'''
 	from .myspace import SpaceMeta
+	taskid=kws.get('taskid',None)
+	callername=kws.get('callername',None)
 	status, msg = SpaceMeta.local_to_ftp(filename, ip, port, username, password, remotedir, callername)
 	_log(msg, taskid=taskid, callername=callername)
 	return (status, msg)
 
 
-def ftp_to_local(ip, port, username, password, remotefile, callername=None, taskid=None):
+def ftp_to_local(ip, port, username, password, remotefile,**kws):
 	'''
 	ftp文件下载
 	'''
 	from .myspace import SpaceMeta
+	taskid=kws.get('taskid',None)
+	callername=kws.get('callername',None)
+
 	status, msg = SpaceMeta.ftp_to_local(ip, port, username, password, remotefile, callername)
 	_log(msg, taskid=taskid, callername=callername)
 	return (status, msg)
 
 
-def local_file_check(filename, templatename, checklist, callername=None, taskid=None):
+def local_file_check(filename, templatename, checklist, **kws):
 	'''
 	本地文件使用报文模板进行数据校验
 	'''
 	from .myspace import SpaceMeta
+
+	taskid=kws.get('taskid',None)
+	callername=kws.get('callername',None)
+	
 	_log('开始校验文件[%s]' % filename, taskid=taskid, callername=callername)
 	_log('使用的报文模板[%s]' % templatename, taskid=taskid, callername=callername)
 	_log('待校验字段[%s]' % '|'.join(checklist), taskid=taskid, callername=callername)

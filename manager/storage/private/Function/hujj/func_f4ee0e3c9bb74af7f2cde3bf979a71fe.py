@@ -1,4 +1,4 @@
-def base64_encrypt(str_):
+def base64_encrypt(str_,**kws):
     import base64
 
     str_=str_['mw']

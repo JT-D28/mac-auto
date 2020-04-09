@@ -1,4 +1,10 @@
-a='a=b==c'
+def testwaibu(a,**kws):
+    print(a)
+    print(kws['callername'])
 
-b=a.split('=')[1:]
-print('='.join(b))
+
+def a(**kws):
+    print(kws)
+a(a=1)
+
+

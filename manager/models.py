@@ -1,6 +1,5 @@
-import json
-import time,traceback
 
+import time,traceback,re,json
 from django.db.models import *
 from login.models import *
 
@@ -94,12 +93,18 @@ class BusinessData(Model):
 				if step.content_type in ['xml','urlencode']:
 					return ('success', data)
 				else:
-					try:
-						print(json.loads(data))
-						return ('success', data)
-					except:
-						data = data.replace('null', 'None').replace('true', 'True').replace('false', 'False')
-						return ('success',json.dumps(eval(data)))
+
+					data = data.replace('null', 'None').replace('true','True').replace('false','False')
+					
+					if len(re.findall('\$\[(.*?)\((.*?)\)\]', data))>0:
+						##是函数调用
+						pass
+					else:
+						#data=eval(data)
+						data=json.dumps(eval(data))
+
+					return ('success', data)
+
 			
 			elif step.step_type == 'function':
 				return ('success', businessdatainst.params.split(','))
@@ -134,31 +139,31 @@ class Step(Model):
 	
 	author = ForeignKey(User, on_delete=CASCADE)
 	step_type = CharField(choices=choice, max_length=12, null=True)
-	
 	##如果是接口类型 这个字段暂时无用
 	related_id = CharField(max_length=32, blank=True, null=True)
-	
 	description = CharField(max_length=500, null=True)
 	headers = CharField(max_length=500, blank=True, null=True)
 	body = TextField(blank=True, null=True)
 	url = TextField(blank=True, null=True)
 	method = CharField(max_length=128, blank=True, null=True)
 	content_type = CharField(max_length=128, blank=True, null=True)
-	
-	# db_check=CharField(max_length=128,blank=True)
-	# itf_check=CharField(max_length=128,blank=True)
 	##临时变量等 |分隔  可以是token
 	temp = CharField(max_length=128, blank=True, null=True)
 	# tag_id=CharField(max_length=32,blank=True)
-	
 	businessdatainfo = ManyToManyField(BusinessData, blank=True)
 	# businesstitle=CharField(max_length=1000,blank=True)
 	db_id = CharField(max_length=64, blank=True, null=True)
+	encrypt_type=CharField(max_length=10,default='',blank=True)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 	
 	def __str__(self):
 		return "[%s]%s" % (self.id, self.description)
+
+class StepAdditional(Model):
+	step_id=IntegerField(null=True)
+	encrypt_type=CharField(max_length=10,default='',blank=True)
+
 
 
 class Case(Model):

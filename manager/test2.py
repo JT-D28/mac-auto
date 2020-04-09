@@ -1,1 +1,3 @@
-print(300/3723)
+a=(1,None)
+if None in a:
+    print(1)

@@ -397,40 +397,40 @@ class MessageParser(object):
             }
 
 
-    @classmethod
-    def move_up_or_down(cls,fid,direction='up'):
-        '''
-        字段上下移动
+    # @classmethod
+    # def move_up_or_down(cls,fid,direction='up'):
+    #     '''
+    #     字段上下移动
 
-        '''
-        try:
-            move_step=(lambda:-1 if direction=='up' else 1)()
-            tf=TemplateField.objects.get(id=fid)
-            cur_order=tf.order
-            t=tf.template
-            expected=list(TemplateField.objects.filter(template=t,order=(cur_order+move_step)))
+    #     '''
+    #     try:
+    #         move_step=(lambda:-1 if direction=='up' else 1)()
+    #         tf=TemplateField.objects.get(id=fid)
+    #         cur_order=tf.order
+    #         t=tf.template
+    #         expected=list(TemplateField.objects.filter(template=t,order=(cur_order+move_step)))
 
-            if len(expected)==0:
-                return ('success','边界移动忽略.')
+    #         if len(expected)==0:
+    #             return ('success','边界移动忽略.')
 
-            else:
-                tf.order=cur_order+move_step
-                tf.save()
+    #         else:
+    #             tf.order=cur_order+move_step
+    #             tf.save()
 
-                tf0=expected[0]
-                tf0.order=tf0.order-move_step
-                tf0.save()
+    #             tf0=expected[0]
+    #             tf0.order=tf0.order-move_step
+    #             tf0.save()
 
-                return {
-                'code':0,
-                'msg':"%s成功"%((lambda:'上移' if direction=='up' else '下移')())
-                }
+    #             return {
+    #             'code':0,
+    #             'msg':"%s成功"%((lambda:'上移' if direction=='up' else '下移')())
+    #             }
 
-        except:
-            return {
-            'code':4,
-            'msg':'移动异常=>'+traceback.format_exc()
-            }
+    #     except:
+    #         return {
+    #         'code':4,
+    #         'msg':'移动异常=>'+traceback.format_exc()
+    #         }
 
     @classmethod
     def get_parse_config(cls,templatename):

@@ -39,7 +39,7 @@
               <button class="layui-btn btn" id='querybtn'>查询</button>
             </div>
           <table id='table-view' class="layui-table"
-                 lay-data="{height: 'full-100', cellMinWidth: 80, page: true, limit:10, url:'/manager/querydb/'}"
+                 lay-data="{height: 'full-100', cellMinWidth: 80, page: true, limit:10, url:'/manager/queryuicontrol/'}"
                  lay-filter='target'>
               <thead>
               <tr>
@@ -47,8 +47,8 @@
                   <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
                   <th lay-data="{field: 'description', sort: true}">权限码</th>
                   <th lay-data="{field: 'description', sort: true}">功能描述</th>
-                  <th lay-data="{field: 'kind', sort: true}">面向</th>
-                  <th lay-data="{field: 'kind', sort: true}">有效</th>
+                  <th lay-data="{field: 'kind', sort: true}">可见用户</th>
+                  <th lay-data="{field: 'kind', sort: true}">页面是否配置</th>
                   <th lay-data="{field: 'dbname', sort: true}">创建者</th>
                   <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar'}">操作</th>
 

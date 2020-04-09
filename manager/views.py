@@ -15,6 +15,7 @@ from . import cm
 #from .context import querytestdata, gettestdatastep, mounttestdata, gettestdataparams, queryafteradd as qa,queryafterdel as qd, queryafteredit as qe, queryaftercopy as qc
 import json ,operator, xlrd, base64, traceback
 from .pa import MessageParser
+from .ar import Grant
 
 # # Create your views here.
 
@@ -3405,4 +3406,10 @@ def edit_file_name(request):
 @csrf_exempt
 def authcontrol(request):
 	return render(request, 'manager/authcontrol.html',locals())
+
+
+@csrf_exempt
+def queryuicontrol(request):
+	res=Grant.query_ui_grant_table(request.GET.get('searchvalue'))
+	return JsonResponse(res,safe=False)
 

@@ -32,53 +32,39 @@ class User(Model):
 		verbose_name = "用户"
 		verbose_name_plural = "用户"
 
-#
-# class Role(Model):
-#     '''角色表
-#     '''
-#     name=CharField(max_length=16)
-#     description=TextField()
-#
-# class Auth(Model):
-#     '''
-#     权限表
-#     '''
-#     kind=CharField(max_length=16,default='menu')#OPERATIOH|WEB
+
+class Role(Model):
+    '''角色表
+    '''
+    name=CharField(max_length=16)
+    description=TextField()
+    user=ManyToManyField(User,blank=True)
 
 
-# class Operation(Model):
-#     '''
-#     功能操作
-#     '''
-#     code=CharField(max_length=16)
-#     url=TextField()
-#     description=CharField(max_length=64)
-#     is_allow=BooleanField(default=True)
+class UIControl(Model):
+	'''
+	ui控制
+	'''
+	code=CharField(max_length=24)
+	description=TextField(blank=True)
+	is_config=CharField(max_length=5)#YES|NO
+	author=ForeignKey(User,on_delete=CASCADE)
+	createtime = DateTimeField(auto_now_add=True, null=True)
+	updatetime = DateTimeField(auto_now=True, null=True)
 
 
-# class WebElement(Model):
-#     '''
-#     web元素
-#     '''
-#     element_id=CharField(max_length=16)
-#     kind=CharField(max_length=16)#BUTTON|MENU
-#     text=CharField(max_length=16)
-#     url=TextField()
-#     description=CharField(max_length=64)
-#     is_hide=BooleanField(default=True)
-#     is_disable=BooleanField(default=True)
+class User_UI_Relation(Model):
+	'''用户UI关联表
+	'''
+	kind=CharField(max_length=12) #USER|ROLE
+	user_id=IntegerField()
+	uc_id=IntegerField()
+	
+
+class URLControl(Model):
+	pass
+
+class BuiltinControl(Model):
+	pass
 
 
-# class AuthOperation(Model):
-#     '''
-#     权限&功能关联表
-#     '''
-#     auth=ForeignKey(Auth, on_delete=CASCADE)
-#     Op=ForeignKey(Operation,on_delete=CASCADE)
-
-# class AuthWebElement(Model):
-#     '''
-#     权限&页面元素关联表
-#     '''
-#     auth=ForeignKey(Auth, on_delete=CASCADE)
-#     el=ForeignKey(WebElement,on_delete=CASCADE)

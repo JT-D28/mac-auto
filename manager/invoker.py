@@ -579,7 +579,7 @@ def _step_process_check(callername, taskid, order, kind):
 			
 			if step.content_type == 'xml':
 				if re.search('webservice', step.url):
-					headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), 'post',
+					headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url,str(paraminfo),'post',
 					                                                    None, 'xml')
 					text = text.replace('&lt;', '<')
 					text = re.findall('(?<=\?>).*?(?=</ns1:out>)', text, re.S)[0]
@@ -587,8 +587,13 @@ def _step_process_check(callername, taskid, order, kind):
 				else:
 					text, statuscode, itf_msg = _callsocket(taskid, user, step.url, body=str(paraminfo))
 			else:
+				encryptlist=list(StepAdditional.objects.filter(step_id=step.id))
+				encrypttype=-1
+				if len(encryptlist)>0:
+					encrypttype=encryptlist[0].encrypt_type
+
 				headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), step.method,
-				                                                    step.headers, step.content_type, step.temp, kind)
+				                                                    step.headers, step.content_type, step.temp, kind,encrypttype)
 			
 			viewcache(taskid, username, kind,
 			          "<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>" % text)
@@ -758,12 +763,14 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
 		return ('', '', err)
 
 
-def _callinterface(taskid, user, url, body=None, method=None, headers=None, content_type=None, props=None, kind=None):
+def _callinterface(taskid, user, url, body=None, method=None, headers=None, content_type=None, props=None, kind=None,encrypt_type=None):
 	"""
     返回(rps.text,rps.status_code,msg)
     """
 	# url data headers过滤
 	viewcache(taskid, user.name, kind, "执行接口请求=>")
+	if encrypt_type!=-1:
+		viewcache(taskid, user.name, kind, "加密方式=>%s"%encrypt_type)
 	if content_type == 'formdata':
 		return ('', '', '', 'form-data方式暂不支持..')
 	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>content_type=>%s</span>" % content_type)
@@ -778,7 +785,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>url=>%s</span>" % url)
 	
 	viewcache(taskid, user.name, kind,
-	          "<span style='color:#009999;'>原始params=><xmp style='color:#009999;'>%s</xmp></span>" % body)
+	          "<span style='color:#009999;'>原始参数=><xmp style='color:#009999;'>%s</xmp></span>" % body)
 	data_rp = _replace_property(user, body)
 	if data_rp[0] is not 'success':
 		return ('', '', '', data_rp[1])
@@ -793,7 +800,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	body = data_rf[1]
 	
 	viewcache(taskid, user.name, kind,
-	          "<span style='color:#009999;'>params=><xmp style='color:#009999;'>%s</xmp></span>" % body)
+	          "<span style='color:#009999;'>变量替换后参数=><xmp style='color:#009999;'>%s</xmp></span>" % body)
 	
 	# body=json.loads(body)
 	
@@ -815,7 +822,6 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		return ('', '', '', '接口请求头格式不对 请检查')
 	
 	##
-	
 	default = {
 		'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36"}
 	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>headers=>%s</span>" % {**default, **headers})
@@ -829,13 +835,15 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		default["Content-Type"] = 'application/xml'
 		body = body.encode('utf-8')
 	elif content_type == 'urlencode':
-		# body=body.encode('utf-8')
-		# body=json.loads(body)
 		try:
-			print('urlencode=>', body)
 			if body.startswith("{") and not body.startswith("{{"):
-				body = parse.urlencode(ast.literal_eval(body.replace('\r', '').replace('\n', '').replace('\t', '')))
-			body = body.encode('UTF-8')
+				body=body.replace('\r', '').replace('\n', '').replace('\t', '').replace(' ', '')
+				if encrypt_type in (None,-1,''):
+					body = parse.urlencode(ast.literal_eval(body))
+					body = body.encode('UTF-8')
+				else:
+					body=EncryptUtils.base64_encrypt(body)
+					viewcache(taskid, user.name, kind, "<span style='color:#009999;'>%s加密后参数=> %s</span>" %(encrypt_type,body))
 		
 		except:
 			print('参数转化异常：', traceback.format_exc())

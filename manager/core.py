@@ -423,8 +423,8 @@ class XJsonEncoder(json.JSONEncoder):
 	
 	def encode(self, obj):
 		
-		evalstr=super(XJsonEncoder, self).encode(obj)
-		evalstr=evalstr.replace('false', 'False').replace('true','True')
+		evalstr = super(XJsonEncoder, self).encode(obj)
+		evalstr = evalstr.replace('false', 'False').replace('true', 'True')
 		L = eval(evalstr)
 		
 		return {
@@ -501,7 +501,7 @@ class PlanEncoder(XJsonEncoder):
 	def __init__(self, **args):
 		super(PlanEncoder, self).__init__(
 			['id', 'author', 'last', 'description', 'cases', 'createtime', 'updatetime', 'run_type', 'run_value',
-			 'mail_config_id', 'db_id', 'is_send_dingding', 'is_send_mail','schemename'], **args)
+			 'mail_config_id', 'db_id', 'is_send_dingding', 'is_send_mail', 'schemename'], **args)
 	
 	def encode(self, obj):
 		# print('hhhh'*100)
@@ -592,7 +592,6 @@ class StepEncoder(XJsonEncoder):
 			except:
 				x['tagname'] = ''
 
-
 		return {
 			"code": 0,
 			"msg": '操作成功',
@@ -604,10 +603,11 @@ class StepEncoder(XJsonEncoder):
 
 
 class BusinessDataEncoder(XJsonEncoder):
-
-	def __init__(self,**args):
-		super(BusinessDataEncoder,self).__init__(['id','businessname','db_check','itf_check','params','postposition','preposition','count','parser_id','parser_check'],**args)
-
+	
+	def __init__(self, **args):
+		super(BusinessDataEncoder, self).__init__(
+			['id', 'businessname', 'db_check', 'itf_check', 'params', 'postposition', 'preposition', 'count',
+			 'parser_id', 'parser_check'], **args)
 	
 	def encode(self, obj):
 		from .cm import getchild
@@ -697,19 +697,23 @@ class OrderEncoder(XJsonEncoder):
 class DBEncoder(XJsonEncoder):
 	def __init__(self, **args):
 		super(DBEncoder, self).__init__(
-			['id', 'kind', 'dbname', 'host', 'port', 'username', 'password', 'description', 'author','scheme','createtime',
+			['id', 'kind', 'dbname', 'host', 'port', 'username', 'password', 'description', 'author', 'scheme',
+			 'createtime',
 			 'updatetime'], **args)
 
 
 class TemplateEncoder(XJsonEncoder):
-
-	def __init__(self,**args):
-		super(TemplateEncoder,self).__init__(['id','kind','name','description','author','createtime','updatetime'],**args)
+	
+	def __init__(self, **args):
+		super(TemplateEncoder, self).__init__(
+			['id', 'kind', 'name', 'description', 'author', 'createtime', 'updatetime'], **args)
 
 
 class TemplateFieldEncoder(XJsonEncoder):
-	def __init__(self,**args):
-		super(TemplateFieldEncoder,self).__init__(['id','fieldcode','description','start','end','index','template'],**args)
+	def __init__(self, **args):
+		super(TemplateFieldEncoder, self).__init__(
+			['id', 'fieldcode', 'description', 'start', 'end', 'index', 'template'], **args)
+
 
 def simplejson(code=0, msg='', **kw):
 	_dict = {}
@@ -734,19 +738,20 @@ def pkg(code=0, msg='', **kw):
 	
 	return _dict
 
+
 def get_params(request):
 	'''
 	封装请求参数
 
 	'''
-	o={**dict(request.POST),**dict(request.GET)}
+	o = {**dict(request.POST), **dict(request.GET)}
 	for ok in o:
-		o[ok]=o.get(ok)[0]
-
+		o[ok] = o.get(ok)[0]
+	
 	return o
 
 
-def getpagedata(data,page,limit):
+def getpagedata(data, page, limit):
 	'''
 	返回分页数据与元数据大小
 	'''
@@ -812,7 +817,7 @@ def gettaskid(plan):
 	# new_md5 = md5()
 	# new_md5.update(s.encode(encoding='utf-8'))
 	# return new_md5.hexdigest()
-	taskid=base64.b64encode((re.findall('(?<=\[).*?(?=])', plan)[0]+'_'+str(time.time())).encode()).decode()
+	taskid = base64.b64encode((re.findall('(?<=\[).*?(?=])', plan)[0] + '_' + str(time.time())).encode()).decode()
 	return taskid
 
 
@@ -874,8 +879,8 @@ class Fu:
 				author = str(x.author)
 				filename = "func_%s" % x.flag
 				body = x.body
-				#path = os.path.join(os.path.dirname(__file__), 'Function', author)
-				path=os.path.join(os.path.dirname(__file__),'storage','private','Function',author)
+				# path = os.path.join(os.path.dirname(__file__), 'Function', author)
+				path = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'Function', author)
 				
 				if not os.path.exists(path):
 					os.makedirs(path)
@@ -889,7 +894,7 @@ class Fu:
 				path = os.path.join(path, filename + '.py')
 				with open(path, 'w', encoding='utf-8') as f:
 					# print("body=>",body)
-					#print(type(body))
+					# print(type(body))
 					a = base64.b64decode(body).decode(encoding='utf-8')
 					# print(a)
 					f.write(a)
@@ -944,7 +949,7 @@ class Fu:
 		return cls._md5(final)
 	
 	@classmethod
-	def call(cls, funcobj, call_str, builtin=False,username=None,taskid=None):
+	def call(cls, funcobj, call_str, builtin=False, username=None, taskid=None):
 		# print("内置=>",builtin)
 		# print('调用=》',call_str)
 		try:
@@ -952,26 +957,26 @@ class Fu:
 			if builtin is True:
 				try:
 					call_str = call_str.replace('\n', '')
-					#print('调用原表达式=>', call_str)
+					# print('调用原表达式=>', call_str)
 					if call_str.startswith('dbexecute') and taskid not in call_str:
-						call_str = call_str.replace(')',',taskid="%s",callername="%s")'%(taskid,username))
+						call_str = call_str.replace(')', ',taskid="%s",callername="%s")' % (taskid, username))
 					res = eval(call_str)
 					print("调用内置函数表达式:%s 结果为:%s" % (call_str, res))
 					if isinstance(res, (tuple,)):
 						if res[0] is not 'success':
 							return res
-
+					
 					elif isinstance(res, (bool,)):
 						if res is False:
-							return ('fail','[%s]没按预期执行 提前结束'%re.findall('(.*?)\(',call_str)[0])
+							return ('fail', '[%s]没按预期执行 提前结束' % re.findall('(.*?)\(', call_str)[0])
 					elif res is None:
 						pass
-
-					elif isinstance(res,(str,)):
+					
+					elif isinstance(res, (str,)):
 						pass
 					else:
-						return ('error','内置函数返回类型{None,bool,tuple}')
-
+						return ('error', '内置函数返回类型{None,bool,tuple}')
+				
 				except:
 					try:
 						methodname = call_str.split('(')[0]
@@ -982,7 +987,7 @@ class Fu:
 						s3 = re.findall('callername=(.*?)\)', call_str)[0]  # callername
 						
 						print('s1=%s\ns2=%s\ns3=%s' % (s1, s2, s3))
-			
+						
 						argstr = re.findall('\((.*)\)', call_str)[0]
 						# arglist=argstr.split(',')
 						# print('arglist=>',arglist)
@@ -993,16 +998,16 @@ class Fu:
 						if argstr.strip():
 							if methodname.startswith('db'):
 								call_str = '%s(\"%s\",taskid=%s,callername=%s)' % (methodname, s1, s2, s3)
-								#print('参数加双引号后表达式=>', call_str)
+							# print('参数加双引号后表达式=>', call_str)
 							else:
 								call_str = '%s(%s,taskid=%s,callername=%s)' % (methodname, s1, s2, s3)
-
+						
 						else:
 							call_str = '%s()' % (methodname,)
 						# call_str1='createPhone()'
 						# print(eval(call_str1))
 						
-						#print('最终计算=>', call_str)
+						# print('最终计算=>', call_str)
 						res = eval(call_str)
 						if res[0] is not 'success':
 							return res
@@ -1010,7 +1015,7 @@ class Fu:
 					except:
 						print(traceback.format_exc())
 						return ('error', "非法表达式[%s]" % call_str)
-	
+			
 			else:
 				print('fucobj=>', funcobj)
 				user = funcobj.author
@@ -1018,12 +1023,12 @@ class Fu:
 				f = __import__('manager.storage.private.Function.%s.func_%s' % (user, flag), fromlist=True)
 				callstr = "f.%s" % (call_str)
 				# print(callstr)
-				callstr=callstr.replace('\n', '')
-				print('ccc=>\n',callstr)
+				callstr = callstr.replace('\n', '')
+				print('ccc=>\n', callstr)
 				print('\n' in callstr)
 				res = eval(callstr)
 				print("调用用户定义表达式:%s 结果为:%s" % (callstr, res))
-
+			
 			return ('success', res)
 		
 		except Exception as e:

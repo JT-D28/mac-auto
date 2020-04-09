@@ -56,7 +56,7 @@ def initDataupdate():
 	print('变量tag更新完成')
 	dbcons = DBCon.objects.all()
 	for dbcon in dbcons:
-		if dbcon.scheme is None or dbcon.scheme=='':
+		if dbcon.scheme is None or dbcon.scheme == '':
 			dbcon.scheme = '全局'
 			dbcon.save()
 			time.sleep(0.001)
@@ -73,7 +73,7 @@ def initDataupdate():
 					plan.save()
 					print('计划' + str(plan.id) + '更新成功')
 				else:
-					plan.db_id=''
+					plan.db_id = ''
 					plan.schemename = '全局'
 					plan.save()
 				print('计划' + str(plan.id) + '更新成功')
@@ -83,9 +83,9 @@ def initDataupdate():
 	cases = mm.Case.objects.all()
 	for case in cases:
 		try:
-			dbid=case.db_id
+			dbid = case.db_id
 			if dbid.isdigit():
-				case.db_id=DBCon.objects.get(id=dbid).description
+				case.db_id = DBCon.objects.get(id=dbid).description
 				case.save()
 				print('用例' + str(case.id) + '更新成功')
 		except:
@@ -100,7 +100,7 @@ def initDataupdate():
 	for step in steps:
 		try:
 			if step.db_id.isdigit():
-				step.db_id=DBCon.objects.get(id=step.db_id).description
+				step.db_id = DBCon.objects.get(id=step.db_id).description
 				step.save()
 				print('步骤' + str(step.id) + '更新成功')
 		except:
@@ -120,6 +120,7 @@ def clearRedisforUser(username):
 	keys = con.keys("console.msg::%s::*" % (username))
 	for elem in con.keys():
 		con.delete(elem)
+
 
 @csrf_exempt
 def login(request):
@@ -274,15 +275,17 @@ def testexpress(request):
 
 @csrf_exempt
 def testexpress1(request):
-	return JsonResponse([{'width':95,'name':'节点名称'}, {'width': 98,'name':'节点名称:一审'}], safe=False)
+	return JsonResponse([{'width': 95, 'name': '节点名称'}, {'width': 98, 'name': '节点名称:一审'}], safe=False)
+
 
 @csrf_exempt
 def testexpress2(request):
-	return JsonResponse(False,safe=False)
+	return JsonResponse(False, safe=False)
+
 
 @csrf_exempt
 def testxml(request):
-	return render(request,'manager/test.xml',content_type="application/xml")
+	return render(request, 'manager/test.xml', content_type="application/xml")
 # '''
 # 测试特殊返回字符串
 # '''

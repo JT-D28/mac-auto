@@ -15,7 +15,7 @@ import json
 from ME2 import configs
 
 BASE_URL = 'http://' + configs.ME2_URL
-HELP_DOC_URL = "%s/static/web/viewer.html?file=%s/static/ME2.pdf" % (BASE_URL, BASE_URL)
+HELP_DOC_URL = "%s/static/PDF.js/web/viewer.html?file=%s/static/PDF.js/ME2.pdf" % (BASE_URL, BASE_URL)
 ##Redis配置
 REDIS_HOST = configs.REDIS_HOST
 REDIS_PORT = configs.REDIS_PORT
@@ -33,13 +33,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'd6yqlb(u%mxu!t$4evtz@3#5zqo@zy8db09cj1pi2r38^6fi*y'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
 # Application definition
 
 INSTALLED_APPS = [
+	'channels',
 	'django.contrib.admin',
 	'django.contrib.auth',
 	'django.contrib.contenttypes',
@@ -49,7 +50,6 @@ INSTALLED_APPS = [
 	'login',
 	'manager',
 	'homepage',
-	'channels',
 	'corsheaders',
 	# 'django_crontab',
 ]
@@ -191,15 +191,16 @@ LOGGING = {
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-STATICFILES_DIRS = [
-	os.path.join(BASE_DIR, "login/static"),
-	os.path.join(BASE_DIR, 'manager/static'),
-	os.path.join(BASE_DIR, 'homepage/static'),
-	os.path.join(BASE_DIR, 'local_reports'),
-	os.path.join(BASE_DIR, 'PDF.js')
-
-]
+# STATICFILES_DIRS = [
+# 	os.path.join(BASE_DIR, "login/static"),
+# 	os.path.join(BASE_DIR, 'manager/static'),
+# 	os.path.join(BASE_DIR, 'homepage/static'),
+# 	os.path.join(BASE_DIR, 'local_reports'),
+# 	os.path.join(BASE_DIR, 'PDF.js')
+#
+# ]
 
 # 配置解决跨域问题
 # 跨域增加忽略

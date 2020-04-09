@@ -196,7 +196,7 @@ def gettaskresult(taskid):
 			# print('c=>%s'%business.id)
 			status, step = BusinessData.gettestdatastep(business.id)
 			# print('a=>%s b=>%s'%(case.id,step.id))
-			if isinstance(step,(str,) ):continue;
+			if isinstance(step, (str,)): continue;
 			step_weight = Order.objects.get(main_id=case.id, follow_id=step.id, kind='case_step').value
 			
 			business_index = \
@@ -579,7 +579,7 @@ def _step_process_check(callername, taskid, order, kind):
 			
 			if step.content_type == 'xml':
 				if re.search('webservice', step.url):
-					headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url,str(paraminfo),'post',
+					headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), 'post',
 					                                                    None, 'xml')
 					text = text.replace('&lt;', '<')
 					text = re.findall('(?<=\?>).*?(?=</ns1:out>)', text, re.S)[0]
@@ -587,8 +587,10 @@ def _step_process_check(callername, taskid, order, kind):
 				else:
 					text, statuscode, itf_msg = _callsocket(taskid, user, step.url, body=str(paraminfo))
 			else:
+
 				headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), step.method,
 				                                                    step.headers, step.content_type, step.temp, kind)
+
 			
 			viewcache(taskid, username, kind,
 			          "<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>" % text)
@@ -758,12 +760,15 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
 		return ('', '', err)
 
 
+
 def _callinterface(taskid, user, url, body=None, method=None, headers=None, content_type=None, props=None, kind=None):
+
 	"""
     返回(rps.text,rps.status_code,msg)
     """
 	# url data headers过滤
 	viewcache(taskid, user.name, kind, "执行接口请求=>")
+
 	if content_type == 'formdata':
 		return ('', '', '', 'form-data方式暂不支持..')
 	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>content_type=>%s</span>" % content_type)
@@ -826,9 +831,11 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>method=>%s</span>" % method)
 	
 	if content_type == 'json':
+
 		default["Content-Type"] = 'application/json;charset=UTF-8'
 		body=body.encode('utf-8')
 		# body = json.dumps(eval(body))
+
 	elif content_type == 'xml':
 		default["Content-Type"] = 'application/xml'
 		body = body.encode('utf-8')
@@ -840,6 +847,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 				body = parse.urlencode(ast.literal_eval(body))
 
 			body = body.encode('UTF-8')
+
 
 		except:
 			print('参数转化异常：', traceback.format_exc())
@@ -1193,7 +1201,7 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 				else:
 					return ('fail', '表达式%s校验失败' % ourexpression)
 			
-		
+			
 			else:
 				
 				p = None
@@ -1547,7 +1555,7 @@ def _replace_variable(user, str_, src=1, taskid=None, force=False):
     src:同_gain_compute()
     """
 	if taskid is not None:
-		t=base64.b64decode(taskid).decode()
+		t = base64.b64decode(taskid).decode()
 		pid = t.split('_')[0]
 		pname = Plan.objects.get(id=pid).description
 	try:
@@ -2241,8 +2249,8 @@ class MainSender:
 	@classmethod
 	def gen_report(cls, taskid, htmlcontent):
 		print('==本地缓存测试报告')
-
-		filepath='./local_reports/report_%s.html' % taskid
+		
+		filepath = './local_reports/report_%s.html' % taskid
 		if os.path.exists(filepath):
 			with open('./local_reports/report_%s.html' % taskid, 'w') as f:
 				f.write(htmlcontent)
@@ -3014,8 +3022,8 @@ class Transformer(object):
 								print('--成功获取业务id=>%s' % b)
 								
 								self.add_step_business_relation(step.id, b.id)
-							# self.add_step_bussiness_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
-							# self.add_case_business_relation2(case.id, self.data_workbook[k],rowdata['参数值'])
+						# self.add_step_bussiness_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
+						# self.add_case_business_relation2(case.id, self.data_workbook[k],rowdata['参数值'])
 						
 						# 单条
 						else:
@@ -3110,8 +3118,8 @@ class Transformer(object):
 							business_id = BusinessData.objects.get(
 								businessname='%s_I0_%s_%s' % (bkname, lineindex, self.transform_id)).id
 							self.add_step_business_relation(step.id, business_id)
-						# self.add_step_bussiness_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
-						# self.add_case_business_relation2(case.id, self.data_workbook[k],rowdata['参数值'])
+					# self.add_step_bussiness_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
+					# self.add_case_business_relation2(case.id, self.data_workbook[k],rowdata['参数值'])
 					
 					else:
 						# 函数
@@ -3292,7 +3300,7 @@ class Transformer(object):
 					print('业务名称[%s_%s]查找返回的业务数据有多条' % (testpoint, self.transform_id))
 					business = list(BusinessData.objects.filter(businessname="%s_%s" % (testpoint, self.transform_id)))[
 						0]
-				# business=list(BusinessData.objects.filter(businessname="%s"%testpoint))[0]
+			# business=list(BusinessData.objects.filter(businessname="%s"%testpoint))[0]
 			else:
 				business = BusinessData.objects.get(
 					businessname="%s%s_%s" % (sheetname, x.get('数据编号'), self.transform_id))
@@ -3379,7 +3387,7 @@ class Transformer(object):
 						print('业务名称[%s_%s]查找返回的业务数据有多条' % (testpoint, self.transform_id))
 						business = \
 							list(BusinessData.objects.filter(businessname='%s_%s' % (testpoint, self.transform_id)))[0]
-					# business=list(BusinessData.objects.filter(businessname='%s'%testpoint))[0]
+				# business=list(BusinessData.objects.filter(businessname='%s'%testpoint))[0]
 				else:
 					print('-查找测试点=>%s_I0%s_%s' % (sheetname, int(x.get('数据编号')), self.transform_id))
 					business = BusinessData.objects.get(
@@ -3395,7 +3403,7 @@ class Transformer(object):
 				order.save()
 				
 				print('==步骤关联测试点[%s]' % order)
-			# step.businessdatainfo.add(business)
+		# step.businessdatainfo.add(business)
 		except:
 			print(traceback.format_exc())
 	
@@ -3774,7 +3782,7 @@ class DataMove:
 					builtin = (funcname in builtinmethods)
 					
 					if builtin is False:
-						status, res =BusinessData.gettestdataparams(business.id)  ###????????????????
+						status, res = BusinessData.gettestdataparams(business.id)  ###????????????????
 						print('%s=>%s' % (business.businessname, business.params))
 						if status is not 'success':
 							return JsonResponse(simplejson(code=3, msg=str(res)))

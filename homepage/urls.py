@@ -42,5 +42,5 @@ urlpatterns = [
 	path('planforceStop/', views.planforceStop),
 	path('query_third_call/', views.query_third_call),
 	path('jenkinsJobRun/', views.jenkinsJobRun),
-	path('queryProductAndPlan/',views.queryProductAndPlan)
+	path('queryProductAndPlan/', views.queryProductAndPlan)
 ]

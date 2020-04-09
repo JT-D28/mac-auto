@@ -68,13 +68,13 @@ def queryproduct(request):
 
 @csrf_exempt
 def queryallplan(request):
-	sql=''
-	if configs.dbtype=='mysql':
+	sql = ''
+	if configs.dbtype == 'mysql':
 		sql = '''SELECT plan.id,CONCAT(pro.description,'-',plan.description) as planname 
 		FROM `manager_plan` plan,manager_product pro,manager_order o WHERE pro.id=o.main_id AND plan.id=o.follow_id order by pro.id'''
 	else:
-		sql='''SELECT plan.id, pro.description||'-'||plan.description as planname  FROM `manager_plan` plan,manager_product pro,manager_order o WHERE pro.id=o.main_id AND plan.id=o.follow_id order by pro.id   '''
-
+		sql = '''SELECT plan.id, pro.description||'-'||plan.description as planname  FROM `manager_plan` plan,manager_product pro,manager_order o WHERE pro.id=o.main_id AND plan.id=o.follow_id order by pro.id   '''
+	
 	with connection.cursor() as cursor:
 		cursor.execute(sql)
 		desc = cursor.description
@@ -585,9 +585,9 @@ def query_third_call(request):
 	callername = models.Plan.objects.get(id=planid).author.name
 	mwstr = 'callername=%s&taskid=%s' % (callername, planid)
 	is_verify_url = '%s/manager/third_party_call/?v=%s&is_verify=%s&planid=%s&scheme=%s' % (
-		settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 1, planid,dbscheme)
+		settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 1, planid, dbscheme)
 	debug_url = '%s/manager/third_party_call/?v=%s&is_verify=%s&planid=%s&scheme=%s' % (
-		settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 0, planid,dbscheme)
+		settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 0, planid, dbscheme)
 	return JsonResponse({'is_verify_url': is_verify_url, 'debug_url': debug_url})
 
 

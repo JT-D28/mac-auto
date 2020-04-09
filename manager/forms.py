@@ -25,7 +25,7 @@ class StepForm(forms.Form):
 		attrs={'class': 'form-control', 'placeholder': "Username", 'autofocus': ''}))
 	method = forms.ChoiceField(label='method', choices=(('get', 'GET'), ('post', 'POST')))
 	content_type = forms.ChoiceField(label='content-type', choices=(
-	('json', 'application/json'), ('xml', 'application/xml'), ('urlencode', 'x-www-form-urlencode')))
+		('json', 'application/json'), ('xml', 'application/xml'), ('urlencode', 'x-www-form-urlencode')))
 	version = forms.CharField(label='version', widget=forms.TextInput(attrs={'class': 'form-control'}))
 	body = forms.CharField(label='body', widget=forms.TextInput(attrs={'class': 'form-control'}))
 	db_check = forms.CharField(label='db_check', widget=forms.TextInput(attrs={'class': 'form-control'}))

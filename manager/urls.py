@@ -21,12 +21,12 @@ urlpatterns = [
 	
 	path('help/', views.help),
 	path('index/', views.index),
-
-    path('datamove/',views.datamove),
-    path('uploadfile/', views.uploadfile),
-    path('delfile/', views.delfiles),
-    path('upload/',views.upload),
-    path('querymovedata/',views.querymovedata),
+	
+	path('datamove/', views.datamove),
+	path('uploadfile/', views.uploadfile),
+	path('delfile/', views.delfiles),
+	path('upload/', views.upload),
+	path('querymovedata/', views.querymovedata),
 	
 	path('import/', views.dataimport),
 	path('export/', views.dataexport),
@@ -38,7 +38,7 @@ urlpatterns = [
 	path('addvariable/', views.addvar),
 	path('delvar/', views.delvar),
 	path('editvariable/', views.editvar),
-	path('copyvar/',views.copyVar),
+	path('copyvar/', views.copyVar),
 	
 	path('step/', views.step),
 	path('queryonestep/', views.queryonestep),
@@ -46,7 +46,6 @@ urlpatterns = [
 	# path('addstep/', views.addstep),
 	# path('delstep/', views.delstep),
 	# path('editstep/', views.editstep),
-
 	
 	# path('itf/', views.itf),
 	# path('addinterface/', views.additf),
@@ -60,7 +59,6 @@ urlpatterns = [
 	path('queryonecase/', views.queryonecase),
 	# path('querycase/', views.querycase),
 	# path('editcase/', views.editcase),
-
 	
 	path('transform/', views.transform),
 	path('third_party_call/', views.third_party_call),
@@ -95,7 +93,7 @@ urlpatterns = [
 	# path("aftergroup/", views.aftergroup),
 	
 	path('dbcon/', views.dbcon),
-	path('queryDbScheme/',views.queryDbScheme),
+	path('queryDbScheme/', views.queryDbScheme),
 	path('testdbcon/', views.testdbcon),
 	path('querydb/', views.querydb),
 	path('queryonedb/', views.queryonedb),
@@ -104,7 +102,7 @@ urlpatterns = [
 	path('editdbcon/', views.editcon),
 	path('querydblist/', views.querydblist),
 	path('querydblistdefault/', views.querydblistdefault),
-	path('copyDbCon/',views.copyDbCon),
+	path('copyDbCon/', views.copyDbCon),
 	
 	path('mailconfig/', views.mailconfig),
 	path('querymailconfig/', views.querymailconfig),
@@ -113,7 +111,7 @@ urlpatterns = [
 	
 	path('querytaskdetail/', views.querytaskdetail),
 	#
-	#path('querybusinessdata/', views.querybusinessdata),
+	# path('querybusinessdata/', views.querybusinessdata),
 	path('queryonebusiness/', views.queryonebusiness),
 	# path('queryonebusinessdata/', views.queryonebusinessdata),
 	path('querybusinessdatalist/', views.querybusinessdatalist),
@@ -127,31 +125,30 @@ urlpatterns = [
 	path('querytag/', views.querytag),
 	path('varBatchEdit/', views.varBatchEdit),
 	#
-    path('template/', views.template),
-    path('querytemplatecommon/', views.querytemplatecommon),
-    path('addtemplate/', views.addtemplate),
-    path('deltemplate/', views.deltemplate),
-    path('edittemplate/', views.edittemplate),
-    path('querytemplate/',views.querytemplate),  
-    path('querytemplatelist/',views.querytemplatelist),
-
-    path('templatefield/', views.templatefield),
-    path('querytemplatefield/', views.querytemplatefield),
-    path('addtemplatefield/', views.addtemplatefield),
-    path('deltemplatefield/',views.deltemplatefield),
-    path('edittemplatefield/',views.edittemplatefield),
-    path('queryfielddetail/', views.queryfielddetail),
-    path('queryuserfile/',views.queryuserfile),
-
-    path('authcontrol/', views.authcontrol),
-    path('queryuicontrol/',views.queryuicontrol),
-
+	path('template/', views.template),
+	path('querytemplatecommon/', views.querytemplatecommon),
+	path('addtemplate/', views.addtemplate),
+	path('deltemplate/', views.deltemplate),
+	path('edittemplate/', views.edittemplate),
+	path('querytemplate/', views.querytemplate),
+	path('querytemplatelist/', views.querytemplatelist),
+	
+	path('templatefield/', views.templatefield),
+	path('querytemplatefield/', views.querytemplatefield),
+	path('addtemplatefield/', views.addtemplatefield),
+	path('deltemplatefield/', views.deltemplatefield),
+	path('edittemplatefield/', views.edittemplatefield),
+	path('queryfielddetail/', views.queryfielddetail),
+	path('queryuserfile/', views.queryuserfile),
+	
+	path('authcontrol/', views.authcontrol),
+	path('queryuicontrol/', views.queryuicontrol),
+	
 	#
 	path('queryoneproduct/', views.queryoneproduct),
 	path('tree/', views.treetest),
 	path('querytreelist/', views.querytreelist),
 	path('treecontrol/', views.treecontrol),
-    path('getfulltree/', views.getfulltree),
-	
+	path('getfulltree/', views.getfulltree),
 
 ]

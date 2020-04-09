@@ -17,7 +17,6 @@ from .invoker import runplan, DataMove, runplans
 from .core import gettaskid
 
 
-
 ##addproduct
 
 def addproduct(request):
@@ -198,12 +197,13 @@ def handlebindplans(olddescription, newdescription, id_):
 	for oldtag in oldtags:
 		planids = json.loads(oldtag['planids'])
 		if olddescription in planids and id_ in planids[olddescription]:
-			edittag=Tag.objects.get(id=oldtag['id'])
-			ol=json.loads(edittag.planids)
+			edittag = Tag.objects.get(id=oldtag['id'])
+			ol = json.loads(edittag.planids)
 			ol[newdescription] = ol.pop(olddescription)
-			edittag.planids=str(ol).replace("'",'"')
+			edittag.planids = str(ol).replace("'", '"')
 			edittag.save()
-			print(str(edittag.id)+'更新完成')
+			print(str(edittag.id) + '更新完成')
+
 
 def editplan(request):
 	id_ = request.POST.get('uid').split('_')[1]
@@ -270,7 +270,7 @@ def run(request):
 	for planid in planids:
 		plan = mm.Plan.objects.get(id=planid)
 		taskid = gettaskid(plan.__str__())
-		if getRunningInfo(callername, planid, 'isrunning')=='1':
+		if getRunningInfo(callername, planid, 'isrunning') == '1':
 			return {
 				'status': 'fail',
 				'msg': '任务已在运行，稍后再试！'
@@ -304,13 +304,12 @@ def importplan(request):
 def addcase(request):
 	msg = ''
 	try:
-		pid=request.POST.get('pid').split('_')[1]
+		pid = request.POST.get('pid').split('_')[1]
 		case = mm.Case()
 		case.author = lm.User.objects.get(name=request.session.get('username', None))
 		case.description = request.POST.get('description')
 		case.db_id = request.POST.get('dbid')
 		case.save()
-		
 		
 		addrelation('plan_case', request.session.get('username'), pid, case.id)
 		return {
@@ -395,7 +394,7 @@ def addstep(request):
 		body = request.POST.get("body")
 		url = request.POST.get('url')
 		if url:
-			url=url.strip()
+			url = url.strip()
 		method = request.POST.get('method')
 		content_type = request.POST.get('content_type')
 		db_check = request.POST.get('db_check')
@@ -418,7 +417,7 @@ def addstep(request):
 			case.db_id = dbid
 			case.save()
 			
-			addrelation('case_case', author,pid, case.id)
+			addrelation('case_case', author, pid, case.id)
 			return {
 				'status': 'success',
 				'msg': '新建[%s]成功' % case.description,
@@ -448,7 +447,7 @@ def addstep(request):
 		step.author = lm.User.objects.get(name=author)
 		
 		step.db_id = dbid
-		#step.encrypt_type=encrypt_type
+		# step.encrypt_type=encrypt_type
 		step.save()
 
 		# mounttestdata(author,step.id)
@@ -508,6 +507,7 @@ def editstep(request):
 	try:
 		count = request.POST.get('count')
 		dbid = request.POST.get('dbid')
+
 		step_type = request.POST.get('step_type')
 		description = request.POST.get('description')
 		headers = request.POST.get('headers')
@@ -540,8 +540,10 @@ def editstep(request):
 		
 		step.temp = tmp
 		step.db_id = dbid
+
 	
 		step.save()
+
 		stepname = description
 		
 		print('step save,count=>', count)
@@ -613,18 +615,17 @@ def addbusiness(request):
 	from .core import getbuiltin, Fu
 	bname = ''
 	try:
-
-		pid=request.POST.get('pid').split('_')[1]
-		b=mm.BusinessData()
-		b.businessname=request.POST.get('businessname')
-		bname=b.businessname
-		b.itf_check=request.POST.get('itf_check')
-		b.db_check=request.POST.get('db_check')
-		b.params=request.POST.get('params')
-		b.parser_check=request.POST.get('parser_check')
-		b.parser_id=request.POST.get('parser_id')
-
-
+		
+		pid = request.POST.get('pid').split('_')[1]
+		b = mm.BusinessData()
+		b.businessname = request.POST.get('businessname')
+		bname = b.businessname
+		b.itf_check = request.POST.get('itf_check')
+		b.db_check = request.POST.get('db_check')
+		b.params = request.POST.get('params')
+		b.parser_check = request.POST.get('parser_check')
+		b.parser_id = request.POST.get('parser_id')
+		
 		# check_result=_check_params(b.params)
 		# print('nn=>',check_result)
 		# if not check_result:
@@ -711,22 +712,22 @@ def editbusiness(request):
 	from .core import getbuiltin, Fu
 	bname = ''
 	try:
-
-		b=mm.BusinessData.objects.get(id=request.POST.get('uid').split('_')[1])
-		b.businessname=request.POST.get('businessname')
-		bname=b.businessname
-		b.itf_check=request.POST.get('itf_check')
-		b.db_check=request.POST.get('db_check')
-		b.params=request.POST.get('params')
-		b.postposition=request.POST.get('postposition')
-		b.preposition=request.POST.get('preposition')
-		b.count=int(request.POST.get('count').strip()) if request.POST.get('count') !='' else int(1)
-		b.parser_check=request.POST.get('file_check')
-		b.parser_id=request.POST.get('parser_id')
-
-		#check params
-		check_result=_check_params(b.params)
-
+		
+		b = mm.BusinessData.objects.get(id=request.POST.get('uid').split('_')[1])
+		b.businessname = request.POST.get('businessname')
+		bname = b.businessname
+		b.itf_check = request.POST.get('itf_check')
+		b.db_check = request.POST.get('db_check')
+		b.params = request.POST.get('params')
+		b.postposition = request.POST.get('postposition')
+		b.preposition = request.POST.get('preposition')
+		b.count = int(request.POST.get('count').strip()) if request.POST.get('count') != '' else int(1)
+		b.parser_check = request.POST.get('file_check')
+		b.parser_id = request.POST.get('parser_id')
+		
+		# check params
+		check_result = _check_params(b.params)
+		
 		# if not check_result:
 		# 	return{
 		# 	'status':'error',
@@ -1351,15 +1352,15 @@ def get_search_match(searchvalue):
 	   3.无匹配结果
 	'''
 	import time
-	print('1=>',time.time())
+	print('1=>', time.time())
 	nodes = get_full_tree()
-	print('2=>',time.time())
+	print('2=>', time.time())
 	for node in nodes:
 		if searchvalue in node.get('name'):
 			# node['name']="<s>%s</s>"%node['name']
 			# node['name']="<span style='color:red;'>%s</span>"%node['name']
 			_expand_parent(node, nodes)
-	print('3=>',time.time())
+	print('3=>', time.time())
 	return nodes
 
 
@@ -1375,12 +1376,12 @@ icon_map = {
 def get_full_tree():
 	nodes = []
 	root = {'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
-	#products = list(mm.Product.objects.all())
-	query_product_sql='select description,author_id,id from manager_product'
+	# products = list(mm.Product.objects.all())
+	query_product_sql = 'select description,author_id,id from manager_product'
 	with connection.cursor() as cursor:
 		cursor.execute(query_product_sql)
 		products = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-		#print('products=>',products)
+	# print('products=>',products)
 	for product in products:
 		productname = product['description']
 		productobj = {
@@ -1392,24 +1393,23 @@ def get_full_tree():
 		}
 		
 		nodes.append(productobj)
-		#plan_order_list = list(mm.Order.objects.filter(kind='product_plan', main_id=product['id']))
+		# plan_order_list = list(mm.Order.objects.filter(kind='product_plan', main_id=product['id']))
 		
-		query_plan_order_list="select * from manager_order where kind='product_plan' and main_id=%s"
+		query_plan_order_list = "select * from manager_order where kind='product_plan' and main_id=%s"
 		with connection.cursor() as cursor:
-			cursor.execute(query_plan_order_list,[product['id']])
-			plan_order_list=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-
-		print('$'*200)
-		print('plan_order_list=>',plan_order_list,len(plan_order_list))
+			cursor.execute(query_plan_order_list, [product['id']])
+			plan_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+		
+		print('$' * 200)
+		print('plan_order_list=>', plan_order_list, len(plan_order_list))
 		for order in plan_order_list:
 			try:
-				#plan = mm.Plan.objects.get(id=int(order.follow_id))
-				query_plan_sql='select * from manager_plan where id=%s'
+				# plan = mm.Plan.objects.get(id=int(order.follow_id))
+				query_plan_sql = 'select * from manager_plan where id=%s'
 				with connection.cursor() as cursor:
-					cursor.execute(query_plan_sql,[order['follow_id']])
-					plan=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()][0]
-
-
+					cursor.execute(query_plan_sql, [order['follow_id']])
+					plan = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()][0]
+				
 				planname = plan['description']
 				planobj = {
 					'id': 'plan_%s' % plan['id'],
@@ -1421,28 +1421,27 @@ def get_full_tree():
 				
 				nodes.append(planobj)
 			except:
-				#print('异常查询 planid=>', order['follow_id'])
+				# print('异常查询 planid=>', order['follow_id'])
 				continue;
 			
-
-			#case_order_list = ordered(list(mm.Order.objects.filter(kind='plan_case', main_id=plan['id'])))
+			# case_order_list = ordered(list(mm.Order.objects.filter(kind='plan_case', main_id=plan['id'])))
 			
-			query_case_order_list_sql="select * from manager_order where kind='plan_case' and main_id=%s"
+			query_case_order_list_sql = "select * from manager_order where kind='plan_case' and main_id=%s"
 			with connection.cursor() as cursor:
-				cursor.execute(query_case_order_list_sql,[plan['id']])
-				case_order_list=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-				case_order_list.sort(key=lambda e:e.get('value'))
-
-			print('case_order_list=>',case_order_list,len(case_order_list))
-
+				cursor.execute(query_case_order_list_sql, [plan['id']])
+				case_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+				case_order_list.sort(key=lambda e: e.get('value'))
+			
+			print('case_order_list=>', case_order_list, len(case_order_list))
+			
 			for order in case_order_list:
-				#case = mm.Case.objects.get(id=order.follow_id)
-				query_case_sql='select * from manager_case where id=%s'
+				# case = mm.Case.objects.get(id=order.follow_id)
+				query_case_sql = 'select * from manager_case where id=%s'
 				with connection.cursor() as cursor:
-					cursor.execute(query_case_sql,[order['follow_id']])
-					caselist=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-				if len(caselist)>0:
-					case=caselist[0]
+					cursor.execute(query_case_sql, [order['follow_id']])
+					caselist = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+				if len(caselist) > 0:
+					case = caselist[0]
 					casename = case['description']
 					caseobj = {
 						'id': 'case_%s' % case['id'],
@@ -1460,29 +1459,27 @@ def get_full_tree():
 
 def _add_next_case_node(parent, case, nodes):
 	##处理所属单节点
-	#step_order_list = ordered(list(mm.Order.objects.filter(kind='case_step', main_id=case['id'])))
-	query_step_order_sql='select * from manager_order where kind=%s and main_id=%s'
+	# step_order_list = ordered(list(mm.Order.objects.filter(kind='case_step', main_id=case['id'])))
+	query_step_order_sql = 'select * from manager_order where kind=%s and main_id=%s'
 	with connection.cursor() as cursor:
-		cursor.execute(query_step_order_sql,['case_step',case['id']])
-		step_order_list=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-		step_order_list.sort(key=lambda e:e.get('value'))
-
-
-	#print('step_order_list11=>',step_order_list,len(step_order_list))
-
-
+		cursor.execute(query_step_order_sql, ['case_step', case['id']])
+		step_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+		step_order_list.sort(key=lambda e: e.get('value'))
+	
+	# print('step_order_list11=>',step_order_list,len(step_order_list))
+	
 	for order in step_order_list:
-		#print('stepid=>', order['follow_id'])
-		#step = mm.Step.objects.get(id=order['follow_id'])
-		query_step_sql='select * from manager_step where id=%s'
+		# print('stepid=>', order['follow_id'])
+		# step = mm.Step.objects.get(id=order['follow_id'])
+		query_step_sql = 'select * from manager_step where id=%s'
 		with connection.cursor() as cursor:
-			cursor.execute(query_step_sql,[order['follow_id']])
-			steplist=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-
+			cursor.execute(query_step_sql, [order['follow_id']])
+			steplist = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+		
 		# print('#'*200)
 		# print('steplist=>',len(steplist))
-		if len(steplist)>0:
-			step=steplist[0]
+		if len(steplist) > 0:
+			step = steplist[0]
 			nodes.append({
 				'id': 'step_%s' % step['id'],
 				'pId': 'case_%s' % case['id'],
@@ -1491,24 +1488,23 @@ def _add_next_case_node(parent, case, nodes):
 				'textIcon': icon_map.get('step')
 			})
 		
-		#business_order_list = ordered(list(mm.Order.objects.filter(kind='step_business', main_id=step['id'])))
-		query_business_order_list_sql="select * from manager_order where kind='step' and main_id=%s"
+		# business_order_list = ordered(list(mm.Order.objects.filter(kind='step_business', main_id=step['id'])))
+		query_business_order_list_sql = "select * from manager_order where kind='step' and main_id=%s"
 		with connection.cursor() as cursor:
-			cursor.execute(query_business_order_list_sql,[step['id']])
-			business_order_list=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-			business_order_list.sort(key=lambda e:e.get('value'))
-
+			cursor.execute(query_business_order_list_sql, [step['id']])
+			business_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+			business_order_list.sort(key=lambda e: e.get('value'))
+		
 		for order in business_order_list:
-			#business = mm.BusinessData.objects.get(id=order.follow_id)
-			query_business_sql='select * from manager_businessdata where id=%s'
-
-			with connection.cursor() as cursor:
-				cursor.execute(query_business_sql,[order['follow_id']])
-				businesslist=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+			# business = mm.BusinessData.objects.get(id=order.follow_id)
+			query_business_sql = 'select * from manager_businessdata where id=%s'
 			
-
-			if len(businesslist)>0:
-				business=businesslist[0]
+			with connection.cursor() as cursor:
+				cursor.execute(query_business_sql, [order['follow_id']])
+				businesslist = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+			
+			if len(businesslist) > 0:
+				business = businesslist[0]
 				nodes.append({
 					'id': 'business_%s' % business['id'],
 					'pId': 'step_%s' % step['id'],
@@ -1516,21 +1512,21 @@ def _add_next_case_node(parent, case, nodes):
 					'type': 'business',
 					'textIcon': icon_map.get('business')
 				})
-		
+	
 	##处理多级节点
-	#case_order_list = ordered(list(mm.Order.objects.filter(kind='case_case', main_id=case['id'])))
-	query_case_order_list_sql="select * from manager_order where kind='case_case' and main_id=%s"
+	# case_order_list = ordered(list(mm.Order.objects.filter(kind='case_case', main_id=case['id'])))
+	query_case_order_list_sql = "select * from manager_order where kind='case_case' and main_id=%s"
 	with connection.cursor() as cursor:
-		cursor.execute(query_case_order_list_sql,[case['id']])
-		case_order_list=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-		case_order_list.sort(key=lambda e:e.get('value'))
+		cursor.execute(query_case_order_list_sql, [case['id']])
+		case_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+		case_order_list.sort(key=lambda e: e.get('value'))
 	for order in case_order_list:
-		#case0 = mm.Case.objects.get(id=order.follow_id)
-		query_case_sql='select * from manager_case where id=%s'
+		# case0 = mm.Case.objects.get(id=order.follow_id)
+		query_case_sql = 'select * from manager_case where id=%s'
 		with connection.cursor() as cursor:
-			cursor.execute(query_case_sql,[order['follow_id']])
-			case0=[dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()][0]
-
+			cursor.execute(query_case_sql, [order['follow_id']])
+			case0 = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()][0]
+		
 		nodes.append({
 			'id': 'case_%s' % case0['id'],
 			'pId': 'case_%s' % case['id'],

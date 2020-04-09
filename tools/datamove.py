@@ -62,8 +62,6 @@
 # 			return ('error','区分配置文件和用例文件发生异常=>%s'%traceback.format_exc())
 
 
-
-
 # 	def _check_file_valid(self):
 # 		"""
 # 		检查文件是否合法
@@ -121,7 +119,7 @@
 
 # 		'''
 # 		res={}
-		
+
 # 		script_cache=self._get_workbook_sheet_cache(self.config_workbook, 'Scripts')
 # 		for rowdata in script_cache:
 # 			rowdatalist=rowdata['脚本全称'].split(',')
@@ -156,7 +154,7 @@
 # 		for index in range(len(titles)):
 # 			title_order_map[str(index)]=str(titles[index])
 # 		# print('titles=>',title_order_map)
-		
+
 
 # 		for rowindex in range(1, sheet_rows):
 # 			row_map={}
@@ -193,7 +191,7 @@
 # 		print('【接收的数据集 开始转换】[%s,%s]'%(self.data_workbook,self.config_workbook))
 
 # 		resultlist=[]
-		
+
 # 		f1=self.add_var()
 
 # 		f2=self.addbusinessdata()
@@ -217,8 +215,6 @@
 # 				return res
 
 # 		return ('success','转换成功')
-
-
 
 
 # 	def addbusinessdata(self):
@@ -275,10 +271,9 @@
 # 			return ('error','插入业务数据异常=>%s'%traceback.format_exc())
 
 
-
 # 	def _get_step_names(self):
 # 		return [x for x in self.data_workbook.sheet_names() if x not in('变量定义','执行数据')]
-		
+
 # 	def addstepdata(self):
 # 		'''
 # 		添加step
@@ -396,16 +391,8 @@
 # 			return ('error','添加变量异常=>%s'%traceback.format_exc())
 
 
-
 # 	def _rollback(self):
 # 		"""
 # 		转换失败回滚操作
 # 		"""
 # 		pass
-
-
-
-
-
-
-

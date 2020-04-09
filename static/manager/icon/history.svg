@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48px" height="48px" viewBox="0 0 48 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.5 (67469) - http://www.bohemiancoding.com/sketch -->
+    <title>分组 6</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="首页" transform="translate(-697.000000, -161.000000)">
+            <g id="分组-6" transform="translate(697.000000, 161.000000)">
+                <circle id="椭圆形-copy-2" fill="#F5FAF9" fill-rule="nonzero" cx="24" cy="24" r="23"></circle>
+                <g id="-历史小" transform="translate(14.000000, 13.000000)">
+                    <rect id="矩形" fill="#000000" opacity="0" x="0" y="0" width="21" height="21"></rect>
+                    <path d="M10.5,21 C4.701375,21 0,16.298625 0,10.5 C0,4.701375 4.701375,0 10.5,0 C16.298625,0 21,4.701375 21,10.5 C21,16.298625 16.298625,21 10.5,21 Z M11.375,11.015375 L11.375,6.12237501 C11.375,5.646375 10.983,5.25 10.5,5.25 C10.0135,5.25 9.62499999,5.64024999 9.62499999,6.12237501 L9.62499999,11.377625 C9.62350829,11.6069734 9.71358395,11.8274383 9.87525,11.990125 L12.362,14.476875 C12.5258531,14.6397322 12.7478172,14.7306313 12.9788345,14.7294819 C13.2098518,14.7283326 13.4309004,14.6352295 13.593125,14.47075 C13.9323495,14.1314573 13.9350817,13.5822761 13.59925,13.239625 L11.375,11.015375 Z" id="形状" fill="#009788" fill-rule="nonzero"></path>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -59,3 +59,5 @@ pymysql
 mysqlclient==1.3.14
 pyecharts
 python-jenkins==1.6.0
+easycython
+pyinstaller

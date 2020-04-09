@@ -9,10 +9,11 @@
 /tools/__pycache__/
 /homepage/__pycache__/
 /logs/*.log
+/logs/monitor.log
 /logs/deal/*.log
 /login/__pycache__/
 /login/migrations/__pycache__/
-/local_reports/*.html
+/logs/local_reports/*.html
 /ME2/configs.py
 /manager/storage/private/Function/*/__pycache__/
 /manager/storage/private/__pycache__/*

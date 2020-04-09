@@ -161,7 +161,7 @@ def gettaskresult(taskid):
 	
 	# print('cases=>')
 	# print(cases)
-	report_url = 'http://%s/static/report_%s.html' % (configs.ME2_URL, taskid)
+	report_url = 'http://%s/manage/report_%s.html' % (configs.ME2_URL, taskid)
 	detail['local_report_address'] = report_url
 	detail['planname'] = planname
 	detail['planid'] = planid
@@ -2250,9 +2250,9 @@ class MainSender:
 	def gen_report(cls, taskid, htmlcontent):
 		print('==本地缓存测试报告')
 		
-		filepath = './local_reports/report_%s.html' % taskid
+		filepath = './logs/local_reports/report_%s.html' % taskid
 		if os.path.exists(filepath):
-			with open('./local_reports/report_%s.html' % taskid, 'w') as f:
+			with open(filepath, 'w') as f:
 				f.write(htmlcontent)
 	
 	@classmethod

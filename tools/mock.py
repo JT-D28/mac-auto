@@ -4,8 +4,10 @@
 # @Author  : Blackstone
 # @to      :
 import threading
+
+
 def mock():
-	with open('mock.log','w+') as f:
+	with open('mock.log', 'w+') as f:
 		while True:
 			f.write('aa')
 

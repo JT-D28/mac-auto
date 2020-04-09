@@ -6,4 +6,4 @@
 
 from manager.cron import Cron
 
-Cron.recovertask()
+# Cron.recovertask()

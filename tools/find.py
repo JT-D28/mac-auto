@@ -5,24 +5,25 @@
 # @to      :
 import os
 
-dz={}
-def find(flag,target,dz=dz):
-	
+dz = {}
+
+
+def find(flag, target, dz=dz):
 	for d in os.listdir(target):
-		abspath=os.path.join(target,d)
+		abspath = os.path.join(target, d)
 		# print(abspath)
 		if os.path.isdir(abspath):
-			find(flag, abspath,dz)
+			find(flag, abspath, dz)
 		else:
-			#print(abspath)
-			with open(abspath,'rb') as f:
+			# print(abspath)
+			with open(abspath, 'rb') as f:
 				try:
-					content=f.readlines()
+					content = f.readlines()
 					for line in content:
 						if flag in line:
-							idx=content.index(line)
+							idx = content.index(line)
 							content.remove(line)
-							dz.get(abspath,[]).append(idx)
+							dz.get(abspath, []).append(idx)
 				except:
 					pass
 	return dz

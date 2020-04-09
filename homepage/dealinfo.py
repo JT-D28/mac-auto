@@ -10,7 +10,7 @@ def doDebugInfo(request):
 	type = request.POST.get("type")
 	id = request.POST.get("id")
 	taskid = request.POST.get("taskid")
-
+	
 	if type == 'info':
 		sql = '''
 		SELECT p.description AS planname ,max(r.createtime) as time ,taskid,is_running from manager_plan p,
@@ -21,7 +21,7 @@ def doDebugInfo(request):
 			desc = cursor.description
 			row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
 		return row, 'info', '', row[0]['is_running']
-
+	
 	if type == 'plan':
 		sql2 = '''
 		SELECT description as title,case_id as id FROM manager_resultdetail r LEFT JOIN manager_case c on r.case_id=c.id 

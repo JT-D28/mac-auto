@@ -12,26 +12,24 @@ def connect_proxy():
 	"""
 	5s delay
 	"""
-	key = winreg.OpenKey(winreg.HKEY_CURRENT_USER,r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",access=983103) 
-
-	print(winreg.QueryValue(key,'ProxyEnable'))
-	print(winreg.QueryValue(key,'ProxyServer'))
-
-	#winreg.SetValue(key, 'ProxyEnable', winreg.REG_SZ, '1')
+	key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",
+	                     access=983103)
+	
+	print(winreg.QueryValue(key, 'ProxyEnable'))
+	print(winreg.QueryValue(key, 'ProxyServer'))
+	
+	# winreg.SetValue(key, 'ProxyEnable', winreg.REG_SZ, '1')
 	winreg.SetValueEx(key, 'ProxyEnable', 0, winreg.REG_DWORD, 1)
 	winreg.SetValue(key, 'ProxyServer', winreg.REG_SZ, '127.0.0.1:8888')
 
 
-
 def disconnect_proxy():
-	key = winreg.OpenKey(winreg.HKEY_CURRENT_USER,r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",access=983103) 
+	key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",
+	                     access=983103)
 	winreg.SetValueEx(key, 'ProxyEnable', 0, winreg.REG_DWORD, 0)
 
 
-
-
-
-#connect_proxy()
+# connect_proxy()
 disconnect_proxy()
 
-#print(eval('0xF003F'))
+# print(eval('0xF003F'))

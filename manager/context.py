@@ -3,69 +3,70 @@
 # @Date    : 2019-11-19 09:51:22
 # @Author  : Blackstone
 # @to      :
-import time, traceback, redis, datetime, requests, copy,os
+import time, traceback, redis, datetime, requests, copy, os
 from django.conf import settings
 from manager import models
 from hashlib import md5
 
-
-
 '''
 用户操作记录
 '''
-_OPERATION={
-	'symbol':{
-		'add':'增加',
-		'del':'删除',
-		'delete':'删除',
-		'update':'更新',
-		'edit':'编辑',
-		'query':'查询',
+_OPERATION = {
+	'symbol': {
+		'add': '增加',
+		'del': '删除',
+		'delete': '删除',
+		'update': '更新',
+		'edit': '编辑',
+		'query': '查询',
 	},
-	'entity':{
-		'plan':'计划',
-		'case':'用例',
-		'step':'步骤',
-		'business':'测试点',
-		'businessdata':'测试点',
-		'var':'变量',
-		'variable':'变量',
-		'con':'数据连接',
-		'dbcon':'数据连接',
-		'template':'模板',
-		'templatefield':'模板字段',
-		'tag':'标签',
+	'entity': {
+		'plan': '计划',
+		'case': '用例',
+		'step': '步骤',
+		'business': '测试点',
+		'businessdata': '测试点',
+		'var': '变量',
+		'variable': '变量',
+		'con': '数据连接',
+		'dbcon': '数据连接',
+		'template': '模板',
+		'templatefield': '模板字段',
+		'tag': '标签',
 	}
 }
 
+
 def get_symbol_name(key):
-	return _OPERATION['symbol'].get(key,'[%s]未定义'%key)
+	return _OPERATION['symbol'].get(key, '[%s]未定义' % key)
+
 
 def get_entity_name(key):
-	return _OPERATION['entity'].get(key,'[%s]未定义'%key)
+	return _OPERATION['entity'].get(key, '[%s]未定义' % key)
+
 
 def get_operate_name(interfacename):
 	'''
 	获取操作名字
 
 	'''
-	interfacename=interfacename.split('/')[-1]
-	print('interfacename=>',interfacename)
-	a=''
-	b=''
+	interfacename = interfacename.split('/')[-1]
+	print('interfacename=>', interfacename)
+	a = ''
+	b = ''
 	for _ in _OPERATION['symbol']:
 		if _ in interfacename:
-			a=_OPERATION['symbol'][_]
+			a = _OPERATION['symbol'][_]
 			break;
-
+	
 	for _ in _OPERATION['entity']:
 		if _ in interfacename:
-			b=_OPERATION['entity'][_]
+			b = _OPERATION['entity'][_]
 			break;
-
+	
 	# print('a=>',a)
 	# print('b=>',b)
-	return ''.join([a,b])
+	return ''.join([a, b])
 
 
 '''
@@ -86,6 +87,7 @@ _friendly_map = {
 		'pymysql.err.OperationalError: (1045': '[mysql]账号密码错误',
 	}
 }
+
 
 def get_friendly_msg(msg0, kind='all'):
 	'''
@@ -146,7 +148,6 @@ def set_top_common_config(taskid, value, kind='db', src=None):
 	# if dbcache is None:  加上以后优先级变成 计划>用例。。。
 	cache[kind] = value
 	_task_context_manager[taskid] = cache
-	
 
 
 '''
@@ -171,11 +172,11 @@ def _getvid():
 # 	testdata.db_check = adddata.get('db_check', '')
 # 	testdata.params = adddata.get('params', '')
 # 	print('参数信息=>', testdata.params)
-	
+
 # 	cur = querytestdata(callername, stepid, trigger='add')
 # 	cur.append(testdata)
 # 	_settestdata(callername, stepid, cur)
-	
+
 # 	res = querytestdata(callername, stepid, trigger='www')
 # 	print('res=>', [x.params for x in res])
 
@@ -183,7 +184,7 @@ def _getvid():
 # def _copytestdata(callername, stepid, vid):
 # 	key = "%s_%s" % (callername, stepid)
 # 	cur = querytestdata(callername, stepid, trigger='copy')
-	
+
 # 	copyit = None
 # 	for business in cur:
 # 		print('curbit=>', business.id)
@@ -198,7 +199,7 @@ def _getvid():
 # 			print('[复制测试数据]vid=%s' % vid)
 # 			_settestdata(callername, stepid, cur)
 # 			return
-	
+
 # 	print('[复制测试数据]没发现指定复制对象 vid=%s' % vid)
 
 
@@ -207,7 +208,7 @@ def _getvid():
 # 		key = "%s_%s" % (callername, stepid)
 # 		_user_step_testdata_manager[key] = setdata
 # 		print("[设置缓存]key=%s value=%s" % (key, str(setdata)))
-	
+
 # 	except:
 # 		print("[设置缓存]异常")
 # 		print(traceback.format_exc())
@@ -226,7 +227,7 @@ def _getvid():
 # 	# else:
 # 	# 	print('忽略id=>',str(x.id),len(str(x.id)))
 # 	print('删除后缓存=>', curtmp)
-	
+
 # 	_settestdata(callername, stepid, curtmp)
 
 
@@ -242,16 +243,16 @@ def _getvid():
 # 			x.params = editdata.get('params')
 # 			print('x=>', x.itf_check)
 # 			break;
-	
+
 # 	print('编辑后数据=>', cur)
-	
+
 # 	_settestdata(callername, stepid, cur)
 
 
 # def _cleartestdata(callername, stepid):
 # 	key = "%s_%s" % (callername, stepid)
 # 	try:
-		
+
 # 		del _user_step_testdata_manager[key]
 # 		print('[清除缓存]key=%s' % key)
 # 	except:
@@ -274,7 +275,7 @@ def _getvid():
 # 			print('[新增步骤异常]')
 # 			error = traceback.format_exc()
 # 			print(error)
-	
+
 # 	else:
 # 		key = "%s_%s" % (callername, stepid)
 # 		res = _user_step_testdata_manager.get(key, [])
@@ -318,7 +319,7 @@ def _getvid():
 # 			print('删除不在缓存中的业务数据id=>', todelids)
 # 			for x in todelids:
 # 				step.businessdatainfo.remove(x)
-		
+
 # 		# print('cache=>',cache)
 # 		for x in cache:
 # 			if str(x.id).startswith('vid_'):
@@ -329,7 +330,7 @@ def _getvid():
 # 				bd.params = x.params
 # 				# bd.params=x.params.replace('true','True').replace('false','False').replace('null','None')
 # 				bd.save()
-				
+
 # 				bids.append(bd.id)
 # 				step = models.Step.objects.get(id=stepid)
 # 				step.businessdatainfo.add(bd)
@@ -342,17 +343,17 @@ def _getvid():
 # 				bd.itf_check = x.itf_check
 # 				bd.db_check = x.db_check
 # 				bd.params = x.params
-				
+
 # 				print('params=>', bd.params)
-				
+
 # 				print('保存业务数据长度=>', len(bd.params))
 # 				# bd.params=x.params.replace('true','True').replace('false','False').replace('null','None')
 # 				bd.save()
-		
+
 # 		print('[挂载测试数据]成功 stepid=%s 测试数据id=%s' % (stepid, bids))
-	
+
 # 	# _cleartestdata(callername, stepid)
-	
+
 # 	except:
 # 		err = traceback.format_exc()
 # 		print('[挂载测试数据]异常')
@@ -365,7 +366,7 @@ def _getvid():
 # 		msg, step = gettestdatastep(businessdata_id)
 # 		if msg is not 'success':
 # 			return (msg, step)
-		
+
 # 		data = businessdatainst.params
 
 # 		if step.step_type == 'interface':
@@ -374,7 +375,7 @@ def _getvid():
 # 			else:
 # 				data = data.replace('null', 'None').replace('true','True').replace('false','False')
 # 				return ('success', eval(data))
-		
+
 # 		elif step.step_type == 'function':
 # 			return ('success', businessdatainst.params.split(','))
 # 	except:
@@ -393,7 +394,7 @@ def _getvid():
 # 		stepid = models.Order.objects.get(follow_id=businessdata_id, kind='step_business').main_id
 # 		step = models.Step.objects.get(id=stepid)
 # 		return ('success', step)
-	
+
 # 	except:
 # 		print(traceback.format_exc())
 # 		return ('error', '获取业务数据所属步骤异常 业务ID=%s' % businessdata_id)
@@ -447,35 +448,35 @@ def remotecache(key, linemsg):
 _runninginfo = dict()
 
 
-def setRunningInfo(username, planid, taskid, isrunning,dbscheme='全局'):
+def setRunningInfo(username, planid, taskid, isrunning, dbscheme='全局'):
 	if 'lastest_taskid' not in _runninginfo:
-		_runninginfo['lastest_taskid']={}
-	lastest_taskid=_runninginfo.get('lastest_taskid',{})
-	lastest_taskid[username]=taskid
+		_runninginfo['lastest_taskid'] = {}
+	lastest_taskid = _runninginfo.get('lastest_taskid', {})
+	lastest_taskid[username] = taskid
 	if str(planid) not in _runninginfo:
 		_runninginfo[str(planid)] = {}
 	planinfo = _runninginfo.get(str(planid), {})
-	planinfo['taskid']=taskid
-	planinfo['isrunning']=isrunning
+	planinfo['taskid'] = taskid
+	planinfo['isrunning'] = isrunning
 	planinfo['dbscheme'] = dbscheme
 	print("储存运行信息", _runninginfo)
 
 
 def getRunningInfo(username='', planid='', type='latest_taskid'):
-	print('getinfo:',username,planid,type)
+	print('getinfo:', username, planid, type)
 	if type == 'latest_taskid':
-		latest_taskids = _runninginfo.get('lastest_taskid',{})
-		latest_taskid = latest_taskids.get(username,None)
+		latest_taskids = _runninginfo.get('lastest_taskid', {})
+		latest_taskid = latest_taskids.get(username, None)
 		return latest_taskid
 	elif type == 'plan_taskid':
 		planinfo = _runninginfo.get(str(planid), {})
-		taskid = planinfo.get('taskid',None)
+		taskid = planinfo.get('taskid', None)
 		return taskid
 	elif type == 'isrunning':
 		planinfo = _runninginfo.get(str(planid), {})
-		isrunning = planinfo.get('isrunning',0)
+		isrunning = planinfo.get('isrunning', 0)
 		return str(isrunning)
 	elif type == 'dbscheme':
 		planinfo = _runninginfo.get(str(planid), {})
-		dbscheme = planinfo.get('dbscheme','全局')
+		dbscheme = planinfo.get('dbscheme', '全局')
 		return dbscheme

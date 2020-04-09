@@ -34,21 +34,21 @@ class User(Model):
 
 
 class Role(Model):
-    '''角色表
-    '''
-    name=CharField(max_length=16)
-    description=TextField()
-    user=ManyToManyField(User,blank=True)
+	'''角色表
+	'''
+	name = CharField(max_length=16)
+	description = TextField()
+	user = ManyToManyField(User, blank=True)
 
 
 class UIControl(Model):
 	'''
 	ui控制
 	'''
-	code=CharField(max_length=24)
-	description=TextField(blank=True)
-	is_config=CharField(max_length=5)#YES|NO
-	author=ForeignKey(User,on_delete=CASCADE)
+	code = CharField(max_length=24)
+	description = TextField(blank=True)
+	is_config = CharField(max_length=5)  # YES|NO
+	author = ForeignKey(User, on_delete=CASCADE)
 	createtime = DateTimeField(auto_now_add=True, null=True)
 	updatetime = DateTimeField(auto_now=True, null=True)
 
@@ -56,15 +56,14 @@ class UIControl(Model):
 class User_UI_Relation(Model):
 	'''用户UI关联表
 	'''
-	kind=CharField(max_length=12) #USER|ROLE
-	user_id=IntegerField()
-	uc_id=IntegerField()
-	
+	kind = CharField(max_length=12)  # USER|ROLE
+	user_id = IntegerField()
+	uc_id = IntegerField()
+
 
 class URLControl(Model):
 	pass
 
+
 class BuiltinControl(Model):
 	pass
-
-

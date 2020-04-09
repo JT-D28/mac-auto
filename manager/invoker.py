@@ -781,7 +781,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		return ('', '', '', url_rv[1])
 
 	url_rf=''
-	if len(url_rv[1].split('?'))>0:
+	if len(url_rv[1].split('?'))>1:
 		print('$'*1000)
 		url_params=url_rv[1].split('?')[1]
 		print('url_params=>',url_params)
@@ -931,6 +931,7 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
 
 	call_method_params.append("taskid='%s'" % taskid)
 	call_method_params.append("callername='%s'" % user.name)
+	call_method_params=[x for x in call_method_params if x]
 
 	call_str = '%s(%s)' % (call_method_name, ','.join(call_method_params))
 	
@@ -1484,9 +1485,15 @@ def _replace_function(user, str_, taskid=None):
 		except:
 			pass
 
-		appendstr=",callername='%s',taskid='%s'"%(user.name,taskid)
+		appendstr="callername='%s',taskid='%s'"%(user.name,taskid)
+		itlist=[]
+		if call_str[1]:
+			itlist.append(call_str[1])
+		itlist.append(appendstr)
 		#计算表达式
-		invstr = '%s(%s%s)' % (fname, call_str[1],appendstr)
+		invstr = '%s(%s)' % (fname, ','.join(itlist))
+		print('*'*1000)
+		print('invstr=>',invstr)
 		#替换表达式
 		repstr='%s(%s)'%(fname,call_str[1])
 		
@@ -1984,6 +1991,7 @@ class Struct(object):
 
 class XMLParser(Struct):
 	def __init__(self, data):
+		print('==xml解析传入data=：\n',data)
 		self.root = ET.fromstring(str(data))
 	
 	def getValue(self, xpath):

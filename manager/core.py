@@ -940,13 +940,18 @@ class Fu:
 		
 		# 带关键字参数和可变参数的 都按a()计算
 		# 参数带=好 记为关键参数 去除
-		paramlist = [p for p in paramlist if not p.startswith('*') and not p.__contains__('=')]
+		print('函数的所有参数数据=>',paramlist)
+		paramlist = [p for p in paramlist if not p.startswith('*') and not p.__contains__('=') and p.strip()]
+		print('函数的去除无效参数数据=>',paramlist)
 		size = len(paramlist)
+		print('大小=>',size)
 		paramstr = ",".join(pool[0:size])
 		final = "%s(%s)" % (funcname, paramstr)
-		print('final=>', final)
+		print('\n获取函数特征码铭文=>\n', final)
+		md5_=cls._md5(final)
+		print('\n获取函数特征码密文=>\n', md5_)
 		
-		return cls._md5(final)
+		return md5_
 	
 	@classmethod
 	def call(cls, funcobj, call_str, builtin=False, username=None, taskid=None):

@@ -1,0 +1,9 @@
+<style type="text/css">body{font-family:Microsoft YaHei}.success{color:#093}.fail{color:#f03}.skip{color:#f90}.error{color:#f0f}table{width:95%;margin:auto}th{background-color:#39c;color:#fff}td{background-color:#eee;text-align:center}</style><br/><h2 style="text-align: center;">[1]接口测试报告</h2><p class='attribute'><strong>测试结果</strong></p><table><tr><th>#Samples</th><th>Failures</th><th>Success Rate</th><th>Average Time</th><th>Min Time</th><th>Max Time</th></tr><tr><td>1</td><td>1</td><td>0.00</td><td>56</td><td>56</td><td>56</td></tr></table><strong>测试详情</strong><p style="text-indent:2em;" >用例名[1]</p><p>第1次迭代</p><table><tr><th>执行序号</th><th>结果</th><th>耗时(ms)</th><th>步骤名称</th><th>api</th><th>接口验证</th><th>数据验证</th><th>消息</th></tr><tr><td style="width:100px;">1.1_1</td><td style="width:100px;" class="fail">fail</td><td style="width:100px;">56</td><td style="width:200px;" title="ww">ww</td><td style="width:200px;">/manager/index/#</td><td style="width:100px;"></td><td style="width:100px;"></td><td>字符串[{'a': '{{aa}}'}]变量替换异常[Traceback (most recent call last):
+  File "C:\Users\F\git\ME2\manager\invoker.py", line 1581, in _replace_variable
+    var=Variable.objects.get(key=varname)
+  File "D:\Python36\lib\site-packages\django\db\models\manager.py", line 82, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "D:\Python36\lib\site-packages\django\db\models\query.py", line 408, in get
+    self.model._meta.object_name
+manager.models.Variable.DoesNotExist: Variable matching query does not exist.
+] 请检查包含变量是否已配置</td></tr></table>

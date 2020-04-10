@@ -519,7 +519,6 @@ def queryvar(request):
 			cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag, bindstr])
 		desc = cursor.description
 		
-		print('desc=>', desc)
 		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
 		for i in rows:
 			m = ''
@@ -667,7 +666,7 @@ def varRepeatCheck(key, bindplans, editid=0):
 						if tag:
 							print('没有绑定计划的变量,有全局变量;')
 							state = ''
-				state = "变量已经绑定过计划：<br>%s" % (str) if str != '' else ''
+				state = "变量%s已经绑定过计划：<br>%s" % (key,str) if str != '' else ''
 		
 		else:
 			state = ''

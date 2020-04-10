@@ -1,26 +1,27 @@
-# 数据库类型  sqlite3|mysql
-dbtype = 'sqlite3'
+import configparser
+import os
 
-# ME2 url地址
-ME2_URL = '127.0.0.1:8000'
+confs = configparser.ConfigParser()
+confs.read(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.ini'), encoding="utf-8")
+conf = confs['useconfig']
 
-# 环境数据库配置  本地用 me2-local-test root 123456 10.60.44.59 3306
-# mysql
+print('使用配置：')
+for des in confs.options('useconfig'):
+	if len(des)<20:
+		hdes=des+' '*(30-len(des))
+	print('%s: \t%s'%(hdes,conf[des]))
+	
 
-DATABASES_NAME = 'me2-57'
-
-DATABASES_USER = 'root'
-DATABASES_PWD = '123456'
-DATABASES_HOST = '10.60.44.59'
-DATABASES_PORT = '3306'
-
-# sqlite3 默认文件名为db.sqlite3
-
-
-# redis配置
-REDIS_HOST = '127.0.0.1'
-REDIS_PORT = '6379'
-REDIS_PASSWORD = ''
+dbtype = conf['dbtype']
+ME2_URL = conf['ME2_URL']
+DATABASES_NAME = conf['DATABASES_NAME']
+DATABASES_USER = conf['DATABASES_USER']
+DATABASES_PWD = conf['DATABASES_PWD']
+DATABASES_HOST = conf['DATABASES_HOST']
+DATABASES_PORT = conf['DATABASES_PORT']
+REDIS_HOST = conf['REDIS_HOST']
+REDIS_PORT = conf['REDIS_PORT']
+REDIS_PASSWORD = conf['REDIS_PASSWORD']
 
 # 邮件服务器配置 SMTP
 EMAIL_HOST = 'smtp.qq.com'

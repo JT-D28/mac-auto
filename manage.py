@@ -23,11 +23,10 @@ def main():
 	
 	print("++++++++++++++++++++++++++++++++++")
 	# check_user_task()
-	if 'daphne' in sys.argv:
+	if 'daphne' == sys.argv[1]:
 		from daphne import cli
-		print(sys.argv)
 		cli = cli.CommandLineInterface()
-		cli.run(args=sys.argv[2:])
+		cli.run(args=['-p',sys.argv.pop(),'-b','0.0.0.0','ME2.asgi:application'])
 	else:
 		execute_from_command_line(sys.argv)
 	# try:

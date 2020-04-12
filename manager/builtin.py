@@ -76,30 +76,33 @@ def dbexecute2(sql, **kws):
 					sqls = sql.split("@")[0].split(";")
 					conname = sql.split('@')[1]
 					for sql in sqls:
-						res, msg = dbexecute("%s@%s" % (sql, conname), taskid=taskid, callername=callername)
-						print('执行结果=>', (res, msg))
-						if res != 'success':
-							return res, msg
-						d.append(str(msg))
+						if sql!='':
+							res, msg = dbexecute("%s@%s" % (sql, conname), taskid=taskid, callername=callername)
+							print('执行结果=>', (res, msg))
+							if res != 'success':
+								return res, msg
+							d.append(str(msg))
 				elif '@' not in sql:
 					sqls = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")
 					dbnamecache = get_top_common_config(taskid)
 					for sql in sqls:
-						res, msg = dbexecute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
-						print('执行结果=>', (res, msg))
-						if res != 'success':
-							return res, msg
-						d.append(str(msg))
+						if sql != '':
+							res, msg = dbexecute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
+							print('执行结果=>', (res, msg))
+							if res != 'success':
+								return res, msg
+							d.append(str(msg))
 			return 'success', '+'.join(d)
 		elif re.search('@', sql) is None:
 			sqls2 = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")
 			dbnamecache = get_top_common_config(taskid)
 			for sql in sqls2:
-				res, msg = dbexecute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
-				print('执行结果=>', (res, msg))
-				if res != 'success':
-					return res, msg
-				d.append(str(msg))
+				if sql != '':
+					res, msg = dbexecute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
+					print('执行结果=>', (res, msg))
+					if res != 'success':
+						return res, msg
+					d.append(str(msg))
 			return 'success', '+'.join(d)
 	
 	except:

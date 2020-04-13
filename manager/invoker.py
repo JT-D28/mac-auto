@@ -12,6 +12,7 @@ from django.http import JsonResponse
 
 from ME2 import configs,urlmap
 from homepage.dealinfo import dealDeBuginfo
+
 from login.models import *
 from manager.models import *
 from .core import ordered, Fu, getbuiltin, EncryptUtils, genorder, simplejson
@@ -524,6 +525,37 @@ def runplan(callername, taskid, planid, is_verify, kind=None, dbscheme=None):
     finally:
         clear_data(username, _tempinfo)
 
+def dealDeBuginfo(taskid):
+	logname = "./logs/" + taskid + ".log"
+	dealogname = "./logs/deal/" + taskid + ".log"
+	if os.path.exists(logname):
+		ma = []
+		with open(logname, 'r', encoding='utf-8') as f:
+			tmep1 = ''
+			while 1:
+				log_text = f.readline()
+				if '结束计划' in log_text:
+					break
+				else:
+					if '---------------' in log_text:
+						continue
+					else:
+						tmep = log_text.replace('\n', '').replace(
+							"'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36', ",
+							'')
+						tmep1 = tmep1 + tmep
+			temp2 = re.sub(
+				r'\[(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])\s+(20|21|22|23|[0-1]\d):[0-5]\d:[0-5]\d\]', '',
+				tmep1)
+			case_matchs = re.findall(r"开始执行用例.*?结束用例.*?结果.*?<br>", temp2)
+			print("开始处理日志------")
+			for case in case_matchs:
+				step_matchs = re.findall(r"开始执行步骤.*?步骤执行.*?结果.*?<br>", case)
+				for step in step_matchs:
+					with open(dealogname, 'a', encoding='UTF-8') as f:
+						f.write(step.replace("        ", '\n') + '\n========\n')
+			print('处理日志完成------')
+	
 
 def _step_process_check(callername, taskid, order, kind):
     """

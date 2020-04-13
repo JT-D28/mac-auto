@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/2.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
-
+import logging
 import os
 import json
 from ME2 import configs
@@ -181,11 +181,12 @@ LOGGING = {
 	'loggers': {
 		'django': {
 			'handlers': ['console', 'file', 'email'],
-			'level': 'INFO',
-			'propagate': True,
+			'level': 'WARNING',
+			'propagate': 0,
 		},
 	},
 }
+logme = logging.getLogger("django")
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/

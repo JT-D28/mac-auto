@@ -887,7 +887,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		default["Content-Type"] = 'application/x-www-form-urlencoded;charset=UTF-8'
 		try:
 			if body.startswith("{") and not body.startswith("{{"):
-				body=body.replace('\r', '').replace('\n', '').replace('\t', '').replace(' ', '')
+				body=body.replace('\r', '').replace('\n', '').replace('\t', '')
 				body = parse.urlencode(ast.literal_eval(body))
 
 			body = body.encode('UTF-8')

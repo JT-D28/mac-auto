@@ -134,37 +134,26 @@ def login(request):
 	if configs.IS_CREATE_SUPERUSER:
 		User.create_superuser(EncryptUtils.md5_encrypt(configs.SUPERUSER_PWD))
 	if request.method == 'POST':
-		login_form = forms.UserForm(request.POST)
 		message = ''
-		# if login_form.is_valid():
-		# username=login_form.cleaned_data.get('username')
-		# password=login_form.cleaned_data.get('password')
 		username = request.POST.get('username')
 		password = request.POST.get('password')
-		
 		try:
 			user = User.objects.get(name=username)
+			if EncryptUtils.md5_encrypt(password) == user.password:
+				request.session.set_expiry(14400)
+				request.session['is_login'] = True
+				request.session['username'] = username
+				logme.warning('用户登录成功：{}\t{}'.format(user.name, user.password))
+				clearRedisforUser(username)
+				return JsonResponse({'code':0,'msg':'登录成功'})
+			else:
+				message = '密码错误'
+				logme.warning('用户密码错误：{}\t{}'.format(user.name, user.password))
 		except:
 			message = '用户不存在'
 			logme.warning(message)
-			return render(request, 'login/login.html', locals())
-		
-		if EncryptUtils.md5_encrypt(password) == user.password:
-			request.session.set_expiry(14400)
-			request.session['is_login'] = True
-			request.session['username'] = username
-			logme.warning('用户登录成功：{}\t{}'.format(user.name, user.password))
-			clearRedisforUser(username)
-			return redirect("/manager/index/")
-		else:
-			message = '密码错误'
-			logme.warning('用户密码错误：{}\t{}'.format(user.name, user.password))
-			return render(request, 'login/login.html', locals())
-	# else:
-	# 	message='验证码错误'
-	# 	return render(request, 'login/login.html',locals())
-	
-	login_form = forms.UserForm(request.POST)
+		return JsonResponse({'code':1,'msg':message})
+
 	if request.session.get('is_login', None):
 		logme.info('用户已登录，跳转到登录页面')
 		username = request.session.get("username", None)

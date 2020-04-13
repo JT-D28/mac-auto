@@ -2,56 +2,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-<title>ME2_登录</title>
-<meta name="description" content="">
-<meta name="keywords" content="">
-<link href="https://cdn.bootcss.com/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
-<link href="{% static 'login/css/login.css' %}" rel="stylesheet">
- <!-- <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}"> -->
-<style type="text/css">
-
-
-</style>
+    <meta charset="utf-8">
+    <title>ME2_登录</title>
+    <link href="{% static 'login/css/login.css' %}" rel="stylesheet">
+    <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 </head>
 
-<body >
-    <div class="box">
-        <h2 style="color: #009688;">接口测试 ME2</h2>
-
-        <form action="/account/login/" method="post" autocomplete="new-password" >
-<!--             <p >{{csrf_token}}</p> -->
-            <div class="inputbox">
-                {{login_form.username}}
-                <label>用户名</label>
-            </div>
-            <div class="inputbox">
-                {{login_form.password}}
-                <label>密码</label>
-            </div>
-            <p style="color:red;">{{message}}</p>
-            <input type="submit" name="" value="登录" style="float:right;">
-
-
-        </form>
-     
+<body style="background:rgba(250,250,250,1);">
+<div class="box">
+    <div style="margin-top: 66px;text-align: center"><img src="{% static 'login/image/logo.svg' %}"></div>
+    <div class="boxtext">接口测试</div>
+    <div class="userName" style="margin-top: 38px;">
+        <img src="{% static 'login/image/people.svg' %}">
+        <input id="username" type="text" name="username" placeholder="请输入用户名">
     </div>
+    <div class="userPwd" style="margin-top: 19px;">
+        <img src="{% static 'login/image/lock.svg' %}">
+        <input id="password" type="password" name="password" placeholder="请输入密码">
+    </div>
+    <button class="login_btn" id="loginbtn">登 录</button>
+    <p id="message"></p>
+</div>
 
-	<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>
-	<script src="https://cdn.bootcss.com/popper.js/1.15.0/umd/popper.js"></script>
-	<script src="https://cdn.bootcss.com/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
-    <script type="text/javascript">
+<script type="text/javascript">
+    $('#loginbtn').click(function () {
+        $.ajax({
+            type: "POST",
+            url: "",
+            data: {username: $("#username").val(), password: $("#password").val()},
+            dataType: "json",
+            success: function (data) {
+                if (data.code == 1) {
+                    document.getElementById("message").innerHTML = data.msg;
+                } else if (data.code == 0) {
+                    window.location = "/manager/index/";
+                }
+            }
+        });
+    });
 
-        var flag=(top.location==window.location)
-        // console.log('top location=>'+top.location)
-        // console.log('window location=>'+window.location)
-        
-        if(!flag)
-            top.location.href=window.location.href
-       
-        
-
-    </script>
+    var flag = (top.location == window.location)
+    if (!flag)
+        top.location.href = window.location.href
+</script>
 </body>
 </html>

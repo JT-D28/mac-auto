@@ -2531,7 +2531,7 @@ def querytreelist(request):
 					'pId': 'product_%s' % product.id,
 					'name': plan.description,
 					'type': 'plan',
-					'textIcon': 'fa fa-product-hunt',
+					'textIcon': 'fa icon-fa-product-hunt',
 					# 'open':True
 				})
 			
@@ -2551,7 +2551,7 @@ def querytreelist(request):
 					'pId': 'plan_%s' % plan.id,
 					'name': casename,
 					'type': 'case',
-					'textIcon': 'fa fa-folder',
+					'textIcon': 'fa icon-fa-folder',
 					# 'open':True
 				})
 			return data
@@ -2571,7 +2571,7 @@ def querytreelist(request):
 					'pId': 'case_%s' % case.id,
 					'name': stepname,
 					'type': 'step',
-					'textIcon': 'fa fa-file-o',
+					'textIcon': 'fa icon-fa-file-o',
 					# 'open':True
 				})
 			
@@ -2585,7 +2585,7 @@ def querytreelist(request):
 					'pId': 'case_%s' % idx,
 					'name': casename,
 					'type': 'case',
-					'textIcon': 'fa fa-folder',
+					'textIcon': 'fa icon-fa-folder',
 				})
 			
 			return data
@@ -2604,7 +2604,7 @@ def querytreelist(request):
 					'pId': 'step_%s' % step.id,
 					'name': bname,
 					'type': 'business',
-					'textIcon': 'fa fa-leaf',
+					'textIcon': 'fa icon-fa-leaf',
 					# 'open':True
 				})
 			
@@ -2633,7 +2633,7 @@ def querytreelist(request):
 	else:
 		print('query id is None')
 		
-		datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True})
+		datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True})
 		productlist = list(Product.objects.all())
 		for product in productlist:
 			datanode.append({
@@ -2641,7 +2641,7 @@ def querytreelist(request):
 				'pId': -1,
 				'name': product.description,
 				'type': 'product',
-				'textIcon': 'fa fa-home'
+				'textIcon': 'fa icon-fa-home'
 			})
 	
 	##

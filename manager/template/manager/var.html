@@ -19,6 +19,15 @@
             height: 34px;
             line-height: 34px;
         }
+        .edit{
+            width:24px;
+            height:17px;
+            font-size:12px;
+            font-family:PingFang-SC-Medium,PingFang-SC;
+            font-weight:500;
+            color:rgba(0,151,136,1);
+            line-height:17px;
+        }
 
         .layui-table-view {
             margin: 20px 0;
@@ -617,9 +626,9 @@
                     , {field: 'key', width: '15%', title: '键名'}
                     , {field: 'description', width: '15%', title: '描述', sort: true}
                     , {field: 'value', width: '15%', title: '值'}
-                    , {field: 'gain', width: '15%', title: '获取方式'}
-                    , {field: 'planids', width: '10%', title: '绑定计划'}
-                    , {field: 'customize', width: '10%', title: '标记'}
+                    // , {field: 'gain', width: '15%', title: '获取方式'}
+                    , {field: 'planids', width: '17%', title: '绑定计划'}
+                    , {field: 'customize', width: '17%', title: '标记'}
                     , {field: 'author', width: '8%', title: '创建者', sort: true}
                     , {align: 'center', toolbar: '#toolbar', fixed: 'right'}
                 ]],
@@ -990,7 +999,7 @@
 <script type="text/html" id="toolbar">
 
 
-    <i class="layui-icon layui-icon-edit" lay-event="edit"></i>
+    <i class="layui-icon edit" lay-event="edit">编辑</i>
 
 
 </script>

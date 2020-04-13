@@ -1,10 +1,4 @@
-def testwaibu(a,**kws):
-    print(a)
-    print(kws['callername'])
+import base64
 
-
-def a(**kws):
-    print(kws)
-a(a=1)
-
-
+str_="eyJTdGF0dXMiOiItMSIsIlJldHVybk1zZyI6IuacquefpemUmeivryJ9"
+print(base64.b64decode(str_).decode(encoding='utf-8'))

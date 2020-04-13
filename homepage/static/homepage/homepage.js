@@ -469,7 +469,7 @@ var app = new Vue({
             var optionRecords = {
                 animation: false,
                 legend: {
-                    right: '7%',
+                    right: '0.7%',
                     top: '3%',
                     data: ['成功率', '成功数', '失败数', '错误数', '跳过数', '失败率']
                 },
@@ -509,7 +509,7 @@ var app = new Vue({
                 },
                 grid: [
                     {
-                        top: '65px',
+                        top: '80px',
                         left: '65px',
                         right: '65px',
                         bottom: '40px',
@@ -548,7 +548,7 @@ var app = new Vue({
                         min: 0,
                         max: totalmax[0] + 10,
                         position: 'left',
-                        offset: 15,
+                        offset: 12,
                         splitArea: {
                             show: true
                         },
@@ -722,6 +722,7 @@ var app = new Vue({
                 },
                 series: [
                     {
+                        color: ['rgba(77,201,122,1)', 'rgba(242,242,242,1)'],
                         type: 'pie',
                         radius: ['85%', '95%'],
                         center: ["32%", "50%"],
@@ -731,7 +732,10 @@ var app = new Vue({
                                 show: true,
                                 position: 'center',
                                 textStyle: {
-                                    fontSize: '18',
+                                    fontSize:'16',
+                                    fontFamily:'PingFang-SC-Medium,PingFang-SC',
+                                    fontWeight:'500',
+                                    color:'rgba(51,51,51,1)'
                                 },
                             },
                         },

@@ -29,7 +29,9 @@
     }
 
     #coverage > .el-card__header {
-        padding: 5px 20px;
+        padding: 5px 20px 0px 0;
+        height: 40px;
+        border-bottom: 0px
     }
 
     #selectpd,
@@ -47,7 +49,7 @@
     }
 
     .el-input__inner {
-        height: 34px;
+        height: 34px !important;
         line-height: 34px;
     }
 
@@ -88,6 +90,7 @@
 
     .layui-card > .el-tabs > .el-tabs__header {
         margin-right: 0px;
+        margin-bottom: -40px;
     }
 
     .el-input__icon {
@@ -111,9 +114,6 @@
         height: calc(100% - 50px)
     }
 
-    #coverage > .el-card__header {
-        height: 50px;
-    }
 
     #coveragerow > .layui-col-md4 {
         height: 50%;
@@ -131,6 +131,72 @@
     .el-tabs__active-bar {
         background-color: rgba(0, 151, 136, 1);
     }
+
+    .el-tabs__nav-wrap::after {
+        background-color: white;
+        height: 0px;
+    }
+
+    .el-tabs__nav {
+        left: 18px
+    }
+
+    .el-tabs--bottom .el-tabs__item.is-bottom:nth-child(2),
+    .el-tabs--bottom .el-tabs__item.is-top:nth-child(2),
+    .el-tabs--top .el-tabs__item.is-bottom:nth-child(2),
+    .el-tabs--top .el-tabs__item.is-top:nth-child(2) {
+        font-size: 13px;
+        font-family: PingFang-SC-Medium, PingFang-SC;
+        font-weight: 500;
+        color: rgba(0, 151, 136, 1);
+        padding-right: 13px;
+    }
+
+    .el-tabs--bottom .el-tabs__item.is-bottom:last-child,
+    .el-tabs--bottom .el-tabs__item.is-top:last-child,
+    .el-tabs--top .el-tabs__item.is-bottom:last-child,
+    .el-tabs--top .el-tabs__item.is-top:last-child {
+        font-size: 13px;
+        font-family: PingFang-SC-Medium, PingFang-SC;
+        font-weight: 500;
+        color: rgba(0, 151, 136, 1);
+        padding-left: 13px;
+    }
+
+    .el-tabs__item {
+        line-height: 50px;
+    }
+
+    .el-range-editor.is-active, .el-range-editor.is-active:hover, .el-select .el-input.is-focus .el-input__inner {
+        height: 34px !important;
+    }
+
+    .el-select > .el-input {
+        height: 34px;
+    }
+
+    .el-input__inner, .el-input__icon {
+        height: 34px;
+        line-height: 34px;
+    }
+
+    .el-input__inner, .el-input__icon {
+        height: 34px;
+        line-height: 34px;
+    }
+
+    .layui-card-header {
+        padding-right: 20px;
+        height: 42px;
+        text-align: center;
+        font-size: 16px;
+        font-family: PingFang-SC-Medium, PingFang-SC;
+        font-weight: 500;
+        color: rgba(51, 51, 51, 1);
+        border-bottom:0px;
+        border-top: 1px solid rgba(242,244,245,1);;
+    }
+
 </style>
 <body>
 <div id="app">
@@ -225,7 +291,7 @@
                     </div>
                 </div>
                 <div class="layui-card" style="flex:1;width:100%;margin: 0px 20px 20px 0;display: inline-block">
-                    <el-tabs @tab-click="reportChartCilck" :tab-position="productsetposition" style="height: 100%">
+                    <el-tabs @tab-click="reportChartCilck" :tab-position="top" style="height: 100%">
                         <el-tab-pane label="计划成功率" style="height: 100%">
                             <div id="echarts-records"
                                  style="background-color:#f2f2f2;height:100%;"></div>
@@ -234,8 +300,19 @@
                         <el-tab-pane label="代码覆盖率" style="height: 100%">
                             <el-card id="coverage" class="box-card" style="height: 100%">
                                 <div slot="header" class="clearfix">
+                                    <el-button
+                                            style="margin-left:20px;height: 34px;padding-top: 10px;float: right;background:rgba(248,123,103,1);border-radius:2px;border-color:rgba(248,123,103,1)"
+                                            type="success"
+                                            @click="jacocoRun">
+                                        ${jacocoRunstate}
+                                    </el-button>
+                                    <el-button
+                                            style="margin-left:20px;height: 34px;padding-top: 10px;float: right;background:rgba(0,151,136,1);border-radius:2px;border-color:rgba(0,151,136,1)"
+                                            type="success"
+                                            @click="jacocoReFlash('update')">${synchronize}
+                                    </el-button>
                                     <el-select @change="serviceChange" clearable collapse-tags filterable
-                                               v-model="form.service" multiple style="width: 50%">
+                                               v-model="form.service" multiple style="width: 30%;float: right">
                                         <el-option
                                                 v-for="i in services"
                                                 :key="i.id"
@@ -243,15 +320,11 @@
                                                 :value="i.id">
                                         </el-option>
                                     </el-select>
-                                    <el-button type="success" @click="jacocoReFlash('update')">${synchronize}
-                                    </el-button>
-                                    <el-button type="success" @click="jacocoRun">${jacocoRunstate}</el-button>
                                 </div>
-
-                                <div id="coveragerow" class="layui-row" style="height: 100%">
+                                <div id="coveragerow" class="layui-row" style="height: 100%;padding-top: 8px">
                                     <div class="layui-col-md4">
                                         <div class="layui-card" style="height: 100%;">
-                                            <div class="layui-card-header" style="padding-right: 20px;height: 42px">
+                                            <div class="layui-card-header">
                                                 branchCoverage
                                             </div>
                                             <div class="layui-card-body"
@@ -263,7 +336,7 @@
                                     </div>
                                     <div class="layui-col-md4">
                                         <div class="layui-card" style="height: 100%;">
-                                            <div class="layui-card-header" style="padding-right: 20px;height: 42px">
+                                            <div class="layui-card-header">
                                                 classCoverage
                                             </div>
                                             <div class="layui-card-body"
@@ -276,7 +349,7 @@
 
                                     <div class="layui-col-md4">
                                         <div class="layui-card" style="height: 100%;">
-                                            <div class="layui-card-header" style="padding-right: 20px;height: 42px">
+                                            <div class="layui-card-header">
                                                 instructionCoverage
                                             </div>
                                             <div class="layui-card-body"
@@ -288,7 +361,7 @@
                                     </div>
                                     <div class="layui-col-md4">
                                         <div class="layui-card" style="height: 100%;">
-                                            <div class="layui-card-header" style="padding-right: 20px;height: 42px">
+                                            <div class="layui-card-header">
                                                 complexityScore
                                             </div>
                                             <div class="layui-card-body"
@@ -301,7 +374,7 @@
 
                                     <div class="layui-col-md4">
                                         <div class="layui-card" style="height: 100%;">
-                                            <div class="layui-card-header" style="padding-right: 20px;height: 42px">
+                                            <div class="layui-card-header">
                                                 lineCoverage
                                             </div>
                                             <div class="layui-card-body"
@@ -313,7 +386,7 @@
                                     </div>
                                     <div class="layui-col-md4">
                                         <div class="layui-card" style="height: 100%;">
-                                            <div class="layui-card-header" style="padding-right: 20px;height: 42px">
+                                            <div class="layui-card-header">
                                                 methodCoverage
                                             </div>
                                             <div class="layui-card-body"
@@ -324,123 +397,6 @@
                                         </div>
                                     </div>
                                 </div>
-
-
-                                <!--      <div class="layui-col-md4">
-										  <div class="layui-card">
-											  <div class="layui-card-header" style="padding-right: 20px">
-												  branchCoverage
-											  </div>
-											  <div class="layui-card-body" style="padding:5px 15px">
-												  <div class="layui-row">
-													  <div id="branchCoverage" class="layui-col-md4"
-														   style="width: 100px;height: 100px"></div>
-													  <div class="layui-col-md6 jacocofontsize">
-														  覆盖率：${Coverage.branchCoverage.percentageFloat}%<br>
-														  覆盖数：${Coverage.branchCoverage.covered}<br>
-														  缺失数：${Coverage.branchCoverage.missed}<br>
-														  总 数：${Coverage.branchCoverage.total}<br>
-													  </div>
-												  </div>
-											  </div>
-										  </div>
-									  </div>
-									  <div class="layui-col-md4">
-										  <div class="layui-card">
-											  <div class="layui-card-header">
-												  classCoverage
-											  </div>
-											  <div class="layui-card-body" style="padding:5px 15px">
-												  <div class="layui-row">
-													  <div id="classCoverage" class="layui-col-md4"
-														   style="width: 100px;height: 100px"></div>
-													  <div class="layui-col-md6 jacocofontsize">
-														  覆盖率：${Coverage.classCoverage.percentageFloat}%<br>
-														  覆盖数：${Coverage.classCoverage.covered}<br>
-														  缺失数：${Coverage.classCoverage.missed}<br>
-														  总 数：${Coverage.classCoverage.total}<br>
-													  </div>
-												  </div>
-											  </div>
-										  </div>
-									  </div>
-									  <div class="layui-col-md4">
-										  <div class="layui-card">
-											  <div class="layui-card-header">
-												  instructionCoverage
-											  </div>
-											  <div class="layui-card-body" style="padding:5px 15px">
-												  <div class="layui-row">
-													  <div id="instructionCoverage" class="layui-col-md4"
-														   style="width: 100px;height: 100px"></div>
-													  <div class="layui-col-md6 jacocofontsize">
-														  覆盖率：${Coverage.instructionCoverage.percentageFloat}%<br>
-														  覆盖数：${Coverage.instructionCoverage.covered}<br>
-														  缺失数：${Coverage.instructionCoverage.missed}<br>
-														  总 数：${Coverage.instructionCoverage.total}<br>
-													  </div>
-												  </div>
-											  </div>
-										  </div>
-									  </div>
-									  <div class="layui-col-md4">
-										  <div class="layui-card">
-											  <div class="layui-card-header">
-												  complexityScore
-											  </div>
-											  <div class="layui-card-body" style="padding:5px 15px">
-												  <div class="layui-row">
-													  <div id="complexityScore" class="layui-col-md4"
-														   style="width: 100px;height: 100px"></div>
-													  <div class="layui-col-md6 jacocofontsize">
-														  覆盖率：${Coverage.complexityScore.percentageFloat}%<br>
-														  覆盖数：${Coverage.complexityScore.covered}<br>
-														  缺失数：${Coverage.complexityScore.missed}<br>
-														  总 数：${Coverage.complexityScore.total}<br>
-													  </div>
-												  </div>
-											  </div>
-										  </div>
-									  </div>
-									  <div class="layui-col-md4">
-										  <div class="layui-card">
-											  <div class="layui-card-header">
-												  lineCoverage
-											  </div>
-											  <div class="layui-card-body" style="padding:5px 15px">
-												  <div class="layui-row">
-													  <div id="lineCoverage" class="layui-col-md4"
-														   style="width: 100px;height: 100px"></div>
-													  <div class="layui-col-md6 jacocofontsize">
-														  覆盖率：${Coverage.lineCoverage.percentageFloat}%<br>
-														  覆盖数：${Coverage.lineCoverage.covered}<br>
-														  缺失数：${Coverage.lineCoverage.missed}<br>
-														  总 数：${Coverage.lineCoverage.total}<br>
-													  </div>
-												  </div>
-											  </div>
-										  </div>
-									  </div>
-									  <div class="layui-col-md4">
-										  <div class="layui-card">
-											  <div class="layui-card-header">
-												  methodCoverage
-											  </div>
-											  <div class="layui-card-body" style="padding:5px 15px">
-												  <div class="layui-row">
-													  <div id="methodCoverage" class="layui-col-md4"
-														   style="width: 100px;height: 100px"></div>
-													  <div class="layui-col-md6 jacocofontsize">
-														  覆盖率：${Coverage.methodCoverage.percentageFloat}%<br>
-														  覆盖数：${Coverage.methodCoverage.covered}<br>
-														  缺失数：${Coverage.methodCoverage.missed}<br>
-														  总 数：${Coverage.methodCoverage.total}<br>
-													  </div>
-												  </div>
-											  </div>
-										  </div>
-									  </div>!-->
-
                             </el-card>
                         </el-tab-pane>
                     </el-tabs>

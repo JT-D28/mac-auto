@@ -18,3 +18,4 @@
 /manager/storage/private/Function/*/__pycache__/
 /manager/storage/private/__pycache__/*
 /manager/storage/private/Function
+/homepage/views/__pycache__/

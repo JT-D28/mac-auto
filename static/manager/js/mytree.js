@@ -143,16 +143,16 @@ var tree={
 		}
 		_opinfo={
 
-			'up':"<span class='fa fa-arrow-circle-up' id='up_#tid#' title='上移'></span>",
-			'down':"<span class='fa fa-arrow-circle-down' id='down_#tid#' title='下移'></span>",
-			'edit':"<span class='fa fa-pencil-square-o' id='edit_#tid#' title='编辑' onfocus='this.blur();'></span>",
-			'mimport':"<span class='fa fa-hand-o-left' id='mimport_#tid#' title='导入'></span>",
-			'mexport':"<span class='fa fa-hand-o-right' id='mexport_#tid#' title='导出'></span>",
-			'run':"<span class='fa fa-play-circle' id='run_#tid#' title='运行'></span>",
-			'add':"<span class='fa fa-plus-circle' id='add_#tid#' title='增加' onfocus='this.blur();'></span>",
-			'del':"<span class='fa fa-trash' id='del_#tid#' title='删除' onfocus='this.blur();'></span>",
-			'logs':"<span class='fa fa-bug' id='logs_#tid#' title='调试日志' onfocus='this.blur();'></span>",
-			'config':"<span class='fa fa-cog' id='config_#tid#' title='高级配置' onfocus='this.blur();'></span>",
+			'up':"<span class='fa icon-fa-arrow-circle-up' id='up_#tid#' title='上移'></span>",
+			'down':"<span class='fa icon-fa-arrow-circle-down' id='down_#tid#' title='下移'></span>",
+			'edit':"<span class='fa icon-fa-pencil-square-o' id='edit_#tid#' title='编辑' onfocus='this.blur();'></span>",
+			'mimport':"<span class='fa icon-fa-hand-o-left' id='mimport_#tid#' title='导入'></span>",
+			'mexport':"<span class='fa icon-fa-hand-o-right' id='mexport_#tid#' title='导出'></span>",
+			'run':"<span class='fa icon-fa-play-circle' id='run_#tid#' title='运行'></span>",
+			'add':"<span class='fa icon-fa-plus-circle' id='add_#tid#' title='增加' onfocus='this.blur();'></span>",
+			'del':"<span class='fa icon-fa-trash' id='del_#tid#' title='删除' onfocus='this.blur();'></span>",
+			'logs':"<span class='fa icon-fa-bug' id='logs_#tid#' title='调试日志' onfocus='this.blur();'></span>",
+			'config':"<span class='fa icon-fa-cog' id='config_#tid#' title='高级配置' onfocus='this.blur();'></span>",
 			}
 
 		var type=treeNode.type
@@ -623,6 +623,11 @@ var tree={
     		return false
     	}
     	src_type=treeNodes[0].type
+    	if(src_type=='product'){
+
+    		layer.alert('不允许移动产品级目录',{icon:2,time:1500})
+    		return false
+    	}
     	target_type=targetNode.type
     	expected=_allow[src_type]
     	warn='不允许此操作['+_call_map[src_type]+'->'+_call_map[target_type]+']'

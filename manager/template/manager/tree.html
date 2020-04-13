@@ -6,7 +6,9 @@
     <title>树组件</title>
     <link rel="stylesheet" type="text/css" href="{% static 'manager/ztree/zTreeStyle.css' %}">
     <!--   <link rel="stylesheet" type="text/css" href="{% static 'manager/ztree/demo.css' %}"> -->
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/icomoon/style.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+
 
     <link rel="stylesheet" type="text/css" href="{% static 'manager/bootstrap/bootstrap.min.css' %}">
     <link href="{% static 'manager/bootstrap-fileinput-master/css/fileinput.css' %}" media="all" rel="stylesheet"
@@ -71,6 +73,21 @@
         .fa {
 
             color: #FF6699;
+        }
+        .btn{
+            width:72px;
+            height:34px;
+            background:rgba(0,151,136,1);
+            border-radius:0px 2px 2px 0px;
+        }
+        .btn-text{
+            width:24px;
+            height:17px;
+            font-size:12px;
+            font-family:PingFang-SC-Medium,PingFang-SC;
+            font-weight:500;
+            color:rgba(255,255,255,1);
+            line-height:17px;
         }
 
         /*.fa{
@@ -167,11 +184,12 @@
 </script>
 
 <div style="margin-left: 25px;margin-right: 50px;height: 100%">
+
     <div class="layui-row" style="height: 100%;">
         <div id='treelist' class="layui-col-md5 " style="max-height:100%;overflow-y:auto;padding: 20px">
             <div class="layui-inline">
-                <input type="input" name="" placeholder="search" style='padding:5px;' id='search' autocomplete="off">
-                <button id='searchbtn' class="layui-btn  layui-btn-sm fa fa-search" style="color:#eee"></button>
+                <input type="input" name="" placeholder="" style='width:240px;height:34px;background:rgba(255,255,255,1);border-radius:2px;border:1px solid rgba(220,222,224,1);' id='search' autocomplete="off">
+                <button id='searchbtn' class="btn" ><span class='btn-text'>查询</span></button>
             </div>
             <ul id="case-manager" class="ztree" style="margin-bottom: 20px"></ul>
 

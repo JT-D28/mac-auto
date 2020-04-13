@@ -12,6 +12,15 @@
             cursor: pointer;
         }
 
+        .edit{
+            width:24px;
+            height:17px;
+            font-size:12px;
+            font-family:PingFang-SC-Medium,PingFang-SC;
+            font-weight:500;
+            color:rgba(0,151,136,1);
+            line-height:17px;
+        }
         .btn {
             height: 34px;
             line-height: 34px;
@@ -322,9 +331,9 @@
 
     {% verbatim %}
     {{# if (d.kind=='用户定义') { }}
-    <i class="layui-icon layui-icon-edit" lay-event="edit"></i>
+    <i class="layui-icon edit" lay-event="edit">编辑</i>
     {{# }else if(d.last==''){}}
-    <i class="layui-icon layui-icon-edit" lay-event="edit" disabled></i>
+    <i class="layui-icon edit" lay-event="edit" disabled>编辑</i>
     {{#} }}
 
     {% endverbatim %}

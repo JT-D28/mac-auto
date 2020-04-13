@@ -24,6 +24,15 @@
         .layui-table-view {
             margin: 20px 0;
         }
+        .edit{
+            width:24px;
+            height:17px;
+            font-size:12px;
+            font-family:PingFang-SC-Medium,PingFang-SC;
+            font-weight:500;
+            color:rgba(0,151,136,1);
+            line-height:17px;
+        }
     </style>
 </head>
 <body style="height: calc(100% - 40px);padding: 20px">
@@ -241,7 +250,7 @@ $('#kv-explorer').on('filebatchuploadsuccess', function(event, data, previewId, 
 </script>
 
 <script type="text/html" id="toolbar">
-  <i class="layui-icon layui-icon-edit" lay-event="edit"></i>
+  <i class="layui-icon edit" lay-event="edit">编辑</i>
 
   
 </script>

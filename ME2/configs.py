@@ -1,5 +1,5 @@
 # 数据库类型  sqlite3|mysql
-dbtype = 'sqlite3'
+dbtype = 'mysql'
 
 # ME2 url地址
 ME2_URL = '127.0.0.1:8000'
@@ -7,11 +7,11 @@ ME2_URL = '127.0.0.1:8000'
 # 环境数据库配置  本地用 me2-local-test root 123456 10.60.44.59 3306
 # mysql
 
-DATABASES_NAME = 'me2-57'
+DATABASES_NAME = 'me2-66'
 
 DATABASES_USER = 'root'
 DATABASES_PWD = '123456'
-DATABASES_HOST = '10.60.44.59'
+DATABASES_HOST = '172.18.12.66'
 DATABASES_PORT = '3306'
 
 # sqlite3 默认文件名为db.sqlite3

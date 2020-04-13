@@ -1232,6 +1232,7 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 				ak = k.split('.')[-1].lower()
 				hk = _get_hearder_key(ak)
 				rh = rps_header[hk]
+				viewcache(taskid, user, None, '实际响应头：%s'%rh)
 				# print('响应头=>',rh)
 				
 				if op == '$':

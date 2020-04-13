@@ -5,13 +5,6 @@ confs = configparser.ConfigParser()
 confs.read(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.ini'), encoding="utf-8")
 conf = confs['useconfig']
 
-print('使用配置：')
-for des in confs.options('useconfig'):
-	if len(des)<20:
-		hdes=des+' '*(30-len(des))
-	print('%s: \t%s'%(hdes,conf[des]))
-	
-
 dbtype = conf['dbtype']
 ME2_URL = conf['ME2_URL']
 DATABASES_NAME = conf['DATABASES_NAME']

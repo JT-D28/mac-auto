@@ -2,6 +2,7 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys, datetime, traceback
+from ME2.configs import confs
 from apscheduler.schedulers.background import BackgroundScheduler
 
 
@@ -24,16 +25,16 @@ def main():
 	print("++++++++++++++++++++++++++++++++++")
 	# check_user_task()
 	if 'daphne' == sys.argv[1]:
+		print('使用配置：')
+		for des in confs.options('useconfig'):
+			if len(des) < 20:
+				hdes = des + ' ' * (20 - len(des))
+			print('%s: \t%s' % (hdes, confs['useconfig'][des]))
 		from daphne import cli
 		cli = cli.CommandLineInterface()
-		cli.run(args=['-p',sys.argv.pop(),'-b','0.0.0.0','ME2.asgi:application'])
+		cli.run(args=['-p', sys.argv.pop(), '-b', '0.0.0.0', 'ME2.asgi:application','--access-log','./logs/access.log'])
 	else:
 		execute_from_command_line(sys.argv)
-	# try:
-	#     execute_from_command_line(sys.argv)
-	# except:
-	#     print(traceback.format_exc())
-	#     pass
 
 
 if __name__ == '__main__':

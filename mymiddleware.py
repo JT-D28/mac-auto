@@ -6,6 +6,7 @@
 from django.db.models import Q
 from django.shortcuts import HttpResponseRedirect
 from django.http import HttpResponse, JsonResponse
+from ME2.settings import logme
 from manager import models
 from login import models as lm
 from manager.core import simplejson
@@ -25,7 +26,7 @@ class Interceptor(MiddlewareMixin):
 		字段重复校验
 
 		"""
-		# print('==字段重复校验====')
+		
 		_meta = {
 			'Function': 'name',
 			'Interface': 'name',
@@ -63,12 +64,12 @@ class Interceptor(MiddlewareMixin):
 		flag2 = simplename.startswith('edit')
 		
 		# print('flag=>',flag1,flag2)
-		
 		if flag1:
 			key = simplename.replace('add', '').lower()
 			# print('key=>',key)
 			mkey = getkey(_meta, key)
 			if mkey:
+				logme.warning('==[新增]字段重复校验====')
 				actionV = request.POST.get(_meta[mkey])
 				callstr = "list(models.%s.objects.filter(%s='%s'))" % (mkey, _meta[mkey], actionV)
 				if mkey == 'Function':
@@ -85,18 +86,16 @@ class Interceptor(MiddlewareMixin):
 					else:
 						return 'fail', "配置方案【%s】下已存在描述为【%s】的数据连接" % (schemevalue, description)
 				qssize = len(eval(callstr))
-				print('callstr=>%s size=%s' % (callstr, qssize))
-				print('url[%s]字段[%s]重复验证 已存在[%s]条' % (request.path, _meta[mkey], qssize))
+				logme.warning('callstr=>%s size=%s' % (callstr, qssize))
+				logme.warning('url[%s]字段[%s]重复验证 已存在[%s]条' % (request.path, _meta[mkey], qssize))
 				if qssize == 0:
 					return ('success', '')
 				else:
 					return ('fail', "%s%s重复" % (_m1[mkey], _m2[_meta[mkey]]))
-			
 			else:
 				return ('success', '')
 		
 		elif flag2:
-			
 			repeatid = None
 			call_str = ''
 			try:
@@ -104,13 +103,14 @@ class Interceptor(MiddlewareMixin):
 				# print('key=>',key)
 				mkey = getkey(_meta, key)
 				if mkey:
+					logme.warning('==[编辑]字段重复校验====')
 					if mkey == 'DBCon':
 						schemevalue = request.POST.get('schemevalue')
 						description = request.POST.get('description')
 						id=request.POST.get('id')
 						oldcon = models.DBCon.objects.filter(~Q(id=id) & Q(description=description, scheme=schemevalue))
 						qssize = len(oldcon)
-						print(oldcon)
+						logme.warning(oldcon)
 						if qssize == 0:
 							return 'success', ''
 						else:
@@ -118,11 +118,11 @@ class Interceptor(MiddlewareMixin):
 							return 'fail', msg
 					actionV = request.POST.get(_meta[mkey])
 					call_str = "models.%s.objects.get(%s='%s').id" % (mkey, _meta[mkey], actionV)
-					print('callstr=>', call_str)
+					logme.warning('callstr=>', call_str)
 					call_id = request.POST.get('id')
 					repeatid = eval(call_str)
 					
-					print('repeatid=>', repeatid)
+					logme.warning('repeatid=>', repeatid)
 					
 					if str(call_id) == str(repeatid):
 						return ('success', '')
@@ -149,7 +149,7 @@ class Interceptor(MiddlewareMixin):
 			if request.session.get('username', None):
 				return True
 			else:
-				print('session校验不通过 跳到登录页面')
+				logme.warning('session校验不通过 跳到登录页面')
 				return False
 
 		return True
@@ -182,13 +182,15 @@ class Interceptor(MiddlewareMixin):
 
 
 	def _print_call_msg(self,request):
-		print("=============================调用[%s]==============="%request.path)
+		if not request.path.startswith('/static'):
+			logme.warning("=============================【%s】调用[%s]=============================" %(request.session.get('username','未登录'),request.path))
 		a=dict(request.GET)
 		b=dict(request.POST)
 		o={**a,**b}
 		for ok in o:
 			o[ok]=o.get(ok)[0]
-		print(o)
+		if o:
+			logme.warning('请求参数:'+str(o))
 		
 	
 	def process_request(self, request):

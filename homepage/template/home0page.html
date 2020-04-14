@@ -105,6 +105,7 @@
         height: 94%;
     }
 
+    #noticeSet > .el-dialog,
     #productSet > .el-dialog {
         height: 80%;
     }
@@ -141,10 +142,8 @@
         left: 18px
     }
 
-    .el-tabs--bottom .el-tabs__item.is-bottom:nth-child(2),
-    .el-tabs--bottom .el-tabs__item.is-top:nth-child(2),
-    .el-tabs--top .el-tabs__item.is-bottom:nth-child(2),
-    .el-tabs--top .el-tabs__item.is-top:nth-child(2) {
+    .layui-card .el-tabs--top .el-tabs__item.is-bottom:nth-child(2),
+    .layui-card .el-tabs--top .el-tabs__item.is-top:nth-child(2) {
         font-size: 13px;
         font-family: PingFang-SC-Medium, PingFang-SC;
         font-weight: 500;
@@ -152,16 +151,37 @@
         padding-right: 13px;
     }
 
-    .el-tabs--bottom .el-tabs__item.is-bottom:last-child,
-    .el-tabs--bottom .el-tabs__item.is-top:last-child,
-    .el-tabs--top .el-tabs__item.is-bottom:last-child,
-    .el-tabs--top .el-tabs__item.is-top:last-child {
+    .layui-card .el-tabs--top .el-tabs__item.is-bottom:last-child,
+    .layui-card .el-tabs--top .el-tabs__item.is-top:last-child {
         font-size: 13px;
         font-family: PingFang-SC-Medium, PingFang-SC;
         font-weight: 500;
         color: rgba(0, 151, 136, 1);
         padding-left: 13px;
     }
+
+    #productSet .el-tabs__nav {
+        height: 26px;
+    }
+
+    #productSet .el-tabs__item {
+        font-family: PingFang-SC-Medium, PingFang-SC;
+        font-weight: 500;
+        line-height: 16px;
+        height: 26px;
+        padding-right: 28px;
+        padding-left: 0px;
+    }
+
+    #productSet .el-tabs__nav {
+        left: 25px;
+    }
+
+    #productSet .el-tabs__header {
+        border-bottom: 1px solid rgba(233, 234, 236, 1);
+        margin-bottom: 0px;
+    }
+
 
     .el-tabs__item {
         line-height: 50px;
@@ -193,9 +213,68 @@
         font-family: PingFang-SC-Medium, PingFang-SC;
         font-weight: 500;
         color: rgba(51, 51, 51, 1);
-        border-bottom:0px;
-        border-top: 1px solid rgba(242,244,245,1);;
+        border-bottom: 0px;
+        border-top: 1px solid rgba(242, 244, 245, 1);;
     }
+
+    .el-dialog__title {
+        font-size: 14px;
+        font-family: PingFang-SC-Medium, PingFang-SC;
+        font-weight: 500;
+        color: rgba(53, 59, 75, 1);
+        line-height: 20px;
+    }
+
+    #productSet .el-dialog__body {
+        padding: 0;
+        height: calc(100% - 151px);
+    }
+
+    #noticeSet .el-dialog__body {
+        padding: 0;
+        height: calc(100% - 122px);
+    }
+
+    .el-dialog__header {
+        padding: 14px 20px 20px;
+    }
+
+    #productSet .el-tabs, #productSet .el-tabs .el-tabs__content {
+        height: 100%;
+    }
+
+    #noticeSet .el-form-item,
+    #productSet .el-form-item {
+        padding: 0px 60px 0 30px;
+        margin-bottom: 16px;
+    }
+
+    #noticeSet .el-dialog__header {
+        border-bottom: 1px solid rgba(233, 234, 236, 1);
+        padding: 15px 20px
+    }
+
+    #noticeSet .el-dialog__headerbtn {
+        top: 16px
+    }
+
+    #noticeSet .el-dialog__body,
+    #productSet .el-tabs__content {
+        background: rgba(247, 248, 250, 1);
+        font-size: 12px;
+        font-family: PingFang-SC-Medium, PingFang-SC;
+        font-weight: 500;
+        color: rgba(53, 59, 75, 1);
+        line-height: 17px;
+        border-bottom: 1px solid rgba(233, 234, 236, 1);
+    }
+
+    .el-dialog__footer {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+    }
+
 
 </style>
 <body>
@@ -291,7 +370,7 @@
                     </div>
                 </div>
                 <div class="layui-card" style="flex:1;width:100%;margin: 0px 20px 20px 0;display: inline-block">
-                    <el-tabs @tab-click="reportChartCilck" :tab-position="top" style="height: 100%">
+                    <el-tabs @tab-click="reportChartCilck" :tab-position="topposition" style="height: 100%">
                         <el-tab-pane label="计划成功率" style="height: 100%">
                             <div id="echarts-records"
                                  style="background-color:#f2f2f2;height:100%;"></div>
@@ -403,119 +482,145 @@
                 </div>
             </div>
         </div>
-        <el-dialog id='productSet' title='项目设置' :visible.sync="productSetVisible" width="70%" top="3vh"
+        <el-dialog id='productSet' title='项目设置' :visible.sync="productSetVisible" width="60%" top="3vh"
                    style="height: 100%">
-            <el-tabs :tab-position="productsetposition">
+            <el-tabs :tab-position="topposition">
                 <el-tab-pane label="jacoco配置">
-                    <el-form :label-position="productsetposition" label-width="15%" :model="form">
+                    <el-form :label-position="topposition" label-width="18%" :model="form" style="margin-top:24px">
                         <el-form-item label="jenkins地址">
                             <el-input v-model="form.productset.jenkinsurl"></el-input>
                         </el-form-item>
-                        <el-form :inline="true" :model="form" class="demo-form-inline">
-                            <el-form-item label="用户名" style="width: 47%" label-width="32%">
-                                <el-input v-model="form.productset.authname"></el-input>
-                            </el-form-item>
-                            <el-form-item label="密码" style="width: 47%" label-width="32%">
-                                <el-input v-model="form.productset.authpwd"></el-input>
-                            </el-form-item>
-                        </el-form>
-                        <el-form-item label="服务名和任务名">
+                        <el-form-item label="用户名">
+                            <el-input v-model="form.productset.authname"></el-input>
+                        </el-form-item>
+                        <el-form-item label="密码">
+                            <el-input v-model="form.productset.authpwd"></el-input>
+                        </el-form-item>
+                        <el-form-item label="服务名/任务名">
                             <el-input type="textarea" v-model="form.productset.jobname" placeholder='填入内容为描述/服务名称和jenkins中对应的任务名，格式示例：
 settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></el-input>
                         </el-form-item>
-                        <el-form-item label="顺序执行任务名">
-                            <el-input v-model="form.productset.order" placeholder='填入顺序执行时jenkins对应的任务名称'></el-input>
-                        </el-form-item>
+                        <!--  <el-form-item label="顺序执行任务名">
+							  <el-input v-model="form.productset.order" placeholder='填入顺序执行时jenkins对应的任务名称'></el-input>
+						  </el-form-item>-->
                     </el-form>
-                    <el-button type="primary" @click="jacocoSetSave">保存</el-button>
-                    <el-button @click="productSetVisible = false">取消</el-button>
                 </el-tab-pane>
                 <el-tab-pane label='解除运行状态'>
-                    <el-form :inline="true" :model="form" class="demo-form-inline">
-                        <el-select v-model="form.forceStopPlans" filterable placeholder="选择计划"
-                                   style="width: 49%">
-                            <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
-                                       :value="plan.id">
-                            </el-option>
-                        </el-select>
-                        <h3 style="margin-top: 3rem">任务当前状态：${runningState}</h3><br>
+                    <el-form :label-position="topposition" label-width="18%" :model="form" style="margin-top:24px">
+                        <el-form-item label="计划名称">
+                            <el-select v-model="form.forceStopPlans" filterable placeholder="选择计划"
+                                       style="width: 100%">
+                                <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
+                                           :value="plan.id">
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="任务当前状态:">
+                            ${runningState}
+                        </el-form-item>
+                        <el-form-item label="操作:">
+                            <el-button type="success" @click="planStatereFlash">刷新</el-button>
+                            <el-tooltip class="item" effect="dark" content="确定计划运行完成但是提示还在运行时点击" placement="bottom">
+                                <el-button type="danger" @click="forceStop">更改运行状态
+                                </el-button>
+                            </el-tooltip>
+                        </el-form-item>
+
                     </el-form>
-                    <el-button type="success" @click="planStatereFlash" style="margin-top: 2rem">刷新
-                    </el-button>
-                    <el-tooltip class="item" effect="dark" content="确定计划运行完成但是提示还在运行时点击" placement="bottom">
-                        <el-button type="danger" @click="forceStop" style="margin-top: 2rem">更改运行状态
-                        </el-button>
-                    </el-tooltip>
                 </el-tab-pane>
                 <el-tab-pane label='外部调用链接'>
-                    <el-select v-model="form.third_plan" filterable placeholder="选择计划" style="width: 49%">
-                        <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
-                                   :value="plan.id">
-                        </el-option>
-                    </el-select>
-                    <el-select v-model="form.third_dbschemes" filterable placeholder="数据连接方案" style="width: 49%">
-                        <el-option v-for="dbscheme in dbschemes" :key="dbscheme.value" :label="dbscheme.label"
-                                   :value="dbscheme.value">
-                        </el-option>
-                    </el-select>
-                    <div style="margin-top: 15px;">
-                        <el-input placeholder="验证地址" v-model="form.is_verify_url">
-                            <template slot="prepend">验证地址</template>
-                            <template slot="append">
-                                <el-button type="primary" icon="el-icon-copy-document" plain
-                                           @click="copyUrl(form.is_verify_url)"></el-button>
-                            </template>
-                        </el-input>
-                    </div>
-                    <div style="margin-top: 15px;">
-                        <el-input placeholder="调试地址" v-model="form.debug_url">
-                            <template slot="prepend">调试地址</template>
-                            <template slot="append">
-                                <el-button type="primary" icon="el-icon-copy-document" plain
-                                           @click="copyUrl(form.debug_url)"></el-button>
-                            </template>
-                        </el-input>
-                    </div>
+
+                    <el-form :label-position="topposition" label-width="18%" :model="form" style="margin-top:24px">
+                        <el-form-item label="计划">
+                            <el-select v-model="form.third_plan" filterable placeholder="选择计划" style="width: 100%">
+                                <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
+                                           :value="plan.id">
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="数据连接方案">
+                            <el-select v-model="form.third_dbschemes" filterable placeholder="数据连接方案"
+                                       style="width: 100%">
+                                <el-option v-for="dbscheme in dbschemes" :key="dbscheme.value" :label="dbscheme.label"
+                                           :value="dbscheme.value">
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="验证地址">
+                            <el-input placeholder="验证地址" v-model="form.is_verify_url">
+                                <template slot="append">
+                                    <el-button type="primary" icon="el-icon-copy-document" plain
+                                               @click="copyUrl(form.is_verify_url)"></el-button>
+                                </template>
+                            </el-input>
+                        </el-form-item>
+                        <el-form-item label="调试地址">
+                            <el-input placeholder="调试地址" v-model="form.debug_url">
+                                <template slot="append">
+                                    <el-button type="primary" icon="el-icon-copy-document" plain
+                                               @click="copyUrl(form.debug_url)"></el-button>
+                                </template>
+                            </el-input>
+                        </el-form-item>
+                    </el-form>
                 </el-tab-pane>
             </el-tabs>
+            <div slot="footer" class="dialog-footer" style="float: right">
+                <el-button @click="productSetVisible = false" style="line-height:0px;font-size:12px;height:30px;">取 消
+                </el-button>
+                <el-button type="primary" @click="jacocoSetSave"
+                           style="margin-left:20px;line-height:0px;font-size:12px;height:30px;background:rgba(0,151,136,1);border-radius:2px;border-color:rgba(0,151,136,1)">
+                    保 存
+                </el-button>
+            </div>
         </el-dialog>
-        <el-dialog title="通知配置" :visible.sync="noticeSetVisible" width="70%" top="3vh" style="height: 100%">
-            <el-form :model="form">
-                <el-form-item label="配色方案" :label-width="form.formLabelWidth">
-                    <el-select v-model="form.reportNoticeSet.color" placeholder="请选择配色方案">
+        <el-dialog id='noticeSet' title='通知配置' :visible.sync="noticeSetVisible" width="60%" top="3vh"
+                   style="height: 100%">
+            <el-form :label-position="topposition" label-width="18%" :model="form" style="padding-top:24px">
+                <el-form-item label="配色方案">
+                    <el-select v-model="form.reportNoticeSet.color" placeholder="请选择配色方案" style="width: 100%">
                         <el-option label="red" value="red"></el-option>
                         <el-option label="blue" value="blue"></el-option>
                     </el-select>
                 </el-form-item>
                 <el-tooltip class="item" effect="dark" content="多收件人请用,分隔" placement="bottom">
-                    <el-form-item label="收件人" :label-width="form.formLabelWidth">
+                    <el-form-item label="收件人">
                         <el-input v-model="form.reportNoticeSet.to_receive" autocomplete="off"></el-input>
                     </el-form-item>
                 </el-tooltip>
-                <el-form-item label="标题" :label-width="form.formLabelWidth">
+                <el-form-item label="标题">
                     <el-input v-model="form.reportNoticeSet.description" autocomplete="off"></el-input>
                 </el-form-item>
                 <el-tooltip class="item" effect="dark" content="内容中如果有参数，只会在任务运行完成后替换，手动发送报告不生效"
                             placement="bottom">
-                    <el-form-item label="邮件内容" :label-width="form.formLabelWidth">
+                    <el-form-item label="邮件内容">
                         <el-input type="textarea" v-model="form.reportNoticeSet.text"
                                   autocomplete="off"></el-input>
                     </el-form-item>
                 </el-tooltip>
-                <el-form-item label="钉钉机器人token" :label-width="form.formLabelWidth"
-                              style="margin-top: 2rem">
+                <hr>
+                <el-form-item label="钉钉token">
                     <el-input v-model="form.reportNoticeSet.dingdingtoken" autocomplete="off"></el-input>
                 </el-form-item>
             </el-form>
-            <div slot="footer" class="dialog-footer">
-                <el-button type="success" round @click="sendRepoet">发送最新报告</el-button>
-                <el-button type="primary" @click="savenoticeSet(0)">保 存</el-button>
-                <el-button @click="noticeSetVisible = false">关 闭</el-button>
+            <div slot="footer" class="dialog-footer" style="float: right">
+                <el-button type="primary" @click="sendRepoet"
+                           style="margin-left:20px;line-height:0px;font-size:12px;height:30px;background:rgba(0,151,136,1);border-radius:2px;border-color:rgba(0,151,136,1)">
+                    发送最新报告
+                </el-button>
+                <el-button type="primary" @click="savenoticeSet(0)"
+                           style="margin-left:20px;line-height:0px;font-size:12px;height:30px;background:rgba(0,151,136,1);border-radius:2px;border-color:rgba(0,151,136,1)">
+                    保 存
+                </el-button>
+                <el-button @click="noticeSetVisible = false" style="margin-left:20px;line-height:0px;font-size:12px;height:30px;">关 闭
+                </el-button>
             </div>
         </el-dialog>
+
+
         <el-dialog id="planHistory" title='历史记录' :visible.sync="planHistoryVisible" width="90%" top="3vh"
                    style="height: 100%">
-            <el-tabs :tab-position="productsetposition" style="min-height: 320px;">
+            <el-tabs :tab-position="topposition" style="min-height: 320px;">
                 <el-tab-pane label="历史缺陷">
                     <el-date-picker
                             v-model="historytime"
@@ -534,6 +639,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 </el-tab-pane>
             </el-tabs>
         </el-dialog>
+
         <div id="seeprocess" style="display:none">
             <div class="layui-table">
                 <div class="layui-card-body">

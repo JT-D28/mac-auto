@@ -112,7 +112,7 @@ var app = new Vue({
             services: [],
             runVisible: false,
             productSetVisible: false,
-            productsetposition: 'left',
+            topposition: 'top',
             planHistoryVisible: false,
             form: {
                 debug_url: '',

@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['manage.py'],
-             pathex=['E:\\hxtest\\ME-DEV\\ME2'],
+             pathex=[],
              binaries=[],
              datas=[('./homepage','homepage'),('./logs','logs'),('./login','login'),('./manager','manager'),('./ME2','ME2'),('./static','static'),('mymiddleware.py','.')],
              hiddenimports=['daphne','channels','channels.auth','channels.generic.websocket','channels.generic','pyDes','jenkins','channels.apps','corsheaders','corsheaders.apps','mysqlclient','pymysql','mysqldb','xlrd','corsheaders.middleware'],

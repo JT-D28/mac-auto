@@ -1367,11 +1367,11 @@ def get_search_match(searchvalue):
 
 
 icon_map = {
-	'product': 'fa fa-home',
-	'plan': 'fa fa-product-hunt',
-	'case': 'fa fa-folder',
-	'step': 'fa fa-file-o',
-	'business': 'fa fa-leaf'
+	'product': 'fa icon-fa-home',
+	'plan': 'fa icon-fa-product-hunt',
+	'case': 'fa icon-fa-folder',
+	'step': 'fa icon-fa-file-o',
+	'business': 'fa icon-fa-leaf'
 }
 
 

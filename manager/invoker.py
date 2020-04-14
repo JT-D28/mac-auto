@@ -963,6 +963,7 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
 	
 	call_method_params.append("taskid='%s'" % taskid)
 	call_method_params.append("callername='%s'" % user.name)
+	call_method_params.append('location=%s'%1)
 	call_method_params = [x for x in call_method_params if x]
 	
 	call_str = '%s(%s)' % (call_method_name, ','.join(call_method_params))

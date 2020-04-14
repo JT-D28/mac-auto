@@ -29,7 +29,7 @@
     }
 
     #coverage > .el-card__header {
-        padding: 5px 20px 0px 0;
+        padding: 7px 20px 0px 0;
         height: 40px;
         border-bottom: 0px
     }
@@ -102,7 +102,7 @@
     }
 
     #planHistory > .el-dialog {
-        height: 94%;
+        height: 95%;
     }
 
     #noticeSet > .el-dialog,
@@ -224,6 +224,16 @@
         color: rgba(53, 59, 75, 1);
         line-height: 20px;
     }
+    #planHistory .el-dialog__body{
+        padding: 20px;
+    }
+    .el-date-editor .el-range-separator{
+        line-height: 23px;
+    }
+
+    .layui-table, .layui-table-view{
+        margin:20px 0 0 0
+    }
 
     #productSet .el-dialog__body {
         padding: 0;
@@ -236,7 +246,7 @@
     }
 
     .el-dialog__header {
-        padding: 14px 20px 20px;
+        padding: 15px 20px 20px;
     }
 
     #productSet .el-tabs, #productSet .el-tabs .el-tabs__content {
@@ -249,6 +259,7 @@
         margin-bottom: 16px;
     }
 
+    #planHistory .el-dialog__header,
     #noticeSet .el-dialog__header {
         border-bottom: 1px solid rgba(233, 234, 236, 1);
         padding: 15px 20px
@@ -486,7 +497,7 @@
                    style="height: 100%">
             <el-tabs :tab-position="topposition">
                 <el-tab-pane label="jacoco配置">
-                    <el-form :label-position="topposition" label-width="18%" :model="form" style="margin-top:24px">
+                    <el-form :label-position="rightposition" label-width="18%" :model="form" style="margin-top:24px">
                         <el-form-item label="jenkins地址">
                             <el-input v-model="form.productset.jenkinsurl"></el-input>
                         </el-form-item>
@@ -506,7 +517,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     </el-form>
                 </el-tab-pane>
                 <el-tab-pane label='解除运行状态'>
-                    <el-form :label-position="topposition" label-width="18%" :model="form" style="margin-top:24px">
+                    <el-form :label-position="rightposition" label-width="18%" :model="form" style="margin-top:24px">
                         <el-form-item label="计划名称">
                             <el-select v-model="form.forceStopPlans" filterable placeholder="选择计划"
                                        style="width: 100%">
@@ -530,7 +541,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                 </el-tab-pane>
                 <el-tab-pane label='外部调用链接'>
 
-                    <el-form :label-position="topposition" label-width="18%" :model="form" style="margin-top:24px">
+                    <el-form :label-position="rightposition" label-width="18%" :model="form" style="margin-top:24px">
                         <el-form-item label="计划">
                             <el-select v-model="form.third_plan" filterable placeholder="选择计划" style="width: 100%">
                                 <el-option v-for="plan in plans" :key="plan.id" :label="plan.name"
@@ -576,7 +587,7 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
         </el-dialog>
         <el-dialog id='noticeSet' title='通知配置' :visible.sync="noticeSetVisible" width="60%" top="3vh"
                    style="height: 100%">
-            <el-form :label-position="topposition" label-width="18%" :model="form" style="padding-top:24px">
+            <el-form :label-position="rightposition" label-width="18%" :model="form" style="padding-top:24px">
                 <el-form-item label="配色方案">
                     <el-select v-model="form.reportNoticeSet.color" placeholder="请选择配色方案" style="width: 100%">
                         <el-option label="red" value="red"></el-option>
@@ -612,7 +623,8 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                            style="margin-left:20px;line-height:0px;font-size:12px;height:30px;background:rgba(0,151,136,1);border-radius:2px;border-color:rgba(0,151,136,1)">
                     保 存
                 </el-button>
-                <el-button @click="noticeSetVisible = false" style="margin-left:20px;line-height:0px;font-size:12px;height:30px;">关 闭
+                <el-button @click="noticeSetVisible = false"
+                           style="margin-left:20px;line-height:0px;font-size:12px;height:30px;">关 闭
                 </el-button>
             </div>
         </el-dialog>
@@ -620,24 +632,20 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
 
         <el-dialog id="planHistory" title='历史记录' :visible.sync="planHistoryVisible" width="90%" top="3vh"
                    style="height: 100%">
-            <el-tabs :tab-position="topposition" style="min-height: 320px;">
-                <el-tab-pane label="历史缺陷">
-                    <el-date-picker
-                            v-model="historytime"
-                            type="daterange"
-                            align="right"
-                            @change="queryOldBug('omit')"
-                            unlink-panels
-                            range-separator=" - "
-                            value-format="yyyy-MM-dd"
-                            start-placeholder="开始日期"
-                            end-placeholder="结束日期"
-                            :picker-options="pickerOptions">
-                    </el-date-picker>
-                    <table id="oldbugtable" lay-size='sm' lay-filter="oldbugtable"
-                           style="height: 100%"></table>
-                </el-tab-pane>
-            </el-tabs>
+            <el-date-picker
+                    v-model="historytime"
+                    type="daterange"
+                    align="right"
+                    @change="queryOldBug('omit')"
+                    unlink-panels
+                    range-separator=" - "
+                    value-format="yyyy-MM-dd"
+                    start-placeholder="开始日期"
+                    end-placeholder="结束日期"
+                    :picker-options="pickerOptions">
+            </el-date-picker>
+            <table id="oldbugtable" lay-size='sm' lay-filter="oldbugtable"
+                   style="height: 100%"></table>
         </el-dialog>
 
         <div id="seeprocess" style="display:none">

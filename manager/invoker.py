@@ -52,13 +52,13 @@ def db_connect(config):
 	"""
     测试数据库连接
     """
-	logme.debug('==测试数据库连接===')
+	print('==测试数据库连接===')
 	
 	conn = None
 	
 	try:
 		
-		# logme.debug(len(conname),len(conname.strip()))
+		# print(len(conname),len(conname.strip()))
 		description = config['description']
 		dbtype = config['dbtype']
 		dbname = config['dbname']
@@ -69,11 +69,11 @@ def db_connect(config):
 		user = config['username']
 		pwd = config['password']
 		
-		# logme.debug("=>没查到可用配置,准备新配一个")
-		logme.debug("数据库类型=>", dbtype)
-		logme.debug("数据库名(服务名|SID)=>", dbname)
-		logme.debug("数据库地址=>", host, port)
-		logme.debug("数据库账号=>", user, pwd)
+		# print("=>没查到可用配置,准备新配一个")
+		print("数据库类型=>", dbtype)
+		print("数据库名(服务名|SID)=>", dbname)
+		print("数据库地址=>", host, port)
+		print("数据库账号=>", user, pwd)
 		
 		if dbtype.lower() == 'oracle_servicename':
 			import cx_Oracle
@@ -103,7 +103,7 @@ def db_connect(config):
 	
 	except:
 		error = traceback.format_exc()
-		logme.debug('error=>', error)
+		print('error=>', error)
 		return ('error', '连接异常->%s' % get_friendly_msg(error))
 
 
@@ -125,7 +125,7 @@ def _get_full_case_name(case_id, curent_case_name):
 
 def gettaskresult(taskid):
 	from .cm import getchild
-	logme.debug("==gettaskresult==")
+	print("==gettaskresult==")
 	##区分迭代次数
 	bset = set()
 	bmap = {}
@@ -135,7 +135,7 @@ def gettaskresult(taskid):
 	spend_total = 0
 	res = ResultDetail.objects.filter(taskid=taskid).order_by('createtime')
 	
-	# logme.debug(res)
+	# print(res)
 	reslist = list(res)
 	if len(reslist) == 0:
 		return detail
@@ -160,8 +160,8 @@ def gettaskresult(taskid):
 	
 	cases = [Case.objects.get(id=caseid) for caseid in caseids]
 	
-	# logme.debug('cases=>')
-	# logme.debug(cases)
+	# print('cases=>')
+	# print(cases)
 	report_url = 'http://%s/manage/report_%s.html' % (configs.ME2_URL, taskid)
 	detail['local_report_address'] = report_url
 	detail['planname'] = planname
@@ -186,7 +186,7 @@ def gettaskresult(taskid):
 		if caseobj.get("steps", None) is None:
 			caseobj['steps'] = {}
 		caseid = case.id
-		# logme.debug('taskid=>%s case_id=>%s'%(taskid,case))
+		# print('taskid=>%s case_id=>%s'%(taskid,case))
 		step_query = list(ResultDetail.objects.filter(taskid=taskid, case=case))
 		##case_step
 		for x in step_query:
@@ -194,9 +194,9 @@ def gettaskresult(taskid):
 			# for rb in rblist:
 			businessobj = {}
 			business = x.businessdata
-			# logme.debug('c=>%s'%business.id)
+			# print('c=>%s'%business.id)
 			status, step = BusinessData.gettestdatastep(business.id)
-			# logme.debug('a=>%s b=>%s'%(case.id,step.id))
+			# print('a=>%s b=>%s'%(case.id,step.id))
 			if isinstance(step, (str,)): continue;
 			step_weight = Order.objects.get(main_id=case.id, follow_id=step.id, kind='case_step').value
 			
@@ -229,7 +229,7 @@ def gettaskresult(taskid):
 				error, stepinst = BusinessData.gettestdatastep(business.id)
 				if stepinst.url:
 					
-					# logme.debug('%s=>%s,%s'%(business.id,error,stepinst))
+					# print('%s=>%s,%s'%(business.id,error,stepinst))
 					businessobj['stepname'] = stepinst.description
 					matcher = [a for a in stepinst.url.split('/') if
 					           not a.__contains__("{{") and not a.__contains__(':')]
@@ -294,7 +294,7 @@ def gettaskresult(taskid):
 	detail["reporttime"] = time.strftime("%m-%d %H:%M", time.localtime())
 	
 	##
-	logme.debug('报告数据=>', detail)
+	print('报告数据=>', detail)
 	
 	return detail
 
@@ -303,7 +303,7 @@ def check_user_task():
 	def run():
 		# while True:
 		#   time.sleep(2)
-		# logme.debug("do task.")
+		# print("do task.")
 		for username, tasks in _taskmap.items():
 			for taskid, plans in tasks.items():
 				for planid in plans:
@@ -318,7 +318,7 @@ def runplans(username, taskid, planids, is_verify, kind=None, dbscheme=None):
 	kindmsg = ''
 	if kind is not None:
 		kindmsg = kind
-	# logme.debug("kindmsg=>",kindmsg,username,taskid)
+	# print("kindmsg=>",kindmsg,username,taskid)
 	verifymsg = '调试' if is_verify in ('0', None, '', 0) else '验证'
 	
 	viewcache(taskid, username, kind,
@@ -340,7 +340,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind):
 	steporderlist = ordered(list(Order.objects.filter(Q(kind='case_step') | Q(kind='case_case'), main_id=case0.id)))
 	##case执行次数
 	casecount = int(case0.count) if case0.count is not None else 1
-	# logme.debug('ccc=>',steporderlist)
+	# print('ccc=>',steporderlist)
 	
 	for lid in range(0, casecount):
 		for o in steporderlist:
@@ -361,14 +361,14 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind):
 					# 步骤执行次数>0
 					for ldx in range(0, stepcount):
 						businessorderlist = ordered(list(Order.objects.filter(kind='step_business', main_id=stepid)))
-						# logme.debug('bbb=>',businessorderlist)
+						# print('bbb=>',businessorderlist)
 						for order in businessorderlist:
 							groupid = order.value.split(".")[0]
 							# step=Step.objects.get(id=order.follow_id)
 							start = time.time()
 							spend = 0
 							if groupid not in groupskip:
-								logme.debug('传入order=>', order.value)
+								print('传入order=>', order.value)
 								result, error = _step_process_check(username, taskid, order, kind)
 								spend = int((time.time() - start) * 1000)
 								
@@ -379,7 +379,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind):
 							
 							##保存结果
 							try:
-								logme.debug("准备保存结果===")
+								print("准备保存结果===")
 								detail = ResultDetail()
 								detail.taskid = taskid
 								detail.plan = plan
@@ -393,9 +393,9 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind):
 								detail.is_verify = is_verify
 								detail.save()
 								
-								logme.debug('保存结果=>', detail)
+								print('保存结果=>', detail)
 							except:
-								logme.debug('保存结果异常=>', traceback.format_exc())
+								print('保存结果异常=>', traceback.format_exc())
 							##
 							caseresult.append(result)
 							##
@@ -409,7 +409,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind):
 							elif "omit" in result:
 								result = "<span class='layui-bg-green'>%s</span>" % result
 							##
-							# logme.debug(len(result),len('success'),result=='success')
+							# print(len(result),len('success'),result=='success')
 							if 'success' in result:
 								viewcache(taskid, username, kind, "步骤执行结果%s" % (result))
 							elif 'omit' in result:
@@ -451,13 +451,13 @@ def runplan(callername, taskid, planid, is_verify, kind=None, dbscheme=None):
 		plan = Plan.objects.get(id=planid)
 		dbscheme = plan.schemename if dbscheme is None or dbscheme == '' else dbscheme
 		setRunningInfo(callername, planid, taskid, 1, dbscheme)
-		logme.debug('plan=>', plan)
+		print('plan=>', plan)
 		plan.is_running = 1
 		plan.save()
 		dbid = getDbUse(taskid, plan.db_id)
 		# dbid = plan.db_id
 		if dbid:
-			logme.debug('plan dbid=>', dbid)
+			print('plan dbid=>', dbid)
 			desp = DBCon.objects.get(id=int(dbid)).description
 			set_top_common_config(taskid, desp, src='plan')
 		
@@ -468,7 +468,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, dbscheme=None):
 		result, error = "", ""
 		# caseresult=[]
 		planresult = []
-		logme.debug('cases=>', cases)
+		print('cases=>', cases)
 		
 		for case in cases:
 			if case.count == 0 or case.count == '0':
@@ -512,14 +512,14 @@ def runplan(callername, taskid, planid, is_verify, kind=None, dbscheme=None):
 			user = User.objects.get(name=username)
 			mail_res = MainSender.send(taskid, user, mail_config)
 			dingding_res = MainSender.dingding(taskid, user, mail_config)
-			logme.debug("发送邮件 结果[%s]" % mail_res)
+			print("发送邮件 结果[%s]" % mail_res)
 			viewcache(taskid, username, kind, mail_res)
-			logme.debug("发送钉钉通知 结果[%s]" % dingding_res)
+			print("发送钉钉通知 结果[%s]" % dingding_res)
 			viewcache(taskid, username, kind, dingding_res)
 	
 	except Exception as e:
-		# traceback.logme.debug_exc()
-		logme.debug(traceback.format_exc())
+		# traceback.print_exc()
+		print(traceback.format_exc())
 		viewcache(taskid, username, kind, '执行计划未知异常[%s]' % traceback.format_exc())
 	
 	finally:
@@ -549,14 +549,14 @@ def dealDeBuginfo(taskid):
 				r'\[(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])\s+(20|21|22|23|[0-1]\d):[0-5]\d:[0-5]\d\]', '',
 				tmep1)
 			case_matchs = re.findall(r"开始执行用例.*?结束用例.*?结果.*?<br>", temp2)
-			logme.debug("开始处理日志------")
+			print("开始处理日志------")
 			for case in case_matchs:
 				step_matchs = re.findall(r"开始执行步骤.*?步骤执行.*?结果.*?<br>", case)
 				for step in step_matchs:
 					if os.path.exists(dealogname):
 						with open(dealogname, 'a', encoding='UTF-8') as f:
 							f.write(step.replace("        ", '\n') + '\n========\n')
-			logme.debug('处理日志完成------')
+			print('处理日志完成------')
 
 
 def _step_process_check(callername, taskid, order, kind):
@@ -578,7 +578,7 @@ def _step_process_check(callername, taskid, order, kind):
 		itf_check = businessdata.itf_check
 		status, paraminfo = BusinessData.gettestdataparams(order.follow_id)
 		
-		# logme.debug('bbid=>',businessdata.id)
+		# print('bbid=>',businessdata.id)
 		status1, step = BusinessData.gettestdatastep(businessdata.id)
 		
 		username = callername
@@ -640,7 +640,7 @@ def _step_process_check(callername, taskid, order, kind):
 				if db_check:
 					res, error = _compute(taskid, user, db_check, type="db_check", kind=kind)
 					if res is not 'success':
-						logme.debug('################db_check###############' * 20)
+						print('################db_check###############' * 20)
 						return ('fail', error)
 				# else:
 				#   viewcache(taskid,username,kind,'数据校验没配置 跳过校验')
@@ -663,7 +663,7 @@ def _step_process_check(callername, taskid, order, kind):
 				return ('fail', 'statuscode=%s' % statuscode)
 			
 			if itf_msg:
-				logme.debug('################itf-msg###############' * 20)
+				print('################itf-msg###############' * 20)
 				return ('fail', itf_msg)
 		
 		elif step.step_type == "function":
@@ -676,11 +676,11 @@ def _step_process_check(callername, taskid, order, kind):
 			
 			viewcache(taskid, username, kind, "调用函数=>%s" % step.body)
 			
-			logme.debug('关联id=>', step.related_id)
+			print('关联id=>', step.related_id)
 			res, msg = _callfunction(user, step.related_id, step.body, paraminfo, taskid=taskid)
 			viewcache(taskid, username, kind, "函数执行结果=>%s" % res)
 			
-			# logme.debug('fjdajfd=>',res,msg)
+			# print('fjdajfd=>',res,msg)
 			if res is not 'success':
 				return res, msg
 			
@@ -699,8 +699,8 @@ def _step_process_check(callername, taskid, order, kind):
 				return ('success', '')
 	
 	except Exception as e:
-		# traceback.logme.debug_exc()
-		logme.debug(traceback.format_exc())
+		# traceback.print_exc()
+		print(traceback.format_exc())
 		return ("error", "执行任务[%s] 未处理的异常[%s]" % (taskid, traceback.format_exc()))
 
 
@@ -720,7 +720,7 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
 			data = data.decode('GBK')
 			recvdata += data
 		except:
-			logme.debug(traceback.format_exc())
+			print(traceback.format_exc())
 		
 		finally:
 			sock.close()
@@ -762,7 +762,7 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
 		#   body=body.replace(m, m+'\n')
 		
 		length = str(len(body.encode('GBK'))).rjust(8)
-		logme.debug('Content-Length=>', length)
+		print('Content-Length=>', length)
 		sendmsg = 'Content-Length:' + str(length) + '\r\n' + body
 		
 		viewcache(taskid, user.name, None, '执行socket请求')
@@ -779,7 +779,7 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
 		
 		# while True:
 		#   recv_bytes =cs.recv(1024)
-		#   logme.debug(2222)
+		#   print(2222)
 		#   responsexml+=recv_bytes
 		#   if not len(recv_bytes):
 		#       break;
@@ -789,7 +789,7 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
 		if cs:
 			cs.close()
 		err = traceback.format_exc()
-		logme.debug(err)
+		print(err)
 		return ('', '', err)
 
 
@@ -813,9 +813,9 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	
 	url_rf = ''
 	if len(url_rv[1].split('?')) > 1:
-		logme.debug('$' * 1000)
+		print('$' * 1000)
 		url_params = url_rv[1].split('?')[1]
-		logme.debug('url_params=>', url_params)
+		print('url_params=>', url_params)
 		sep = _replace_function(user, url_params, taskid=taskid)
 		if sep[0] is not 'success':
 			return ('', '', '', sep[1])
@@ -853,7 +853,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	
 	# body=json.loads(body)
 	
-	# logme.debug(type(headers))
+	# print(type(headers))
 	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>原始headers=>%s</span>" % (headers))
 	if headers is None or len(headers.strip()) == 0:
 		headers = {}
@@ -896,14 +896,14 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		
 		
 		except:
-			logme.debug('参数转化异常：', traceback.format_exc())
+			print('参数转化异常：', traceback.format_exc())
 			return ('', '', '', 'urlencode接口参数格式不对 请检查..')
 	
 	elif content_type == 'xml':
 		isxml = 0
 	else:
 		raise NotImplementedError("content_type=%s没实现" % content_type)
-	# logme.debug("method=>",method)
+	# print("method=>",method)
 	rps = None
 	if method == "get":
 		session = get_task_session('%s_%s' % (taskid, user.name))
@@ -926,7 +926,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		else:
 			rps = session.post(url, headers={**default, **headers})
 	
-	# logme.debug("textfdafda=>",rps.text)
+	# print("textfdafda=>",rps.text)
 	else:
 		return ('', '', '', "请求方法[%s]暂不支持.." % method)
 	
@@ -968,7 +968,7 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
 	
 	call_str = '%s(%s)' % (call_method_name, ','.join(call_method_params))
 	
-	logme.debug('测试函数调用=>', call_str)
+	print('测试函数调用=>', call_str)
 	ok = _replace_variable(user, call_str, src=1, taskid=taskid)
 	if re.search(r"\(.*?(?=,taskid)", ok[1]):
 		viewcache(taskid, user, None, "替换变量后的函数参数=>%s" % re.search(r"(?<=\().*?(?=,taskid)", ok[1]).group())
@@ -977,13 +977,13 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
 	if res is not 'success':
 		return (res, call_str)
 	
-	logme.debug('ttttttttttttttt=>', call_str)
+	print('ttttttttttttttt=>', call_str)
 	
 	return Fu.call(f, call_str, builtin=builtin)
 
 
 def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
-	# logme.debug('执行[%s]:%s'%(kind,call_strs))
+	# print('执行[%s]:%s'%(kind,call_strs))
 	f = None
 	builtinmethods = [x.name for x in getbuiltin()]
 	# call_list=call_strs.split('|');
@@ -1047,7 +1047,7 @@ def _compute(taskid, user, checkexpression, type=None, target=None, kind=None, p
 				old = item
 				item = _legal(item)
 				ress = _eval_expression(user, item, taskid=taskid)
-				logme.debug('ress1=>', ress)
+				print('ress1=>', ress)
 				
 				if ress[0] is 'success':
 					viewcache(taskid, user.name, None,
@@ -1063,12 +1063,12 @@ def _compute(taskid, user, checkexpression, type=None, target=None, kind=None, p
 		elif type == "itf_check":
 			#
 			for item in checklist:
-				logme.debug('check', item)
+				print('check', item)
 				old = item
 				item = _legal(item)
 				ress = _eval_expression(user, item, need_chain_handle=True, data=target, taskid=taskid,
 				                        parse_type=parse_type, rps_header=rps_header)
-				logme.debug('ress2=>', ress)
+				print('ress2=>', ress)
 				if ress[0] is 'success':
 					viewcache(taskid, user.name, None,
 					          "校验表达式[<span style='color:#009999;'>%s</span>] 结果[<span style='color:#009999;'>%s</span>]" % (
@@ -1086,11 +1086,11 @@ def _compute(taskid, user, checkexpression, type=None, target=None, kind=None, p
 		
 		else:
 			return ('error', '计算表达式[%s]异常[_compute type传参错误]' % checkexpression)
-		# logme.debug("结果列表=>",resultlist)
+		# print("结果列表=>",resultlist)
 		# errmsgs=[flag for flag,msg in resultlist if isinstance(x,(str))]
 		failmsg = '请检查_compute函数,_eval_expression函数返回fail时没传失败消息'
 		
-		logme.debug('resultlist=>', resultlist)
+		print('resultlist=>', resultlist)
 		notsuccessmsg = [msg for flag, msg in resultlist if flag is not 'success']
 		if len(notsuccessmsg) > 0:
 			failmsg = notsuccessmsg[0]
@@ -1136,10 +1136,10 @@ def _legal(ourexpression):
 
 def _replace(expressionsep):
 	try:
-		logme.debug('==replace=>%s' % expressionsep)
+		print('==replace=>%s' % expressionsep)
 		eval(expressionsep)
 	except Exception as e:
-		logme.debug('==_replace异常')
+		print('==_replace异常')
 		
 		# if    'true' in expressionsep:
 		#   expressionsep=expressionsep.replace('true','True')
@@ -1195,18 +1195,18 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 	exp = None
 	try:
 		
-		# logme.debug("ourexpression=>",ourexpression)
+		# print("ourexpression=>",ourexpression)
 		exp_rp = _replace_property(user, ourexpression)
-		# logme.debug('qqqqq=>',exp_rp)
+		# print('qqqqq=>',exp_rp)
 		
-		# logme.debug('exp-pr=>',exp_rp)
+		# print('exp-pr=>',exp_rp)
 		if exp_rp[0] is not 'success':
 			return exp_rp
 		
 		exp_rv = _replace_variable(user, exp_rp[1], taskid=taskid, responsetext=data)
 		if exp_rv[0] is not 'success':
 			return exp_rv
-		# logme.debug('exp_rv=<',exp_rv)
+		# print('exp_rv=<',exp_rv)
 		exp_rf = _replace_function(user, exp_rv[1], taskid=taskid)
 		
 		if exp_rf[0] is not 'success':
@@ -1219,12 +1219,12 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 		if need_chain_handle is True:
 			
 			k, v, op = _separate_expression(exp)
-			logme.debug('获取的项=>', k, v, op)
+			print('获取的项=>', k, v, op)
 			if parse_type != 'xml':
 				for badstr in ['\\n', '\\r', '\n']:
 					data = data.replace(badstr, '')
 			data = data.replace('null', "'None'").replace('true', "'True'").replace("false", "'False'")
-			# logme.debug('data=>',data)
+			# print('data=>',data)
 			
 			if 'response.text' == k:
 				if op == '$':
@@ -1238,14 +1238,14 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 				ak = k.split('.')[-1].lower()
 				hk = _get_hearder_key(ak)
 				rh = rps_header[hk]
-				# logme.debug('响应头=>',rh)
+				# print('响应头=>',rh)
 				
 				if op == '$':
 					flag = rh.__contains__(v)
 				elif op == '==':
 					act = rh
 					expect = str(v).strip()
-					# logme.debug('act=>%s expect=>%s'%(act,expect))
+					# print('act=>%s expect=>%s'%(act,expect))
 					flag = act == expect
 				else:
 					return ('fail', '响应头校验暂时只支持=,$比较.')
@@ -1263,12 +1263,12 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 				if parse_type == 'json':
 					p = JSONParser(data)
 				elif parse_type == 'xml':
-					# logme.debug('类型=>',type(parse_type))
-					# logme.debug('data=>')
-					# logme.debug(data)
+					# print('类型=>',type(parse_type))
+					# print('data=>')
+					# print(data)
 					# 消除content-type首行
 					data = '\n'.join(data.split('\n')[1:])
-					logme.debug('reee', data)
+					print('reee', data)
 					p = XMLParser(data)
 				
 				oldk = k
@@ -1293,7 +1293,7 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 			elif v == 'null':
 				v = 'None'
 			
-			logme.debug('表达式合成{%s(%s),%s(%s),%s(%s)}' % (k, type(k), op, type(op), v, type(v)))
+			print('表达式合成{%s(%s),%s(%s),%s(%s)}' % (k, type(k), op, type(op), v, type(v)))
 			
 			if type(k) == type(v):
 				exp = "".join([str(k), op, str(v)])
@@ -1306,23 +1306,23 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 			if isinstance(rr, (tuple,)):
 				raise RuntimeError('需要特殊处理')
 			
-			logme.debug("实际计算表达式[%s] 结果[%s]" % (exp, rr))
+			print("实际计算表达式[%s] 结果[%s]" % (exp, rr))
 		
 		return ('success', '') if rr is True else ('fail', '表达式%s校验失败' % ourexpression)
 	except:
-		logme.debug(traceback.format_exc())
-		logme.debug('表达式等号两边加单引号后尝试判断..')
+		print(traceback.format_exc())
+		print('表达式等号两边加单引号后尝试判断..')
 		exp = exp.replace("<br>", '')
 		# return ('error','表达式[%s]计算异常[%s]'%(ourexpression,traceback.format_exc()))
 		try:
-			logme.debug('_op=>', _op)
-			logme.debug('_exp=>', exp)
+			print('_op=>', _op)
+			print('_exp=>', exp)
 			for op in _op:
 				if op in exp:
 					key = exp.split(op)[0]
 					value = exp.split(op)[1]
-					logme.debug('key=>', key)
-					logme.debug('value=>', value)
+					print('key=>', key)
+					print('value=>', value)
 					res = None
 					if op == '$':
 						res = eval(
@@ -1335,7 +1335,7 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 					else:
 						res = eval('''"%s"%s"%s"''' % (str(key), op, str(value)))
 					
-					logme.debug('判断结果=>', res)
+					print('判断结果=>', res)
 					if res is True:
 						return ('success', res)
 					else:
@@ -1344,25 +1344,25 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 			return ('fail', '')
 		
 		except:
-			logme.debug('表达式计算异常.')
+			print('表达式计算异常.')
 			return ('error', '表达式[%s]计算异常[%s]' % (ourexpression, traceback.format_exc()))
 		
 		# res=None
 		exp = None
 		try:
 			
-			# logme.debug("ourexpression=>",ourexpression)
+			# print("ourexpression=>",ourexpression)
 			exp_rp = _replace_property(user, ourexpression)
-			# logme.debug('qqqqq=>',exp_rp)
+			# print('qqqqq=>',exp_rp)
 			
-			# logme.debug('exp-pr=>',exp_rp)
+			# print('exp-pr=>',exp_rp)
 			if exp_rp[0] is not 'success':
 				return exp_rp
 			
 			exp_rv = _replace_variable(user, exp_rp[1], taskid=taskid)
 			if exp_rv[0] is not 'success':
 				return exp_rv
-			# logme.debug('exp_rv=<',exp_rv)
+			# print('exp_rv=<',exp_rv)
 			
 			exp = exp_rv[1]
 			
@@ -1371,9 +1371,9 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 			if need_chain_handle is True:
 				
 				k, v, op = _separate_expression(exp)
-				logme.debug('获取的项=>', k, v, op)
+				print('获取的项=>', k, v, op)
 				data = data.replace('null', "'None'").replace('true', "'True'").replace("false", "'False'")
-				# logme.debug('data=>',data)
+				# print('data=>',data)
 				
 				if 'response.text' == k:
 					if op == '$':
@@ -1387,14 +1387,14 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 					ak = k.split('.')[-1].lower()
 					hk = _get_hearder_key(ak)
 					rh = rps_header[hk]
-					# logme.debug('响应头=>',rh)
+					# print('响应头=>',rh)
 					
 					if op == '$':
 						flag = rh.__contains__(v)
 					elif op == '==':
 						act = rh
 						expect = str(v).strip()
-						# logme.debug('act=>%s expect=>%s'%(act,expect))
+						# print('act=>%s expect=>%s'%(act,expect))
 						flag = act == expect
 					else:
 						return ('fail', '响应头校验暂时只支持=,$比较.')
@@ -1411,12 +1411,12 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 					if parse_type == 'json':
 						p = JSONParser(data)
 					elif parse_type == 'xml':
-						# logme.debug('类型=>',type(parse_type))
-						# logme.debug('data=>')
-						# logme.debug(data)
+						# print('类型=>',type(parse_type))
+						# print('data=>')
+						# print(data)
 						# 消除content-type首行
 						data = '\n'.join(data.split('\n')[1:])
-						logme.debug('reee', data)
+						print('reee', data)
 						p = XMLParser(data)
 					
 					oldk = k
@@ -1441,7 +1441,7 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 				elif v == 'null':
 					v = 'None'
 				
-				logme.debug('表达式合成{%s(%s),%s(%s),%s(%s)}' % (k, type(k), op, type(op), v, type(v)))
+				print('表达式合成{%s(%s),%s(%s),%s(%s)}' % (k, type(k), op, type(op), v, type(v)))
 				
 				if type(k) == type(v):
 					exp = "".join([str(k), op, str(v)])
@@ -1454,23 +1454,23 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 				if isinstance(rr, (tuple,)):
 					raise RuntimeError('需要特殊处理')
 				
-				logme.debug("实际计算表达式[%s] 结果[%s]" % (exp, rr))
+				print("实际计算表达式[%s] 结果[%s]" % (exp, rr))
 			
 			return ('success', '') if rr is True else ('fail', '表达式%s校验失败' % ourexpression)
 		except:
-			logme.debug(traceback.format_exc())
-			logme.debug('表达式等号两边加单引号后尝试判断..')
+			print(traceback.format_exc())
+			print('表达式等号两边加单引号后尝试判断..')
 			exp = exp.replace("<br>", '').replace('\n', '').replace('\r', '')
 			# return ('error','表达式[%s]计算异常[%s]'%(ourexpression,traceback.format_exc()))
 			try:
-				logme.debug('_op=>', _op)
-				logme.debug('_exp=>', exp)
+				print('_op=>', _op)
+				print('_exp=>', exp)
 				for op in _op:
 					if op in exp:
 						key = exp.split(op)[0]
 						value = exp.split(op)[1]
-						logme.debug('key=>', key)
-						logme.debug('value=>', value)
+						print('key=>', key)
+						print('value=>', value)
 						res = None
 						if op == '$':
 							res = eval(
@@ -1483,7 +1483,7 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 						else:
 							res = eval('''"%s"%s"%s"''' % (str(key), op, str(value)))
 						
-						logme.debug('判断结果=>', res)
+						print('判断结果=>', res)
 						if res is True:
 							return ('success', res)
 						else:
@@ -1492,14 +1492,14 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 				return ('fail', '')
 			
 			except:
-				logme.debug('表达式计算异常.')
+				print('表达式计算异常.')
 				return ('error', '表达式[%s]计算异常[%s]' % (ourexpression, traceback.format_exc()))
 
 
 def _replace_function(user, str_, taskid=None):
 	'''计算函数引用表达式
     '''
-	# logme.debug('--计算引用表达式=>',str_)
+	# print('--计算引用表达式=>',str_)
 	
 	resultlist = []
 	builtinmethods = [x.name for x in getbuiltin()]
@@ -1526,8 +1526,8 @@ def _replace_function(user, str_, taskid=None):
 		# 计算表达式
 		invstr = '%s(%s)' % (fname, ','.join(itlist))
 		# viewcache(taskid, user.name,None,'计算表达式=>%s'%invstr)
-		logme.debug('*' * 1000)
-		logme.debug('invstr=>', invstr)
+		print('*' * 1000)
+		print('invstr=>', invstr)
 		
 		# 替换表达式
 		repstr = '%s(%s)' % (fname, call_str[1])
@@ -1537,16 +1537,16 @@ def _replace_function(user, str_, taskid=None):
 		resultlist.append((status, res))
 		
 		if status is 'success':
-			logme.debug('\n\n')
-			logme.debug('替换函数引用 %s\n =>\n %s ' % ('$[%s]' % invstr, str(res)))
+			print('\n\n')
+			print('替换函数引用 %s\n =>\n %s ' % ('$[%s]' % invstr, str(res)))
 			str_ = str_.replace('$[%s]' % repstr, str(res))
 	
 	if len([x for x in resultlist if x[0] is 'success']) == len(resultlist):
-		logme.debug('--成功计算引用表达式 结果=>', str_)
+		print('--成功计算引用表达式 结果=>', str_)
 		return ('success', str_)
 	else:
 		alist = [x[1] for x in resultlist if x[0] is not 'success']
-		logme.debug('--异常计算引用表达式=>', alist[0])
+		print('--异常计算引用表达式=>', alist[0])
 		return ('error', alist[0])
 
 
@@ -1557,9 +1557,9 @@ def _get_step_params(paraminfo, taskid, callername):
     '''
 	
 	def _next(cur):
-		# logme.debug('_next')
-		# logme.debug('初始数据=>',cur)
-		# logme.debug('*'*200)
+		# print('_next')
+		# print('初始数据=>',cur)
+		# print('*'*200)
 		
 		if isinstance(cur, (dict,)):
 			i = 0
@@ -1570,16 +1570,16 @@ def _get_step_params(paraminfo, taskid, callername):
 				v = cur[k]
 				try:
 					v = eval(v)
-					# logme.debug('类型：',type(v))
+					# print('类型：',type(v))
 				except:
 					pass
 				
 				if isinstance(v, (str,)):
 					if v.__contains__('{{STEP_PARAMS}'):
-						logme.debug('字符串发现STEP_PARAMS', v)
+						print('字符串发现STEP_PARAMS', v)
 						del cur[k]
 						# cur[k]=''
-						# logme.debug(cur)
+						# print(cur)
 				
 				else:
 					_next(v)
@@ -1601,7 +1601,7 @@ def _get_step_params(paraminfo, taskid, callername):
 		ps = eval(paraminfo)
 		
 		if isinstance(ps, (dict,)):
-			# logme.debug('ps=>',ps)
+			# print('ps=>',ps)
 			_next(ps)
 			viewcache(taskid, callername, None, '获取内置变量[字典模式]STEP_PARAMS=> %s ' % str(ps))
 			return ps
@@ -1618,15 +1618,15 @@ def _get_step_params(paraminfo, taskid, callername):
 				
 				try:
 					import json
-					logme.debug('p1=>', p1)
+					print('p1=>', p1)
 					dl[p1] = eval(p2)
 					
-					# logme.debug('类型：',type(dl[p1]))
+					# print('类型：',type(dl[p1]))
 				except:
-					# traceback.logme.debug_exc()
+					# traceback.print_exc()
 					dl[p1] = p2
 			
-			logme.debug('dl=>', dl)
+			print('dl=>', dl)
 			_next(dl)
 			viewcache(taskid, callername, None, '获取内置变量[a=1&b=2模式]STEP_PARAMS=> %s ' % str(dl))
 			return dl
@@ -1653,17 +1653,17 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
 		for varname in varnames:
 			if varname.strip() == 'STEP_PARAMS':
 				dictparams = _get_step_params(str_, taskid, user.name)
-				logme.debug('==获取内置变量STEP_PARAMS=>\n', dictparams)
-				logme.debug('==STEP_PARAMS替换前=>\n', old)
+				print('==获取内置变量STEP_PARAMS=>\n', dictparams)
+				print('==STEP_PARAMS替换前=>\n', old)
 				old = old.replace('{{%s}}' % varname, str(dictparams))
-				logme.debug('==STEP_PARAMS替换后=>\n', old)
+				print('==STEP_PARAMS替换后=>\n', old)
 				continue;
 			
 			elif varname.strip() == 'RESPONSE_TEXT':
-				logme.debug('==获取text/html响应报文用于替换')
+				print('==获取text/html响应报文用于替换')
 				if responsetext:
 					old = old.replace('{{RESPONSE_TEXT}}', responsetext)
-					logme.debug('==RESPONSE_TEXT替换后=>\n', old)
+					print('==RESPONSE_TEXT替换后=>\n', old)
 					continue;
 			
 			vars = Variable.objects.filter(key=varname)
@@ -1682,18 +1682,18 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
 					except:
 						pass
 				if var is None:
-					logme.debug(traceback.format_exc())
+					print(traceback.format_exc())
 					return ('error', '字符串[%s]变量替换异常,未在局部变量和全局变量中找到，请检查是否已正确配置' % str_)
 			
 			gain_rv = _replace_variable(user, var.gain, src=src, taskid=taskid)
 			if gain_rv[0] is not 'success':
-				# logme.debug(11)
+				# print(11)
 				return gain_rv
 			gain = gain_rv[1]
 			
 			value_rv = _replace_variable(user, var.value, src=src, taskid=taskid)
 			if value_rv[0] is not 'success':
-				# logme.debug(1221)
+				# print(1221)
 				return value_rv
 			value = value_rv[1]
 			
@@ -1719,7 +1719,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
 					if v is None:
 						v = _gain_compute(user, gain, src=src, taskid=taskid)
 						if v[0] is not 'success':
-							# logme.debug(14441)
+							# print(14441)
 							return v
 						else:
 							v = v[1]
@@ -1730,8 +1730,9 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
 				
 				else:
 					v = _gain_compute(user, gain, src=src, taskid=taskid)
+					print('变量获取方式')
 					if v[0] is not 'success':
-						# logme.debug(11999)
+						# print(11999)
 						return v
 					else:
 						v = v[1]
@@ -1743,7 +1744,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
 		
 		return ('success', old)
 	except Exception as e:
-		logme.debug(traceback.format_exc())
+		print(traceback.format_exc())
 		return ('error', '字符串[%s]变量替换异常[%s] 请检查包含变量是否已配置' % (str_, traceback.format_exc()))
 
 
@@ -1756,7 +1757,7 @@ def is_valid_where_sql(call_str):
 	
 	call_str = call_str.strip()
 	is_function = _is_function_call(call_str)
-	logme.debug('is_function=>', is_function)
+	print('is_function=>', is_function)
 	
 	if is_function: return True
 	if '@' not in call_str:
@@ -1827,18 +1828,18 @@ def _gain_compute(user, gain_str, src=1, taskid=None):
 	try:
 		# from builtin import *
 		# res=re.findall("\w{1,}\([\w,]*\)",gain_str)
-		# logme.debug('匹配结果=>',res,gain_str)
+		# print('匹配结果=>',res,gain_str)
 		if _is_function_call(gain_str):
 			##是方法调用
 			# tzm=Fu.tzm_compute(gain_str,"(.*?)\((.*?)\)")
 			flag = Fu.tzm_compute(gain_str, '(.*?)\((.*?)\)')
-			logme.debug('flag1', flag)
+			print('flag1', flag)
 			ms = list(Function.objects.filter(flag=flag))
 			functionid = None
 			if len(ms) == 0:
 				# functionid=None
 				# flag=Fu.tzm_compute(gain_str,'(.*?)\(.*?\)')
-				# logme.debug('flag2', flag)
+				# print('flag2', flag)
 				try:
 					functionid = Function.objects.get(flag=flag).id
 				except:
@@ -1858,7 +1859,7 @@ def _gain_compute(user, gain_str, src=1, taskid=None):
 			if functionid is None:
 				return ('error', '没查到匹配函数请先定义[%s,%s]' % (gain_str, flag))
 			else:
-				logme.debug('functionid=>', functionid)
+				print('functionid=>', functionid)
 			# return _callfunction(user, functionid, gain_str)
 			return _callfunction(user, functionid, call_method_name, call_method_params, taskid=taskid)
 		
@@ -1885,7 +1886,7 @@ def _gain_compute(user, gain_str, src=1, taskid=None):
 	
 	
 	except Exception as e:
-		# traceback.logme.debug_exc()
+		# traceback.print_exc()
 		return ('error', traceback.format_exc())
 
 
@@ -1903,18 +1904,18 @@ def _replace_property(user, str_, taskid=None):
 		# username=user.name
 		# a=re.findall("\$(.*)=", str_)
 		
-		logme.debug('str_=>', str_)
+		print('str_=>', str_)
 		b = re.findall("\$\{(.*?)\}", str_)
 		# viewcache("b length=>",len(b))
 		# c=a+b
 		c = b
 		for it in c:
 			# viewcache("key=>",it)
-			# logme.debug('tmp==>',it)
+			# print('tmp==>',it)
 			cur = it
 			
-			logme.debug("取属性==")
-			logme.debug(_tempinfo, username, it)
+			print("取属性==")
+			print(_tempinfo, username, it)
 			v = _tempinfo.get(username).get(it)
 			
 			# viewcache("vvv=>",v)
@@ -1923,11 +1924,11 @@ def _replace_property(user, str_, taskid=None):
 				pass
 			old = old.replace(r"${%s}" % it, str(v))
 		
-		# logme.debug('属性替换=》',old)
+		# print('属性替换=》',old)
 		
 		return ('success', old)
 	except Exception as e:
-		logme.debug(traceback.format_exc())
+		print(traceback.format_exc())
 		return ('error', '请检查是否定义属性%s 错误消息:%s' % (cur, traceback.format_exc()))
 
 
@@ -1950,7 +1951,7 @@ def _save_builtin_property(taskid, username):
     '''
 	detail = gettaskresult(taskid)
 	if detail == {}:
-		logme.debug('==内置属性赋值提前结束，执行结果表无数据')
+		print('==内置属性赋值提前结束，执行结果表无数据')
 		return
 	
 	base_url = settings.BASE_URL
@@ -1976,21 +1977,21 @@ def _find_and_save_property(user, dict_str, reponsetext):
     属性保存 如响应json中没相关字段 则当做字符串
     """
 	cur = None
-	# logme.debug(type(dict_str),len(dict_str))
+	# print(type(dict_str),len(dict_str))
 	try:
 		if dict_str is None or len(dict_str.strip()) == 0:
-			# logme.debug('NOOOO'*100)
+			# print('NOOOO'*100)
 			return ('success', '')
 		
 		d = eval(dict_str)
-		# logme.debug(reponsetext)
-		# logme.debug("d=>",d)
+		# print(reponsetext)
+		# print("d=>",d)
 		for k, v in d.items():
 			cur = k
 			p = JSONParser(reponsetext)
-			logme.debug('================_find_and_save_property==========')
-			# logme.debug(p)
-			# logme.debug(k,v)
+			print('================_find_and_save_property==========')
+			# print(p)
+			# print(k,v)
 			v1 = p.getValue(v)
 			
 			if not v1:
@@ -2001,7 +2002,7 @@ def _find_and_save_property(user, dict_str, reponsetext):
 		return ('success', '')
 	
 	except Exception as e:
-		logme.debug(traceback.format_exc())
+		print(traceback.format_exc())
 		return ('error', "用户%s属性缓存失败=>属性%s" % (user.name, cur))
 
 
@@ -2014,8 +2015,8 @@ def save_data(username, d, k, v):
 		
 		d[username][k] = v
 		
-		logme.debug('存属性==')
-		logme.debug(username, k, v)
+		print('存属性==')
+		print(username, k, v)
 		
 		viewcache(username, "用户%s缓存数据=> %s=%s" % (username, k, v))
 	
@@ -2058,12 +2059,12 @@ class Struct(object):
 
 class XMLParser(Struct):
 	def __init__(self, data):
-		logme.debug('==xml解析传入data=：\n', data)
+		print('==xml解析传入data=：\n', data)
 		self.root = ET.fromstring(str(data))
 	
 	def getValue(self, xpath):
 		
-		logme.debug('查找=>', xpath)
+		print('查找=>', xpath)
 		result = ''
 		route_path = ''
 		chainlist = xpath.split('.')
@@ -2079,7 +2080,7 @@ class XMLParser(Struct):
 			propname = None
 			tagname = None
 			ms = re.findall('\[(.*?)\]', chain)
-			# logme.debug('ms=>',ms)
+			# print('ms=>',ms)
 			kh = None
 			
 			for m in ms:
@@ -2099,11 +2100,11 @@ class XMLParser(Struct):
 				route_path += '[1]'
 			
 			if propname:
-				# logme.debug('search=>','.'+route_path)
-				# logme.debug('res=>',self.root.find('.'+route_path).attrib)
+				# print('search=>','.'+route_path)
+				# print('res=>',self.root.find('.'+route_path).attrib)
 				return self.root.find('.' + route_path).attrib.get(propname, 'None')
 		try:
-			# logme.debug('search=>','.'+route_path)
+			# print('search=>','.'+route_path)
 			return self.root.find('.' + route_path).text
 		except:
 			return 'None'
@@ -2113,7 +2114,7 @@ class JSONParser(Struct):
 	
 	def __init__(self, data):
 		
-		# logme.debug("传入=>",data)
+		# print("传入=>",data)
 		self.obj = eval(self._apply_filter(data))
 		
 		# 兼容不同的系统 有些系统喜欢返回JSON字符串 有些json
@@ -2121,14 +2122,14 @@ class JSONParser(Struct):
 			if isinstance(self.obj, (str,)):
 				self.obj = eval(self.obj)
 	
-	# logme.debug('==JSONParser 数据转字典=>',self.obj,type(self.obj))
+	# print('==JSONParser 数据转字典=>',self.obj,type(self.obj))
 	
-	# logme.debug("待匹配数据=>",self.obj)
+	# print("待匹配数据=>",self.obj)
 	
 	def _apply_filter(self, msg):
-		# logme.debug("leix=",type(msg))
+		# print("leix=",type(msg))
 		msg = msg.replace("true", "True").replace("false", "False").replace("null", "None")
-		# logme.debug(msg)
+		# print(msg)
 		return msg
 	
 	def translate(self, chainstr):
@@ -2148,7 +2149,7 @@ class JSONParser(Struct):
 					h = "[%s]" % startindex
 					chainstr = chainstr.replace('response.json%s.' % h, '')
 			elif isinstance(self.obj, (bool,)):
-				logme.debug('&' * 200)
+				print('&' * 200)
 				return 'self.obj'
 			
 			stages = chainstr.split(".")
@@ -2165,22 +2166,22 @@ class JSONParser(Struct):
 		if xpath:
 			
 			try:
-				# logme.debug('==查询源数据=>%s' % (self.obj))
-				# logme.debug('==查询源数据类型=>%s'%type(self.obj))
-				# logme.debug("==xpath查询=>%s" % xpath)
+				# print('==查询源数据=>%s' % (self.obj))
+				# print('==查询源数据类型=>%s'%type(self.obj))
+				# print("==xpath查询=>%s" % xpath)
 				r = eval(xpath)
 				return r
 			except:
-				logme.debug(errms)
+				print(errms)
 				return chainstr
 		else:
-			logme.debug(errms)
+			print(errms)
 			return chainstr
 
 
 # def check(self,chainstr,expected):
 
-#   #logme.debug(type(self.getValue(chainstr)),type(expected))
+#   #print(type(self.getValue(chainstr)),type(expected))
 
 #   return str(self.getValue(chainstr))==str(expected)
 
@@ -2260,7 +2261,7 @@ class MainSender:
 				bodyhtml += '<table>'
 				bodyhtml += "<tr><th>执行序号</th><th>结果</th><th>耗时(ms)</th><th>步骤名称</th><th>api</th><th>接口验证</th><th>数据验证</th><th>消息</th></tr>"
 				for step in vs:
-					logme.debug('nnufa=>', step)
+					print('nnufa=>', step)
 					bodyhtml += '<tr>'
 					bodyhtml += '<td style="width:100px;">%s</td>' % step['num']
 					bodyhtml += '<td style="width:100px;" class="%s">%s</td>' % (step['result'], step['result'])
@@ -2337,7 +2338,7 @@ class MainSender:
 		
 		
 		except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
-			logme.debug(traceback.format_exc())
+			print(traceback.format_exc())
 			ret = 2
 			error = traceback.format_exc()
 		
@@ -2345,7 +2346,7 @@ class MainSender:
 	
 	@classmethod
 	def gen_report(cls, taskid, htmlcontent):
-		logme.debug('==本地缓存测试报告')
+		print('==本地缓存测试报告')
 		
 		filepath = './logs/local_reports/report_%s.html' % taskid
 		if os.path.exists(filepath):
@@ -2424,7 +2425,7 @@ def upload_personal_file(filemap, username):
 			with open(filepath, 'wb') as f:
 				f.write(filemap[filename])
 	except:
-		logme.debug(traceback.format_exc())
+		print(traceback.format_exc())
 		return ('error', '写入异常' + traceback.format_exc())
 	
 	return ('success', '本地写完')
@@ -2435,7 +2436,7 @@ class Transformer(object):
 	
 	def __init__(self, callername, byte_list, content_type, taskid):
 		
-		logme.debug('【Transformer工具初始化】')
+		print('【Transformer工具初始化】')
 		self._before_transform_check_flag = ('success', '')
 		self._difference_config_file(byte_list)
 		self.transform_id = taskid
@@ -2446,9 +2447,9 @@ class Transformer(object):
 		'''
         区分配置文件&用例文
         '''
-		logme.debug('【识别上传文件】')
+		print('【识别上传文件】')
 		try:
-			logme.debug('上传文件数量=>', len(byte_list))
+			print('上传文件数量=>', len(byte_list))
 			for byte in byte_list:
 				cur_workbook = xlrd.open_workbook(file_contents=byte)
 				try:
@@ -2459,8 +2460,8 @@ class Transformer(object):
 					self.data_workbook.append(cur_workbook)
 			
 			##校验文件
-			logme.debug('配置=>', getattr(self, 'config_workbook', None))
-			logme.debug('数据=>', getattr(self, 'data_workbook', []))
+			print('配置=>', getattr(self, 'config_workbook', None))
+			print('数据=>', getattr(self, 'data_workbook', []))
 			if getattr(self, 'config_workbook', None) is None:
 				self._before_transform_check_flag = ('fail', '没上传配置文件')
 				return
@@ -2474,7 +2475,7 @@ class Transformer(object):
 				self._before_transform_check_flag = ('fail', '暂时不支持1个配置文件对应多个case文件')
 				return
 		except:
-			logme.debug(traceback.format_exc())
+			print(traceback.format_exc())
 			self._before_transform_check_flag = ('error', '无法区分配置和用例文件')
 			return
 		
@@ -2508,14 +2509,14 @@ class Transformer(object):
 					step.author = User.objects.get(name=self.callername)
 					func_field_value = rowdata['函数名称']
 					# if func_field_value  not in all_function_name:
-					# logme.debug('canshu=>',rowdata['参数值'])
+					# print('canshu=>',rowdata['参数值'])
 					if '：' not in rowdata['参数值'] and ':' not in rowdata['参数值']:
 						funcname = rowdata['函数名称']
 						
-						# logme.debug('h=>',funcname)
+						# print('h=>',funcname)
 						if funcname not in (all_function_name):
-							# logme.debug('row=>',rowdata)
-							logme.debug('all_function_name', all_function_name)
+							# print('row=>',rowdata)
+							print('all_function_name', all_function_name)
 							return ('fail', '执行数据页没定义函数[%s],请先定义' % funcname)
 			
 			# 检查变量定义获取方式
@@ -2523,10 +2524,10 @@ class Transformer(object):
 			for rowdata in var_sheet:
 				gain = rowdata['获取方式'].strip()
 				if _is_function_call(gain):
-					logme.debug('gain=>', gain)
+					print('gain=>', gain)
 					methodname = re.findall('(.*?)\(.*?\)', gain)[0]
 					if methodname not in all_function_name:
-						logme.debug('all_function_name', all_function_name)
+						print('all_function_name', all_function_name)
 						
 						return ('fail', '变量定义页没定义函数[%s],请先定义' % methodname)
 			
@@ -2556,9 +2557,9 @@ class Transformer(object):
 		init_cache = self._get_workbook_sheet_cache(self.config_workbook, 'Init')
 		
 		for rowdata in init_cache:
-			# logme.debug('basic_config=>',rowdata)
+			# print('basic_config=>',rowdata)
 			if rowdata['默认对象'].lower().strip() == 'y' and rowdata['对象类型'].lower().strip() == 'interface':
-				# logme.debug('fadfljadfljadajf')
+				# print('fadfljadfljadajf')
 				pv = rowdata['参数']
 				if self._is_xml_h():
 					return {
@@ -2581,7 +2582,7 @@ class Transformer(object):
 			if rowdata['默认对象'].lower().strip() == 'y' and rowdata['对象类型'].lower().strip() == 'interface':
 				pv = rowdata['参数']
 				size = len(pv.split(','))
-				# logme.debug('====www=>',size)
+				# print('====www=>',size)
 				
 				return True if size == 5 else False
 	
@@ -2594,7 +2595,7 @@ class Transformer(object):
 		for rowdata in script_cache:
 			try:
 				rowdatalist = rowdata['脚本全称'].split(',')
-				# logme.debug('脚本全称=>',rowdatalist)
+				# print('脚本全称=>',rowdatalist)
 				
 				path = rowdatalist[0]
 				method = rowdatalist[1]
@@ -2609,7 +2610,7 @@ class Transformer(object):
 					'content_type': (lambda: 'urlencode' if content_type == 'iphone' else content_type)()
 				}
 			except:
-				logme.debug(traceback.format_exc())
+				print(traceback.format_exc())
 				continue;
 		
 		return res
@@ -2636,13 +2637,13 @@ class Transformer(object):
 				
 				k = title_order_map[str(cellindex)]
 				v = row[cellindex]
-				# logme.debug('%s->%s'%(k,v))
+				# print('%s->%s'%(k,v))
 				if 2 == ctype:
 					v = int(v)
 				row_map[k] = v
 			
 			cache.append(row_map)
-		# logme.debug(kv_map)
+		# print(kv_map)
 		return cache
 	
 	def _get_business_sheet_cache(self):
@@ -2671,9 +2672,9 @@ class Transformer(object):
 	
 	def transform(self):
 		
-		logme.debug('【准备数据转化】')
+		print('【准备数据转化】')
 		status, msg = self._check_file_valid()
-		# logme.debug('检查结果=>',status,msg)
+		# print('检查结果=>',status,msg)
 		if status != 'success':
 			return (status, msg)
 		
@@ -2694,7 +2695,7 @@ class Transformer(object):
 			self.act_data = self._get_workbook_sheet_cache(dwb, '执行数据') + self.act_data
 			self.var_data = self._get_workbook_sheet_cache(dwb, '变量定义') + self.var_data
 			
-			logme.debug('【开始转换】接收数据集[%s,%s]' % (dwb, self.config_workbook))
+			print('【开始转换】接收数据集[%s,%s]' % (dwb, self.config_workbook))
 			resultlist = []
 			f4 = self.add_case()
 			f5 = self.add_plan()
@@ -2706,12 +2707,12 @@ class Transformer(object):
 			f3 = self.add_step_data()
 			f6 = self.add_db_con()
 			
-			logme.debug('f1=>', f1)
-			logme.debug('f2=>', f2)
-			logme.debug('f3=>', f3)
-			logme.debug('f4=>', f4)
-			logme.debug('f5=>', f5)
-			logme.debug('f6=>', f6)
+			print('f1=>', f1)
+			print('f2=>', f2)
+			print('f3=>', f3)
+			print('f4=>', f4)
+			print('f5=>', f5)
+			print('f6=>', f6)
 			result.append(f1)
 			result.append(f2)
 			result.append(f3)
@@ -2731,7 +2732,7 @@ class Transformer(object):
 	def _get_header(self, hid, **kws):
 		_f = ('数据编号', '头部说明')
 		c = ''
-		# logme.debug('fdajflda=>',self._get_business_sheet_cache().keys())
+		# print('fdajflda=>',self._get_business_sheet_cache().keys())
 		cache = self._get_business_sheet_cache().get('head_I0')
 		for rowdata in cache:
 			if str(rowdata['数据编号']) == str(hid):
@@ -2764,7 +2765,7 @@ class Transformer(object):
         插入业务数据
         '''
 		try:
-			logme.debug('【开始添加业务数据】')
+			print('【开始添加业务数据】')
 			_meta = ['测试点', 'DB检查数据', 'UI检查数据', '接口检查数据', '数据编号']
 			_m = {
 				'测试点': 'businessname',
@@ -2778,11 +2779,11 @@ class Transformer(object):
 			}
 			
 			##接口业务数据
-			logme.debug('--开始添加接口业务数据')
+			print('--开始添加接口业务数据')
 			
 			for sheetname, cache in self._get_business_sheet_cache().items():
 				
-				logme.debug('sss=>', sheetname, cache)
+				print('sss=>', sheetname, cache)
 				
 				if sheetname.__contains__('head') or sheetname.__contains__('报文说明'):
 					continue;
@@ -2790,8 +2791,8 @@ class Transformer(object):
 				
 				sheet_index = 1  # sheet明细行号
 				for rowdata in cache:
-					# s logme.debug('rowdata=>',rowdata)
-					# logme.debug('=>1')
+					# s print('rowdata=>',rowdata)
+					# print('=>1')
 					
 					xmlcontent = ''
 					params = {}
@@ -2813,12 +2814,12 @@ class Transformer(object):
 					business.businessname = '%s_%s_%s' % (sheetname, sheet_index, self.transform_id)
 					sheet_index += 1
 					
-					# logme.debug('=>2')
+					# print('=>2')
 					for fieldname, value in rowdata.items():
-						# logme.debug('=>3')
+						# print('=>3')
 						try:
 							if fieldname in _m:
-								# logme.debug('=>4')
+								# print('=>4')
 								# if fieldname =='测试点':
 								#     business.businessname="%s_%s"%(value.strip(),self.transform_id)
 								#     #business.businessname="%s"%(value.strip())
@@ -2829,7 +2830,7 @@ class Transformer(object):
 									dck = self._replace_var(value)
 									dck = dck.replace('\n', '')
 									if dck:
-										logme.debug('dbcheck=>', dck)
+										print('dbcheck=>', dck)
 										if dck.__contains__('sleep'):
 											business.db_check = '|'.join(dck.split('|')[1:])
 											business.postposition = dck.split('|')[0]
@@ -2841,9 +2842,9 @@ class Transformer(object):
 									business.itf_check = self._replace_var(value)
 									continue
 							else:
-								# logme.debug('=>5')
+								# print('=>5')
 								##hhhh
-								# logme.debug('==========fdafda=>',self._is_xml_h())
+								# print('==========fdafda=>',self._is_xml_h())
 								if self._is_xml_h():
 									
 									nodeinfo = ''
@@ -2856,14 +2857,14 @@ class Transformer(object):
 								else:
 									params[fieldname] = value
 						except:
-							logme.debug(traceback.format_exc())
+							print(traceback.format_exc())
 					
-					# logme.debug('=>6')
+					# print('=>6')
 					if params.get('json', None):
 						params = params.get('json')
-					# logme.debug('=>7')
+					# print('=>7')
 					params = (str(params)).replace('"', "'").replace('\n', '')
-					# logme.debug('[%s]params=>%s'%(sheet_index,str(params)))
+					# print('[%s]params=>%s'%(sheet_index,str(params)))
 					
 					if xmlcontent == '':
 						business.params = self._replace_var(params, sheet_index + 1, rowindex + 1)
@@ -2874,32 +2875,32 @@ class Transformer(object):
 						business.params = self._replace_var(xmlcontent)
 					
 					business.save()
-					logme.debug('==添加接口业务数据[%s]' % business)
+					print('==添加接口业务数据[%s]' % business)
 					self._businessid_cache['%s:%s' % (sheetname, rowindex + 1)] = business.id
 					rowindex = rowindex + 1
 			
-			logme.debug('---开始添加函数业务数据')
+			print('---开始添加函数业务数据')
 			##函数业务数据
 			aaindex = 0
 			for rowdata in self.act_data:
 				aaindex = aaindex + 1
-				# logme.debug('--尝试添加函数业务数据')
+				# print('--尝试添加函数业务数据')
 				paramfield = rowdata['参数值']
-				# logme.debug('paramfield=>',paramfield)
+				# print('paramfield=>',paramfield)
 				if not paramfield.__contains__('：') and not paramfield.__contains__(':'):
 					# businessname重复校验
 					name = "%s_%s_%s" % (rowdata['测试要点概要'].strip(), str(aaindex), self.transform_id)
 					# name="%s"%(rowdata['测试要点概要'].strip())
 					size = len(list(BusinessData.objects.filter(businessname=name)))
-					# logme.debug('size=>',size)
+					# print('size=>',size)
 					if size > 0:
-						logme.debug('测试点已存在[%s] next' % name)
+						print('测试点已存在[%s] next' % name)
 						continue
 					business = BusinessData()
 					business.businessname = name
 					business.params = self._replace_var(paramfield)
 					business.save()
-					logme.debug('==添加函数业务数据[%s]' % business)
+					print('==添加函数业务数据[%s]' % business)
 			
 			return ('success', '')
 		except:
@@ -2915,19 +2916,19 @@ class Transformer(object):
         3.接口检查数据
         4.数据字段
         '''
-		# logme.debug('【变量转化】=>',old)
+		# print('【变量转化】=>',old)
 		varlist = re.findall('{[ru,].*?}', old)
 		if len(varlist) > 0:
 			for x in varlist:
 				varname = re.findall('{[ru],(.*?)}', x)
-				# logme.debug(varname)
+				# print(varname)
 				if x.__contains__('lv_Signature') and si and li:
 					old = old.replace(x, '{{%s_%s_%s_%s}}' % (str(varname[0]).split('$')[0], si, li, self.transform_id))
-					logme.debug('替换签名变量名=>', '{{%s_%s_%s_%s}}' % (str(varname[0]).split('$')[0], si, li, self.transform_id))
+					print('替换签名变量名=>', '{{%s_%s_%s_%s}}' % (str(varname[0]).split('$')[0], si, li, self.transform_id))
 				else:
 					old = old.replace(x, '{{%s_%s}}' % (varname[0], self.transform_id))
 		
-		# logme.debug('转换后=>',old)
+		# print('转换后=>',old)
 		return old
 	
 	def add_db_con(self):
@@ -2940,7 +2941,7 @@ class Transformer(object):
 			con = None
 			groupid = 0
 			for rowdata in global_sheet:
-				# logme.debug('global_row->',rowdata)
+				# print('global_row->',rowdata)
 				varname = rowdata['变量名称']
 				
 				if 'gv_dbtype' in varname:
@@ -2969,13 +2970,13 @@ class Transformer(object):
 					con.author = User.objects.get(name=self.callername)
 					con.description = "库_%s_%s_%s" % (self.callername, self.transform_id, groupid)
 					
-					logme.debug('新增数据连接=>')
-					logme.debug('dbnaem=>', con.dbname)
-					logme.debug('description=>', con.description)
-					logme.debug('username=>', con.username)
-					logme.debug('password=>', con.password)
-					logme.debug('host=>', con.host)
-					logme.debug('port=>', con.port)
+					print('新增数据连接=>')
+					print('dbnaem=>', con.dbname)
+					print('description=>', con.description)
+					print('username=>', con.username)
+					print('password=>', con.password)
+					print('host=>', con.host)
+					print('port=>', con.port)
 					
 					con.save()
 			return ('success', '')
@@ -2987,7 +2988,7 @@ class Transformer(object):
         添加step
         '''
 		try:
-			logme.debug('【开始添加步骤数据】')
+			print('【开始添加步骤数据】')
 			case = None
 			
 			for k, v in self.act_data_map.items():
@@ -3009,8 +3010,8 @@ class Transformer(object):
 						elif rowdata['参数值'].__contains__('：'):
 							bkname = rowdata['参数值'].split('：')[0]
 						
-						# logme.debug('bkname3=>',rowdata['参数值'].split('：'))
-						# logme.debug('bkname2=>',bkname)
+						# print('bkname3=>',rowdata['参数值'].split('：'))
+						# print('bkname2=>',bkname)
 						
 						##多条
 						if rowdata['参数值'].__contains__('-'):
@@ -3025,7 +3026,7 @@ class Transformer(object):
 							
 							# count=int(end)-int(start)+1
 							for i in range(int(start), int(end) + 1):
-								logme.debug('==多条=')
+								print('==多条=')
 								
 								step = Step()
 								step.temp = ''
@@ -3034,9 +3035,9 @@ class Transformer(object):
 								basic_config = self._get_itf_basic_conifg()
 								detail_config = self._get_itf_detail_config()
 								
-								# logme.debug('基础配置=>',basic_config)
+								# print('基础配置=>',basic_config)
 								#
-								# logme.debug('详细配置=>',detail_config)
+								# print('详细配置=>',detail_config)
 								step.step_type = 'interface'
 								step.body = ''
 								
@@ -3048,12 +3049,12 @@ class Transformer(object):
 									step.content_type = detail_config.get(funcname).get('content_type')
 									step.method = detail_config.get(funcname).get('method')
 								except:
-									logme.debug('配置文件里没找到函数名[%s]称所对应的的配合信息' % funcname)
+									print('配置文件里没找到函数名[%s]称所对应的的配合信息' % funcname)
 								
-								logme.debug('===============start===content_type 负值===================')
+								print('===============start===content_type 负值===================')
 								if self._is_xml_h():
 									
-									logme.debug('==================content_type 负值===================')
+									print('==================content_type 负值===================')
 									if basic_config:
 										step.content_type = 'xml'
 										step.url = 'base_url_%s' % self.transform_id
@@ -3071,22 +3072,22 @@ class Transformer(object):
 												
 												self._has_create_var = True
 										except:
-											# logme.debug('9'*100)
+											# print('9'*100)
 											pass
 								else:
-									logme.debug('==非xml')
-									logme.debug('basic_config=>', basic_config)
+									print('==非xml')
+									print('basic_config=>', basic_config)
 									if basic_config:
-										logme.debug('=有基础配置=')
+										print('=有基础配置=')
 										try:
 											
 											# step.url="%s%s"%(basic_config.get('host',''),detail_config.get(funcname).get('path',''))
 											step.url = "%s%s" % ('{{base_url_%s}}' % self.transform_id,
 											                     detail_config.get(funcname).get('path', ''))
-											# logme.debug('$$'*100)
-											logme.debug('step.url=>', step.url)
+											# print('$$'*100)
+											print('step.url=>', step.url)
 										except:
-											logme.debug(traceback.format_exc())
+											print(traceback.format_exc())
 										##
 										try:
 											
@@ -3101,22 +3102,22 @@ class Transformer(object):
 												
 												self._has_create_var = True
 										except:
-											# logme.debug('9'*100)
+											# print('9'*100)
 											pass
 								
 								is_exist = len(list(Step.objects.filter(description=step.description)))
 								if is_exist == 0:
 									step.save()
-									logme.debug('添加步骤=>', step)
+									print('添加步骤=>', step)
 								else:
 									step = Step.objects.get(description=step.description)
 								
 								##step关联业务数据
 								self.add_case_step_relation(case.id, step.id)
-								logme.debug('--尝试获取业务id=>', '%s_I0_%s_%s' % (bkname, i, self.transform_id))
+								print('--尝试获取业务id=>', '%s_I0_%s_%s' % (bkname, i, self.transform_id))
 								b = BusinessData.objects.get(
 									businessname='%s_I0_%s_%s' % (bkname, i, self.transform_id))
-								logme.debug('--成功获取业务id=>%s' % b)
+								print('--成功获取业务id=>%s' % b)
 								
 								self.add_step_business_relation(step.id, b.id)
 						# self.add_step_bussiness_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
@@ -3124,7 +3125,7 @@ class Transformer(object):
 						
 						# 单条
 						else:
-							logme.debug('===单条===')
+							print('===单条===')
 							step = Step()
 							step.temp = ''
 							step.author = User.objects.get(name=self.callername)
@@ -3138,9 +3139,9 @@ class Transformer(object):
 							basic_config = self._get_itf_basic_conifg()
 							detail_config = self._get_itf_detail_config()
 							
-							# logme.debug('基础配置=>',basic_config)
+							# print('基础配置=>',basic_config)
 							#
-							# logme.debug('详细配置=>',detail_config)
+							# print('详细配置=>',detail_config)
 							step.step_type = 'interface'
 							step.body = ''
 							step.headers = ''
@@ -3152,7 +3153,7 @@ class Transformer(object):
 								step.method = detail_config.get(funcname).get('method')
 							
 							except:
-								logme.debug('配置文件里没找到函数名[%s]称所对应的的配合信息' % funcname)
+								print('配置文件里没找到函数名[%s]称所对应的的配合信息' % funcname)
 							if self._is_xml_h():
 								if basic_config:
 									# step.url='%s:%s'%(basic_config.get('host',''),basic_config.get('port',''))
@@ -3172,7 +3173,7 @@ class Transformer(object):
 											
 											self._has_create_var = True
 									except:
-										# logme.debug('9'*100)
+										# print('9'*100)
 										pass
 							
 							else:
@@ -3193,25 +3194,25 @@ class Transformer(object):
 											
 											self._has_create_var = True
 									except:
-										# logme.debug('9'*100)
+										# print('9'*100)
 										pass
-							# logme.debug('url=>',step.url)
+							# print('url=>',step.url)
 							# step.url=self._replace_var(step.url)
 							
 							is_exist = len(list(Step.objects.filter(description=step.description)))
 							if is_exist == 0:
 								step.save()
-								logme.debug('添加步骤=>', step)
+								print('添加步骤=>', step)
 							else:
 								step = Step.objects.get(description=step.description)
-								logme.debug('已存在步骤[%s]' % step)
+								print('已存在步骤[%s]' % step)
 							
 							##step关联业务数据
 							self.add_case_step_relation(case.id, step.id)
 							
-							logme.debug('bkname=>', bkname)
-							logme.debug('lineindex=>', lineindex)
-							logme.debug('带匹配=>', '%s_I0_%s_%s' % (bkname, lineindex, self.transform_id))
+							print('bkname=>', bkname)
+							print('lineindex=>', lineindex)
+							print('带匹配=>', '%s_I0_%s_%s' % (bkname, lineindex, self.transform_id))
 							business_id = BusinessData.objects.get(
 								businessname='%s_I0_%s_%s' % (bkname, lineindex, self.transform_id)).id
 							self.add_step_business_relation(step.id, business_id)
@@ -3225,7 +3226,7 @@ class Transformer(object):
 						step.author = User.objects.get(name=self.callername)
 						step.step_type = 'function'
 						step.body = func_field_value
-						# logme.debug('functionname=>',step.body)
+						# print('functionname=>',step.body)
 						step.description = "%s_%s_%s" % (rowdata['测试要点概要'].strip(), row_index, self.transform_id)
 						# step.description="%s"%(rowdata['测试要点概要'].strip())
 						try:
@@ -3239,8 +3240,8 @@ class Transformer(object):
 							name = "%s_%s_%s" % (rowdata['测试要点概要'].strip(), row_index, self.transform_id)
 							
 							# l=list(BusinessData.objects.filter(businessname=name))
-							# logme.debug('size=>',len(l))
-							logme.debug('待匹配业务名=>', name)
+							# print('size=>',len(l))
+							print('待匹配业务名=>', name)
 							businessId = BusinessData.objects.get(businessname=name).id
 							# businessId=BusinessData.objects.get(businessname="%s"%rowdata['测试要点概要'].strip()).id
 							self.add_case_step_relation(case.id, step.id)
@@ -3248,13 +3249,13 @@ class Transformer(object):
 						# self.add_case_businss_relation(case.id, businessId)
 						
 						except:
-							logme.debug(traceback.format_exc())
-							logme.debug('函数步骤没找到关联业务数据[%s]' % name)
+							print(traceback.format_exc())
+							print('函数步骤没找到关联业务数据[%s]' % name)
 			
 			time.sleep(1)
 			
 			# genorder(kind='step',parentid=case.id)
-			logme.debug('==添加步骤结束')
+			print('==添加步骤结束')
 			return ('success', '')
 		except:
 			return ('error', '添加步骤异常[%s]' % traceback.format_exc())
@@ -3262,7 +3263,7 @@ class Transformer(object):
 	def add_plan(self):
 		plan = None
 		try:
-			logme.debug('【添加计划】')
+			print('【添加计划】')
 			dsp = '迁移计划_%s' % self.transform_id
 			length = len(list(Plan.objects.filter(description=dsp)))
 			if length == 0:
@@ -3270,7 +3271,7 @@ class Transformer(object):
 				plan.description = dsp
 				plan.author = User.objects.get(name=self.callername)
 				plan.save()
-				logme.debug('=新建计划=>', plan)
+				print('=新建计划=>', plan)
 				
 				#
 				product = None
@@ -3316,14 +3317,14 @@ class Transformer(object):
 					case.description = dsp
 					case.author = User.objects.get(name=self.callername)
 					case.save()
-					logme.debug('【添加用例】%s' % case.description)
+					print('【添加用例】%s' % case.description)
 			return ('success', '')
 		
 		except:
 			return ('error', '添加用例异常=>%s' % traceback.format_exc())
 	
 	def add_plan_case_relation(self):
-		# logme.debug('【关联计划和用例】')
+		# print('【关联计划和用例】')
 		for k in self.act_data_map:
 			plan = list(Plan.objects.filter(description='迁移计划_%s' % (self.transform_id)))[0]
 			# plan=list(Plan.objects.filter(description='迁移计划_%s'%self.transform_id))[0]
@@ -3339,7 +3340,7 @@ class Transformer(object):
 	
 	def add_case_step_relation(self, case_id, step_id):
 		from .cm import getnextvalue
-		# logme.debug('【关联用例和业务数据】')
+		# print('【关联用例和业务数据】')
 		# step=Step.objects.get(id=step_id)
 		# case=Case.objects.get(id=case_id)
 		# case.businessdatainfo.add(business)
@@ -3356,7 +3357,7 @@ class Transformer(object):
 	
 	def add_case_step_relation2(self, case_id, workbook, paramfieldvalue):
 		
-		logme.debug('【步骤关联业务数据】')
+		print('【步骤关联业务数据】')
 		case = Case.objects.get(id=case_id)
 		sheetname = ''
 		
@@ -3394,7 +3395,7 @@ class Transformer(object):
 					business = BusinessData.objects.get(businessname="%s_%s" % (testpoint, self.transform_id))
 				# business=BusinessData.objects.get(businessname="%s"%testpoint)
 				except:
-					logme.debug('业务名称[%s_%s]查找返回的业务数据有多条' % (testpoint, self.transform_id))
+					print('业务名称[%s_%s]查找返回的业务数据有多条' % (testpoint, self.transform_id))
 					business = list(BusinessData.objects.filter(businessname="%s_%s" % (testpoint, self.transform_id)))[
 						0]
 			# business=list(BusinessData.objects.filter(businessname="%s"%testpoint))[0]
@@ -3420,7 +3421,7 @@ class Transformer(object):
         '''
 		# step=Step.objects.get(id=step_id)
 		# business=BusinessData.objects.get(id=business_id)
-		logme.debug('add_step_business_relation')
+		print('add_step_business_relation')
 		from .cm import getnextvalue
 		
 		order = Order()
@@ -3430,7 +3431,7 @@ class Transformer(object):
 		order.author = User.objects.get(name=self.callername)
 		order.value = getnextvalue(order.kind, order.main_id)
 		order.save()
-		logme.debug('==关联函数步骤和测试点[%s]' % order)
+		print('==关联函数步骤和测试点[%s]' % order)
 	
 	# step.businessdatainfo.add(business)
 	
@@ -3442,7 +3443,7 @@ class Transformer(object):
 		from .cm import getnextvalue
 		
 		try:
-			logme.debug('add_step_business_relation2')
+			print('add_step_business_relation2')
 			
 			step = Step.objects.get(id=step_id)
 			sheetname = ''
@@ -3459,7 +3460,7 @@ class Transformer(object):
 			elif paramfieldvalue.__contains__(':'):
 				rangestr = paramfieldvalue.split(':')[1]
 			
-			logme.debug('f1==>', rangestr)
+			print('f1==>', rangestr)
 			
 			fit = []
 			start = ''
@@ -3473,7 +3474,7 @@ class Transformer(object):
 				start = rangestr
 				fit = [x for x in cache if int(x['数据编号']) == int(start)]
 			
-			logme.debug('f2=>', fit)
+			print('f2=>', fit)
 			for x in fit:
 				testpoint = x.get('测试点', None)
 				if testpoint:
@@ -3481,12 +3482,12 @@ class Transformer(object):
 						business = BusinessData.objects.get(businessname='%s_%s' % (testpoint, self.transform_id))
 					# business=BusinessData.objects.get(businessname='%s'%testpoint)
 					except:
-						logme.debug('业务名称[%s_%s]查找返回的业务数据有多条' % (testpoint, self.transform_id))
+						print('业务名称[%s_%s]查找返回的业务数据有多条' % (testpoint, self.transform_id))
 						business = \
 							list(BusinessData.objects.filter(businessname='%s_%s' % (testpoint, self.transform_id)))[0]
 				# business=list(BusinessData.objects.filter(businessname='%s'%testpoint))[0]
 				else:
-					logme.debug('-查找测试点=>%s_I0%s_%s' % (sheetname, int(x.get('数据编号')), self.transform_id))
+					print('-查找测试点=>%s_I0%s_%s' % (sheetname, int(x.get('数据编号')), self.transform_id))
 					business = BusinessData.objects.get(
 						businessname="%s_I0%s_%s" % (sheetname, x.get('数据编号'), self.transform_id))
 				# business=BusinessData.objects.get(businessname="%s%s"%(sheetname,x.get('数据编号')))
@@ -3499,10 +3500,10 @@ class Transformer(object):
 				order.value = getnextvalue(order.kind, order.main_id)
 				order.save()
 				
-				logme.debug('==步骤关联测试点[%s]' % order)
+				print('==步骤关联测试点[%s]' % order)
 		# step.businessdatainfo.add(business)
 		except:
-			logme.debug(traceback.format_exc())
+			print(traceback.format_exc())
 	
 	def add_var(self):
 		try:
@@ -3530,14 +3531,14 @@ class Transformer(object):
 						var.value = self._get_may_sql_field_value(value)
 					var.author = User.objects.get(name=self.callername)
 					var.save()
-					logme.debug('==添加变量[%s]' % var)
+					print('==添加变量[%s]' % var)
 			
-			logme.debug('签名信息=>', signmethodname)
+			print('签名信息=>', signmethodname)
 			if signmethodname:
 				##签名变量
 				si = 0
 				li = 0
-				logme.debug('--开始处理签名变量')
+				print('--开始处理签名变量')
 				for dwb in self.data_workbook:
 					sheets = dwb.sheet_names()
 					for sheetname in sheets:
@@ -3565,7 +3566,7 @@ class Transformer(object):
 										var.gain = "%s(%s)" % (signmethodname, ','.join(f_pa))
 										var.author = User.objects.get(name=self.callername)
 										var.save()
-										logme.debug('--新建签名变量=>%s' % var)
+										print('--新建签名变量=>%s' % var)
 			
 			return ('success', '')
 		except:
@@ -3576,7 +3577,7 @@ class Transformer(object):
         '''
 		is_first = True
 		sqlmatch = re.findall(r'(select|update|delete|insert).*(from|set|into).+(where){0,1}.*', old)
-		# logme.debug(sqlmatch)
+		# print(sqlmatch)
 		if sqlmatch:
 			groupid = 1
 			new_sql_list = []
@@ -3590,7 +3591,7 @@ class Transformer(object):
 					if '@' in sql:
 						groupid = sql.split('@')[1]
 						length = len(groupid)
-						# logme.debug('len=>',length)
+						# print('len=>',length)
 						new_sql_list.append(sql[0:-int(length + 1)])
 					else:
 						new_sql_list.append(sql)
@@ -3640,7 +3641,7 @@ class Transformer(object):
 	def _rollback(self):
 		"""
         """
-		logme.debug('==转换失败,开始回滚操作')
+		print('==转换失败,开始回滚操作')
 		# order表删除
 		plan = Plan.objects.get(description='迁移计划_%s' % self.transform_id)
 		planid = plan.id
@@ -3662,7 +3663,7 @@ class Transformer(object):
 			if db.description.__contains__(self.transform_id):
 				db.delete()
 		
-		logme.debug('=结束回滚操作】')
+		print('=结束回滚操作】')
 
 
 class DataMove:
@@ -3712,7 +3713,7 @@ class DataMove:
 	
 	def export_plan(self, planid, export_flag, version=2):
 		
-		# logme.debug(version,type(version),version==2)
+		# print(version,type(version),version==2)
 		return self._export_plan_new(planid, export_flag) if version == 2 else self._export_plan_old(planid,
 		                                                                                             export_flag)
 	
@@ -3733,14 +3734,14 @@ class DataMove:
 		try:
 			if dbid is not None:
 				dbcon = DBCon.objects.get(id=dbid)
-				logme.debug()
+				print()
 			else:
 				sep = gain.split('@')
 				if sep[-1] in namelist:
 					return
 				dbcon = DBCon.objects.get(scheme=scheme, description=sep[-1])
 		except:
-			logme.debug('库中没找到连接 略过')
+			print('库中没找到连接 略过')
 		
 		self._data['entity']['dbcons'].append({
 			'id': dbcon.id,
@@ -3762,7 +3763,7 @@ class DataMove:
 				vars = Variable.objects.filter(key=key)
 				for var in vars:
 					planids = Tag.objects.get(var=var).planids
-					logme.debug("okokokokokok", var, planids)
+					print("okokokokokok", var, planids)
 					if Plan.objects.get(id=planid).description in planids and planid in planids:
 						usevar = var
 					else:
@@ -3796,7 +3797,7 @@ class DataMove:
 									'authorname': v.author.name
 								})
 			except:
-				logme.debug('库中没找到变量 略过=>', key)
+				print('库中没找到变量 略过=>', key)
 	
 	def _get_bussiness_id(self):
 		return '%s_%s' % ('vid', EncryptUtils.md5_encrypt(str(datetime.datetime.now())))
@@ -3827,7 +3828,7 @@ class DataMove:
 			if step.db_id != '':
 				try:
 					dbid = DBCon.objects.get(scheme=self._data['entity']['schemename'], description=step.db_id).id
-					logme.debug('234', dbid)
+					print('234', dbid)
 					self._add_dbcon('', dbid=dbid)
 				except:
 					pass
@@ -3838,7 +3839,7 @@ class DataMove:
 			c.append((str(step.id), ordervalue))
 			self._data['relation']['case_step'][str(case.id)] = list(set(c))
 			
-			# logme.debug('%s=>%s'%(step.description,step.step_type))
+			# print('%s=>%s'%(step.description,step.step_type))
 			
 			businesslist = getchild('step_business', step.id)
 			
@@ -3851,7 +3852,7 @@ class DataMove:
 				itf_check = business.itf_check if business.itf_check is not None else ''
 				db_check = business.db_check if business.db_check is not None else ''
 				params = business.params if business.params is not None else ''
-				logme.debug("123iijij", business, params)
+				print("123iijij", business, params)
 				businessd['itf_check'] = itf_check
 				businessd['db_check'] = db_check
 				businessd['params'] = params
@@ -3859,7 +3860,7 @@ class DataMove:
 				
 				self._varkeys = self._varkeys + varnames
 				
-				logme.debug('bname=>', businessd['businessname'])
+				print('bname=>', businessd['businessname'])
 				busnamelist = [business.get('businessname') for business in self._data['entity']['businessdatas']]
 				##
 				if businessd['businessname'] not in busnamelist:
@@ -3880,15 +3881,15 @@ class DataMove:
 					
 					if builtin is False:
 						status, res = BusinessData.gettestdataparams(business.id)  ###????????????????
-						logme.debug('%s=>%s' % (business.businessname, business.params))
+						print('%s=>%s' % (business.businessname, business.params))
 						if status is not 'success':
 							return JsonResponse(simplejson(code=3, msg=str(res)))
 						
 						params = ','.join(res)
 						call_str = '%s(%s)' % (step.body.strip(), params)
 						flag = Fu.tzm_compute(call_str, '(.*?)\((.*?)\)')
-						logme.debug('1call_str=>', call_str)
-						# logme.debug('falg=>',flag)
+						print('1call_str=>', call_str)
+						# print('falg=>',flag)
 						funcs = list(Function.objects.filter(flag=flag))
 						if len(funcs) > 1:
 							return JsonResponse(simplejson(code=44, msg='找到多个匹配的自定义函数 请检查'))
@@ -3975,7 +3976,7 @@ class DataMove:
 				self._data['relation']['plan_case'][str(planid)] = list(set(a))
 				self._add_case_relation_data(case)
 			
-			logme.debug('123', self._varkeys)
+			print('123', self._varkeys)
 			# 统一导出变量
 			for key in self._varkeys:
 				self._add_var(key, planid)
@@ -4134,17 +4135,17 @@ class DataMove:
 			callstr = "len(list(%s.objects.filter(%s='%s')))" % (classstr, key, oldvalue)
 		length = eval(callstr)
 		if length > 0:
-			logme.debug('9999999', classstr)
+			print('9999999', classstr)
 			if classstr in ('Variable', 'DBCon'):
 				return 'fail', '%s[%s]已存在 略过导入请手动调整' % (_M.get(classstr, ''), oldvalue)
 			
 			elif classstr == 'BusinessData':
-				# logme.debug('yes=>',classstr)
+				# print('yes=>',classstr)
 				return ('success', oldvalue)
 			else:
 				# final='%s#%s'%(oldvalue,flag)
 				final = oldvalue
-				logme.debug('%s重复处理=>%s' % (_M.get(classstr), final))
+				print('%s重复处理=>%s' % (_M.get(classstr), final))
 				return ('success', final)
 		else:
 			return ('success', oldvalue)
@@ -4157,7 +4158,7 @@ class DataMove:
 			b = b + byte
 		bs = b.decode()
 		bl = eval(bs)
-		logme.debug('【开始导入数据】 ')
+		print('【开始导入数据】 ')
 		# 导入实体类
 		scheme = bl['entity']['schemename']
 		plan = bl['entity']['plan']
@@ -4222,7 +4223,7 @@ class DataMove:
 		for case in cases:
 			caseo = Case()
 			_cache['case_%s' % case.get('id')] = caseo
-			logme.debug('=缓存case=>', 'case_%s' % case.get('id'))
+			print('=缓存case=>', 'case_%s' % case.get('id'))
 			status, caseo.description = self._hanlde_repeat_name("description=%s" % case.get('description'), 'Case',
 			                                                     flag)
 			caseo.db_id = case.get('db_id')
@@ -4319,12 +4320,12 @@ class DataMove:
 		
 		##dbcons
 		for con in dbcons:
-			logme.debug('-----数据连接导入-----')
+			print('-----数据连接导入-----')
 			cono = DBCon()
 			_cache['dbcon_%s' % con.get('id')] = cono
 			status, cono.description = self._hanlde_repeat_name("description=%s" % con.get('description'), 'DBCon',
 			                                                    flag, scheme)
-			logme.debug(status, cono.description)
+			print(status, cono.description)
 			if status is not 'success':
 				del _cache['dbcon_%s' % con.get('id')]
 				_msg.append(cono.description)
@@ -4389,7 +4390,7 @@ class DataMove:
 		case_case = bl['relation']['case_case']
 		step_businesss = bl['relation']['step_business']
 		
-		logme.debug('[step_businesss]=>%s' % step_businesss)
+		print('[step_businesss]=>%s' % step_businesss)
 		##
 		for k, vs in plan_cases.items():
 			plan = _cache.get('plan_%s' % k)
@@ -4416,10 +4417,10 @@ class DataMove:
 					order.save()
 		
 		##
-		logme.debug('case_step')
+		print('case_step')
 		for k, vs in case_step.items():
 			case = _cache.get('case_%s' % k)
-			logme.debug('查询case缓存=>', 'case_%s' % k)
+			print('查询case缓存=>', 'case_%s' % k)
 			for v, ordervalue in vs:
 				step = _cache.get('step_%s' % v)
 				order = Order()
@@ -4442,7 +4443,7 @@ class DataMove:
 					order.author = authoro
 					order.save()
 		##
-		logme.debug('case_case')
+		print('case_case')
 		for k, vs in case_case.items():
 			case = _cache.get('case_%s' % k)
 			for v, ordervalue in vs:
@@ -4469,17 +4470,17 @@ class DataMove:
 					order.author = authoro
 					order.save()
 					
-					logme.debug(traceback.format_exc())
+					print(traceback.format_exc())
 		
 		##
-		logme.debug('[step_businesss]')
+		print('[step_businesss]')
 		for k, vs in step_businesss.items():
 			step = _cache.get('step_%s' % k)
-			logme.debug('[1]=>')
+			print('[1]=>')
 			for v, ordervalue in vs:
-				logme.debug('[2]=>')
+				print('[2]=>')
 				business = _cache.get('business_%s' % v)
-				logme.debug('[business]=>', business)
+				print('[business]=>', business)
 				order = Order()
 				order.kind = 'step_business'
 				order.main_id = step.id
@@ -4504,7 +4505,7 @@ class DataMove:
 					order.author = authoro
 					order.save()
 				
-				logme.debug('[建议步骤测试点关联]=>%s' % order)
+				print('[建议步骤测试点关联]=>%s' % order)
 		
 		# 处理回调信息
 		callbackmsg = ''

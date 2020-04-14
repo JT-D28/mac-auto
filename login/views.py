@@ -42,7 +42,7 @@ def index(request):
 
 
 def initDataupdate():
-	logme.warning('开始更新旧的数据')
+	print('开始更新旧的数据')
 	variables = Variable.objects.all()
 	for var in variables:
 		if not Tag.objects.filter(var=var).exists():
@@ -53,16 +53,16 @@ def initDataupdate():
 			tag.isglobal = 1
 			tag.save()
 			time.sleep(0.001)
-			logme.warning('变量' + str(var.id) + '更新成功')
-	logme.warning('变量tag更新完成')
+			print('变量' + str(var.id) + '更新成功')
+	print('变量tag更新完成')
 	dbcons = DBCon.objects.all()
 	for dbcon in dbcons:
 		if dbcon.scheme is None or dbcon.scheme == '':
 			dbcon.scheme = '全局'
 			dbcon.save()
 			time.sleep(0.001)
-			logme.warning('数据连接' + str(dbcon.id) + '更新成功')
-	logme.warning('数据连接更新完成')
+			print('数据连接' + str(dbcon.id) + '更新成功')
+	print('数据连接更新完成')
 	plans = Plan.objects.all()
 	for plan in plans:
 		try:
@@ -72,15 +72,15 @@ def initDataupdate():
 					plan.db_id = description if description is not None else ''
 					plan.schemename = '全局'
 					plan.save()
-					logme.warning('计划' + str(plan.id) + '更新成功')
+					print('计划' + str(plan.id) + '更新成功')
 				else:
 					plan.db_id = ''
 					plan.schemename = '全局'
 					plan.save()
-				logme.warning('计划' + str(plan.id) + '更新成功')
+				print('计划' + str(plan.id) + '更新成功')
 		except:
-			logme.warning(traceback.format_exc())
-	logme.warning('计划更新完成')
+			print(traceback.format_exc())
+	print('计划更新完成')
 	cases = mm.Case.objects.all()
 	for case in cases:
 		try:
@@ -88,43 +88,43 @@ def initDataupdate():
 			if dbid.isdigit():
 				case.db_id = DBCon.objects.get(id=dbid).description
 				case.save()
-				logme.warning('用例' + str(case.id) + '更新成功')
+				print('用例' + str(case.id) + '更新成功')
 		except:
 			if dbid is None:
 				case.db_id = ''
 				case.save()
-				logme.warning('用例' + str(case.id) + '更新成功')
+				print('用例' + str(case.id) + '更新成功')
 			else:
-				logme.warning(traceback.format_exc())
-				logme.warning('用例' + str(case.id) + '更新失败')
+				print(traceback.format_exc())
+				print('用例' + str(case.id) + '更新失败')
 	steps = Step.objects.all()
 	for step in steps:
 		try:
 			if step.db_id.isdigit():
 				step.db_id = DBCon.objects.get(id=step.db_id).description
 				step.save()
-				logme.warning('步骤' + str(step.id) + '更新成功')
+				print('步骤' + str(step.id) + '更新成功')
 		except:
 			if step.db_id is None:
 				step.db_id = ''
 				step.save()
-				logme.warning('步骤' + str(step.id) + '更新成功')
+				print('步骤' + str(step.id) + '更新成功')
 			else:
-				logme.warning(traceback.format_exc())
-				logme.warning('步骤' + str(step.id) + '更新失败')
-	logme.warning('步骤的dbid更新完成')
-	logme.warning('旧数据更新结束')
+				print(traceback.format_exc())
+				print('步骤' + str(step.id) + '更新失败')
+	print('步骤的dbid更新完成')
+	print('旧数据更新结束')
 
 def clearRedisforUser(username):
 	pool = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0, decode_responses=True)
 	con = redis.Redis(connection_pool=pool)
 	try:
 		keys = con.keys("console.msg::%s::*" % (username))
-		logme.warning('清理用户【{}】redis缓存'.format(username))
+		print('清理用户【{}】redis缓存'.format(username))
 		for elem in con.keys():
 			con.delete(elem)
 	except:
-		logme.warning('redis没有正常连接')
+		print('redis没有正常连接')
 
 
 
@@ -143,15 +143,15 @@ def login(request):
 				request.session.set_expiry(14400)
 				request.session['is_login'] = True
 				request.session['username'] = username
-				logme.warning('用户登录成功：{}\t{}'.format(user.name, user.password))
+				print('用户登录成功：{}\t{}'.format(user.name, user.password))
 				clearRedisforUser(username)
 				return JsonResponse({'code':0,'msg':'登录成功'})
 			else:
 				message = '密码错误'
-				logme.warning('用户密码错误：{}\t{}'.format(user.name, user.password))
+				print('用户密码错误：{}\t{}'.format(user.name, user.password))
 		except:
 			message = '用户不存在'
-			logme.warning(message)
+			print(message)
 		return JsonResponse({'code':1,'msg':message})
 
 	if request.session.get('is_login', None):
@@ -163,7 +163,7 @@ def login(request):
 
 
 def logout(request):
-	logme.warning('用户【{}】退出登录'.format(request.session.get('username', None)))
+	print('用户【{}】退出登录'.format(request.session.get('username', None)))
 	request.session.flush()
 	return redirect("/account/login/")
 
@@ -177,7 +177,7 @@ def queryaccount(request):
 	searchvalue = request.GET.get('searchvalue')
 	res = None
 	if searchvalue:
-		logme.warning("变量查询条件=>"+searchvalue)
+		print("变量查询条件=>"+searchvalue)
 		res = list(User.objects.filter(Q(name__icontains=searchvalue)))
 	else:
 		res = list(User.objects.all())
@@ -199,10 +199,10 @@ def addaccount(request):
 		user.name = request.POST.get('username')
 		user.password = EncryptUtils.md5_encrypt(request.POST.get('password'))
 		user.save()
-		logme.warning("用户【{}】新增成功".format(user.name))
+		print("用户【{}】新增成功".format(user.name))
 		msg = '操作成功'
 	except:
-		logme.warning(traceback.format_exc())
+		print(traceback.format_exc())
 		code = 1
 		msg = '操作失败'
 	
@@ -218,12 +218,12 @@ def delaccount(request):
 			user = User.objects.get(id=id_)
 			user.delete()
 		msg = '操作成功'
-		logme.warning("用户【{}】删除成功".format(user.name))
+		print("用户【{}】删除成功".format(user.name))
 	except:
 		error = traceback.format_exc()
 		code = 4
 		msg = '操作异常[%s]' % error
-		logme.warning(msg)
+		print(msg)
 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
@@ -237,7 +237,7 @@ def queryoneaccount(request):
 		return JsonResponse(jsonstr, safe=False)
 	except:
 		msg = '操作异常[%s]' % traceback.format_exc()
-		logme.warning(msg)
+		print(msg)
 		return JsonResponse(simplejson(code=4, msg=msg), safe=False)
 
 
@@ -250,11 +250,11 @@ def editaccount(request):
 		user.password = request.POST.get('password')
 		user.save()
 		msg = '操作成功'
-		logme.warning("用户【{}】账号信息修改成功".format(user.name,user.password))
+		print("用户【{}】账号信息修改成功".format(user.name,user.password))
 	except:
 		code = 4
 		msg = '操作异常[%s]' % traceback.format_exc()
-		logme.warning(msg)
+		print(msg)
 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 

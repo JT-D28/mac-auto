@@ -10,6 +10,8 @@ import re
 import time
 import logging, traceback
 import os
+
+from ME2.settings import logme
 from manager import models
 from .context import get_top_common_config, viewcache, getRunningInfo
 
@@ -29,13 +31,13 @@ class Mysqloper:
 		if conname is None:
 			raise RuntimeError('传入配置错误 未知数据库连接名！')
 		
-		logme.debug('===查询和使用配置方案[%s]数据库[%s]的配置信息' % (scheme, configname))
+		print('===查询和使用配置方案[%s]数据库[%s]的配置信息' % (scheme, configname))
 		
 		# c=Mysqloper._pool.get(str(conname),None)
 		c = None
 		if c is not None:
 			
-			logme.debug("=>从连接池获取到一个可用配置 =>")
+			print("=>从连接池获取到一个可用配置 =>")
 			conn = c
 			return ('success', conn)
 		
@@ -43,7 +45,7 @@ class Mysqloper:
 			
 			try:
 				
-				# logme.debug(len(conname),len(conname.strip()))
+				# print(len(conname),len(conname.strip()))
 				dbcon = models.DBCon.objects.get(description=conname.strip(), scheme=scheme)
 				
 				self.dbtype = dbcon.kind
@@ -55,12 +57,12 @@ class Mysqloper:
 				self.user = dbcon.username
 				self.pwd = dbcon.password
 				
-				# logme.debug("=>没查到可用配置,准备新配一个")
-				logme.debug("数据库配置所属方案=>", dbcon.scheme)
-				logme.debug("数据库类型=>", self.dbtype)
-				logme.debug("数据库名(服务名|SID)=>", self.dbname)
-				logme.debug("数据库地址=>", self.host, self.port)
-				logme.debug("数据库账号=>", self.user, self.pwd)
+				# print("=>没查到可用配置,准备新配一个")
+				print("数据库配置所属方案=>", dbcon.scheme)
+				print("数据库类型=>", self.dbtype)
+				print("数据库名(服务名|SID)=>", self.dbname)
+				print("数据库地址=>", self.host, self.port)
+				print("数据库账号=>", self.user, self.pwd)
 				
 				if self.dbtype.lower() == 'mysql':
 					import pymysql
@@ -96,15 +98,15 @@ class Mysqloper:
 					conn = pg2.connect(database=self.dbname, user=self.user, password=self.pwd, host=self.host,
 					                   port=int(self.port))
 				
-				logme.debug("连接成功！")
+				print("连接成功！")
 				#:
 				Mysqloper._pool[str(conname)] = conn
 				
 				return ('success', conn)
 			except Exception as e:
-				logme.debug("数据库配置名=>", conname, scheme)
+				print("数据库配置名=>", conname, scheme)
 				error = traceback.format_exc()
-				logme.debug(error)
+				print(error)
 				return ('error', ("数据库连接失败 请检查配置方案[%s]下的数据库[%s]是否正确配置" % (scheme, configname)))
 	
 	def db_commit(self):
@@ -124,23 +126,23 @@ class Mysqloper:
 	def db_execute2(self, sql, taskid=None, callername=None):
 		
 		reslist = []
-		logme.debug('db_execute2执行：', sql)
-		logme.debug('##' * 100)
+		print('db_execute2执行：'+sql)
+		print('##' * 100)
 		try:
 			sqls = sql.split("@")[0].split(";")
 			conname = sql.split('@')[1]
 			for sql in sqls:
-				# logme.debug(type(sql),sql)
-				# logme.debug(type(conname),conname)
+				# print(type(sql),sql)
+				# print(type(conname),conname)
 				res, msg = self.db_execute("%s@%s" % (sql, conname), taskid=taskid, callername=callername)
-				# logme.debug(sql)
+				# print(sql)
 				reslist.append(msg)
 				if res is not 'success':
 					return res, msg
 			return ('success', str(reslist))
 		
 		except:
-			logme.debug(traceback.format_exc())
+			print(traceback.format_exc())
 			return ('error', 'sql[%s]执行报错[%s]@' % (sql, traceback.format_exc()))
 	
 	def db_execute(self, sql, taskid=None, callername=None):
@@ -161,7 +163,7 @@ class Mysqloper:
 			dbnamecache = get_top_common_config(taskid)
 			scheme = getRunningInfo(planid=base64.b64decode(taskid).decode().split('_')[0], type='dbscheme')
 			if dbnamecache == conname:
-				logme.debug('使用数据库缓存配置')
+				print('使用数据库缓存配置')
 				conname = dbnamecache
 			
 			msg, self.conn = self.db_connect(conname, scheme)
@@ -172,7 +174,7 @@ class Mysqloper:
 			cur = self.conn.cursor()  # 获取一个游标
 			sql = sql.replace(chr(13), '').replace(chr(10), '').strip()
 			self.sqlcount += 1
-			# logme.debug('sqlfda=>',sql,len(sql),len(sql.strip()))
+			# print('sqlfda=>',sql,len(sql),len(sql.strip()))
 			cur.execute(str(sql))
 			
 			##查询sql时候
@@ -181,7 +183,10 @@ class Mysqloper:
 				# for cs in range(15):
 				data = cur.fetchall()
 				data = list(data)
-				logme.debug("sql[%s]查询结果=>%s" % (sql.lower(), data))
+				viewcache(taskid,callername,None,"[<span style='color:#009999;'>%s</span>]执行sql <span "
+				                                 "style='color:#009999;'>%s</span> 结果为 <span "
+				                                 "style='color:#009999;'>%s</span>" % (conname, sql.lower(), sqlresult))
+				print("sql[%s]执行结果=>%s" % (sql.lower(), data))
 				
 				if data and len(data) > 0:
 					# [('f1','f2'),()]
@@ -210,7 +215,7 @@ class Mysqloper:
 			
 			msg = "[<span style='color:#009999;'>%s</span>]执行sql <span style='color:#009999;'>%s</span> 结果为 <span style='color:#009999;'>%s</span>" % (
 				conname, sql, sqlresult)
-			# logme.debug(msg)
+			# print(msg)
 			viewcache(taskid, callername, None, msg)
 			
 			cur.close()
@@ -218,9 +223,9 @@ class Mysqloper:
 			return ('success', sqlresult)
 		
 		except Exception as ee:
-			# traceback.logme.debug_exc()
+			# traceback.print_exc()
 			# return RuntimeError('执行sql[%s],发生未知错误[%s].'%(sql,str(ee)))
-			logme.debug(traceback.format_exc())
+			print(traceback.format_exc())
 			return ('error', "数据库[%s]执行sql[%s]发生异常:\n[%s]" % (conname, sql, traceback.format_exc()))
 
 

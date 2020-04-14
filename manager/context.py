@@ -52,7 +52,7 @@ def get_operate_name(interfacename):
 
 	'''
 	interfacename = interfacename.split('/')[-1]
-	logme.debug('interfacename=>', interfacename)
+	print('interfacename=>', interfacename)
 	a = ''
 	b = ''
 	for _ in _OPERATION['symbol']:
@@ -65,8 +65,8 @@ def get_operate_name(interfacename):
 			b = _OPERATION['entity'][_]
 			break;
 	
-	# logme.debug('a=>',a)
-	# logme.debug('b=>',b)
+	# print('a=>',a)
+	# print('b=>',b)
 	return ''.join([a, b])
 
 
@@ -96,7 +96,7 @@ def get_friendly_msg(msg0, kind='all'):
 	if 'all' == kind:
 		for k1, v1 in _friendly_map.items():
 			for k2, v2 in v1.items():
-				logme.debug('msg0=>', msg0)
+				print('msg0=>', msg0)
 				if msg0.__contains__(k2):
 					return v2
 		return msg0
@@ -118,7 +118,7 @@ _session_context_manager = dict()
 def get_task_session(key):
 	s = _session_context_manager.get(key, requests.session())
 	_session_context_manager[key] = s
-	# logme.debug('session=>',s)
+	# print('session=>',s)
 	return s
 
 
@@ -138,12 +138,12 @@ _task_context_manager = dict()
 def get_top_common_config(taskid, kind='db'):
 	cache = _task_context_manager.get(taskid, {})
 	dbcache = cache.get(kind, None)
-	logme.debug('===获得缓存通用配置 %s->%s=>%s' % (taskid, kind, dbcache))
+	print('===获得缓存通用配置 %s->%s=>%s' % (taskid, kind, dbcache))
 	return dbcache
 
 
 def set_top_common_config(taskid, value, kind='db', src=None):
-	logme.debug('===[%s]设置缓存通用配置%s->%s=>%s' % (src, taskid, kind, value))
+	print('===[%s]设置缓存通用配置%s->%s=>%s' % (src, taskid, kind, value))
 	cache = _task_context_manager.get(taskid, {})
 	dbcache = cache.get(kind, None)
 	# if dbcache is None:  加上以后优先级变成 计划>用例。。。
@@ -164,7 +164,7 @@ def _getvid():
 
 
 # def _addtestdata(callername, stepid, adddata):
-# 	# logme.debug('alt=>',adddata)
+# 	# print('alt=>',adddata)
 # 	vid = _getvid()
 # 	testdata = models.BusinessData()
 # 	testdata.id = vid
@@ -172,14 +172,14 @@ def _getvid():
 # 	testdata.itf_check = adddata.get('itf_check', '')
 # 	testdata.db_check = adddata.get('db_check', '')
 # 	testdata.params = adddata.get('params', '')
-# 	logme.debug('参数信息=>', testdata.params)
+# 	print('参数信息=>', testdata.params)
 
 # 	cur = querytestdata(callername, stepid, trigger='add')
 # 	cur.append(testdata)
 # 	_settestdata(callername, stepid, cur)
 
 # 	res = querytestdata(callername, stepid, trigger='www')
-# 	logme.debug('res=>', [x.params for x in res])
+# 	print('res=>', [x.params for x in res])
 
 
 # def _copytestdata(callername, stepid, vid):
@@ -188,7 +188,7 @@ def _getvid():
 
 # 	copyit = None
 # 	for business in cur:
-# 		logme.debug('curbit=>', business.id)
+# 		print('curbit=>', business.id)
 # 		if str(business.id) == str(vid):
 # 			copyit = models.BusinessData()
 # 			copyit.id = _getvid()
@@ -197,37 +197,37 @@ def _getvid():
 # 			copyit.db_check = business.db_check
 # 			copyit.params = business.params
 # 			cur.append(copyit)
-# 			logme.debug('[复制测试数据]vid=%s' % vid)
+# 			print('[复制测试数据]vid=%s' % vid)
 # 			_settestdata(callername, stepid, cur)
 # 			return
 
-# 	logme.debug('[复制测试数据]没发现指定复制对象 vid=%s' % vid)
+# 	print('[复制测试数据]没发现指定复制对象 vid=%s' % vid)
 
 
 # def _settestdata(callername, stepid, setdata):
 # 	try:
 # 		key = "%s_%s" % (callername, stepid)
 # 		_user_step_testdata_manager[key] = setdata
-# 		logme.debug("[设置缓存]key=%s value=%s" % (key, str(setdata)))
+# 		print("[设置缓存]key=%s value=%s" % (key, str(setdata)))
 
 # 	except:
-# 		logme.debug("[设置缓存]异常")
-# 		logme.debug(traceback.format_exc())
+# 		print("[设置缓存]异常")
+# 		print(traceback.format_exc())
 
 
 # def _deltestdata(callername, stepid, vids):
 # 	cur = querytestdata(callername, stepid, trigger='del')
 # 	curtmp = copy.deepcopy(cur)
-# 	logme.debug('删除前缓存=>', cur, len(cur))
-# 	logme.debug('需要删除的业务id=>', vids)
+# 	print('删除前缓存=>', cur, len(cur))
+# 	print('需要删除的业务id=>', vids)
 # 	for x in cur:
-# 		# logme.debug('id=>',str(x.id))
+# 		# print('id=>',str(x.id))
 # 		if str(x.id) in vids:
-# 			logme.debug('移除id=>', str(x.id))
+# 			print('移除id=>', str(x.id))
 # 			curtmp.remove(x)
 # 	# else:
-# 	# 	logme.debug('忽略id=>',str(x.id),len(str(x.id)))
-# 	logme.debug('删除后缓存=>', curtmp)
+# 	# 	print('忽略id=>',str(x.id),len(str(x.id)))
+# 	print('删除后缓存=>', curtmp)
 
 # 	_settestdata(callername, stepid, curtmp)
 
@@ -237,15 +237,15 @@ def _getvid():
 # 	vid = editdata.get('id')
 # 	for x in cur:
 # 		if str(x.id) == str(vid):
-# 			logme.debug('编辑中...')
+# 			print('编辑中...')
 # 			x.businessname = editdata.get('businessname')
 # 			x.itf_check = editdata.get('itf_check')
 # 			x.db_check = editdata.get('db_check')
 # 			x.params = editdata.get('params')
-# 			logme.debug('x=>', x.itf_check)
+# 			print('x=>', x.itf_check)
 # 			break;
 
-# 	logme.debug('编辑后数据=>', cur)
+# 	print('编辑后数据=>', cur)
 
 # 	_settestdata(callername, stepid, cur)
 
@@ -255,12 +255,12 @@ def _getvid():
 # 	try:
 
 # 		del _user_step_testdata_manager[key]
-# 		logme.debug('[清除缓存]key=%s' % key)
+# 		print('[清除缓存]key=%s' % key)
 # 	except:
-# 		logme.debug('[清除缓存异常]key=%s' % key)
+# 		print('[清除缓存异常]key=%s' % key)
 
 
-# logme.debug(traceback.format_exc())
+# print(traceback.format_exc())
 
 
 # def querytestdata(callername, stepid, trigger='query'):
@@ -273,9 +273,9 @@ def _getvid():
 # 			# 缓存数据
 # 			_settestdata(callername, stepid, res)
 # 		except:
-# 			logme.debug('[新增步骤异常]')
+# 			print('[新增步骤异常]')
 # 			error = traceback.format_exc()
-# 			logme.debug(error)
+# 			print(error)
 
 # 	else:
 # 		key = "%s_%s" % (callername, stepid)
@@ -317,11 +317,11 @@ def _getvid():
 # 			allids = [x.id for x in list(step.businessdatainfo.all())]
 # 			cacheids = [x.id for x in cache]
 # 			todelids = [x for x in allids if x not in cacheids]
-# 			logme.debug('删除不在缓存中的业务数据id=>', todelids)
+# 			print('删除不在缓存中的业务数据id=>', todelids)
 # 			for x in todelids:
 # 				step.businessdatainfo.remove(x)
 
-# 		# logme.debug('cache=>',cache)
+# 		# print('cache=>',cache)
 # 		for x in cache:
 # 			if str(x.id).startswith('vid_'):
 # 				bd = models.BusinessData()
@@ -337,7 +337,7 @@ def _getvid():
 # 				step.businessdatainfo.add(bd)
 # 			else:
 # 				bid = int(x.id)
-# 				logme.debug('修改业务数据id=%s' % bid)
+# 				print('修改业务数据id=%s' % bid)
 # 				bids.append(bid)
 # 				bd = models.BusinessData.objects.get(id=bid)
 # 				bd.businessname = x.businessname
@@ -345,20 +345,20 @@ def _getvid():
 # 				bd.db_check = x.db_check
 # 				bd.params = x.params
 
-# 				logme.debug('params=>', bd.params)
+# 				print('params=>', bd.params)
 
-# 				logme.debug('保存业务数据长度=>', len(bd.params))
+# 				print('保存业务数据长度=>', len(bd.params))
 # 				# bd.params=x.params.replace('true','True').replace('false','False').replace('null','None')
 # 				bd.save()
 
-# 		logme.debug('[挂载测试数据]成功 stepid=%s 测试数据id=%s' % (stepid, bids))
+# 		print('[挂载测试数据]成功 stepid=%s 测试数据id=%s' % (stepid, bids))
 
 # 	# _cleartestdata(callername, stepid)
 
 # 	except:
 # 		err = traceback.format_exc()
-# 		logme.debug('[挂载测试数据]异常')
-# 		logme.debug(err)
+# 		print('[挂载测试数据]异常')
+# 		print(err)
 
 
 # def gettestdataparams(businessdata_id):
@@ -381,12 +381,12 @@ def _getvid():
 # 			return ('success', businessdatainst.params.split(','))
 # 	except:
 # 		error = '获取测试数据传参信息异常[%s]' % traceback.format_exc()
-# 		logme.debug(error)
+# 		print(error)
 # 		return ('error', error)
 
 
 # def gettestdatastep(businessdata_id):
-# 	# logme.debug('aa=>',businessdata_id)
+# 	# print('aa=>',businessdata_id)
 # 	try:
 # 		businessdatainst = models.BusinessData.objects.get(id=businessdata_id)
 # 		# steps=models.Step.objects.all()
@@ -397,7 +397,7 @@ def _getvid():
 # 		return ('success', step)
 
 # 	except:
-# 		logme.debug(traceback.format_exc())
+# 		print(traceback.format_exc())
 # 		return ('error', '获取业务数据所属步骤异常 业务ID=%s' % businessdata_id)
 
 
@@ -416,17 +416,17 @@ def viewcache(taskid, username, kind=None, *msg):
 	try:
 		logname = "./logs/" + taskid + ".log"
 		what = "".join((msg))
-		# logme.debug(username)
+		# print(username)
 		what = "%s        %s" % (time.strftime("[%m-%d %H:%M:%S]", time.localtime()), what)
-		# logme.debug("console:",what)
-		# logme.debug('redis=>', what)
+		# print("console:",what)
+		# print('redis=>', what)
 		# f = open(logname, "a")
 		# f.write(what + "<br>\n")
 		# f.close
 		with open(logname, 'a', encoding='UTF-8') as f:
 			f.write(what + '<br>\n')
 		
-		# logme.debug(what)
+		# print(what)
 		con = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
 		key = "console.msg::%s::%s" % (username, taskid)
 		# data={}
@@ -435,8 +435,8 @@ def viewcache(taskid, username, kind=None, *msg):
 		con.lpush(key, what)
 		con.close()
 	except Exception as e:
-		logme.debug("viewcache异常")
-		logme.debug(traceback.format_exc())
+		print("viewcache异常")
+		print(traceback.format_exc())
 
 
 def remotecache(key, linemsg):
@@ -460,11 +460,11 @@ def setRunningInfo(username, planid, taskid, isrunning, dbscheme='全局'):
 	planinfo['taskid'] = taskid
 	planinfo['isrunning'] = isrunning
 	planinfo['dbscheme'] = dbscheme
-	logme.debug("储存运行信息", _runninginfo)
+	print("储存运行信息", _runninginfo)
 
 
 def getRunningInfo(username='', planid='', type='latest_taskid'):
-	logme.debug('getinfo:', username, planid, type)
+	print('getinfo:', username, planid, type)
 	if type == 'latest_taskid':
 		latest_taskids = _runninginfo.get('lastest_taskid', {})
 		latest_taskid = latest_taskids.get(username, None)

@@ -22,7 +22,7 @@ class User(Model):
 	@classmethod
 	def create_superuser(cls, password):
 		if not User.objects.filter(name='admin').exists():
-			logme.warning('创建管理员账户')
+			print('创建管理员账户')
 			user = User()
 			user.name = 'admin'
 			user.password = password

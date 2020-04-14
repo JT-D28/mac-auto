@@ -69,7 +69,7 @@ class Interceptor(MiddlewareMixin):
 			# print('key=>',key)
 			mkey = getkey(_meta, key)
 			if mkey:
-				logme.warning('==[新增]字段重复校验====')
+				print('==[新增]字段重复校验====')
 				actionV = request.POST.get(_meta[mkey])
 				callstr = "list(models.%s.objects.filter(%s='%s'))" % (mkey, _meta[mkey], actionV)
 				if mkey == 'Function':
@@ -86,8 +86,8 @@ class Interceptor(MiddlewareMixin):
 					else:
 						return 'fail', "配置方案【%s】下已存在描述为【%s】的数据连接" % (schemevalue, description)
 				qssize = len(eval(callstr))
-				logme.warning('callstr=>%s size=%s' % (callstr, qssize))
-				logme.warning('url[%s]字段[%s]重复验证 已存在[%s]条' % (request.path, _meta[mkey], qssize))
+				print('callstr=>%s size=%s' % (callstr, qssize))
+				print('url[%s]字段[%s]重复验证 已存在[%s]条' % (request.path, _meta[mkey], qssize))
 				if qssize == 0:
 					return ('success', '')
 				else:
@@ -103,14 +103,14 @@ class Interceptor(MiddlewareMixin):
 				# print('key=>',key)
 				mkey = getkey(_meta, key)
 				if mkey:
-					logme.warning('==[编辑]字段重复校验====')
+					print('==[编辑]字段重复校验====')
 					if mkey == 'DBCon':
 						schemevalue = request.POST.get('schemevalue')
 						description = request.POST.get('description')
 						id=request.POST.get('id')
 						oldcon = models.DBCon.objects.filter(~Q(id=id) & Q(description=description, scheme=schemevalue))
 						qssize = len(oldcon)
-						logme.warning(oldcon)
+						print(oldcon)
 						if qssize == 0:
 							return 'success', ''
 						else:
@@ -118,11 +118,11 @@ class Interceptor(MiddlewareMixin):
 							return 'fail', msg
 					actionV = request.POST.get(_meta[mkey])
 					call_str = "models.%s.objects.get(%s='%s').id" % (mkey, _meta[mkey], actionV)
-					logme.warning('callstr=>', call_str)
+					print('callstr=>', call_str)
 					call_id = request.POST.get('id')
 					repeatid = eval(call_str)
 					
-					logme.warning('repeatid=>', repeatid)
+					print('repeatid=>', repeatid)
 					
 					if str(call_id) == str(repeatid):
 						return ('success', '')
@@ -149,7 +149,7 @@ class Interceptor(MiddlewareMixin):
 			if request.session.get('username', None):
 				return True
 			else:
-				logme.warning('session校验不通过 跳到登录页面')
+				print('session校验不通过 跳到登录页面')
 				return False
 
 		return True
@@ -183,14 +183,14 @@ class Interceptor(MiddlewareMixin):
 
 	def _print_call_msg(self,request):
 		if not request.path.startswith('/static'):
-			logme.warning("=============================【%s】调用[%s]=============================" %(request.session.get('username','未登录'),request.path))
+			print("=============================【%s】调用[%s]=============================" %(request.session.get('username','未登录'),request.path))
 		a=dict(request.GET)
 		b=dict(request.POST)
 		o={**a,**b}
 		for ok in o:
 			o[ok]=o.get(ok)[0]
 		if o:
-			logme.warning('请求参数:'+str(o))
+			print('请求参数:'+str(o))
 		
 	
 	def process_request(self, request):

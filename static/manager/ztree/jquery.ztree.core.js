@@ -1251,7 +1251,7 @@
 
             // view.replaceSwitchClass(node, switchObj, consts.folder.OPEN);
             
-            view.replaceMyClass(node,switchObj,'fa icon-fa-minus')
+            view.replaceMyClass(node,switchObj,'fa fa-minus')
 
             if(!data.getNodeTextIcon(setting,node)){
               view.replaceIcoClass(node, icoObj, consts.folder.OPEN);
@@ -1282,7 +1282,7 @@
             }
           } else {
             //view.replaceSwitchClass(node, switchObj, consts.folder.CLOSE);
-            view.replaceMyClass(node,switchObj,'fa icon-fa-plus')
+            view.replaceMyClass(node,switchObj,'fa fa-plus')
 
             if(!data.getNodeTextIcon(setting,node)){
               view.replaceIcoClass(node, icoObj, consts.folder.CLOSE);
@@ -1367,16 +1367,16 @@
 
        if (node.type!='business'){
          if(node.open==true){
-          html.push("<span id='", node.tId, consts.id.SWITCH, "' title='' class='fa icon-fa-minus' switcher></span>");
+          html.push("<span id='", node.tId, consts.id.SWITCH, "' title='' class='fa fa-minus' switcher></span>");
             
          }else{
-          html.push("<span id='", node.tId, consts.id.SWITCH, "' title='' class='fa icon-fa-plus' switcher></span>");
+          html.push("<span id='", node.tId, consts.id.SWITCH, "' title='' class='fa fa-plus' switcher></span>");
            
          }
 
        }
        else{
-          //html.push("<span id='", node.tId, consts.id.SWITCH, "' title='' class='fa icon-fa-minus' treenode_switch></span>");
+          //html.push("<span id='", node.tId, consts.id.SWITCH, "' title='' class='fa fa-minus' treenode_switch></span>");
           html.push("<span style='width:6em;'></span>")
        }
 

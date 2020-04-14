@@ -623,11 +623,6 @@ var tree={
     		return false
     	}
     	src_type=treeNodes[0].type
-    	if(src_type=='product'){
-
-    		layer.alert('不允许移动产品级目录',{icon:2,time:1500})
-    		return false
-    	}
     	target_type=targetNode.type
     	expected=_allow[src_type]
     	warn='不允许此操作['+_call_map[src_type]+'->'+_call_map[target_type]+']'

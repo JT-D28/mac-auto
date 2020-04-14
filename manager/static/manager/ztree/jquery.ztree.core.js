@@ -1260,10 +1260,10 @@
               // console.log(node)
 
               if(node.type=='case'){
-                view.replaceMyClass(node,icoObj,'fa fa-folder-open')
+                view.replaceMyClass(node,icoObj,'fa icon-fa-folder-open')
               }else if(node.type=='plan'){
                 //console.log('11111111111111111111')
-                view.replaceMyClass(node,icoObj,'fa fa-product-hunt')
+                view.replaceMyClass(node,icoObj,'fa icon-fa-product-hunt')
 
               }
             }
@@ -1288,9 +1288,9 @@
               view.replaceIcoClass(node, icoObj, consts.folder.CLOSE);
             }else{
               if(node.type=='case')
-                view.replaceMyClass(node,icoObj,'fa fa-folder')
+                view.replaceMyClass(node,icoObj,'fa icon-fa-folder')
               else if(node.type=='plan'){
-                view.replaceMyClass(node,icoObj,'fa fa-product-hunt')
+                view.replaceMyClass(node,icoObj,'fa icon-fa-product-hunt')
                 // console.log('222222222222222222222222')
               }
             }

@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.http import HttpResponse, JsonResponse
 
+from ME2.settings import logme
 from django.db.models import Q
 from manager.models import *
 
@@ -42,12 +43,12 @@ def help(request):
 # @csrf_exempt
 # def recvdata(request):
 # 	data = request.POST
-# 	print(data)
+# 	logme.debug(data)
 # 	# case=json.loads(jsonstr)
 # 	# proxy.Q.push(case)
-# 	print('入队列=>')
-# 	print(data)
-# 	print("*" * 100)
+# 	logme.debug('入队列=>')
+# 	logme.debug(data)
+# 	logme.debug("*" * 100)
 
 
 """
@@ -76,14 +77,14 @@ def upload(request):
 	files = request.FILES.getlist('file_data')
 	for file in files:
 		for chunk in file.chunks():
-			print('上传文件名称=>', file.name)
+			logme.debug('上传文件名称=>', file.name)
 			# content_list.append(chunk)
 			filemap[file.name] = chunk
 	
 	callername = request.session.get('username')
 	kind = request.POST.get('kind')
 	
-	print('kind=>', kind)
+	logme.debug('kind=>', kind)
 	content_type = request.POST.get('content_type')
 	
 	if kind == 'datamovein':
@@ -93,13 +94,13 @@ def upload(request):
 		t = Transformer(callername, filemap.values(), content_type, taskid)
 		
 		res = t.transform()
-		# print('res=>',res)
+		# logme.debug('res=>',res)
 		
 		if res[0] == 'success':
-			# print('flag1_1')
+			# logme.debug('flag1_1')
 			return JsonResponse(simplejson(code=0, msg='excel数据迁移完成 迁移ID=%s' % taskid), safe=False)
 		else:
-			# print('flag1_2')
+			# logme.debug('flag1_2')
 			return JsonResponse(simplejson(code=2, msg='excel数据迁移失败[%s] 迁移ID=%s' % (res[1], taskid)), safe=False)
 	
 	elif kind == 'dataimport':
@@ -137,9 +138,9 @@ def dataexport(request):
 	planid = request.GET.get('planid')
 	m = DataMove()
 	res = m.export_plan(planid, flag, version=int(version))
-	# print('res[0]=>',res[0])
+	# logme.debug('res[0]=>',res[0])
 	if res[0] is 'success':
-		# print('equals')
+		# logme.debug('equals')
 		
 		response = HttpResponse(str(res[1]))
 		response['content-type'] = 'application/json'
@@ -148,7 +149,7 @@ def dataexport(request):
 		# response=FileResponse(res[1],as_attachment=True,filename='plan_%s.json'%flag)
 		return response
 	else:
-		print('导出失败:', res[1])
+		logme.debug('导出失败:', res[1])
 		return JsonResponse(simplejson(code=2, msg='导出失败[%s]' % res[1]), safe=False)
 
 
@@ -204,13 +205,13 @@ def queryonedb(request):
 def querydb(request):
 	searchvalue = request.GET.get('searchvalue')
 	searchvalue = searchvalue if searchvalue not in [None, ''] else ''
-	print("searchvalue=>", searchvalue)
+	logme.debug("searchvalue=>", searchvalue)
 	queryschemevalue = request.GET.get('querySchemeValue')
 	queryschemevalue = queryschemevalue if queryschemevalue not in [None, ''] else ''
-	print("SchemeValue=>", queryschemevalue)
+	logme.debug("SchemeValue=>", queryschemevalue)
 	res = None
 	# if searchvalue:
-	# 	print("变量查询条件=>")
+	# 	logme.debug("变量查询条件=>")
 	# 	res = list(DBCon.objects.filter((Q(description__icontains=searchvalue) | Q(dbname__icontains=searchvalue) | Q(
 	# 		host__icontains=searchvalue) | Q(port__icontains=searchvalue) | Q(kind__icontains=searchvalue)) & Q(
 	# 		scheme=queryschemevalue)))
@@ -255,7 +256,7 @@ def addcon(request):
 		con.save()
 		msg = '添加成功'
 	except:
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 		code = 1
 		msg = '添加异常'
 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
@@ -264,7 +265,7 @@ def addcon(request):
 @csrf_exempt
 def delcon(request):
 	id_ = request.POST.get('ids')
-	# print('ids=>',id_)
+	# logme.debug('ids=>',id_)
 	ids = id_.split(',')
 	code = 0
 	msg = ''
@@ -286,7 +287,7 @@ def editcon(request):
 	msg = ''
 	id_ = request.POST.get('id')
 	try:
-		print("id=>", id_)
+		logme.debug("id=>", id_)
 		con = DBCon.objects.get(id=id_)
 		con.kind = request.POST.get('kind')
 		con.description = request.POST.get('description')
@@ -308,7 +309,7 @@ def editcon(request):
 
 
 def getplan(id, kind):
-	print('get', id, kind)
+	logme.debug('get', id, kind)
 	if kind == 'case':
 		try:
 			k = Order.objects.get(follow_id=id, kind='plan_case')
@@ -336,7 +337,7 @@ def querydblist(request):
 		try:
 			res = list(DBCon.objects.filter().distinct().annotate(name=F('description')).values('name'))
 		except:
-			print(traceback.format_exc())
+			logme.debug(traceback.format_exc())
 			code = 4
 			msg = '查询数据库列表信息异常'
 			return JsonResponse(simplejson(code=code, msg=msg), safe=False)
@@ -344,14 +345,14 @@ def querydblist(request):
 		try:
 			if scheme != '':
 				res = list(DBCon.objects.filter(scheme=scheme).annotate(name=F('description')).values('name'))
-				print(res)
+				logme.debug(res)
 			elif id != '' and id is not None:
 				dbscheme = getplan(id.split('_')[1], id.split('_')[0])
 				res = list(
 					DBCon.objects.filter(scheme=dbscheme).annotate(name=F('description')).values('name'))
-				print('...', res)
+				logme.debug('...', res)
 		except:
-			print(traceback.format_exc())
+			logme.debug(traceback.format_exc())
 			code = 4
 			msg = '查询数据库列表信息异常'
 			return JsonResponse(simplejson(code=code, msg=msg), safe=False)
@@ -386,7 +387,7 @@ def querydblistdefault(request):
 	
 	except:
 		error = traceback.format_exc()
-		print(error)
+		logme.debug(error)
 		return JsonResponse(simplejson(code=4, msg='库名下拉列表默认值返回异常'), safe=False)
 
 
@@ -424,12 +425,12 @@ def copyDbCon(request):
 		except:
 			code = 1
 			s = traceback.format_exc()
-			print(s)
+			logme.debug(s)
 	return JsonResponse({'code': code, 'msg': s})
 
 
 def dbconRepeatCheck(dbids, copyschemevalue, action):
-	print(dbids, copyschemevalue, action)
+	logme.debug(dbids, copyschemevalue, action)
 	s = ''
 	# 一个方案下面描述名不能重复
 	if action == '1':
@@ -470,7 +471,7 @@ def queryonevar(request):
 	try:
 		res = Variable.objects.get(id=request.POST.get('id'))
 		tag = Tag.objects.values('planids', 'customize').get(var=res)
-		print(tag['customize'])
+		logme.debug(tag['customize'])
 		planids = json.loads(tag['planids'])
 		des = ''
 		ids = []
@@ -483,7 +484,7 @@ def queryonevar(request):
 		jsonstr['tags'] = tag
 		return JsonResponse(jsonstr, safe=False)
 	except:
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 		code = 1
 		msg = '查询异常[%s]' % traceback.format_exc()
 		return JsonResponse({'code': code, 'msg': msg})
@@ -501,12 +502,12 @@ def queryvar(request):
 			strtag = '%%'
 		elif i != '0':
 			strtag += i.split('_')[1] + '%'
-	print(strtag)
+	logme.debug(strtag)
 	
 	bindplan = request.POST.get('bindplan') if request.POST.get('bindplan') != '' else ''
 	bindstr = '%","' + bindplan + '"]%' if bindplan != '' else '%%'
 	userid = userid if userid != '0' else str(User.objects.values('id').get(name=request.session.get('username'))['id'])
-	print("searchvalue=>", searchvalue)
+	logme.debug("searchvalue=>", searchvalue)
 	
 	with connection.cursor() as cursor:
 		sql = '''SELECT t.customize ,t.planids,v.id,description,`key`,gain,value,is_cache,u.name as author FROM `manager_variable` v,login_user u
@@ -545,19 +546,19 @@ def queryvar(request):
 # tags= request.POST.get('tags')
 # tags = tags if tags!='0' else ''
 # userid = userid if userid != '0' else str(User.objects.values('id').get(name=request.session.get('username'))['id'])
-# print("searchvalue=>", searchvalue)
+# logme.debug("searchvalue=>", searchvalue)
 # if (len(searchvalue) | len(userid)) and userid != '-1':
-# 	print("变量查询条件=>")
+# 	logme.debug("变量查询条件=>")
 # 	res = list(Variable.objects.filter(Q(author_id=userid) & (
 # 			Q(description__icontains=searchvalue) | Q(key__icontains=searchvalue) | Q(
 # 		value__icontains=searchvalue) | Q(
 # 		gain__icontains=searchvalue)) & Q(tag__contains=tags)))
 # else:
 # 	res = list(Variable.objects.all())
-# print(res)
+# logme.debug(res)
 # limit = request.POST.get('limit')
 # page = request.POST.get('page')
-# # print("res old size=>",len(res))
+# # logme.debug("res old size=>",len(res))
 # res, total = getpagedata(res, page, limit)
 # jsonstr = json.dumps(res, cls=VarEncoder, total=total)
 # return JsonResponse(jsonstr, safe=False)
@@ -566,7 +567,7 @@ def queryvar(request):
 @csrf_exempt
 def delvar(request):
 	id_ = request.POST.get('ids')
-	# print('ids=>',id_)
+	# logme.debug('ids=>',id_)
 	ids = id_.split(',')
 	code = 0
 	msg = ''
@@ -584,7 +585,7 @@ def delvar(request):
 
 @csrf_exempt
 def editvar(request):
-	print("===============editvar=========================================================")
+	logme.debug("===============editvar=========================================================")
 	id_ = request.POST.get('id')
 	code = -1
 	msg = ''
@@ -622,7 +623,7 @@ def editvar(request):
 		msg = '编辑成功'
 		code = 0
 	except:
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 		code = 1
 		msg = "编辑失败[%s]" % traceback.format_exc()
 	
@@ -631,7 +632,7 @@ def editvar(request):
 
 def varRepeatCheck(key, bindplans, editid=0):
 	# 校验重复：同一个key只能最多只能有一个全局变量：isglobal=1;可以有多个绑定了计划的变量，其中绑定的计划不能有重复项
-	print(key, bindplans)
+	logme.debug(key, bindplans)
 	bindplans = json.loads(bindplans)
 	state = '变量重复校验出错！'
 	try:
@@ -639,7 +640,7 @@ def varRepeatCheck(key, bindplans, editid=0):
 			vars = Variable.objects.filter(key=key).exclude(id=editid)
 		else:
 			vars = Variable.objects.filter(key=key)
-		print(vars)
+		logme.debug(vars)
 		if vars:
 			# 如果没有传入绑定的计划id，先判断是否有全局变量
 			if not bindplans:
@@ -664,17 +665,17 @@ def varRepeatCheck(key, bindplans, editid=0):
 					except:
 						tag = Tag.objects.get(var=var, isglobal=1)
 						if tag:
-							print('没有绑定计划的变量,有全局变量;')
+							logme.debug('没有绑定计划的变量,有全局变量;')
 							state = ''
 				state = "变量%s已经绑定过计划：<br>%s" % (key,str) if str != '' else ''
 		
 		else:
 			state = ''
 	except:
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 		state = traceback.format_exc()
 	finally:
-		print(state)
+		logme.debug(state)
 		return state
 
 
@@ -719,7 +720,7 @@ def addvar(request):
 		tag.save()
 		msg = '新增成功'
 	except:
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 		code = 1
 		msg = "新增失败"
 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
@@ -733,7 +734,7 @@ def copyVar(request):
 	bindplans = request.POST.get('bindplans')
 	action = request.POST.get('action')
 	tags = request.POST.get('tags')
-	print(varids, bindplans)
+	logme.debug(varids, bindplans)
 	
 	repvarkey = []
 	for varid in varids:
@@ -767,7 +768,7 @@ def copyVar(request):
 				tag.save()
 			except:
 				msg = traceback.format_exc()
-				print(traceback.format_exc())
+				logme.debug(traceback.format_exc())
 	elif action == '0':
 		for varid in varids:
 			key = Variable.objects.get(id=varid).key
@@ -782,8 +783,8 @@ def copyVar(request):
 				tag.save()
 			except:
 				msg = traceback.format_exc()
-				print(traceback.format_exc())
-	print(msg)
+				logme.debug(traceback.format_exc())
+	logme.debug(msg)
 	return JsonResponse({'code': code, 'msg': msg})
 
 
@@ -800,10 +801,10 @@ def copyVar(request):
 # @csrf_exempt
 # def queryitf(request):
 # 	searchvalue = request.GET.get('searchvalue')
-# 	print("searchvalue=>", searchvalue)
+# 	logme.debug("searchvalue=>", searchvalue)
 # 	res = None
 # 	if searchvalue:
-# 		print("变量查询条件=>")
+# 		logme.debug("变量查询条件=>")
 # 		res = list(Interface.objects.filter(
 # 			Q(description__icontains=searchvalue) | Q(key__icontains=searchvalue) | Q(value__icontains=searchvalue)))
 # 	else:
@@ -897,10 +898,10 @@ def queryonecase(request):
 # @csrf_exempt
 # def querycase(request):
 # 	searchvalue = request.GET.get('searchvalue')
-# 	print("searchvalue=>", searchvalue)
+# 	logme.debug("searchvalue=>", searchvalue)
 # 	res = None
 # 	if searchvalue:
-# 		print("变量查询条件=>")
+# 		logme.debug("变量查询条件=>")
 # 		res = list(Case.objects.filter(description__icontains=searchvalue))
 # 	else:
 # 		res = list(Case.objects.all())
@@ -993,17 +994,17 @@ def transform(request):
 			FILE_COUNT = FILE_COUNT + 1
 			myFile = request.FILES[i]
 			
-			print('接收文件=>', myFile.name)
-			# print('tmp=>',myFile.temporary_file_path())
+			logme.debug('接收文件=>', myFile.name)
+			# logme.debug('tmp=>',myFile.temporary_file_path())
 			if myFile.name.__contains__('Config'):
-				print('包含=>', myFile.name)
+				logme.debug('包含=>', myFile.name)
 				FILE_CHECK = True
 				config_wb = xlrd.open_workbook(filename=None, file_contents=myFile.read())
 			else:
-				print('部包含=>', myFile.name)
+				logme.debug('部包含=>', myFile.name)
 				data_wb = xlrd.open_workbook(filename=None, file_contents=myFile.read())
 		
-		print('file_check=>%s file_count=>%s' % (FILE_CHECK, FILE_COUNT))
+		logme.debug('file_check=>%s file_count=>%s' % (FILE_CHECK, FILE_COUNT))
 		if FILE_CHECK is False:
 			return JsonResponse(simplejson(code=100, msg='没检查到配置文件Config.xlsx'), safe=False)
 		
@@ -1034,9 +1035,9 @@ def third_party_call(request):
 	if getRunningInfo(callername, planid, 'isrunning') == '1':
 		return JsonResponse(simplejson(code=1, msg="调用失败，任务正在运行中，稍后再试！"), safe=False)
 	
-	print('调用方=>', callername)
-	print('调用计划=>', planid)
-	print('调用数据连接方案=>', dbscheme)
+	logme.debug('调用方=>', callername)
+	logme.debug('调用计划=>', planid)
+	logme.debug('调用数据连接方案=>', dbscheme)
 	runplans(callername, taskid, [planid], is_verify, None, dbscheme)
 	return JsonResponse(simplejson(code=0, msg="调用成功,使用DB配置:[%s]" % dbscheme, taskid=taskid), safe=False)
 
@@ -1058,7 +1059,7 @@ def mailcontrol(request):
 		config.save()
 		msg = "[%s]发送邮件功能" % is_send_mail
 	except:
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 		code = 2
 		msg = '操作失败[%s]' % traceback.format_exc()
 	
@@ -1085,14 +1086,14 @@ def queryoneplan(request):
 # @csrf_exempt
 # def queryplan(request):
 # 	searchvalue = request.GET.get('searchvalue')
-# 	print("searchvalue=>", searchvalue)
+# 	logme.debug("searchvalue=>", searchvalue)
 # 	res = None
 # 	if searchvalue:
-# 		print("变量查询条件=>")
+# 		logme.debug("变量查询条件=>")
 # 		res = list(Plan.objects.filter(Q(description__icontains=searchvalue) | Q(run_type__icontains=searchvalue)))
 # 	else:
 # 		username = request.session.get('username', None)
-# 		print(username)
+# 		logme.debug(username)
 # 		author = User.objects.get(name=username)
 
 # 		res = list(Plan.objects.filter(author=author))
@@ -1120,7 +1121,7 @@ def queryoneplan(request):
 # 			plan.delete()
 
 # 	except:
-# 		print(traceback.format_exc())
+# 		logme.debug(traceback.format_exc())
 # 		code = 1
 # 		return JsonResponse(pkg(code=code, msg=msg), safe=False)
 
@@ -1137,7 +1138,7 @@ def queryoneplan(request):
 # 		plan = Plan.objects.get(id=id_)
 # 		plan.description = request.POST.get('description')
 # 		plan.db_id = request.POST.get('dbid')
-# 		print('description=>', plan.description)
+# 		logme.debug('description=>', plan.description)
 # 		plan.run_type = request.POST.get('run_type')
 # 		plan.save()
 # 		msg = '编辑成功'
@@ -1206,7 +1207,7 @@ def querytaskdetail(request):
 	
 	detail = gettaskresult(taskid)
 	
-	# print(detail)
+	# logme.debug(detail)
 	
 	# import json
 	# jsonstr=json.dumps(detail)
@@ -1331,10 +1332,10 @@ def closecrontab(request):
 
 # def queryresult(request):
 # 	searchvalue=request.GET.get('searchvalue')
-# 	print("searchvalue=>",searchvalue)
+# 	logme.debug("searchvalue=>",searchvalue)
 # 	res=None
 # 	if searchvalue:
-# 		print("变量查询条件=>")
+# 		logme.debug("变量查询条件=>")
 # 		res=list(Result.objects.filter(Q(description=searchvalue)|Q(key=searchvalue)|Q(value=searchvalue)))
 # 	else:
 # 		res=list(Result.objects.all())
@@ -1365,10 +1366,10 @@ def resultdetail(request):
 @csrf_exempt
 def queryresultdetail(request):
 	searchvalue = request.GET.get('searchvalue')
-	print("searchvalue=>", searchvalue)
+	logme.debug("searchvalue=>", searchvalue)
 	res = None
 	if searchvalue:
-		print("变量查询条件=>")
+		logme.debug("变量查询条件=>")
 		res = list(ResultDetail.objects.filter(
 			Q(description__icontains=searchvalue) | Q(key__icontains=searchvalue) | Q(value__icontains=searchvalue)))
 	else:
@@ -1462,7 +1463,7 @@ def queryonefunc(request):
 @csrf_exempt
 def queryfunc(request):
 	searchvalue = request.GET.get('searchvalue')
-	print("searchvalue=>", searchvalue)
+	logme.debug("searchvalue=>", searchvalue)
 	res = []
 	if searchvalue:
 		res = list(Function.objects.filter(Q(name__icontains=searchvalue.strip())))
@@ -1513,7 +1514,7 @@ def editfunc(request):
 		msg = '编辑成功'
 	except:
 		code = 1
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 		msg = "编辑失败[%s]" % traceback.format_exc()
 	
 	finally:
@@ -1531,18 +1532,18 @@ def addfunc(request):
 		# base64 str 存储
 		tbody = request.POST.get("body")
 		f.name = Fu.getfuncname(tbody)[0]
-		# print("函数名称=>",f.name)
-		# print("tbody=>",tbody)
+		# logme.debug("函数名称=>",f.name)
+		# logme.debug("tbody=>",tbody)
 		f.body = base64.b64encode(tbody.encode('utf-8')).decode()
 		# f.flag=Fu.flag(f.body)
 		f.flag = Fu.tzm_compute(tbody, "def\s+(.*?)\((.*?)\):")
 		f.save()
 		msg = '添加成功'
 	except Exception as e:
-		print(e)
+		logme.debug(e)
 		code = 1
 		msg = '添加失败'
-	# traceback.print_exc(e)
+	# traceback.logme.debug_exc(e)
 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
@@ -1566,12 +1567,12 @@ def queryfunclist(request):
 			op['description'] = ("%s -> %s" % (x.name, x.description)).replace('\n', ' ').replace('\t', '')
 			data.append(op)
 		
-		print('查函数下拉信息=>', data)
+		logme.debug('查函数下拉信息=>', data)
 		
 		return JsonResponse(simplejson(code=0, msg='操作成功', data=data), safe=False)
 	
 	except:
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 		code = 4
 		msg = '查询函数下拉框信息异常'
 		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
@@ -1588,7 +1589,7 @@ def step(request):
 
 # @csrf_exempt
 # def addstep(request):
-# 	# print("addstepd")
+# 	# logme.debug("addstepd")
 # 	code = 0
 # 	msg = ''
 # 	try:
@@ -1601,16 +1602,16 @@ def step(request):
 # 		content_type = request.POST.get('content_type')
 # 		db_check = request.POST.get('db_check')
 # 		itf_check = request.POST.get('itf_check')
-# 		print('itf_check=>', itf_check)
+# 		logme.debug('itf_check=>', itf_check)
 # 		tmp = request.POST.get('tmp')
 # 		author = request.session.get('username')
-# 		print("author=>", author)
+# 		logme.debug("author=>", author)
 # 		# tagname=request.POST.get('tag')
-# 		# print("tag=>",tagname)
+# 		# logme.debug("tag=>",tagname)
 
 # 		businessdata = request.POST.get('business_data')
 
-# 		print('businessdata=>', type(businessdata), businessdata)
+# 		logme.debug('businessdata=>', type(businessdata), businessdata)
 # 		dbid = request.POST.get('dbid')
 # 		# businsesstitle=getbusinesstitle(eval(businessdata))
 
@@ -1650,7 +1651,7 @@ def step(request):
 # 					businessdatainst = businessinfo[0]
 
 # 				status, res = gettestdataparams(businessdatainst.id)
-# 				print('gettestdataparams=>%s' % res)
+# 				logme.debug('gettestdataparams=>%s' % res)
 # 				if status is not 'success':
 # 					return JsonResponse(simplejson(code=3, msg=str(res)))
 
@@ -1667,9 +1668,9 @@ def step(request):
 
 # 		step.save()
 # 		msg = '添加测试步骤成功'
-# 	# print('flag2')
+# 	# logme.debug('flag2')
 # 	except Exception as e:
-# 		print(traceback.format_exc())
+# 		logme.debug(traceback.format_exc())
 # 		code = 2
 # 		msg = "添加失败:" + str(e)
 # 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
@@ -1692,7 +1693,7 @@ def step(request):
 # 			for case in case_list:
 # 				related_case_list = [case for sb in businessdatainfo if sb in [case.businessdatainfo.all()]]
 # 			size = len(related_case_list)
-# 			print('已关联用例数：', size)
+# 			logme.debug('已关联用例数：', size)
 # 			if size > 0:
 # 				code = 2
 # 				msg = '用例[%s]已关联该步骤 请先消除引用' % related_case_list[0].description
@@ -1703,7 +1704,7 @@ def step(request):
 # 				msg = '删除成功'
 
 # 	except Exception as e:
-# 		print(traceback.print_exc(e))
+# 		logme.debug(traceback.logme.debug_exc(e))
 # 		code = 1
 # 		msg = "删除失败[%s]" % traceback.format_exc()
 
@@ -1767,14 +1768,14 @@ def step(request):
 
 # 				params = ','.join(res)
 # 				calll_str = '%s(%s)' % (step.body.strip(), params)
-# 				# print('callerstr=>',calll_str)
+# 				# logme.debug('callerstr=>',calll_str)
 # 				# flag=Fu.tzm_compute(step.body,'(.*?)\((.*?)\)')
 # 				flag = Fu.tzm_compute(calll_str, '(.*?)\((.*?)\)')
 # 				funcs = list(Function.objects.filter(flag=flag))
 # 				if len(funcs) > 1:
 # 					return JsonResponse(simplejson(code=44, msg='找到多个匹配的自定义函数 请检查'))
 
-# 				# print('fsize=>',len(funcs))
+# 				# logme.debug('fsize=>',len(funcs))
 # 				related_id = funcs[0].id
 # 				step.related_id = related_id
 
@@ -1783,7 +1784,7 @@ def step(request):
 
 # 	except Exception as e:
 # 		code = 4
-# 		print(traceback.format_exc())
+# 		logme.debug(traceback.format_exc())
 # 		msg = "编辑失败[%s]" % traceback.format_exc()
 # 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
@@ -1804,7 +1805,7 @@ def queryonestep(request):
 	
 	
 	except:
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 		return JsonResponse(simplejson(code=3, msg='查询异常'), safe=False)
 
 
@@ -1814,8 +1815,8 @@ def querystep(request):
 	page = request.GET.get('page')
 	searchvalue = request.GET.get('searchvalue')
 	main_id = request.POST.get("mainid")
-	print("searchvalue=>", searchvalue)
-	print("mainid=>", main_id)
+	logme.debug("searchvalue=>", searchvalue)
+	logme.debug("mainid=>", main_id)
 	
 	res = []
 	# 1.有searchvalue 无mainid的查询
@@ -1828,7 +1829,7 @@ def querystep(request):
 	# 	searchvalue=None
 	
 	if searchvalue and main_id is None:
-		print("querystep 查询情况1")
+		logme.debug("querystep 查询情况1")
 		# tags=list(Tag.objects.filter(Q(name__contains=searchvalue)))
 		# for tag in tags:
 		# 	tagid=tag.id
@@ -1840,13 +1841,13 @@ def querystep(request):
 	elif main_id and searchvalue is None:
 		'''@delete
 		'''
-		print("querystep 查询情况2")
+		logme.debug("querystep 查询情况2")
 		res = list(Case.objects.get(id=main_id).steps.all())
 	
 	
 	
 	elif main_id is None and not searchvalue:
-		print("querystep 查询情况3")
+		logme.debug("querystep 查询情况3")
 		res = list(Step.objects.all())
 	# res=list(BusinessData.objects.all())
 	# res,total=getpagedata(res, page, limit)
@@ -1856,7 +1857,7 @@ def querystep(request):
 		# warnings.warn("querystep不支持这种情况..")
 		pass
 	
-	print("查询结果：", res)
+	logme.debug("查询结果：", res)
 	# res=getpagedata(res, request)
 	
 	res, total = getpagedata(res, page, limit)
@@ -1881,7 +1882,7 @@ def queryonemailconfig(request):
 		plan = Plan.objects.get(id=id_)
 		mail_config_id = plan.mail_config_id
 		
-		print('获取计划[%s]邮件配置=>%s' % (plan.description, mail_config_id))
+		logme.debug('获取计划[%s]邮件配置=>%s' % (plan.description, mail_config_id))
 		
 		if mail_config_id:
 			config = MailConfig.objects.get(id=mail_config_id)
@@ -1892,7 +1893,7 @@ def queryonemailconfig(request):
 			return JsonResponse(jsonstr, safe=True)
 	# return JsonResponse(simplejson(code=1,msg='计划[%s]还未关联邮件'%plan.description),safe=False)
 	except:
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 		return JsonResponse(simplejson(code=2, msg='查询异常[%s]' % traceback.format_exc()), safe=False)
 
 
@@ -1934,7 +1935,7 @@ def editmailconfig(request):
 			msg = '新建成功'
 	
 	except:
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 		code = 1
 		msg = '操作异常[%s]' % traceback.format_exc()
 	
@@ -1944,10 +1945,10 @@ def editmailconfig(request):
 @csrf_exempt
 def querymailconfig(request):
 	searchvalue = request.GET.get('searchvalue')
-	# print("searchvalue=>",searchvalue)
+	# logme.debug("searchvalue=>",searchvalue)
 	res = None
 	if searchvalue:
-		print("变量查询条件=>")
+		logme.debug("变量查询条件=>")
 		res = list(MailConfig.objects.filter(
 			Q(description__icontains=searchvalue) | Q(rich_text__icontains=searchvalue) | Q(
 				to_receive__icontains=searchvalue) | Q(cc_receive__icontains=searchvalue)))
@@ -2005,8 +2006,8 @@ def addorder(request):
 		order.save()
 	
 	except Exception as e:
-		print(e)
-		traceback.print_exc(e)
+		logme.debug(e)
+		traceback.logme.debug_exc(e)
 		code = 1
 	
 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
@@ -2045,23 +2046,23 @@ def addordervalue(request):
 # 		follow_ids = [int(x) for x in (requests.POST.get("follow_ids").split(','))]
 # 		kind = requests.POST.get("kind")
 # 		username = requests.session.get('username', None)
-# 		print('follow_ids=>', follow_ids, type(follow_ids))
+# 		logme.debug('follow_ids=>', follow_ids, type(follow_ids))
 
-# 		# print("="*40,"调用queryafteradd接口======\nmain_id=%s\nfollow_ids=%s\nkind=%s"%(main_id,follow_ids,kind))
+# 		# logme.debug("="*40,"调用queryafteradd接口======\nmain_id=%s\nfollow_ids=%s\nkind=%s"%(main_id,follow_ids,kind))
 # 		if operator.eq(follow_ids, [-1]):
-# 			print('只查询')
+# 			logme.debug('只查询')
 
 # 		else:
 # 			# 做数据插入
 
 # 			for follow_id in follow_ids:
-# 				# print(main_id,follow_id,kind,username)f
+# 				# logme.debug(main_id,follow_id,kind,username)f
 # 				# 建立对应关系manager_plan_case&&manager_case_step&&order表  忽略重复添加
 
 # 				_list = list(Order.objects.filter(main_id=main_id, follow_id=follow_id, kind=kind))
 # 				if len(_list) > 0:
 # 					warnmsg = "数据插入忽略 已存在main_id=%s follow_id=%s" % (main_id, follow_id)
-# 					print(warnmsg)
+# 					logme.debug(warnmsg)
 # 					continue;
 # 				else:
 
@@ -2099,14 +2100,14 @@ def addordervalue(request):
 
 # 		#
 # 		_main_order = ordered(list(Order.objects.filter(main_id=main_id, kind=kind)))
-# 		# print(_main_order)
+# 		# logme.debug(_main_order)
 # 		res = []
 # 		for item in _main_order:
-# 			# print("follow_id=>",item.follow_id)
+# 			# logme.debug("follow_id=>",item.follow_id)
 # 			# desp=Step.objects.get(id=item.follow_id).description if kind=="step" else Case.objects.get(id=item.follow_id).description
 # 			desp = None
 # 			if kind == 'step':
-# 				print('fff=>', item.follow_id)
+# 				logme.debug('fff=>', item.follow_id)
 # 				business = BusinessData.objects.get(id=item.follow_id)
 # 				status, stepinst = gettestdatastep(item.follow_id)
 # 				if status is not 'success':
@@ -2125,11 +2126,11 @@ def addordervalue(request):
 
 # 		res0["data"] = res
 
-# 		# print("="*40,"调用queryafteradd结束==")
+# 		# logme.debug("="*40,"调用queryafteradd结束==")
 
 # 		return JsonResponse(json.dumps(res0), safe=False)
 # 	except Exception as e:
-# 		print(traceback.format_exc())
+# 		logme.debug(traceback.format_exc())
 # 		return JsonResponse(simplejson(code=4, msg='操作异常[%s]' % traceback.format_exc()), safe=False)
 
 
@@ -2150,14 +2151,14 @@ def addordervalue(request):
 # 	author = User.objects.get(name=username)
 # 	for follow_id in follow_ids:
 
-# 		# print(main_id,follow_id,kind,username)
+# 		# logme.debug(main_id,follow_id,kind,username)
 # 		# 消除对应关系manager_plan_case&&manager_case_step&&order表  忽略重复添加
 
 # 		_list = list(Order.objects.filter(main_id=main_id, follow_id=follow_id, kind=kind))
 
 # 		if len(_list) == 0:
 # 			warnmsg = "order表数据不存在忽略操作 main_id=%s follow_id=%s" % (main_id, follow_id)
-# 			print(warnmsg)
+# 			logme.debug(warnmsg)
 # 			continue
 
 # 		else:
@@ -2172,7 +2173,7 @@ def addordervalue(request):
 
 # 				else:
 # 					warnmsg = "step表数据不存在或多条忽略操作 main_id=%s follow_id=%s" % (main_id, follow_id)
-# 					print(warnmsg)
+# 					logme.debug(warnmsg)
 # 					continue
 
 # 			elif kind == 'case':
@@ -2184,7 +2185,7 @@ def addordervalue(request):
 # 					plan.save()
 # 				else:
 # 					warnmsg = "case表数据不存在或多条忽略操作 main_id=%s follow_id=%s" % (main_id, follow_id)
-# 					print(warnmsg)
+# 					logme.debug(warnmsg)
 # 					continue
 
 # 			##case 或plan重新生成执行序号
@@ -2192,10 +2193,10 @@ def addordervalue(request):
 
 # 	#
 # 	_main_order = ordered(list(Order.objects.filter(main_id=main_id, kind=kind)))
-# 	# print(_main_order)
+# 	# logme.debug(_main_order)
 # 	res = []
 # 	for item in _main_order:
-# 		# print("follow_id=>",item.follow_id)
+# 		# logme.debug("follow_id=>",item.follow_id)
 # 		desp = None
 
 # 		if kind == 'step':
@@ -2227,7 +2228,7 @@ def queryoneproduct(request):
 	res = None
 	try:
 		res = Product.objects.get(id=request.POST.get('id').split('_')[1])
-		print('product=>', res)
+		logme.debug('product=>', res)
 	
 	except:
 		code = 1
@@ -2244,11 +2245,11 @@ def treecontrol(request):
 	action = request.GET.get('action') or request.POST.get('action', '')
 	if action in ('loadpage', 'view'):
 		page = request.GET.get('page') or request.POST.get('page')
-		# print('loadpage')
+		# logme.debug('loadpage')
 		try:
 			return render(request, "cm/%s.html" % page)
 		except:
-			print(traceback.format_exc())
+			logme.debug(traceback.format_exc())
 			return JsonResponse(pkg(code=4, msg='%s' % traceback.format_exc()), safe=False)
 	
 	else:
@@ -2256,9 +2257,9 @@ def treecontrol(request):
 		callstr = "cm.%s(request)" % (request.POST.get('action') or request.GET.get('action'))
 		status = v = None
 		try:
-			# print('callstr=>',callstr)
+			# logme.debug('callstr=>',callstr)
 			k = eval(callstr)
-			print('k=>', k)
+			logme.debug('k=>', k)
 			status, v, data = k.get('status'), k.get('msg'), k.get('data')
 			
 			if status is not 'success':
@@ -2266,7 +2267,7 @@ def treecontrol(request):
 			else:
 				
 				if action == 'export':
-					print('export %s' % v)
+					logme.debug('export %s' % v)
 					flag = str(datetime.datetime.now()).split('.')[0]
 					response = HttpResponse(str(v))
 					response['content-type'] = 'application/json'
@@ -2276,7 +2277,7 @@ def treecontrol(request):
 				return JsonResponse(pkg(code=0, msg=str(v), data=data), safe=False)
 		
 		except:
-			print(traceback.format_exc())
+			logme.debug(traceback.format_exc())
 			return JsonResponse(pkg(code=4, msg='%s' % traceback.format_exc()), safe=False)
 
 
@@ -2303,7 +2304,7 @@ def record(request):
 # 	}
 # 	try:
 
-# 		# print('KK'*100)
+# 		# logme.debug('KK'*100)
 
 # 		move_kind = requests.POST.get('move_kind')
 # 		main_id = requests.POST.get("main_id")
@@ -2316,14 +2317,14 @@ def record(request):
 
 # 		if 'swap' == move_kind:
 # 			res = swap(kind, main_id, aid, bid)
-# 			# print('swap结果=>',res)
+# 			# logme.debug('swap结果=>',res)
 # 			if res[0] is not 'success':
 # 				raise RuntimeError(res[1])
 # 		else:
 # 			changepostion(kind, main_id, follow_id, move)
 
 # 		_main_order = ordered(list(Order.objects.filter(main_id=main_id, kind=kind)))
-# 		# print(_main_order)
+# 		# logme.debug(_main_order)
 # 		res = []
 # 		for item in _main_order:
 # 			# desp=BusinessData.objects.get(id=item.follow_id).businessname if kind=="step" else Case.objects.get(id=item.follow_id).description
@@ -2370,7 +2371,7 @@ def record(request):
 # 	genorder(kind, main_id, follow_id)
 
 # 	_main_order = ordered(list(Order.objects.filter(main_id=main_id, kind=kind)))
-# 	# print(_main_order)
+# 	# logme.debug(_main_order)
 # 	res = []
 # 	for item in _main_order:
 # 		# desp=BusinessData.objects.get(id=item.follow_id).businessdata if kind=="step" else Case.objects.get(id=item.follow_id).description
@@ -2440,7 +2441,7 @@ def record(request):
 # 		return JsonResponse(jsonstr, safe=False)
 # 	except:
 # 		error = traceback.format_exc()
-# 		print(error)
+# 		logme.debug(error)
 # 		code = 4
 # 		msg = '操作异常[%s]' % error
 # 		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
@@ -2454,7 +2455,7 @@ def queryonebusiness(request):
 		callername = request.session.get('username')
 		# vid = request.POST.get('vid').split('_')[1]
 		# business = BusinessData.objects.get(id=vid)
-		# print('business=>', business)
+		# logme.debug('business=>', business)
 		# jsonstr = json.dumps(business, cls=BusinessDataEncoder)
 		sql = '''
 		SELECT b.id,count,businessname,itf_check,db_check,params,preposition,postposition,value as weight,parser_id,parser_check
@@ -2503,11 +2504,11 @@ def querybusinessdatalist(request):
 		res = list(BusinessData.objects.all())
 		
 		jsonstr = json.dumps(res, cls=BusinessDataEncoder)
-		# print('json=>',jsonstr)
+		# logme.debug('json=>',jsonstr)
 		return JsonResponse(jsonstr, safe=False)
 	except:
 		err = (traceback.format_exc())
-		print(err)
+		logme.debug(err)
 		return JsonResponse(simplejson(code=4, msg='查询异常[%s]' % err))
 
 
@@ -2521,9 +2522,9 @@ def querytreelist(request):
 		if type == 'product':
 			
 			product = Product.objects.get(id=idx)
-			print('product=>', product)
+			logme.debug('product=>', product)
 			plans = cm.getchild('product_plan', idx)
-			print('plans=>', plans)
+			logme.debug('plans=>', plans)
 			for plan in plans:
 				data.append({
 					
@@ -2540,9 +2541,9 @@ def querytreelist(request):
 		elif type == 'plan':
 			plan = Plan.objects.get(id=idx)
 			cases = cm.getchild('plan_case', idx)
-			print('cases=>', cases)
+			logme.debug('cases=>', cases)
 			for case in cases:
-				print('case=>', case)
+				logme.debug('case=>', case)
 				casename = case.description
 				if case.count in (0, '0'):
 					casename = '<s>%s</s>' % casename
@@ -2626,12 +2627,12 @@ def querytreelist(request):
 	
 	if id_:
 		datanode = _get_pid_data(id_, type_, datanode)
-		print('cur d=>', datanode)
+		logme.debug('cur d=>', datanode)
 	elif searchvalue:
 		datanode = get_search_match(searchvalue)
 	
 	else:
-		print('query id is None')
+		logme.debug('query id is None')
 		
 		datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True})
 		productlist = list(Product.objects.all())
@@ -2646,7 +2647,7 @@ def querytreelist(request):
 	
 	##
 	
-	print('query tree result=>%s' % datanode)
+	logme.debug('query tree result=>%s' % datanode)
 	return JsonResponse(simplejson(code=0, data=datanode), safe=False)
 
 
@@ -2718,13 +2719,13 @@ def querytaglist(request):
 			for x in m:
 				if x not in namelist:
 					namelist.append(x)
-		print('tag列表：', namelist)
+		logme.debug('tag列表：', namelist)
 		data = [{'id': 0, 'name': '全部标记'}]
 		for m, n in enumerate(namelist):
 			data.append({'id': str(m + 1) + '_' + n, 'name': n})
 	except:
-		print(traceback.format_exc())
-		print('==获取标签列表异常')
+		logme.debug(traceback.format_exc())
+		logme.debug('==获取标签列表异常')
 	finally:
 		return JsonResponse(pkg(code=0, data=data))
 
@@ -2742,7 +2743,7 @@ def querytags(request):
 		for x in m:
 			if x not in data:
 				data.append(x)
-	print('tag列表：', data)
+	logme.debug('tag列表：', data)
 	return JsonResponse({'code': 0, 'data': data})
 
 
@@ -2762,8 +2763,8 @@ def querytag(request):
 def varBatchEdit(request):
 	ids = request.POST.getlist('ids[]')
 	tags = request.POST.get('tags')
-	print(ids)
-	print(tags)
+	logme.debug(ids)
+	logme.debug(tags)
 	for id in ids:
 		try:
 			var = Variable.objects.get(id=id)
@@ -2816,17 +2817,17 @@ def edittemplate(request):
 @csrf_exempt
 def querytemplate(request):
 	searchvalue = request.GET.get('searchvalue')
-	print("searchvalue=>", searchvalue)
+	logme.debug("searchvalue=>", searchvalue)
 	
 	if searchvalue:
-		print("变量查询条件=>")
+		logme.debug("变量查询条件=>")
 		res = list(Template.objects.filter(name__icontains=searchvalue))
 	else:
 		res = list(Template.objects.all())
 	
 	limit = request.GET.get('limit')
 	page = request.GET.get('page')
-	# print("res old size=>",len(res))
+	# logme.debug("res old size=>",len(res))
 	res, total = getpagedata(res, page, limit)
 	jsonstr = json.dumps(res, cls=TemplateEncoder, total=total)
 	return JsonResponse(jsonstr, safe=False)
@@ -2843,8 +2844,8 @@ def templatefield(request):
 	else:
 		is_start_display = 'none'
 	
-	print('sort', is_sort_display)
-	print('start', is_start_display)
+	logme.debug('sort', is_sort_display)
+	logme.debug('start', is_start_display)
 	
 	return render(request, 'manager/templatefield.html', locals())
 
@@ -2889,7 +2890,7 @@ def queryfielddetail(request):
 # 			if status is not 'success':
 # 				continue;
 # 			else:
-# 				print('case_%s=>step_%s' % (case.id, step.id))
+# 				logme.debug('case_%s=>step_%s' % (case.id, step.id))
 # 				case.steps.add(step)
 
 # 	return JsonResponse(simplejson(code=0, msg='关联case&step ok.'), safe=False)
@@ -2908,7 +2909,7 @@ def queryfielddetail(request):
 # 	case_step=[]
 # 	step_business=[]
 # 	##
-# 	print('==开始记录数据并删除老数据')
+# 	logme.debug('==开始记录数据并删除老数据')
 # 	lista=list(Order.objects.filter(kind='case'))
 # 	listb=list(Order.objects.filter(kind='step'))
 # 	for order in lista:
@@ -2925,7 +2926,7 @@ def queryfielddetail(request):
 # 				if b.id==order.follow_id:
 # 					step=step0
 # 		if step is None:
-# 			print('bussines->step异常 略过')
+# 			logme.debug('bussines->step异常 略过')
 # 			continue;
 
 # 		stepid=step.id
@@ -2934,10 +2935,10 @@ def queryfielddetail(request):
 
 # 		order.delete()
 
-# 	print('==记录数据结束')
+# 	logme.debug('==记录数据结束')
 
 # 	###
-# 	print('==开始构造新关联')
+# 	logme.debug('==开始构造新关联')
 # 	for o in list(set(product_plan)):
 # 		order=Order()
 # 		order.main_id=o[0]
@@ -2993,13 +2994,13 @@ def queryfielddetail(request):
 # 		order.save()
 
 
-# 	print('==order表修改完成.')
+# 	logme.debug('==order表修改完成.')
 # 	return JsonResponse(pkg(code=0))
 
 # def update(request):
 # 	from .cm import getnextvalue
 # 	import copy
-# 	print('==开始更新==')
+# 	logme.debug('==开始更新==')
 # 	planids = []
 # 	delete = []
 # 	cache = {}
@@ -3025,7 +3026,7 @@ def queryfielddetail(request):
 # 		alist = list(Case.objects.filter(id=order.follow_id))
 
 # 		if len(plist) == 0 or len(alist) == 0:
-# 			print('计划和用例检查失败 略过.[%s-%s]' % (order.main_id, order.follow_id))
+# 			logme.debug('计划和用例检查失败 略过.[%s-%s]' % (order.main_id, order.follow_id))
 # 			continue;
 
 # 		##
@@ -3051,9 +3052,9 @@ def queryfielddetail(request):
 # 				order1.author = author
 # 				order1.value = getnextvalue('product_plan', order1.main_id)
 # 				order1.save()
-# 		# print('新建产品计划关联=>',order1)
+# 		# logme.debug('新建产品计划关联=>',order1)
 # 		except:
-# 			print('查询失败 略过 planid=>', order.main_id)
+# 			logme.debug('查询失败 略过 planid=>', order.main_id)
 # 			continue;
 
 # 		case = None
@@ -3074,7 +3075,7 @@ def queryfielddetail(request):
 # 			order2.author = author
 # 			order2.value = getnextvalue('plan_case', order2.main_id)
 # 			order2.save()
-# 	# print('建立计划用例关联=>',order2)
+# 	# logme.debug('建立计划用例关联=>',order2)
 # 	###
 
 # 	for order in listb:
@@ -3094,18 +3095,18 @@ def queryfielddetail(request):
 # 					break;
 # 		##
 # 		if stepid is None:
-# 			print('不正确的order关系step[%s_%s] 略过' % (caseid, businessid))
+# 			logme.debug('不正确的order关系step[%s_%s] 略过' % (caseid, businessid))
 # 			continue;
 
 # 		# step=case_step.get('%s_%s'%(caseid,stepid),None)
 # 		# if step is None:
 # 		step = Step.objects.get(id=stepid)
-# 		# print('获得老的step=>',step)
+# 		# logme.debug('获得老的step=>',step)
 # 		delete.append(copy.deepcopy(step))
 # 		step.id = None
 # 		step.save()
-# 		# print('获得新的step=>',step)
-# 		print("新建步骤%s 来源=>[%s,%s]" % (step, order.main_id, order.follow_id))
+# 		# logme.debug('获得新的step=>',step)
+# 		logme.debug("新建步骤%s 来源=>[%s,%s]" % (step, order.main_id, order.follow_id))
 # 		# case_step['%s_%s'%(case.id,stepid)]=step
 
 # 		case_new_id = None
@@ -3115,7 +3116,7 @@ def queryfielddetail(request):
 # 				case_new_id = plan_case[key].id
 
 # 		if case_new_id is None:
-# 			print('case_new_id不合理 略过[%s->%s]' % (order.main_id, order.follow_id))
+# 			logme.debug('case_new_id不合理 略过[%s->%s]' % (order.main_id, order.follow_id))
 # 			continue;
 
 # 		order3 = Order()
@@ -3125,7 +3126,7 @@ def queryfielddetail(request):
 # 		order3.author = author
 # 		order3.value = getnextvalue('case_step', order3.main_id)
 # 		order3.save()
-# 		# print('建立用例步骤关联=>',order3)
+# 		# logme.debug('建立用例步骤关联=>',order3)
 
 # 		step_new_id = step.id
 # 		# business=step_business.get('%s_%s'%(stepid,businessid), None)
@@ -3134,7 +3135,7 @@ def queryfielddetail(request):
 
 # 		business.id = None
 # 		business.save()
-# 		# print('新建测试点=>',business)
+# 		# logme.debug('新建测试点=>',business)
 # 		step_business['%s_%s' % (stepid, businessid)] = business
 
 # 		order4 = Order()
@@ -3145,25 +3146,25 @@ def queryfielddetail(request):
 # 		order4.value = getnextvalue('step_business', order4.main_id)
 # 		order4.save()
 
-# 	# print('建立步骤测试点关联=>',order4)
+# 	# logme.debug('建立步骤测试点关联=>',order4)
 
 # 	##删除老的order关系
-# 	print('==清除老的order关系')
+# 	logme.debug('==清除老的order关系')
 # 	orderlist = list(Order.objects.filter(Q(kind='case') | Q(kind='step')))
-# 	print('待删除数据=>', orderlist)
+# 	logme.debug('待删除数据=>', orderlist)
 # 	for order in orderlist:
 # 		order.delete()
 
-# 	print('==清除完成.')
+# 	logme.debug('==清除完成.')
 
 # 	##删除报告表
 # 	reportlist = list(ResultDetail.objects.all())
 # 	for report in reportlist:
 # 		report.delete()
-# 	print('==清除报告表')
+# 	logme.debug('==清除报告表')
 
 # 	##删除包含关系
-# 	print('==删除包含关系')
+# 	logme.debug('==删除包含关系')
 # 	planlist = list(Plan.objects.all())
 # 	for plan in list(set(planlist)):
 # 		plan.cases.clear()
@@ -3177,25 +3178,25 @@ def queryfielddetail(request):
 # 		step.businessdatainfo.clear()
 
 # 	# 删除老的实体数据
-# 	print('==清除老的实体数据')
-# 	print('待删除数据=>', delete)
+# 	logme.debug('==清除老的实体数据')
+# 	logme.debug('待删除数据=>', delete)
 # 	for i in delete:
 # 		try:
 # 			i.delete()
 # 		except:
-# 			# print(traceback.format_exc())
-# 			print('删除异常=>', i)
+# 			# logme.debug(traceback.format_exc())
+# 			logme.debug('删除异常=>', i)
 
-# 	print('==清除完成')
+# 	logme.debug('==清除完成')
 
-# 	print('==结束更新==')
+# 	logme.debug('==结束更新==')
 
 # 	return JsonResponse(pkg(code=0))
 
 
 def getfulltree(request):
 	data = cm.get_full_tree()
-	print(len(data))
+	logme.debug(len(data))
 	
 	return JsonResponse(pkg(data=data))
 
@@ -3317,7 +3318,7 @@ def _formatSize(bytes):
 		bytes = float(bytes)
 		kb = bytes / 1024
 	except:
-		print("传入的字节格式不对")
+		logme.debug("传入的字节格式不对")
 		return "Error"
 	
 	if kb >= 1024:
@@ -3337,7 +3338,7 @@ def _getDocSize(path):
 		size = os.path.getsize(path)
 		return _formatSize(size)
 	except Exception as err:
-		print(err)
+		logme.debug(err)
 
 
 # 获取文件夹大小
@@ -3351,7 +3352,7 @@ def _getFileSize(path):
 				sumsize += size
 		return _formatSize(sumsize)
 	except Exception as err:
-		print(err)
+		logme.debug(err)
 
 
 @csrf_exempt
@@ -3366,7 +3367,7 @@ def queryuserfile(request):
 	if not os.path.exists(userdir):
 		os.makedirs(userdir)
 	files = os.listdir(userdir)
-	print('files=>', files)
+	logme.debug('files=>', files)
 	for f in files:
 		if searchvalue and not f.__contains__(searchvalue):
 			continue;
@@ -3385,7 +3386,7 @@ def queryuserfile(request):
 def delfiles(request):
 	block_files = []
 	filenames = request.POST.get('filenames', '')
-	print('filenames=>', filenames)
+	logme.debug('filenames=>', filenames)
 	filenamelist = filenames.split(',')
 	for filename in filenamelist:
 		filepath = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File',
@@ -3394,7 +3395,7 @@ def delfiles(request):
 			os.remove(filepath)
 		except:
 			block_files.append(filename)
-			print(traceback.format_exc())
+			logme.debug(traceback.format_exc())
 	
 	if len(block_files) == 0:
 		return JsonResponse(pkg(code=0, msg='删除成功.'), safe=False)

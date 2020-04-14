@@ -6,6 +6,7 @@
 
 from manager.models import Template, TemplateField
 from login.models import User
+from ME2.settings import logme
 import os, re
 from ftplib import FTP
 from collections import OrderedDict
@@ -25,11 +26,11 @@ class MessageParser(object):
 		self.message = waitcheckmessage
 		self._expectlist = expectlist
 		
-		print('=====解析器初始化=========')
-		print('字段配置=>', self._parse_format)
-		print('带校验消息=>', self.message)
-		print('期望匹配=>', self._expectlist)
-		print('================')
+		logme.debug('=====解析器初始化=========')
+		logme.debug('字段配置=>', self._parse_format)
+		logme.debug('带校验消息=>', self.message)
+		logme.debug('期望匹配=>', self._expectlist)
+		logme.debug('================')
 	
 	def _get_f_value(self, fcode) -> tuple:
 		'''
@@ -55,7 +56,7 @@ class MessageParser(object):
 				return ('error', '字段排序从数字1开始')
 			
 			pf = text.split(sep)[idx - 1]
-			print('解析模板字段[%s] value=%s' % (fcode, pf))
+			logme.debug('解析模板字段[%s] value=%s' % (fcode, pf))
 			return ('success', pf)
 		
 		elif kind == 'length':
@@ -63,7 +64,7 @@ class MessageParser(object):
 			if start is None or end is None:
 				return ('error', '字段[%s]配置错误' % fcode)
 			
-			print('解析模板字段[%s] value=%s' % (fcode, text[int(start - 1):int(end)]))
+			logme.debug('解析模板字段[%s] value=%s' % (fcode, text[int(start - 1):int(end)]))
 			return ('success', text[int(start - 1):int(end)])
 	
 	def _compute_expression(self, child_exp: str):
@@ -99,7 +100,7 @@ class MessageParser(object):
 			res = '非法比较符'
 		
 		try:
-			print('获取计算表达式=>', res)
+			logme.debug('获取计算表达式=>', res)
 			o = eval(res)
 			return ('success', o) if o is True else ('fail', '表达式[%s]不成立' % child_exp)
 		except:
@@ -139,7 +140,7 @@ class MessageParser(object):
 		
 		except:
 			err = traceback.format_exc()
-			print(err)
+			logme.debug(err)
 			return {
 				'code': 4,
 				'msg': '新增模板异常'
@@ -172,7 +173,7 @@ class MessageParser(object):
 		
 		except:
 			error = '删除模板异常'
-			print(error + traceback.format_exc())
+			logme.debug(error + traceback.format_exc())
 			
 			return {
 				'code': 4,
@@ -200,7 +201,7 @@ class MessageParser(object):
 		
 		except:
 			error = '编辑模板异常'
-			print(error + traceback.format_exc())
+			logme.debug(error + traceback.format_exc())
 			return {
 				'code': 4,
 				'msg': error
@@ -215,7 +216,7 @@ class MessageParser(object):
 		
 		except:
 			msg = '查询模板通用属性异常'
-			print(msg + traceback.format_exc())
+			logme.debug(msg + traceback.format_exc())
 			return {
 				'code': 4,
 				'msg': msg
@@ -263,7 +264,7 @@ class MessageParser(object):
 		
 		except:
 			error = '查询模板字段异常'
-			print(error + traceback.format_exc())
+			logme.debug(error + traceback.format_exc())
 			return {
 				'code': 4,
 				'msg': error
@@ -333,7 +334,7 @@ class MessageParser(object):
 			for _ in str(ids).split(','):
 				tf = TemplateField.objects.get(id=int(_))
 				# tmpl=list(tf.template_set.all())
-				# print('待删除模板=>',tmpl)
+				# logme.debug('待删除模板=>',tmpl)
 				# [_.delete() for _ in tmpl]
 				tf.delete()
 			
@@ -378,7 +379,7 @@ class MessageParser(object):
 			return json.dumps(ft, cls=TemplateFieldEncoder)
 		except:
 			error = '查询字段异常'
-			print(error + traceback.format_exc())
+			logme.debug(error + traceback.format_exc())
 			return {
 				'code': 4,
 				'msg': error
@@ -439,7 +440,7 @@ class MessageParser(object):
 			
 			return ('success', res)
 		except:
-			print(traceback.format_exc())
+			logme.debug(traceback.format_exc())
 			return ('error', '获取模板[%s]解析配置异常' % templatename)
 
 

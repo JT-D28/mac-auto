@@ -2,10 +2,9 @@ mapurl={"acccore":["/adminsys/dataright/rolebankaccountright/add.do","/adminsys/
 
 mapurl['ABC']=['www.baidu.com']
 from manager.context import viewcache
-open=True
+open=False
 def getmenhu(url,taskid,username):
     if not open:return url
-    print('url*******************************'*200)
     for k,v in mapurl.items():
         for url0 in v:
             if url0 in url:

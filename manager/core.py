@@ -11,6 +11,7 @@ from collections import namedtuple
 from login.models import User
 from django.http import HttpResponse, JsonResponse
 from hashlib import md5
+from ME2.settings import logme
 from . import models
 from login import models as md
 from .models import Function
@@ -67,7 +68,7 @@ def decrypt_third_invoke_url_params(paramV):
 def genorder(kind="case", parentid=None, childid=None):
 	code = 0
 	
-	# print("type=%s parentid=%s childid=%s"%(kind,parentid,childid))
+	# logme.debug("type=%s parentid=%s childid=%s"%(kind,parentid,childid))
 	
 	try:
 		if parentid is not None:
@@ -82,9 +83,9 @@ def genorder(kind="case", parentid=None, childid=None):
 				# 保持原来顺序重新排序
 				sorted_steps_order = ordered(list(models.Order.objects.filter(main_id=parentid, kind=kind)))
 				
-				# print(len(sorted_steps_order))
+				# logme.debug(len(sorted_steps_order))
 				for order in sorted_steps_order:
-					# print(order.id,order.main_id,order.follow_id)
+					# logme.debug(order.id,order.main_id,order.follow_id)
 					models.Order.objects.filter(id=order.id).update(value="%s.%s" % (start_group_id, start_index))
 					# models.Order.objects.filter(id=order.id).update(value='1.4')
 					start_index = start_index + 1
@@ -102,11 +103,11 @@ def genorder(kind="case", parentid=None, childid=None):
 					order.save()
 				
 				else:
-					print("更新group..")
+					logme.debug("更新group..")
 					is_update = False
 					for order in sorted_steps_order:
 						step_id = order.follow_id
-						print(type(childid))
+						logme.debug(type(childid))
 						if int(step_id) == int(childid):
 							is_update = True
 							value = models.Order.objects.get(main_id=parentid, follow_id=childid, kind=kind).value
@@ -125,25 +126,25 @@ def genorder(kind="case", parentid=None, childid=None):
 	
 	except Exception as e:
 		code = 1
-		traceback.print_exc(e)
+		traceback.logme.debug_exc(e)
 	
 	finally:
 		return code
 
 
 def changepostion(kind, parentid, childid, move=1):
-	# print('=='*100)
-	# print(kind,parentid,childid,move)
+	# logme.debug('=='*100)
+	# logme.debug(kind,parentid,childid,move)
 	flag, msg = 'success', ''
 	try:
 		parentid = int(parentid)
 		childid = int(childid)
 		move = int(move)
-		# print(parentid,childid,move)
+		# logme.debug(parentid,childid,move)
 		orderlist = ordered(list(models.Order.objects.filter(main_id=parentid, kind=kind).order_by('value')))
-		# print("orderlist=>",orderlist)
+		# logme.debug("orderlist=>",orderlist)
 		size = len(orderlist)
-		# print('移动项所列表长度',size)
+		# logme.debug('移动项所列表长度',size)
 		pos = -1
 		for item in orderlist:
 			pos = pos + 1
@@ -151,10 +152,10 @@ def changepostion(kind, parentid, childid, move=1):
 				break;
 		
 		if pos + move >= size or pos + move < 0:
-			print("------------边界操作忽略...--------------")
+			logme.debug("------------边界操作忽略...--------------")
 			return 0
 		
-		# print("移动项所在位置=>",pos)
+		# logme.debug("移动项所在位置=>",pos)
 		
 		tmp = orderlist[pos].value
 		orderlist[pos].value = orderlist[pos + move].value
@@ -164,7 +165,7 @@ def changepostion(kind, parentid, childid, move=1):
 	except:
 		flag = 'error'
 		msg = 'changepostion操作异常[%s]' % traceback.format_exc()
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 	return (flag, msg)
 
 
@@ -184,7 +185,7 @@ def swap(kind, main_id, aid, bid):
 	
 	
 	except:
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 		msg = 'swap操作异常%s' % traceback.format_exc()
 		flag = 'error'
 	
@@ -198,7 +199,7 @@ def swap(kind, main_id, aid, bid):
 # 	page=int(request.GET.get("page"))
 # 	limit=int(request.GET.get("limit"))
 
-# 	print("获取分页数据 page=%s limit=%s"%(page,limit))
+# 	logme.debug("获取分页数据 page=%s limit=%s"%(page,limit))
 
 # 	start=(page-1)*limit+1
 # 	end=page*limit+1
@@ -212,19 +213,19 @@ def testinterface(interface):
 		method = interface.method
 		
 		cmdstr = 'requests.%s(%s,data=%s)' % (method, url, body)
-		print("执行请求=>", cmdstr)
+		logme.debug("执行请求=>", cmdstr)
 		res = eval(cmdstr)
-		print("执行结果=>", res.text)
+		logme.debug("执行结果=>", res.text)
 		return True
 	except Exception as e:
-		print(e)
+		logme.debug(e)
 
 
 def testfunc(functionstr):
 	try:
-		print("执行函数=>", functionstr)
+		logme.debug("执行函数=>", functionstr)
 		res = eval(functionstr)
-		print("执行结果=>", res)
+		logme.debug("执行结果=>", res)
 		return res
 	except Exception as e:
 		return False
@@ -237,7 +238,7 @@ def testfunc(functionstr):
 # 			eval(step.body)
 # 			return True
 # 		except Exception as e:
-# 			print(e)
+# 			logme.debug(e)
 # 			return False
 
 # 	elif type_=='interface':
@@ -246,9 +247,9 @@ def testfunc(functionstr):
 # 			url=step.interface.url
 # 			body=step.body
 # 			method=step.interface.method
-# 			print("接口地址=>"%url)
-# 			print("请求方式=>"%method)
-# 			print("请求参数=>"%body)
+# 			logme.debug("接口地址=>"%url)
+# 			logme.debug("请求方式=>"%method)
+# 			logme.debug("请求参数=>"%body)
 # 			#requests.post(url,data=body)
 # 			response=eval('requests.%s(url,data=body)'%method)
 # 			d=eval(_responsefilter(response.text))
@@ -261,7 +262,7 @@ def testfunc(functionstr):
 
 # 			return True
 # 		except Exception as e:
-# 			print(e)
+# 			logme.debug(e)
 # 			return False
 
 # 	else:
@@ -273,7 +274,7 @@ def testfunc(functionstr):
 # def _is_sql_call(str_):
 # 	s=str_.strip()
 # 	res=len(re.findall('|'.join(__sql_key),s))
-# 	#print(res)
+# 	#logme.debug(res)
 # 	if res>0:
 # 		return True
 # 	else:
@@ -333,12 +334,12 @@ def testfunc(functionstr):
 def packagemenu(list_):
 	root = None
 	for menu in list_:
-		# print(menu.parentid)
+		# logme.debug(menu.parentid)
 		if menu.parentid == '0':
 			root = menu
 			break
 	
-	# print(root)
+	# logme.debug(root)
 	
 	_packagenodechildren(root, list_)
 	
@@ -352,7 +353,7 @@ def _packagenodechildren(menu, list_):
 	for cmenu in list_:
 		cmenu.child = []
 		if cmenu.parentid == str(menu.id):
-			print("uuuuuuuuuuuuuuuuuuuuuuuuuuuuu")
+			logme.debug("uuuuuuuuuuuuuuuuuuuuuuuuuuuuu")
 			menu.child.append(cmenu)
 			alist = copy.deepcopy(list_)
 			alist.remove(cmenu)
@@ -385,22 +386,22 @@ class XJsonEncoder(json.JSONEncoder):
 	def __init__(self, attrs=None, **args):
 		
 		self._total = args.get('total', None)
-		# print('self.total=>',self._total)
+		# logme.debug('self.total=>',self._total)
 		if self._total is not None:
 			del args['total']
 		
 		super(XJsonEncoder, self).__init__(**args)
 		self._attrs = attrs
 	
-	# print('attrs=>',self._attrs)
-	# print('args=>',args)
+	# logme.debug('attrs=>',self._attrs)
+	# logme.debug('args=>',args)
 	
 	def default(self, obj):
 		_map = {}
 		
-		# print(len(self._attrs))
+		# logme.debug(len(self._attrs))
 		for x in self._attrs:
-			# print("name=>",x)
+			# logme.debug("name=>",x)
 			v = ''
 			
 			try:
@@ -411,13 +412,13 @@ class XJsonEncoder(json.JSONEncoder):
 				v = str(v)
 			
 			except:
-				# print(type(obj))
-				# print('error',obj,x)
+				# logme.debug(type(obj))
+				# logme.debug('error',obj,x)
 				v = str(obj)
 			finally:
 				_map[x] = v
 		
-		# print(_map)
+		# logme.debug(_map)
 		
 		return _map
 	
@@ -484,7 +485,7 @@ class CaseEncoder(XJsonEncoder):
 						x['weight'] = '未知'
 			
 			except:
-				print(traceback.format_exc())
+				logme.debug(traceback.format_exc())
 				x['weight'] = '未知'
 		
 		return {
@@ -504,14 +505,14 @@ class PlanEncoder(XJsonEncoder):
 			 'mail_config_id', 'db_id', 'is_send_dingding', 'is_send_mail', 'schemename'], **args)
 	
 	def encode(self, obj):
-		# print('hhhh'*100)
+		# logme.debug('hhhh'*100)
 		L = eval(super(XJsonEncoder, self).encode(obj))
 		code = 0
 		if not isinstance(L, (list)):
 			L = [L]
 		
-		# print('UU'*100)
-		# print(L)
+		# logme.debug('UU'*100)
+		# logme.debug(L)
 		
 		for x in L:
 			
@@ -524,7 +525,7 @@ class PlanEncoder(XJsonEncoder):
 				is_send_dingding = models.MailConfig.objects.get(id=config_id).is_send_dingding
 				x['is_send_mail'] = is_send_mail
 				x['is_send_dingding'] = is_send_dingding
-			# print("uuuuuuuuuu=>",x)
+			# logme.debug("uuuuuuuuuu=>",x)
 			
 			except:
 				
@@ -532,7 +533,7 @@ class PlanEncoder(XJsonEncoder):
 				x['is_send_mail'] = 'disabled'
 				pass
 		
-		print(L)
+		logme.debug(L)
 		
 		return {
 			"code": 0,
@@ -574,16 +575,16 @@ class StepEncoder(XJsonEncoder):
 			L = [L]
 		
 		for x in L:
-			# print("x=>",x)
+			# logme.debug("x=>",x)
 			tag_id = x.get('tag_id')
 			uid = x.get('id')
 			try:
 				
-				print('weight=>', uid)
+				logme.debug('weight=>', uid)
 				x['weight'] = list(models.Order.objects.filter(kind='case_step', follow_id=int(uid)))[0].value
 			
 			except:
-				print(traceback.format_exc())
+				logme.debug(traceback.format_exc())
 				x['weight'] = '未知'
 			
 			try:
@@ -624,21 +625,21 @@ class BusinessDataEncoder(XJsonEncoder):
 					0].value
 			
 			except:
-				print('weight=>', traceback.format_exc())
+				logme.debug('weight=>', traceback.format_exc())
 				x['weight'] = '未知'
 			
-			# print('x[weight]=>',x['weight'])
+			# logme.debug('x[weight]=>',x['weight'])
 			
 			if x.get('count') == 'None':
 				x['count'] = 1
-			# print('count=>',x['count'])
+			# logme.debug('count=>',x['count'])
 			
 			try:
 				##找关联step
 				stepinst = None
 				for step in list(models.Step.objects.all()):
 					businessids = [sb.id for sb in getchild('step_business', step.id)]
-					# print(businessids)
+					# logme.debug(businessids)
 					idd = x.get('id')
 					try:
 						idd = int(idd)
@@ -652,7 +653,7 @@ class BusinessDataEncoder(XJsonEncoder):
 				if stepinst is None:
 					warnings.warn('获取业务数据[id=%s]关联步骤操作失败' % x.get('id'))
 				else:
-					print('[获取业务数据关联步骤]step_id=%s' % stepinst.id)
+					logme.debug('[获取业务数据关联步骤]step_id=%s' % stepinst.id)
 					# stepinst=step_matchs[0]
 					# tag_id=stepinst.tag_id
 					x['stepname'] = stepinst.description
@@ -662,7 +663,7 @@ class BusinessDataEncoder(XJsonEncoder):
 			# 	x['tagname']=models.Tag.objects.get(id=tag_id.strip()).name
 			
 			except:
-				print(traceback.format_exc())
+				logme.debug(traceback.format_exc())
 		# x['tagname']=''
 		
 		return {
@@ -755,7 +756,7 @@ def getpagedata(data, page, limit):
 	'''
 	返回分页数据与元数据大小
 	'''
-	print('page=>%s limit=>%s' % (page, limit))
+	logme.debug('page=>%s limit=>%s' % (page, limit))
 	if page is None or limit is None:
 		return data, len(data)
 	
@@ -767,8 +768,8 @@ def getpagedata(data, page, limit):
 	end = int(page) * int(limit)
 	data = data[start:end]
 	
-	print("分页信息[分页数据大小=%s 返回%s-%s数据]" % (len(old), start + 1, end))
-	# print(start,end)
+	logme.debug("分页信息[分页数据大小=%s 返回%s-%s数据]" % (len(old), start + 1, end))
+	# logme.debug(start,end)
 	return data, len(old)
 
 
@@ -779,8 +780,8 @@ def ordered(iterator, key='value'):
 	try:
 		for i in range(len(iterator) - 1):
 			for j in range(i + 1, len(iterator)):
-				# print(key,getattr(iterator[i],key).split(".")[0],int(str(getattr(iterator[i],key)).split(".")[0]))
-				# print('attr value=>',iterator[i].value)
+				# logme.debug(key,getattr(iterator[i],key).split(".")[0],int(str(getattr(iterator[i],key)).split(".")[0]))
+				# logme.debug('attr value=>',iterator[i].value)
 				
 				groupa = int(str(getattr(iterator[i], key)).split(".")[0])
 				groupb = int(str(getattr(iterator[j], key)).split(".")[0])
@@ -799,7 +800,7 @@ def ordered(iterator, key='value'):
 						iterator[j] = tmp
 	
 	except:
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 	finally:
 		return iterator
 
@@ -830,9 +831,9 @@ def getbuiltin(searchvalue=None, filename='builtin.py'):
 	list_ = []
 	with open(path, encoding='utf-8') as f:
 		content = f.read()
-		# print(content)
+		# logme.debug(content)
 		methodnames = re.findall("def\s+(.*?)\(", content)
-		print('builtin methodnames=>', methodnames)
+		logme.debug('builtin methodnames=>', methodnames)
 		if searchvalue is None:
 			for methodname in methodnames:
 				if methodname.startswith('_'):
@@ -869,8 +870,8 @@ class Fu:
 		更新本地函数文件
 		"""
 		
-		print("*" * 20)
-		print("开始更新本地函数信息..")
+		logme.debug("*" * 20)
+		logme.debug("开始更新本地函数信息..")
 		
 		try:
 			list_ = list(models.Function.objects.all())
@@ -884,7 +885,7 @@ class Fu:
 				
 				if not os.path.exists(path):
 					os.makedirs(path)
-				# print("path=>",path)
+				# logme.debug("path=>",path)
 				# add __init__.py
 				initpath = os.path.join(path, "__init__.py")
 				if not os.path.exists(initpath):
@@ -893,29 +894,29 @@ class Fu:
 				
 				path = os.path.join(path, filename + '.py')
 				with open(path, 'w', encoding='utf-8') as f:
-					# print("body=>",body)
-					# print(type(body))
+					# logme.debug("body=>",body)
+					# logme.debug(type(body))
 					a = base64.b64decode(body).decode(encoding='utf-8')
-					# print(a)
+					# logme.debug(a)
 					f.write(a)
 				
 				if id_ is not None and id_ == x.id:
-					print("*" * 20)
-					print("更新函数:%s 完毕." % x.name)
-					print("*" * 20)
+					logme.debug("*" * 20)
+					logme.debug("更新函数:%s 完毕." % x.name)
+					logme.debug("*" * 20)
 					return 0
 			
-			print("*" * 20)
-			print("更新所有函数完毕.")
-			print("*" * 20)
+			logme.debug("*" * 20)
+			logme.debug("更新所有函数完毕.")
+			logme.debug("*" * 20)
 			return 0
 		
 		except Exception as e:
-			print(e)
-			# traceback.print_exc(e)
-			print("*" * 20)
-			print("更新函数失败.")
-			print("*" * 20)
+			logme.debug(e)
+			# traceback.logme.debug_exc(e)
+			logme.debug("*" * 20)
+			logme.debug("更新函数失败.")
+			logme.debug("*" * 20)
 			return 1
 	
 	@classmethod
@@ -940,36 +941,36 @@ class Fu:
 		
 		# 带关键字参数和可变参数的 都按a()计算
 		# 参数带=好 记为关键参数 去除
-		print('函数的所有参数数据=>',paramlist)
+		logme.debug('函数的所有参数数据=>',paramlist)
 		paramlist = [p for p in paramlist if not p.startswith('*') and not p.__contains__('=') and p.strip()]
-		print('函数的去除无效参数数据=>',paramlist)
+		logme.debug('函数的去除无效参数数据=>',paramlist)
 		size = len(paramlist)
-		print('大小=>',size)
+		logme.debug('大小=>',size)
 		paramstr = ",".join(pool[0:size])
 		final = "%s(%s)" % (funcname, paramstr)
-		print('\n获取函数特征码铭文=>\n', final)
+		logme.debug('\n获取函数特征码铭文=>\n', final)
 		md5_=cls._md5(final)
-		print('\n获取函数特征码密文=>\n', md5_)
+		logme.debug('\n获取函数特征码密文=>\n', md5_)
 		
 		return md5_
 	
 	@classmethod
 	def call(cls, funcobj, call_str, builtin=False, username=None, taskid=None):
-		# print("内置=>",builtin)
-		# print('调用=》',call_str)
+		# logme.debug("内置=>",builtin)
+		# logme.debug('调用=》',call_str)
 		try:
 			res = None
 			if builtin is True:
 				try:
 					call_str = call_str.replace('\n', '')
-					# print('调用原表达式=>', call_str)
+					# logme.debug('调用原表达式=>', call_str)
 					#无效代码可以去掉
 					# if call_str.startswith('dbexecute') and taskid not in call_str:
 					# 	call_str = call_str.replace(')', ',taskid="%s",callername="%s")' % (taskid, username))
 					
 
 					res = eval(call_str)
-					print("调用内置函数表达式:%s 结果为:%s" % (call_str, res))
+					logme.debug("调用内置函数表达式:%s 结果为:%s" % (call_str, res))
 					if isinstance(res, (tuple,)):
 						if res[0] is not 'success':
 							return res
@@ -988,59 +989,59 @@ class Fu:
 				except:
 					try:
 						methodname = call_str.split('(')[0]
-						print('methodname=>', methodname)
+						logme.debug('methodname=>', methodname)
 						
 						s1 = re.findall('\((.*?),taskid=', call_str)[0]  # sql
 						s2 = re.findall('taskid=(.*?),', call_str)[0]  # taskid
 						s3 = re.findall('callername=(.*?)\)', call_str)[0]  # callername
 						
-						print('s1=%s\ns2=%s\ns3=%s' % (s1, s2, s3))
+						logme.debug('s1=%s\ns2=%s\ns3=%s' % (s1, s2, s3))
 						
 						argstr = re.findall('\((.*)\)', call_str)[0]
 						# arglist=argstr.split(',')
-						# print('arglist=>',arglist)
-						# print('size=>',len(arglist))
-						# print('methodname=>',methodname)
-						# print('argstr=>',argstr)
+						# logme.debug('arglist=>',arglist)
+						# logme.debug('size=>',len(arglist))
+						# logme.debug('methodname=>',methodname)
+						# logme.debug('argstr=>',argstr)
 						call_str = ''
 						if argstr.strip():
 							if methodname.startswith('db'):
 								call_str = '%s(\"%s\",taskid=%s,callername=%s)' % (methodname, s1, s2, s3)
-							# print('参数加双引号后表达式=>', call_str)
+							# logme.debug('参数加双引号后表达式=>', call_str)
 							else:
 								call_str = '%s(%s,taskid=%s,callername=%s)' % (methodname, s1, s2, s3)
 						
 						else:
 							call_str = '%s()' % (methodname,)
 						# call_str1='createPhone()'
-						# print(eval(call_str1))
+						# logme.debug(eval(call_str1))
 						
-						# print('最终计算=>', call_str)
+						# logme.debug('最终计算=>', call_str)
 						res = eval(call_str)
 						if res[0] is not 'success':
 							return res
 					
 					except:
-						print(traceback.format_exc())
+						logme.debug(traceback.format_exc())
 						return ('error', "非法表达式[%s]" % call_str)
 			
 			else:
-				print('fucobj=>', funcobj)
+				logme.debug('fucobj=>', funcobj)
 				user = funcobj.author
 				flag = funcobj.flag
 				f = __import__('manager.storage.private.Function.%s.func_%s' % (user, flag), fromlist=True)
 				callstr = "f.%s" % (call_str)
-				# print(callstr)
+				# logme.debug(callstr)
 				callstr = callstr.replace('\n', '')
-				print('ccc=>\n', callstr)
-				print('\n' in callstr)
+				logme.debug('ccc=>\n', callstr)
+				logme.debug('\n' in callstr)
 				res = eval(callstr)
-				print("调用用户定义表达式:%s 结果为:%s" % (callstr, res))
+				logme.debug("调用用户定义表达式:%s 结果为:%s" % (callstr, res))
 			
 			return ('success', res)
 		
 		except Exception as e:
-			print(traceback.format_exc())
+			logme.debug(traceback.format_exc())
 			return ('error', '调用表达式[%s]异常[%s]' % (call_str, traceback.format_exc()))
 	
 	@classmethod
@@ -1072,7 +1073,7 @@ class EncryptUtils:
 		# key uid
 		Des_Key = (EncryptUtils.key + "0000")[0:8]
 		EncryptStr = base64.b64decode(str_)
-		# print(EncryptStr)
+		# logme.debug(EncryptStr)
 		k = des(Des_Key, CBC, EncryptUtils.Des_IV, pad=None, padmode=PAD_PKCS5)
 		DecryptStr = k.decrypt(EncryptStr)
 		return DecryptStr.decode()

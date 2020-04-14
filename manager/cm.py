@@ -10,6 +10,7 @@ import traceback, datetime
 from django.db.models import Q
 from manager import models as mm
 from django.db import connection
+from ME2.settings import logme
 
 from login import models as lm
 from .context import *
@@ -42,7 +43,7 @@ def addproduct(request):
 		}
 	
 	except:
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 		return {
 			'status': 'error',
 			'msg': '新增[%s]异常' % product.description
@@ -192,7 +193,7 @@ def delplan(request):
 
 
 def handlebindplans(olddescription, newdescription, id_):
-	print("处理计划名修改后的标签中绑定的计划名称")
+	logme.debug("处理计划名修改后的标签中绑定的计划名称")
 	oldtags = Tag.objects.values('id', 'planids').filter(Q(planids__contains=olddescription))
 	for oldtag in oldtags:
 		planids = json.loads(oldtag['planids'])
@@ -202,7 +203,7 @@ def handlebindplans(olddescription, newdescription, id_):
 			ol[newdescription] = ol.pop(olddescription)
 			edittag.planids = str(ol).replace("'", '"')
 			edittag.save()
-			print(str(edittag.id) + '更新完成')
+			logme.debug(str(edittag.id) + '更新完成')
 
 
 def editplan(request):
@@ -217,7 +218,7 @@ def editplan(request):
 		plan.description = newdescription
 		plan.db_id = request.POST.get('dbid')
 		plan.schemename = request.POST.get('scheme')
-		print('description=>', plan.description)
+		logme.debug('description=>', plan.description)
 		plan.run_type = request.POST.get('run_type')
 		plan.save()
 		if plan.mail_config_id == '' or plan.mail_config_id is None:  # 针对老任务，没有邮箱配置
@@ -286,7 +287,7 @@ def run(request):
 def export(request):
 	flag = str(datetime.datetime.now()).split('.')[0]
 	version = request.GET.get('version')
-	print('version=>', version)
+	logme.debug('version=>', version)
 	planid = request.GET.get('planid')
 	m = DataMove()
 	res = m.export_plan(planid, flag, version=int(version))
@@ -399,12 +400,12 @@ def addstep(request):
 		content_type = request.POST.get('content_type')
 		db_check = request.POST.get('db_check')
 		itf_check = request.POST.get('itf_check')
-		print('itf_check=>', itf_check)
+		logme.debug('itf_check=>', itf_check)
 		tmp = request.POST.get('tmp')
 		author = request.session.get('username')
-		print("author=>", author)
+		logme.debug("author=>", author)
 		businessdata = request.POST.get('business_data')
-		print('businessdata=>', type(businessdata), businessdata)
+		logme.debug('businessdata=>', type(businessdata), businessdata)
 		dbid = request.POST.get('dbid')
 
 		##
@@ -462,12 +463,12 @@ def addstep(request):
 		# 		# flag=Fu.tzm_compute(step.body,'(.*?)\((.*?)\)')
 		# 		businessdatainst=None
 		# 		businessinfo=getchild('step_business',step.id)
-		# 		print('vvvv=>',businessinfo,step.id)
+		# 		logme.debug('vvvv=>',businessinfo,step.id)
 		# 		if len(businessinfo)>0:
 		# 			businessdatainst=businessinfo[0]
 		
 		# 		status,res=gettestdataparams(businessdatainst.id)
-		# 		print('gettestdataparams=>%s'%res)
+		# 		logme.debug('gettestdataparams=>%s'%res)
 		# 		if status is not 'success':
 		# 			return (status,res)
 		
@@ -546,13 +547,13 @@ def editstep(request):
 
 		stepname = description
 		
-		print('step save,count=>', count)
+		logme.debug('step save,count=>', count)
 		if step.count == 0:
 			stepname = '<s>%s</s>' % stepname
 		
 		# mounttestdata(username, step.id,trigger='edit')
 		
-		print('step save,name=>', stepname)
+		logme.debug('step save,name=>', stepname)
 		return {
 			'status': 'success',
 			'msg': '编辑成功',
@@ -560,7 +561,7 @@ def editstep(request):
 		}
 	
 	except Exception as e:
-		# print(traceback.format_exc())
+		# logme.debug(traceback.format_exc())
 		return {
 			'status': 'error',
 			'msg': '编辑失败[%s]' % traceback.format_exc()
@@ -598,7 +599,7 @@ def delstep(request):
 
 def _check_params(param_value):
 	if param_value.startswith('{') and param_value.endswith('}'):
-		print('f1')
+		logme.debug('f1')
 		try:
 			
 			eval(param_value)
@@ -606,7 +607,7 @@ def _check_params(param_value):
 		except:
 			return False
 	else:
-		print('f2')
+		logme.debug('f2')
 		return True
 
 
@@ -627,7 +628,7 @@ def addbusiness(request):
 		b.parser_id = request.POST.get('parser_id')
 		
 		# check_result=_check_params(b.params)
-		# print('nn=>',check_result)
+		# logme.debug('nn=>',check_result)
 		# if not check_result:
 		# 	return{
 		# 	'status':'error',
@@ -662,12 +663,12 @@ def addbusiness(request):
 				# flag=Fu.tzm_compute(step.body,'(.*?)\((.*?)\)')
 				businessdatainst = None
 				businessinfo = getchild('step_business', step.id)
-				print('vvvv=>', businessinfo, step.id)
+				logme.debug('vvvv=>', businessinfo, step.id)
 				if len(businessinfo) > 0:
 					businessdatainst = businessinfo[0]
 				
 				status, res = mm.BusinessData.gettestdataparams(businessdatainst.id)
-				print('gettestdataparams=>%s' % res)
+				logme.debug('gettestdataparams=>%s' % res)
 				if status is not 'success':
 					return {
 						'status': status,
@@ -686,7 +687,7 @@ def addbusiness(request):
 					}
 				related_id = funcs[0].id
 				
-				print('修改step related_id=>', related_id)
+				logme.debug('修改step related_id=>', related_id)
 				step.related_id = related_id
 				step.save()
 		
@@ -828,7 +829,7 @@ def movenode(request):
 			'status': 'success',
 			'msg': '操作成功'}
 	except:
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 		return {
 			'status': 'error',
 			'msg': '移动异常'
@@ -855,16 +856,16 @@ def addrelation(kind, callername, main_id, follow_id):
 
 
 def delrelation(kind, callername, main_id, follow_id):
-	# print('==删除关联关系')
-	# print('kind=>',kind)
-	# print('main_id=>',main_id)
-	# print('follow_id=>',follow_id)
+	# logme.debug('==删除关联关系')
+	# logme.debug('kind=>',kind)
+	# logme.debug('main_id=>',main_id)
+	# logme.debug('follow_id=>',follow_id)
 	try:
 		ol = mm.Order.objects.get(kind=kind, main_id=main_id, follow_id=follow_id)
-		print('==删除节点关联[%s]' % ol)
+		logme.debug('==删除节点关联[%s]' % ol)
 		ol.delete()
 	# length=len(ol)
-	# print('找到[%s]条待删除'%length)
+	# logme.debug('找到[%s]条待删除'%length)
 	# for o in ol:
 	# 	o.delete()
 	
@@ -872,11 +873,11 @@ def delrelation(kind, callername, main_id, follow_id):
 	# 	Order.objects.get(kind='case_case',follow_id=follow_id).delete()
 	
 	except:
-		print('==删除节点关联报错')
-		print(traceback.format_exc())
+		logme.debug('==删除节点关联报错')
+		logme.debug(traceback.format_exc())
 
 
-# print('删除完毕')
+# logme.debug('删除完毕')
 def getchild(kind, main_id):
 	'''
 	返回有序子项
@@ -885,22 +886,23 @@ def getchild(kind, main_id):
 	orderlist = ordered(list(mm.Order.objects.filter(kind=kind, main_id=main_id)))
 	if kind == 'product_plan':
 		for order in orderlist:
-			print('planid=>', order.follow_id)
+			logme.debug('planid=>', order.follow_id)
 			try:
-				print('plan class=>', mm.Plan)
+				logme.debug('plan class=>', mm.Plan)
 				p = mm.Plan.objects.get(id=order.follow_id)
-				# print('添加计划=>',plan)
+				# logme.debug('添加计划=>',plan)
 				child.append(p)
 			# pirnt('child=>',child)
 			except:
-				print(traceback.format_exc())
+				logme.warn('找不到计划 ID=%s'%order.follow_id)
+				#logme.debug(traceback.format_exc())
 	elif kind == 'plan_case':
 		for order in orderlist:
-			print('case class=>', mm.Case)
+			logme.debug('case class=>', mm.Case)
 			child.append(mm.Case.objects.get(id=order.follow_id))
 	elif kind == 'case_step':
 		for order in orderlist:
-			print('main=>%s follow=>%s v=%s' % (order.main_id, order.follow_id, order.value))
+			logme.debug('main=>%s follow=>%s v=%s' % (order.main_id, order.follow_id, order.value))
 			
 			child.append(mm.Step.objects.get(id=order.follow_id))
 	elif kind == 'step_business':
@@ -915,17 +917,17 @@ def getchild(kind, main_id):
 		for order in orderlist:
 			kind = order.kind
 			ctype = kind.split('_')[1]
-			# print('old ctype=>',ctype)
+			# logme.debug('old ctype=>',ctype)
 			if ctype in ('business', 'businessdata'):
 				ctype = "BusinessData"
 			else:
 				ctype = ctype[0].upper() + ctype[1:]
 			
-			# print('last ctype=>',ctype)
+			# logme.debug('last ctype=>',ctype)
 			
 			child.append(eval('mm.%s.objects.get(id=%s)' % (ctype, order.follow_id)))
 	
-	# print('ck=>',child)
+	# logme.debug('ck=>',child)
 	return child
 
 
@@ -969,7 +971,7 @@ def ordered(iterator, key='value', time_asc=True):
 	
 	
 	except:
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 	finally:
 		return iterator
 
@@ -978,7 +980,7 @@ def _regen_weight_force(parent_type, parent_id, ignore_id=None):
 	'''
 	重排父级权重
 	'''
-	print('==强制删除后兄弟节点权重调整')
+	logme.debug('==强制删除后兄弟节点权重调整')
 	try:
 		kind = ''
 		ol = ordered(list(mm.Order.objects.filter(Q(kind__contains='%s_' % parent_type) & Q(main_id=parent_id))))
@@ -994,7 +996,7 @@ def _regen_weight_force(parent_type, parent_id, ignore_id=None):
 				ol[idx - 1].value = '1.%s' % cur
 				ol[idx - 1].save()
 	except:
-		print('强制删除后兄弟节点权重调整异常=>', traceback.format_exc())
+		logme.debug('强制删除后兄弟节点权重调整异常=>', traceback.format_exc())
 
 
 def _regen_weight(callername, element, trigger='prev', target_id=None):
@@ -1014,9 +1016,9 @@ def _regen_weight(callername, element, trigger='prev', target_id=None):
 		
 		delrelation(order.kind, callername, parentid, element.id)
 		
-		print('==删除节点[%s]' % element)
+		logme.debug('==删除节点[%s]' % element)
 		element.delete()
-		print('==删除后重新生成权重')
+		logme.debug('==删除后重新生成权重')
 		orderlist = ordered(list(mm.Order.objects.filter(Q(kind__contains=text) & Q(main_id=parentid))))
 		
 		index = 0
@@ -1030,9 +1032,9 @@ def _regen_weight(callername, element, trigger='prev', target_id=None):
 			weight = '%s.%s' % (group, index)
 			order.value = weight
 			order.save()
-			print('[%s]=>[%s]' % (old, order))
+			logme.debug('[%s]=>[%s]' % (old, order))
 		
-		print('生成后=>', orderlist)
+		logme.debug('生成后=>', orderlist)
 	
 	else:
 		c = element.__class__.__name__.lower()
@@ -1043,7 +1045,7 @@ def _regen_weight(callername, element, trigger='prev', target_id=None):
 		group = order.value.split('.')[0]
 		parentkind = order.kind.split('_')[0]
 		text = '%s_' % parentkind
-		# print('text=%s main_id=%s'%(text,parentid))
+		# logme.debug('text=%s main_id=%s'%(text,parentid))
 		orderlist = ordered(list(mm.Order.objects.filter(Q(kind__contains=text) & Q(main_id=parentid))))
 		
 		if trigger == 'prev':
@@ -1054,10 +1056,10 @@ def _regen_weight(callername, element, trigger='prev', target_id=None):
 			# 最后一个不用在处理
 			pass
 		
-		print('===[%s]操作 根据时间处理再排序=>%s' % (trigger, orderlist))
+		logme.debug('===[%s]操作 根据时间处理再排序=>%s' % (trigger, orderlist))
 		
 		##重新生成序号 只处理同组号的数据
-		print('==兄弟节点重新生成权重')
+		logme.debug('==兄弟节点重新生成权重')
 		
 		index = 0
 		for order in orderlist:
@@ -1065,16 +1067,16 @@ def _regen_weight(callername, element, trigger='prev', target_id=None):
 			index = index + 1
 			curgroup = order.value.split('.')[0]
 			
-			print('==拖动组号=>%s 兄弟节点组号=>%s 相等=>%s' % (group, curgroup, group == curgroup))
+			logme.debug('==拖动组号=>%s 兄弟节点组号=>%s 相等=>%s' % (group, curgroup, group == curgroup))
 			if curgroup != group:
 				continue
 			
 			weight = '%s.%s' % (group, index)
 			order.value = weight
 			order.save()
-			print('[%s]=>[%s]' % (old, order))
+			logme.debug('[%s]=>[%s]' % (old, order))
 		
-		print('生成后=>', orderlist)
+		logme.debug('生成后=>', orderlist)
 
 
 def _resort_by_create_when_equal(orderlist, asc=True):
@@ -1100,7 +1102,7 @@ def getnextvalue(kind, main_id, flag=0):
 			mm.Order.objects.filter(kind='case_step', main_id=main_id))
 	else:
 		orderlist = list(mm.Order.objects.filter(kind=kind, main_id=main_id))
-	# print('list=>',orderlist)
+	# logme.debug('list=>',orderlist)
 	
 	if len(orderlist) == 0:
 		return '1.1'
@@ -1113,19 +1115,19 @@ def getnextvalue(kind, main_id, flag=0):
 
 
 def _get_delete_node(src_uid, src_type, iscopy, del_nodes):
-	# print('iscopy=>',iscopy)
+	# logme.debug('iscopy=>',iscopy)
 	if iscopy == 'true':
-		print('==复制操作 略过添加待删除源数据')
+		logme.debug('==复制操作 略过添加待删除源数据')
 	else:
-		print('==计算待删除源数据==')
+		logme.debug('==计算待删除源数据==')
 		del_nodes.append((src_type, str(src_uid)))
 		parent_type, parent_id = _get_node_parent_info(src_type, src_uid)
 		
 		# kind='%s_%s'%(parent_type,src_type)
 		
-		# print('k1=>',kind)
+		# logme.debug('k1=>',kind)
 		childs = getchild('%s_' % src_type, src_uid)  ##??
-		# print('childs=>',childs)
+		# logme.debug('childs=>',childs)
 		for child in childs:
 			child_type = child.__class__.__name__.lower()
 			_get_delete_node(child.id, child_type, False, del_nodes)
@@ -1150,16 +1152,16 @@ def _sort_by_weight(childs):
 				desp = c.description
 			except:
 				desp = c.businessname
-			print('desp=>', descp)
+			logme.debug('desp=>', descp)
 			parent_type, parent_id = _get_node_parent_info(node_type, c.id)
 			
 			# if parent_id==-1:
 			# 	return childs
 			
-			print('p=>', node_type, c.id)
-			print('res=>', parent_type, parent_id)
+			logme.debug('p=>', node_type, c.id)
+			logme.debug('res=>', parent_type, parent_id)
 			kind = '%s_%s' % (parent_type, node_type)
-			print('o info=>%s %s %s' % (kind, parent_id, c.id))
+			logme.debug('o info=>%s %s %s' % (kind, parent_id, c.id))
 			ov = mm.Order.objects.get(kind=kind, main_id=parent_id, follow_id=c.id).value
 			_m[str(ov)] = c
 		###
@@ -1183,29 +1185,29 @@ def _build_node(kind, src_uid, target_uid, move_type, user, build_nodes):
 		target_type_upper = 'BusinessData'
 	
 	src_type = kind.split('_')[1]
-	# print('src_type=>',src_type)
+	# logme.debug('src_type=>',src_type)
 	src_type_upper = src_type[0].upper() + src_type[1:]
 	if src_type_upper == 'Businessdata' or src_type_upper == 'Business':
 		src_type_upper = 'BusinessData'
 	
 	##构造target数据(重新生成)
-	print('==构建新节点实体数据')
+	logme.debug('==构建新节点实体数据')
 	if kind in ('step_businessdata'):
 		kind = 'step_business'
-	print(src_type_upper, '=>', src_uid)
+	logme.debug(src_type_upper, '=>', src_uid)
 	src = eval("mm.%s.objects.get(id=%s)" % (src_type_upper, src_uid))
-	# print('老id=>',src.id)
+	# logme.debug('老id=>',src.id)
 	src.id = None
 	src.save()
-	print('构建完成[%s]' % src)
+	logme.debug('构建完成[%s]' % src)
 	build_nodes.append(src)
-	# print('新id=>',src.id)
+	# logme.debug('新id=>',src.id)
 	
 	##构造target关联
-	print('==构建新节点关联关联==')
-	# print(move_type)
-	# print('kind=>',kind)
-	# print('%s->%s'%(target_uid,src.id))
+	logme.debug('==构建新节点关联关联==')
+	# logme.debug(move_type)
+	# logme.debug('kind=>',kind)
+	# logme.debug('%s->%s'%(target_uid,src.id))
 	
 	if move_type == 'inner':
 		order = mm.Order()
@@ -1214,13 +1216,13 @@ def _build_node(kind, src_uid, target_uid, move_type, user, build_nodes):
 		order.follow_id = src.id
 		order.value = getnextvalue(kind, target_uid)
 		order.author = user
-		print('inner 构建完成[%s]' % order)
+		logme.debug('inner 构建完成[%s]' % order)
 		order.save()
 	else:
 		kindlike = '%s_' % target_type
 		
-		print('kindlike=>', kindlike)  ##error
-		print('targetid=>', target_uid)
+		logme.debug('kindlike=>', kindlike)  ##error
+		logme.debug('targetid=>', target_uid)
 		
 		parent_order = mm.Order.objects.get(Q(kind__contains=kindlike) & Q(follow_id=target_uid))
 		parent_type = parent_order.kind.split('_')[0]
@@ -1247,24 +1249,24 @@ def _build_node(kind, src_uid, target_uid, move_type, user, build_nodes):
 		else:
 			order.value = getnextvalue(kind, target_uid)
 		
-		print('%s 构建完成[%s]' % (move_type, order))
+		logme.debug('%s 构建完成[%s]' % (move_type, order))
 		
 		order.save()
 	
 	##子节点存在情况
 	# parent_type,parent_id=_get_node_parent_info(src_type,src_uid)
 	# k2='%s_%s'%('',src_type)
-	# print('k2=>',k2)
+	# logme.debug('k2=>',k2)
 	childs = getchild('%s_' % src_type, src_uid)  ##???
-	# print('==兄弟节点排序=>',childs)
+	# logme.debug('==兄弟节点排序=>',childs)
 	childs = _sort_by_weight(childs)
-	# print('排序结果=>',childs)
+	# logme.debug('排序结果=>',childs)
 	
 	# if child_type=='businessdata':
 	# 	continue;
 	
 	if len(childs) > 0:
-		print('==构建新节点下子节点数据')
+		logme.debug('==构建新节点下子节点数据')
 	for child in childs:
 		child_type = child.__class__.__name__.lower()  ###?
 		src_type = src.__class__.__name__.lower()
@@ -1273,7 +1275,7 @@ def _build_node(kind, src_uid, target_uid, move_type, user, build_nodes):
 
 
 def _build_all(src_id, target_id, move_type, user, is_copy, callername):
-	print('==开始构建目标位置所有节点==')
+	logme.debug('==开始构建目标位置所有节点==')
 	src_uid = src_id.split('_')[1]
 	target_uid = target_id.split('_')[1]
 	src_type = src_id.split('_')[0]
@@ -1289,7 +1291,7 @@ def _build_all(src_id, target_id, move_type, user, is_copy, callername):
 	element = eval("mm.%s.objects.get(id=%s)" % (elementclass, elementid))
 	##
 	if move_type != 'inner':
-		print('targetid=>', target_uid)
+		logme.debug('targetid=>', target_uid)
 		# order=Order.objects.get(follow_id=target_uid)
 		# parenttype=order.kind.split('_')[0]
 		# kind='%s_%s'%(parenttype,src_type)
@@ -1299,22 +1301,22 @@ def _build_all(src_id, target_id, move_type, user, is_copy, callername):
 	build_nodes = []
 	_build_node(kind, src_uid, target_uid, move_type, user, build_nodes)
 	
-	print('--构建目标位置所有节点结束')
+	logme.debug('--构建目标位置所有节点结束')
 	del_nodes = []
 	_get_delete_node(src_uid, src_type, is_copy, del_nodes)
 	# 移动目标区域兄弟节点需重新生成权重
-	print('==获取移动复制构造的第一个model对象=>', build_nodes[0])
+	logme.debug('==获取移动复制构造的第一个model对象=>', build_nodes[0])
 	##处理源数据
-	print('==获取拖动源待处理节点列表=>', del_nodes)
+	logme.debug('==获取拖动源待处理节点列表=>', del_nodes)
 	for t in del_nodes:
 		tclass = _first_word_up(t[0])
 		if tclass in ('Business', 'Businessdata'):
 			tclass = 'BusinessData'
 		el = eval("mm.%s.objects.get(id=%s)" % (tclass, t[1]))
 		_regen_weight(callername, el, trigger='del', target_id=target_id)
-	print('--拖动源处理结束')
+	logme.debug('--拖动源处理结束')
 	#
-	print('==处理拖动目标位置的排序显示')
+	logme.debug('==处理拖动目标位置的排序显示')
 	_regen_weight(callername, build_nodes[0], trigger=move_type, target_id=target_id)
 
 
@@ -1352,15 +1354,15 @@ def get_search_match(searchvalue):
 	   3.无匹配结果
 	'''
 	import time
-	print('1=>', time.time())
+	logme.debug('1=>', time.time())
 	nodes = get_full_tree()
-	print('2=>', time.time())
+	logme.debug('2=>', time.time())
 	for node in nodes:
 		if searchvalue in node.get('name'):
 			# node['name']="<s>%s</s>"%node['name']
 			# node['name']="<span style='color:red;'>%s</span>"%node['name']
 			_expand_parent(node, nodes)
-	print('3=>', time.time())
+	logme.debug('3=>', time.time())
 	return nodes
 
 
@@ -1381,7 +1383,7 @@ def get_full_tree():
 	with connection.cursor() as cursor:
 		cursor.execute(query_product_sql)
 		products = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-	# print('products=>',products)
+	# logme.debug('products=>',products)
 	for product in products:
 		productname = product['description']
 		productobj = {
@@ -1400,8 +1402,8 @@ def get_full_tree():
 			cursor.execute(query_plan_order_list, [product['id']])
 			plan_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
 		
-		print('$' * 200)
-		print('plan_order_list=>', plan_order_list, len(plan_order_list))
+		logme.debug('$' * 200)
+		logme.debug('plan_order_list=>', plan_order_list, len(plan_order_list))
 		for order in plan_order_list:
 			try:
 				# plan = mm.Plan.objects.get(id=int(order.follow_id))
@@ -1421,7 +1423,7 @@ def get_full_tree():
 				
 				nodes.append(planobj)
 			except:
-				# print('异常查询 planid=>', order['follow_id'])
+				# logme.debug('异常查询 planid=>', order['follow_id'])
 				continue;
 			
 			# case_order_list = ordered(list(mm.Order.objects.filter(kind='plan_case', main_id=plan['id'])))
@@ -1432,7 +1434,7 @@ def get_full_tree():
 				case_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
 				case_order_list.sort(key=lambda e: e.get('value'))
 			
-			print('case_order_list=>', case_order_list, len(case_order_list))
+			logme.debug('case_order_list=>', case_order_list, len(case_order_list))
 			
 			for order in case_order_list:
 				# case = mm.Case.objects.get(id=order.follow_id)
@@ -1466,18 +1468,18 @@ def _add_next_case_node(parent, case, nodes):
 		step_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
 		step_order_list.sort(key=lambda e: e.get('value'))
 	
-	# print('step_order_list11=>',step_order_list,len(step_order_list))
+	# logme.debug('step_order_list11=>',step_order_list,len(step_order_list))
 	
 	for order in step_order_list:
-		# print('stepid=>', order['follow_id'])
+		# logme.debug('stepid=>', order['follow_id'])
 		# step = mm.Step.objects.get(id=order['follow_id'])
 		query_step_sql = 'select * from manager_step where id=%s'
 		with connection.cursor() as cursor:
 			cursor.execute(query_step_sql, [order['follow_id']])
 			steplist = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
 		
-		# print('#'*200)
-		# print('steplist=>',len(steplist))
+		# logme.debug('#'*200)
+		# logme.debug('steplist=>',len(steplist))
 		if len(steplist) > 0:
 			step = steplist[0]
 			nodes.append({
@@ -1572,8 +1574,8 @@ def weight_decorate(kind, followid):
 		t = 'BusinessData'
 		desp = 'businessname'
 	text = eval('mm.%s.objects.get(id=%s).%s' % (t, followid, desp))
-	print('kin=>', kind)
-	print('fl=>', followid)
+	logme.debug('kin=>', kind)
+	logme.debug('fl=>', followid)
 	weight = mm.Order.objects.get(kind=kind, follow_id=followid).value
 	# final=weight+' ' +text
 	final = text
@@ -1606,15 +1608,15 @@ def del_node_force(request):
 	'''强制递归删除节点
 	'''
 	
-	print('=强制del_node_force删除数据')
+	logme.debug('=强制del_node_force删除数据')
 	id_ = request.POST.get('ids')
 	ids = id_.split(',')
 	for i in ids:
 		node_type = i.split('_')[0]
 		idx = i.split('_')[1]
 		
-		# print('node_type=>',node_type)
-		# print('idx=>',idx)
+		# logme.debug('node_type=>',node_type)
+		# logme.debug('idx=>',idx)
 		
 		##重排序
 		parent_type, parent_id = _get_node_parent_info(node_type, idx)
@@ -1650,18 +1652,18 @@ def _get_node_parent_info(node_type, node_id):
 			node_type = 'business'
 		
 		kindlike = '_%s' % node_type
-		print('fid=>%s kind like=>%s' % (node_id, kindlike))
+		logme.debug('fid=>%s kind like=>%s' % (node_id, kindlike))
 		o = mm.Order.objects.get(Q(kind__contains=kindlike) & Q(follow_id=node_id))
 		return (o.kind.split('_')[0], o.main_id)
 
 
 def _get_case_parent_info(case_id):
-	# print('del case id=>',case_id)
+	# logme.debug('del case id=>',case_id)
 	case_desp = mm.Case.objects.get(id=case_id).description
 	o = list(mm.Order.objects.filter(Q(kind__contains='_case') & Q(follow_id=case_id)))[0]
-	# print('order=>',o)
+	# logme.debug('order=>',o)
 	kind = o.kind.split('_')[0]
-	# print('获得文件夹[%s]上层节点类型=>%s'%(case_desp,kind))
+	# logme.debug('获得文件夹[%s]上层节点类型=>%s'%(case_desp,kind))
 	return (kind, o.main_id)
 
 
@@ -1676,7 +1678,7 @@ def _del_product_force(product_id):
 		
 		product.delete()
 	except:
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 
 
 def _del_plan_force(plan_id):
@@ -1684,7 +1686,7 @@ def _del_plan_force(plan_id):
 	try:
 		mm.objects.get(kind='product_plan', follow_id=plan_id).delete()
 	except:
-		print('取消上层依赖异常.')
+		logme.debug('取消上层依赖异常.')
 	try:
 		plan = mm.Plan.objects.get(id=plan_id)
 		plan_order_list = list(mm.Order.objects.filter(kind='plan_case', main_id=plan_id))
@@ -1696,7 +1698,7 @@ def _del_plan_force(plan_id):
 		
 		plan.delete()
 	except:
-		print(traceback.format_exc())
+		logme.debug(traceback.format_exc())
 
 
 def _del_case_force(case_id, up='plan_case'):
@@ -1704,7 +1706,7 @@ def _del_case_force(case_id, up='plan_case'):
 	try:
 		mm.Order.objects.get(kind=up, follow_id=case_id).delete()
 	except:
-		print('取消上层依赖异常.case_id=%s type=%s' % (case_id, up))
+		logme.debug('取消上层依赖异常.case_id=%s type=%s' % (case_id, up))
 	
 	case = mm.Case.objects.get(id=case_id)
 	case_order_list = list(mm.Order.objects.filter(kind='case_step', main_id=case_id))
@@ -1731,7 +1733,7 @@ def _del_step_force(step_id):
 	try:
 		mm.Order.objects.get(kind='case_step', follow_id=step_id).delete()
 	except:
-		print('取消上层依赖异常.')
+		logme.debug('取消上层依赖异常.')
 	
 	try:
 		
@@ -1745,4 +1747,4 @@ def _del_step_force(step_id):
 		step.delete()
 	
 	except:
-		print('删除步骤异常=>', traceback.format_exc())
+		logme.debug('删除步骤异常=>', traceback.format_exc())

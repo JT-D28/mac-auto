@@ -183,9 +183,7 @@ class Mysqloper:
 				# for cs in range(15):
 				data = cur.fetchall()
 				data = list(data)
-				viewcache(taskid,callername,None,"[<span style='color:#009999;'>%s</span>]执行sql <span "
-				                                 "style='color:#009999;'>%s</span> 结果为 <span "
-				                                 "style='color:#009999;'>%s</span>" % (conname, sql.lower(), sqlresult))
+			
 				print("sql[%s]执行结果=>%s" % (sql.lower(), data))
 				
 				if data and len(data) > 0:
@@ -203,6 +201,7 @@ class Mysqloper:
 						return ('error', "sql[%s]查询结果返回存在多组数据或多个字段 不支持" % sql)
 				
 				elif sqlresult == None:
+					viewcache(taskid, callername, None, "sql <span style='color:#009999;'>%s</span> 查询无结果"%(sql.lower()))
 					return ('success', '')
 				
 				else:

@@ -32,7 +32,7 @@ def main():
 			print('%s: \t%s' % (hdes, confs['useconfig'][des]))
 		from daphne import cli
 		cli = cli.CommandLineInterface()
-		cli.run(args=['-p', sys.argv.pop(), '-b', '0.0.0.0', 'ME2.asgi:application','--access-log','./logs/access.log'])
+		cli.run(args=['-p', sys.argv.pop(), '-b', '0.0.0.0', 'ME2.asgi:application','-v','0'])
 	else:
 		execute_from_command_line(sys.argv)
 

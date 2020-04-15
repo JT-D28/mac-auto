@@ -2,6 +2,9 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys, datetime, traceback
+
+from twisted.internet import asyncioreactor
+
 from ME2.configs import confs
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -25,6 +28,13 @@ def main():
 	print("++++++++++++++++++++++++++++++++++")
 	# check_user_task()
 	if 'daphne' == sys.argv[1]:
+		current_reactor = sys.modules.get("twisted.internet.reactor", None)
+		if current_reactor is not None:
+			if not isinstance(current_reactor, asyncioreactor.AsyncioSelectorReactor):
+				del sys.modules["twisted.internet.reactor"]
+				asyncioreactor.install()
+		else:
+			asyncioreactor.install()
 		print('使用配置：')
 		for des in confs.options('useconfig'):
 			if len(des) < 20:

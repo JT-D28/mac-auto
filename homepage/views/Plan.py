@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from ME2 import configs
 from homepage.models import Jacoco_report
 from manager.cm import getchild
+from manager.context import getRunningInfo, setRunningInfo
 from manager.core import simplejson
 from manager.models import Plan
 
@@ -75,21 +76,19 @@ def queryplan(request):
 @csrf_exempt
 def queryPlanState(request):
 	planid = request.POST.get('id')[5:]
-	plan = Plan.objects.get(id=planid)
 	if request.POST.get('refresh'):
 		while 1:
-			plan = Plan.objects.get(id=planid)
-			if plan.is_running in (0, '0'):
+			is_running = getRunningInfo('',planid,'isrunning')
+			if is_running in (0, '0'):
 				return JsonResponse({'data': 1})
-	return JsonResponse({'data': plan.is_running})
+	is_running = getRunningInfo('',planid,'isrunning')
+	return JsonResponse({'data': is_running})
 
 @csrf_exempt
 def planforceStop(request):
 	planid = request.POST.get('id')[5:]
-	plan = Plan.objects.get(id=planid)
 	try:
-		plan.is_running = 0
-		plan.save()
+		setRunningInfo(request.session.get("username"), planid, getRunningInfo('', planid, 'isrunning'), 0)
 		code = 0
 		msg = 'success'
 	except:

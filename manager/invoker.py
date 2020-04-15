@@ -553,9 +553,8 @@ def dealDeBuginfo(taskid):
 			for case in case_matchs:
 				step_matchs = re.findall(r"开始执行步骤.*?步骤执行.*?结果.*?<br>", case)
 				for step in step_matchs:
-					if os.path.exists(dealogname):
-						with open(dealogname, 'a', encoding='UTF-8') as f:
-							f.write(step.replace("        ", '\n') + '\n========\n')
+					with open(dealogname, 'a', encoding='UTF-8') as f:
+						f.write(step.replace("        ", '\n') + '\n========\n')
 			print('处理日志完成------')
 
 

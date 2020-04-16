@@ -4,6 +4,7 @@ import threading
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from ME2.settings import BASE_DIR
 from manager.core import simplejson
 from manager.invoker import MainSender
 from manager.models import Plan, ResultDetail, MailConfig, User

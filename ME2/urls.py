@@ -19,6 +19,7 @@ from django.urls import path, include
 from django.views.static import serve
 
 from ME2.settings import STATIC_ROOT
+from ME2.settings import DEBUG
 from login import views
 
 urlpatterns = [
@@ -35,6 +36,11 @@ urlpatterns = [
 	# path('',views.index),
 
 ]
+
+if DEBUG:
+    import debug_toolbar
+    urlpatterns.append(url(r'^__debug__/', include(debug_toolbar.urls)))
+
 
 handler404 = views.page_not_found
 handler500 = views.page_error

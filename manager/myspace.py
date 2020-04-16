@@ -8,6 +8,7 @@ import os, traceback, subprocess
 from .pa import MessageParser
 from ftplib import FTP
 from ME2.settings import logme
+from manager.context import Me2Log as logger
 
 class SpaceMeta(object):
 	

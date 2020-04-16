@@ -130,7 +130,7 @@ def clearRedisforUser(username):
 
 @csrf_exempt
 def login(request):
-	threading.Thread(target=initDataupdate, args=()).start()
+	# threading.Thread(target=initDataupdate, args=()).start()
 	if configs.IS_CREATE_SUPERUSER:
 		User.create_superuser(EncryptUtils.md5_encrypt(configs.SUPERUSER_PWD))
 	if request.method == 'POST':

@@ -3,7 +3,7 @@ import traceback
 from django.db import connection
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
+import time
 from ME2 import configs
 from homepage.models import Jacoco_report
 from manager.cm import getchild
@@ -73,16 +73,20 @@ def queryplan(request):
 		msg = '查询数据库列表信息异常'
 		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 	
+	
 @csrf_exempt
 def queryPlanState(request):
 	planid = request.POST.get('id')[5:]
-	if request.POST.get('refresh'):
-		while 1:
-			is_running = getRunningInfo('',planid,'isrunning')
-			if is_running in (0, '0'):
-				return JsonResponse({'data': 1})
+	# if request.POST.get('refresh'):
+	# 	while 1:
+	# 		is_running = getRunningInfo('',planid,'isrunning')
+	# 		print('3333312313333333333333333')
+	# 		if is_running in (0, '0'):
+	# 			return JsonResponse({'data': 1})
+	# 		time.sleep(1)
 	is_running = getRunningInfo('',planid,'isrunning')
 	return JsonResponse({'data': is_running})
+
 
 @csrf_exempt
 def planforceStop(request):

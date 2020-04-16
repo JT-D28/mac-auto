@@ -201,7 +201,7 @@ class Mysqloper:
 						return ('error', "sql[%s]查询结果返回存在多组数据或多个字段 不支持" % sql)
 				
 				elif sqlresult == None:
-					viewcache(taskid, callername, None, "sql <span style='color:#009999;'>%s</span> 查询无结果"%(sql.lower()))
+					viewcache(taskid, callername, None, "sql <span style='color:#009999;'>%s</span> 查询无结果"%(sql))
 					return ('success', '')
 				
 				else:

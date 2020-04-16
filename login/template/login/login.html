@@ -10,7 +10,8 @@
 
 <body style="background:rgba(250,250,250,1);">
 <div class="box">
-    <div style="margin-top: 66px;text-align: center"><img style="margin-left:0px" src="{% static 'login/image/logo.svg' %}"></div>
+    <div style="margin-top: 66px;text-align: center"><img style="margin-left:0px"
+                                                          src="{% static 'login/image/logo.svg' %}"></div>
     <div class="boxtext">接口测试</div>
     <div class="userName" style="margin-top: 38px;">
         <img src="{% static 'login/image/people.svg' %}">
@@ -25,7 +26,15 @@
 </div>
 
 <script type="text/javascript">
-
+    $(".box").bind("keydown", function (e) {
+        // 兼容FF和IE和Opera
+        var theEvent = e || window.event;
+        var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+        if (code == 13) {
+            //回车执行查询
+            $("#loginbtn").click();
+        }
+    });
     $('#loginbtn').click(function () {
         $.ajax({
             type: "POST",

@@ -4,6 +4,7 @@ import threading
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from ME2.settings import BASE_DIR
 from manager.core import simplejson
 from manager.invoker import MainSender
 from manager.models import Plan, ResultDetail, MailConfig, User
@@ -39,7 +40,7 @@ def sendmail(config_id, username, taskid):
 		
 @csrf_exempt
 def downloadReport(request):
-	reportname = './logs/local_reports/report_' + request.POST.get("taskid") + '.html'
+	reportname = BASE_DIR+'/logs/local_reports/report_' + request.POST.get("taskid") + '.html'
 	if os.path.exists(reportname):
 		with open(reportname, 'r', encoding='gbk') as f:
 			text = '<meta charset="UTF-8">\n' + f.read()

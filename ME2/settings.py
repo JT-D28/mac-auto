@@ -15,7 +15,7 @@ import json
 from ME2 import configs
 
 BASE_URL = 'http://' + configs.ME2_URL
-HELP_DOC_URL = "%s/static/PDF.js/web/viewer.html?file=%s/static/PDF.js/ME2.pdf" % (BASE_URL, BASE_URL)
+
 ##Redis配置
 REDIS_HOST = configs.REDIS_HOST
 REDIS_PORT = configs.REDIS_PORT
@@ -169,7 +169,7 @@ LOGGING = {
 		'file': {
 			'level': 'INFO',
 			'class': 'logging.FileHandler',
-			'filename': './logs/monitor.log',
+			'filename': BASE_DIR+'/logs/monitor.log',
 			'formatter': 'verbose'
 		},
 		'email': {

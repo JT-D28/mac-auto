@@ -10,6 +10,8 @@ import json, threading, time
 import redis
 from django.conf import settings
 
+from ME2.settings import BASE_DIR
+
 
 class ChatConsumer(WebsocketConsumer):
 	
@@ -160,7 +162,7 @@ class logConsumer(WebsocketConsumer):
 		super(logConsumer, self).__init__(args)
 	
 	def sendmsg(self, taskid, is_running):
-		logname = "./logs/" + taskid + ".log"
+		logname = BASE_DIR+"/logs/" + taskid + ".log"
 		done_msg = '结束计划'
 		if os.path.exists(logname):
 			with open(logname, 'r', encoding='utf-8') as f:

@@ -3,12 +3,13 @@ import os
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from ME2.settings import BASE_DIR
 from manager.core import simplejson
 
 
 @csrf_exempt
 def downloadlog(request):
-	logname = './logs/' + request.POST.get('taskid') + '.log'
+	logname = BASE_DIR+'/logs/' + request.POST.get('taskid') + '.log'
 	with open(logname, 'r', encoding='utf-8') as f:
 		log_text = '<meta charset="UTF-8">\n' + f.read()
 	# log_text = log_text.replace("<span style='color:#FF3399'>", '').replace("</xmp>", '').replace(
@@ -31,7 +32,7 @@ def process(request):
 	log_text = ''
 	is_done = 'no'
 	done_msg = '结束计划'
-	logname = "./logs/" + taskid + ".log"
+	logname = BASE_DIR+"/logs/" + taskid + ".log"
 	try:
 		if os.path.exists(logname):
 			with open(logname, 'r', encoding='utf-8') as f:

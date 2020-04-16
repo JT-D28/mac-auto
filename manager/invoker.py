@@ -11,7 +11,9 @@ from django.db.models import Q
 from django.http import JsonResponse
 
 from ME2 import configs, urlmap
+
 from manager.context import Me2Log as logger
+from ME2.settings import logme, BASE_DIR
 
 from login.models import *
 from manager.models import *
@@ -527,8 +529,8 @@ def runplan(callername, taskid, planid, is_verify, kind=None, dbscheme=None):
 
 
 def dealDeBuginfo(taskid):
-	logname = "./logs/" + taskid + ".log"
-	dealogname = "./logs/deal/" + taskid + ".log"
+	logname = BASE_DIR + "/logs/" + taskid + ".log"
+	dealogname = BASE_DIR + "/logs/deal/" + taskid + ".log"
 	if os.path.exists(logname):
 		ma = []
 		with open(logname, 'r', encoding='utf-8') as f:
@@ -2347,7 +2349,7 @@ class MainSender:
 	def gen_report(cls, taskid, htmlcontent):
 		logger.info('==本地缓存测试报告')
 		
-		filepath = './logs/local_reports/report_%s.html' % taskid
+		filepath = '%s/logs/local_reports/report_%s.html' %(BASE_DIR,taskid)
 		if os.path.exists(filepath):
 			with open(filepath, 'w') as f:
 				f.write(htmlcontent)

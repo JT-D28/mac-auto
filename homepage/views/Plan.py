@@ -3,7 +3,7 @@ import traceback
 from django.db import connection
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
+import time
 from ME2 import configs
 from homepage.models import Jacoco_report
 from manager.cm import getchild
@@ -82,6 +82,7 @@ def queryPlanState(request):
 			is_running = getRunningInfo('',planid,'isrunning')
 			if is_running in (0, '0'):
 				return JsonResponse({'data': 1})
+			time.sleep(5)
 	is_running = getRunningInfo('',planid,'isrunning')
 	return JsonResponse({'data': is_running})
 

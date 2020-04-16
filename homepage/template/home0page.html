@@ -109,6 +109,9 @@
     #productSet > .el-dialog {
         height: 80%;
     }
+    #productSet .el-tab-pane{
+        height: 100%;
+    }
 
 
     #coverage > .el-card__body {
@@ -285,7 +288,9 @@
         bottom: 0;
         right: 0;
     }
-
+    #servicename div,#servicename .el-textarea__inner{
+        height: 100%;
+    }
 
 </style>
 <body>
@@ -497,7 +502,7 @@
                    style="height: 100%">
             <el-tabs :tab-position="topposition">
                 <el-tab-pane label="jacoco配置">
-                    <el-form :label-position="rightposition" label-width="18%" :model="form" style="margin-top:24px">
+                    <el-form :label-position="rightposition" label-width="18%" :model="form" style="padding-top: 24px;height: calc(100% - 40px)">
                         <el-form-item label="jenkins地址">
                             <el-input v-model="form.productset.jenkinsurl"></el-input>
                         </el-form-item>
@@ -507,7 +512,7 @@
                         <el-form-item label="密码">
                             <el-input v-model="form.productset.authpwd"></el-input>
                         </el-form-item>
-                        <el-form-item label="服务名/任务名">
+                        <el-form-item id="servicename" label="服务名/任务名" style="height: calc(100% - 180px);">
                             <el-input type="textarea" v-model="form.productset.jobname" placeholder='填入内容为描述/服务名称和jenkins中对应的任务名，格式示例：
 settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></el-input>
                         </el-form-item>

@@ -833,7 +833,7 @@ def getbuiltin(searchvalue=None, filename='builtin.py'):
 		content = f.read()
 		# print(content)
 		methodnames = re.findall("def\s+(.*?)\(", content)
-		print('builtin methodnames=>', methodnames)
+		# print('builtin methodnames=>', methodnames)
 		if searchvalue is None:
 			for methodname in methodnames:
 				if methodname.startswith('_'):

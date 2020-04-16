@@ -31,8 +31,8 @@ def index(request):
 
 
 def help(request):
-	# return render(request, 'manager/help.html')
-	return redirect(settings.HELP_DOC_URL)
+	me2url=request.get_raw_uri().replace(request.path,'')
+	return redirect("%s/static/PDF.js/web/viewer.html?file=%s/static/PDF.js/ME2.pdf" % (me2url, me2url))
 
 
 # @csrf_exempt

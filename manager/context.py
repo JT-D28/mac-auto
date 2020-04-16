@@ -464,7 +464,7 @@ def setRunningInfo(username, planid, taskid, isrunning, dbscheme='全局'):
 
 
 def getRunningInfo(username='', planid='', type='latest_taskid'):
-	print('getinfo:', username, planid, type)
+	# print('getinfo:', username, planid, type)
 	if type == 'latest_taskid':
 		latest_taskids = _runninginfo.get('lastest_taskid', {})
 		latest_taskid = latest_taskids.get(username, None)

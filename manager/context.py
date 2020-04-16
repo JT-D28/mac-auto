@@ -10,6 +10,28 @@ from hashlib import md5
 from ME2.settings import logme
 
 '''
+日志打印
+'''
+class Me2Log(object):
+
+	@classmethod
+	def debug(cls,*msg):
+		logme.debug(' '.join([str(x) for x in msg]))
+
+	@classmethod
+	def info(cls,*msg):
+		logme.info(' '.join([str(x) for x in msg]))
+
+	@classmethod
+	def warn(cls,*msg):
+		logme.warn(' '.join([str(x) for x in msg]))
+
+	@classmethod
+	def error(cls,*msg):
+		logme.error(' '.join([str(x) for x in msg]))
+
+
+'''
 用户操作记录
 '''
 _OPERATION = {

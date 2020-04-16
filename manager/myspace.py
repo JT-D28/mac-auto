@@ -42,11 +42,11 @@ class SpaceMeta(object):
 			bufsize = 1024
 			# remotefilename=os.sep.split(remotefile)[-1]
 			remotefilename = remotefile.split('/')[-1]
-			print('remotefilename=>', remotefilename)
+			logger.info('remotefilename=>', remotefilename)
 			localfile = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File', callername,
 			                         remotefilename)
-			print('localfile=>', localfile)
-			# print(os.path.dirname(__file__))
+			logger.info('localfile=>', localfile)
+			# logger.info(os.path.dirname(__file__))
 			fp = open(localfile, 'wb')  # 以写模式在本地打开文件
 			ftp.retrbinary('RETR ' + remotefile, fp.write, bufsize)
 			fp.close()
@@ -79,7 +79,7 @@ class SpaceMeta(object):
 			p.wait()
 			decryptresult = p.communicate()[0].decode('GBK')
 		
-		print('==获得文件[%s]内容:\n%s' % (filename, decryptresult))
+		logger.info('==获得文件[%s]内容:\n%s' % (filename, decryptresult))
 		
 		parser = MessageParser.get_parse_config(templatename)
 		if parser[0] is not 'success':
@@ -87,7 +87,7 @@ class SpaceMeta(object):
 		mp = MessageParser(parser[1], decryptresult, checklist)
 		checkresult = mp.compute()
 		
-		print('本地文件校验计算明细=>', checkresult)
+		logger.info('本地文件校验计算明细=>', checkresult)
 		for exp in checkresult:
 			if checkresult[exp][0] is not 'success':
 				return checkresult[exp]

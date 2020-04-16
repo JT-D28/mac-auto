@@ -34,8 +34,8 @@
   color: #009788;
 }
 .icon-fa-file-o:before {
-  content: "\e902";
-  color: #b7e078;
+  content: "\e907";
+  color: #fa7a63;
 }
 .icon-fa-folder-open:before {
   content: "\e903";
@@ -58,8 +58,8 @@
   color: #009788;
 }
 .icon-fa-leaf:before {
-  content: "\e907";
-  color: #fa7a63;
+  content: "\e902";
+  color: #b7e078;
 }
 .icon-fa-pencil-square-o:before {
   content: "\e908";

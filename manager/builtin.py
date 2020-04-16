@@ -10,17 +10,23 @@ from .context import get_top_common_config, viewcache
 from .db import Mysqloper
 
 
-def _log(msg, **kws):
+def cout(*msg, **kws):
 	'''
 	控制台输出日志
+	关键字参数level={DEBUG,INFO,WARN,ERROR}
 	'''
 	taskid=kws['taskid']
 	callername=kws['callername']
 	level=kws.get('level','DEBUG')
-	if level == 'DEBUG':
-		msg = "<span style='color:#009999;'>%s</span>" % msg
-		viewcache(taskid, callername, None, msg)
-
+	_colormap={
+		'DEBUG':'#339999',
+		'INOF':'#009688',
+		'WARN':'#FFFF00',
+		'ERROR':'#FF3300'
+	}
+	text=' '.join([str(x) for x in msg])
+	msg = "<span style='color:%s;'>%s</span>" % (_colormap[level],text)
+	viewcache(taskid, callername, None, msg)
 
 def dbexecute(sql, **kws):
 	"""
@@ -230,7 +236,7 @@ def local_to_ftp(filename, ip, port, username, password, remotedir, **kws):
 	taskid=kws.get('taskid',None)
 	callername=kws.get('callername',None)
 	status, msg = SpaceMeta.local_to_ftp(filename, ip, port, username, password, remotedir, callername)
-	_log(msg, taskid=taskid, callername=callername)
+	cout(msg, taskid=taskid, callername=callername)
 	return (status, msg)
 
 
@@ -243,7 +249,7 @@ def ftp_to_local(ip, port, username, password, remotefile,**kws):
 	callername=kws.get('callername',None)
 
 	status, msg = SpaceMeta.ftp_to_local(ip, port, username, password, remotefile, callername)
-	_log(msg, taskid=taskid, callername=callername)
+	cout(msg, taskid=taskid, callername=callername)
 	return (status, msg)
 
 
@@ -256,8 +262,8 @@ def local_file_check(filename, templatename, checklist, **kws):
 	taskid=kws.get('taskid',None)
 	callername=kws.get('callername',None)
 	
-	_log('开始校验文件[%s]' % filename, taskid=taskid, callername=callername)
-	_log('使用的报文模板[%s]' % templatename, taskid=taskid, callername=callername)
-	_log('待校验字段[%s]' % '|'.join(checklist), taskid=taskid, callername=callername)
+	cout('开始校验文件[%s]' % filename, taskid=taskid, callername=callername)
+	cout('使用的报文模板[%s]' % templatename, taskid=taskid, callername=callername)
+	cout('待校验字段[%s]' % '|'.join(checklist), taskid=taskid, callername=callername)
 	status, msg = SpaceMeta.local_file_check(filename, templatename, checklist, callername)
 	return (status, msg)

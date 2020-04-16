@@ -7,7 +7,7 @@ import time, traceback, redis, datetime, requests, copy, os
 from django.conf import settings
 from manager import models
 from hashlib import md5
-from ME2.settings import logme
+from ME2.settings import logme, BASE_DIR
 
 '''
 用户操作记录
@@ -409,12 +409,11 @@ redis key格式=>console.msg::username::taskid
 
 def viewcache(taskid, username, kind=None, *msg):
 	taskmsg = ""
-	
 	if kind is not None:
 		##定时任务不加入redis队列
 		return
 	try:
-		logname = "./logs/" + taskid + ".log"
+		logname = BASE_DIR+"/logs/" + taskid + ".log"
 		what = "".join((msg))
 		# print(username)
 		what = "%s        %s" % (time.strftime("[%m-%d %H:%M:%S]", time.localtime()), what)

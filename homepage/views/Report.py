@@ -39,7 +39,7 @@ def sendmail(config_id, username, taskid):
 		
 @csrf_exempt
 def downloadReport(request):
-	reportname = './logs/local_reports/report_' + request.POST.get("taskid") + '.html'
+	reportname = BASE_DIR+'/logs/local_reports/report_' + request.POST.get("taskid") + '.html'
 	if os.path.exists(reportname):
 		with open(reportname, 'r', encoding='gbk') as f:
 			text = '<meta charset="UTF-8">\n' + f.read()

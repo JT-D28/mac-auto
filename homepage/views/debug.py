@@ -4,6 +4,8 @@ import re
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db import connection
+
+from ME2.settings import BASE_DIR
 from manager.core import getpagedata
 
 
@@ -121,7 +123,7 @@ def doDebugInfo(request):
 				businessdata_row.append(i)
 		return businessdata_row, 'bussiness', taskid, 0
 	if type == 'bussiness':
-		logname = "./logs/deal/" + taskid + ".log"
+		logname = BASE_DIR+"/logs/deal/" + taskid + ".log"
 		if os.path.exists(logname):
 			with open(logname, 'r', encoding='utf-8') as f:
 				res = f.read()

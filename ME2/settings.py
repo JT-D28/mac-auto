@@ -169,7 +169,7 @@ LOGGING = {
 		'file': {
 			'level': 'INFO',
 			'class': 'logging.FileHandler',
-			'filename': './logs/monitor.log',
+			'filename': BASE_DIR+'/logs/monitor.log',
 			'formatter': 'verbose'
 		},
 		'email': {

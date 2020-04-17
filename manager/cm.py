@@ -95,6 +95,7 @@ def editproduct(request):
 		}
 	
 	except:
+		logger.error(traceback.format_exc())
 		return {
 			'status': 'error',
 			'msg': '编辑异常'
@@ -965,11 +966,6 @@ def ordered(iterator, key='value', time_asc=True):
 						elif time_asc == False:
 							if timea < timeb:
 								iterator[i], iterator[j] = iterator[j], iterator[i]
-	
-	
-	
-	
-	
 	
 	except:
 		logger.info(traceback.format_exc())

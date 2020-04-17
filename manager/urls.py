@@ -150,5 +150,9 @@ urlpatterns = [
 	path('querytreelist/', views.querytreelist),
 	path('treecontrol/', views.treecontrol),
 	path('getfulltree/', views.getfulltree),
+
+	#
+	path('changemode/', views.changemode),
+
 	path('getParamfromFetchData/',views.getParamfromFetchData)
 ]

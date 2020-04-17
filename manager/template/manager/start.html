@@ -91,7 +91,8 @@
                                             style="width:18px;height:18px;padding-right: 10px"></a>
             <!-- 顶部右侧菜单 -->
             <ul class="layui-nav top_menu">
-                <li class="layui-nav-item" style="margin-left: 30px;">
+                <li class="layui-nav-item" style="margin-left: 30px;" id='head'>
+
                     <img src="{% static 'manager/image/me.jpg' %}" style="padding: 0" class="layui-nav-img">
                     <i id='username' class="textcolor">{{ request.session.username }}</i>
                 </li>
@@ -239,6 +240,22 @@
         var username = $("#username").text()
         var taskkeys = []
         var curtaskindex = 0
+
+        $("#head").dblclick(function(){
+
+
+            _post_nl('/manager/changemode/',{},function(data){
+                if(data.code==0){
+                    layer.msg(data.msg)
+                    setTimeout(function(){
+                        window.top.location.reload()
+                    },1200)
+
+                    
+                }
+
+            })
+        });
 
         $("#console").click(function () {
             _post_nl('/homepage/querytaskid/', {'action': 'lastest'}, function (data) {

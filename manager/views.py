@@ -573,11 +573,17 @@ def delvar(request):
 	# logger.info('ids=>',id_)
 	ids = id_.split(',')
 	code = 0
-	msg = ''
+	msg = '删除成功.'
+
+
 	try:
 		for i in ids:
-			Variable.objects.get(id=i).delete()
-		msg = '删除成功'
+			vf=list(Variable.objects.filter(id=i))
+			for v in vf:
+				Tag.objects.filter(var=v).delete()
+				v.delete()
+
+	
 	except:
 		code = 1
 		msg = "删除失败[%s]" % traceback.format_exc()
@@ -3457,3 +3463,33 @@ def authcontrol(request):
 def queryuicontrol(request):
 	res = Grant.query_ui_grant_table(request.GET.get('searchvalue'))
 	return JsonResponse(res, safe=False)
+
+
+'''
+开发模式切换
+'''
+@csrf_exempt
+def changemode(request):
+	dirname=os.path.dirname(os.path.dirname(__file__))
+	configpath=os.path.join(dirname,'ME2','settings.py')
+	print(configpath)
+	lineindex=-1
+	lines=[]
+	msg='开启DEBUG模式'
+	with open(configpath,encoding='utf-8') as f:
+		lines=f.readlines()
+	for line in lines:
+		lineindex=lineindex+1
+		if line.strip()=='DEBUG = True' or line.strip()=='DEBUG = False':
+			break;
+
+	if lines[lineindex].strip()=='DEBUG = True':
+		lines[lineindex]='DEBUG = False'
+		msg='关闭DEBUG模式'
+	else:
+		lines[lineindex]='DEBUG = True'
+
+	with open(configpath,'w',encoding='utf-8') as f:
+		f.write(''.join(lines))
+
+	return JsonResponse(pkg(code=0,msg=msg),safe=False)

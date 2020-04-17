@@ -160,12 +160,12 @@ _task_context_manager = dict()
 def get_top_common_config(taskid, kind='db'):
 	cache = _task_context_manager.get(taskid, {})
 	dbcache = cache.get(kind, None)
-	print('===获得缓存通用配置 %s->%s=>%s' % (taskid, kind, dbcache))
+	Me2Log.warn('===获得缓存通用配置 %s->%s=>%s' % (taskid, kind, dbcache))
 	return dbcache
 
 
 def set_top_common_config(taskid, value, kind='db', src=None):
-	print('===[%s]设置缓存通用配置%s->%s=>%s' % (src, taskid, kind, value))
+	Me2Log.warn('===[%s]设置缓存通用配置%s->%s=>%s' % (src, taskid, kind, value))
 	cache = _task_context_manager.get(taskid, {})
 	dbcache = cache.get(kind, None)
 	# if dbcache is None:  加上以后优先级变成 计划>用例。。。
@@ -435,7 +435,7 @@ def viewcache(taskid, username, kind=None, *msg):
 		##定时任务不加入redis队列
 		return
 	try:
-		logname = BASE_DIR+"/logs/" + taskid + ".log"
+		logname = BASE_DIR + "/logs/" + taskid + ".log"
 		what = "".join((msg))
 		# print(username)
 		what = "%s        %s" % (time.strftime("[%m-%d %H:%M:%S]", time.localtime()), what)
@@ -456,8 +456,8 @@ def viewcache(taskid, username, kind=None, *msg):
 		con.lpush(key, what)
 		con.close()
 	except Exception as e:
-		print("viewcache异常")
-		print(traceback.format_exc())
+		Me2Log.error("viewcache异常")
+		Me2Log.error(traceback.format_exc())
 
 
 def remotecache(key, linemsg):
@@ -470,7 +470,7 @@ def remotecache(key, linemsg):
 _runninginfo = dict()
 
 
-def setRunningInfo(username, planid, taskid, isrunning, dbscheme='全局'):
+def setRunningInfo(username, planid, taskid, isrunning, dbscheme='全局',is_verify=1):
 	if 'lastest_taskid' not in _runninginfo:
 		_runninginfo['lastest_taskid'] = {}
 	lastest_taskid = _runninginfo.get('lastest_taskid', {})
@@ -478,9 +478,18 @@ def setRunningInfo(username, planid, taskid, isrunning, dbscheme='全局'):
 	if str(planid) not in _runninginfo:
 		_runninginfo[str(planid)] = {}
 	planinfo = _runninginfo.get(str(planid), {})
-	planinfo['taskid'] = taskid
 	planinfo['isrunning'] = isrunning
 	planinfo['dbscheme'] = dbscheme
+	if 'verify' not in planinfo:
+		planinfo['verify']={}
+	if 'debug' not in planinfo:
+		planinfo['debug']={}
+	verify = planinfo.get('verify', {})
+	debug = planinfo.get('debug', {})
+	if str(is_verify) == '1':
+		verify['taskid']=taskid
+	elif str(is_verify) == '0':
+		debug['taskid'] = taskid
 	print("储存运行信息", _runninginfo)
 
 
@@ -490,10 +499,16 @@ def getRunningInfo(username='', planid='', type='latest_taskid'):
 		latest_taskids = _runninginfo.get('lastest_taskid', {})
 		latest_taskid = latest_taskids.get(username, None)
 		return latest_taskid
-	elif type == 'plan_taskid':
+	elif type == 'debug_taskid':
 		planinfo = _runninginfo.get(str(planid), {})
-		taskid = planinfo.get('taskid', None)
-		return taskid
+		debug = planinfo.get('debug', {})
+		debug_taskid = debug.get('taskid', None)
+		return debug_taskid
+	elif type == 'verify_taskid':
+		planinfo = _runninginfo.get(str(planid), {})
+		verify = planinfo.get('verify', {})
+		verify_taskid = verify.get('taskid', None)
+		return verify_taskid
 	elif type == 'isrunning':
 		planinfo = _runninginfo.get(str(planid), {})
 		isrunning = planinfo.get('isrunning', 0)

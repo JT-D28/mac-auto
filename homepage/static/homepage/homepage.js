@@ -186,7 +186,7 @@ var app = new Vue({
                                 layer.close(index)
                             }
                         });
-                        setTimeout(function () {
+                        /**setTimeout(function () {
                             _post_nl('/homepage/queryPlanState/', {
                                 id: that.form.plan,
                                 refresh: 1
@@ -195,7 +195,7 @@ var app = new Vue({
                                     that.getReportChart()
                                 }
                             })
-                        }, 2000)
+                        }, 2000)**/
                     } else layer.msg(data.msg)
                 })
             } else {

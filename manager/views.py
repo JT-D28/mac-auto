@@ -573,11 +573,17 @@ def delvar(request):
 	# logger.info('ids=>',id_)
 	ids = id_.split(',')
 	code = 0
-	msg = ''
+	msg = '删除成功.'
+
+
 	try:
 		for i in ids:
-			Variable.objects.get(id=i).delete()
-		msg = '删除成功'
+			vf=list(Variable.objects.filter(id=i))
+			for v in vf:
+				Tag.objects.filter(var=v).delete()
+				v.delete()
+
+	
 	except:
 		code = 1
 		msg = "删除失败[%s]" % traceback.format_exc()

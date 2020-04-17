@@ -3311,6 +3311,38 @@ def queryDbScheme(request):
 	return JsonResponse({'code': 0, 'data': data})
 
 
+@csrf_exempt
+def getParamfromFetchData(request):
+	text = request.POST.get('fetchtest')
+	code=0
+	data = ''
+	rq='{%s}'%text.split('fetch(')[1].rstrip(');').replace('\n','').replace(',',':',1)
+	try:
+		x = json.loads(rq)
+		for (k, v) in x.items():
+			data = {
+				'url': k,
+				'headers': v.get('headers', ''),
+				'referrer': v.get('referrer', ''),
+				'body': v.get('body', ''),
+				'method': v.get('method', ''),
+				'contenttype': v.get('headers', '').get('Content-Type', '')
+			}
+			parsed_result = {}
+			pairs = parse.parse_qsl(data['body'])
+			print(pairs)
+			for name, value in pairs:
+				print(name,value)
+				parsed_result[name] = value
+			print(parsed_result,'ddddddddd')
+	except:
+		print(traceback.format_exc())
+		code=1
+	return JsonResponse({'code': code,'data': parsed_result.__str__()})
+
+
+
+
 '''
 个人空间管理
 '''

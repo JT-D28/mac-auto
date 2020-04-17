@@ -11,8 +11,8 @@ from manager import models
 from login import models as lm
 from manager.core import simplejson
 import re, os, traceback
-from  manager.context import  get_operate_name
-
+from manager.context import get_operate_name
+from manager.context import Me2Log as logger
 try:
 	from django.utils.deprecation import MiddlewareMixin  # Django 1.10.x
 except ImportError:
@@ -190,7 +190,7 @@ class Interceptor(MiddlewareMixin):
 		for ok in o:
 			o[ok]=o.get(ok)[0]
 		if o:
-			print('请求参数:'+str(o))
+			logger.warn('请求参数:'+str(o))
 		
 	
 	def process_request(self, request):

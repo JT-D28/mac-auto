@@ -452,7 +452,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, dbscheme=None):
 	try:
 		plan = Plan.objects.get(id=planid)
 		dbscheme = plan.schemename if dbscheme is None or dbscheme == '' else dbscheme
-		setRunningInfo(callername, planid, taskid, 1, dbscheme)
+		setRunningInfo(callername, planid, taskid, 1, dbscheme,is_verify)
 		logger.info('plan=>', plan)
 		plan.is_running = 1
 		plan.save()
@@ -484,14 +484,14 @@ def runplan(callername, taskid, planid, is_verify, kind=None, dbscheme=None):
 		
 		if planre:
 			plan.last = 'success'
-			setRunningInfo(callername, planid, taskid, 0)
+			setRunningInfo(callername, planid, taskid, 0, dbscheme,is_verify)
 			plan.is_running = 0
 			plan.save()
 			viewcache(taskid, username, kind,
 			          "结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-green'>success</span>" % plan.description)
 		else:
 			plan.last = 'fail'
-			setRunningInfo(callername, planid, taskid, 0)
+			setRunningInfo(callername, planid, taskid, 0, dbscheme,is_verify)
 			plan.is_running = 0
 			plan.save()
 			viewcache(taskid, username, kind,

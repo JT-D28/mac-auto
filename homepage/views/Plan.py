@@ -92,7 +92,7 @@ def queryPlanState(request):
 def planforceStop(request):
 	planid = request.POST.get('id')[5:]
 	try:
-		setRunningInfo(request.session.get("username"), planid, getRunningInfo('', planid, 'isrunning'), 0)
+		setRunningInfo(request.session.get("username"), planid, getRunningInfo('', planid, 'isrunning'),'', 0)
 		code = 0
 		msg = 'success'
 	except:

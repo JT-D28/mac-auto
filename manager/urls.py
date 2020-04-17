@@ -151,4 +151,7 @@ urlpatterns = [
 	path('treecontrol/', views.treecontrol),
 	path('getfulltree/', views.getfulltree),
 
+	#
+	path('changemode/', views.changemode),
+
 ]

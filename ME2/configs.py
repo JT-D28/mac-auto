@@ -6,6 +6,9 @@ confs = configparser.ConfigParser()
 confs.read(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.ini'), encoding="utf-8")
 conf = confs['useconfig']
 
+#
+DEBUG=conf['DEBUG']
+#
 dbtype = conf['dbtype']
 ME2_URL = conf['ME2_URL']
 DATABASES_NAME = conf['DATABASES_NAME']
@@ -16,6 +19,7 @@ DATABASES_PORT = conf['DATABASES_PORT']
 REDIS_HOST = conf['REDIS_HOST']
 REDIS_PORT = conf['REDIS_PORT']
 REDIS_PASSWORD = conf['REDIS_PASSWORD']
+
 
 
 # 邮件服务器配置 SMTP

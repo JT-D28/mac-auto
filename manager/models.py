@@ -66,6 +66,7 @@ class Param(Model):
 class BusinessData(Model):
 	count = IntegerField(default=1, null=True)
 	businessname = CharField(max_length=128, null=True)
+	description=TextField(blank=True,null=True)
 	itf_check = TextField(null=True)
 	db_check = TextField(null=True)
 	# params=ManyToManyField(Param,blank=True)

@@ -5,17 +5,9 @@
     <meta charset="UTF-8">
     <title>业务数据</title>
     <link rel="stylesheet" type="text/css" href="{% static 'manager/bootstrap/bootstrap.min.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
     <style type="text/css">
-
-        .hide{
-            display: none;
-        }
-        #detail_config:hover{
-            cursor: pointer;
-
-        }
         .layui-icon:hover {
             cursor: pointer;
         }
@@ -67,52 +59,46 @@
         .mailpadding {
             padding: 9px 1px;
         }
-        .layui-form-item .layui-inline{
-            margin-bottom: 0px;
-        }
     </style>
 
 </head>
-<body style="height: 100%">
+<body>
 
 <div class="layui-row" style="height: 100%">
     <div class="layui-col-md12" style="height: 100%;padding:0 15px">
-        <fieldset style="height:100%">
+        <fieldset style="height:95%">
             <legend style="font-size: 20px;border-top-width:0px !important;">
                   <span class="layui-breadcrumb">
                       <a href="">用例管理</a>
                       <a href="">业务数据</a>
                   </span>
             </legend>
-            <form id='addbusiness' class='layui-form layui-form-pane' style="height: 98%">
+            <form id='addbusiness' class='layui-form layui-form-pane'>
+                <div class="layui-form-item " id='weight_item' hidden>
+                    <label class="layui-form-label required">权重</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="weight" placeholder="请输入" autocomplete="off" class="layui-input"
+                               id='weight' disabled>
+                    </div>
+                </div>
                 <div class="layui-form-item">
-                    <div id="busname" class="layui-inline" style="width: calc(48% - 20px);">
-                        <label class="layui-form-label required">测试点</label>
-                        <div class="layui-input-block">
-                            <input type="text" name="businessname" placeholder="请输入" autocomplete="off"
-                                   class="layui-input"
-                                   lay-verify="required">
-                        </div>
+                    <div class="layui-inline" style="width: 65%;">
+                    <label class="layui-form-label required">测试点</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="businessname" placeholder="请输入" autocomplete="off" class="layui-input"
+                               lay-verify="required" >
                     </div>
-                    <div id='weight_item' class="layui-inline"
-                         style="width: 30%;float: right;display: none;margin-right:0px">
-                        <label class="layui-form-label required">权重</label>
-                        <div class="layui-input-block">
-                            <input type="text" name="weight" placeholder="请输入" autocomplete="off"
-                                   class="layui-input"
-                                   id='weight' disabled style="text-align: center;padding-left:0px">
-                        </div>
                     </div>
-                    <div class="layui-inline" style="width: 22%;float: right;margin-right:10px">
-                        <label class="layui-form-label required">执行次数</label>
-                        <div class="layui-input-block">
-                            <input type="text" name="count" placeholder="请输入" autocomplete="off" class="layui-input"
-                                   id='count' style="text-align: center;padding-left:0px">
-                        </div>
+                    <div class="layui-inline" style="width: 30%;float: right;margin-right:0">
+                    <label class="layui-form-label required">执行次数</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="count" placeholder="请输入" autocomplete="off" class="layui-input"
+                               id='count'>
+                    </div>
                     </div>
                 </div>
 
-                <div class="layui-form-item">
+                <div class="layui-form-item ">
                     <label class="layui-form-label">前置操作</label>
                     <div class="layui-input-block">
                         <input type="text" id='pre' name="pre" placeholder="单个使用sleep(4),多个sleep(4)|dbexecute2(变量引用)"
@@ -140,38 +126,24 @@
                                class="layui-input" lay-verify="required">
                     </div>
                 </div>
-<!--                 <div class="layui-form-item ">
-
-                        <label class="layui-form-label required">文件校验</label>
-                        <div class="layui-input-block">
-                            <input type="text" id='file_check' name="file_check" placeholder="请输入" autocomplete="off"
-                                   class="layui-input" lay-verify="required">
-                        </div>
-
-
-                </div> -->
-<!--                   <div class="layui-form-item">
-                    <label class="layui-form-label">模板选择</label>
-                    <div class="layui-input-block">
-                      <select name="template_list" lay-verify="">
-
-                      </select>
-                    </div>
-                  </div> -->
-
-
-
-
-                <div class="layui-form-item " style="height: calc(100% - 350px)">
+                <div class="layui-form-item ">
                     <label class="layui-form-label required">参数信息</label>
-                    <div class="layui-input-block" style="height: 100%;">
+                    <div class="layui-input-block">
                         <textarea name="params" id='params' placeholder="接口时输入json字符串 函数时直接输入参数,多个时,分隔"
                                   autocomplete="off" class="layui-textarea" lay-verify="required"
-                                  style="min-height:100px!important;height: 100%;"></textarea>
+                                  style="min-height:140px!important;"></textarea>
+                    </div>
+                </div>
+                <div class="layui-form-item ">
+                    <label class="layui-form-label required">备注信息</label>
+                    <div class="layui-input-block">
+                        <textarea name="description" id='description' placeholder=""
+                                  autocomplete="off" class="layui-textarea" lay-verify="required"
+                                  style="min-height:140px!important;"></textarea>
                     </div>
                 </div>
                 <div class="layui-form-item" id="savaline">
-                    <button class="layui-btn" id='save' style="display:none;">保存</button>
+                    <button class="layui-btn" id='save' style="visibility:hidden;">保存</button>
                 </div>
             </form>
         </fieldset>
@@ -186,54 +158,22 @@
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
 <script type="text/javascript">
-    action = _get_query_param('action')
-    if (action != 'view') {
-        $('#save').css('display', 'block')
-        $('#busname').css('width', 'calc(78% - 20px)')
-    } else {
-        $('#save').css('display', 'none')
-        $('#savaline').css('height', 0)
-        $('#weight_item').css('display', 'block')
-        _set_form_not_editable()
-    }
-
-    function load_templates() {
-        success = function (e) {
-            if (e.code == 0) {
-                $("[name='template_list']").empty();
-                $("[name='template_list']").append("<option value='0'>请选择</option>");
-
-                for (var i = 0; i < e.data.length; i++) {
-                    console.log(e.data[i]);
-                    $("[name='template_list']").append("<option value='" + e.data[i]['value'] + "'>" + e.data[i]['name'] + "</option>")
-
-                }
-
-            }
-            layui.form.render('select');
-        };
-        _post('/manager/querytemplatelist/', {}, success);
-
-    }
-
-    add_var_prop_smart_inputs(['pre', 'post', 'itf_check', 'db_check', 'params'])
+    add_var_prop_smart_inputs(['pre','post','itf_check','db_check','params'])
     layui.use(['table', 'element', 'form'], function () {
 
         var table = layui.table;
         var $ = layui.jquery
         var layer = layui.layer;
         var form = layui.form
-
-        load_templates()
         uid = _get_query_param('uid')
         pid = _get_query_param('pid')
+        action = _get_query_param('action')
         detail = 'addbusiness'
 
-
         if (action != 'view')
-            $('#save').css('display', 'inline')
+            $('#save').css('visibility', 'visible')
         else {
-            $('#save').css('visibility', 'none')
+            $('#save').css('visibility', 'hidden')
             $('#savaline').css('height',0)
             $('#weight_item').removeAttr('hidden')
 
@@ -247,7 +187,6 @@
             success = function (d) {
                 data = d.data[0]
 
-               
                 $("[name='weight']").val(data['weight'])
                 $("[name='count']").val(data['count'])
                 $("[name='businessname']").val(data['businessname'])
@@ -256,11 +195,7 @@
                 $("[name='params']").val(data['params'])
                 $("[name='pre']").val(data['preposition'])
                 $("[name='post']").val(data['postposition'])
-                $("[name='file_check']").val(data['parser_check'])
-                $("[name='template_list']").val(data['parser_id'])
-
-                form.render('select');
-
+                $("[name='description']").val(data['description'])
 
             };
             _post('/manager/queryonebusiness/', {'vid': uid}, success);
@@ -269,6 +204,8 @@
 
         if (detail == 'addbusiness') {
             $("[name='count']").val(1)
+
+
         }
 
 
@@ -287,9 +224,7 @@
                 'preposition': $("[name='pre']").val(),
                 'postposition': $("[name='post']").val(),
                 'count': $("[name='count']").val(),
-                'file_check': $("[name='file_check']").val(),
-                'parser_id': $("[name='template_list']").val()
-                //'parser_id':$("[name='template_list']").attr('value'),
+                'description':$("[name='description']").val(),
 
             }
             _post('/manager/treecontrol/', data, function (e) {
@@ -320,14 +255,6 @@
             });
 
             return false;
-
-
-        });
-
-        //文件校验
-
-        $("#detail_btn").click(function () {
-            $('#detail_config').toggleClass('hide')
 
 
         });

@@ -2467,7 +2467,7 @@ def queryonebusiness(request):
 		# logger.info('business=>', business)
 		# jsonstr = json.dumps(business, cls=BusinessDataEncoder)
 		sql = '''
-		SELECT b.id,count,businessname,itf_check,db_check,params,preposition,postposition,value as weight,parser_id,parser_check
+		SELECT b.id,count,businessname,itf_check,db_check,params,preposition,postposition,value as weight,parser_id,parser_check,description
 		FROM manager_businessdata b, manager_order o WHERE b.id=%s and o.follow_id=b.id
 		'''
 		with connection.cursor() as cursor:

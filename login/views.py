@@ -172,6 +172,9 @@ def logout(request):
 def account(request):
 	return render(request, 'login/account.html')
 
+@csrf_exempt
+def role(request):
+	return render(request, 'login/role.html')
 
 def queryaccount(request):
 	searchvalue = request.GET.get('searchvalue')

@@ -23,7 +23,7 @@ from ME2.settings import DEBUG
 from login import views
 
 urlpatterns = [
-	url(r'^static/(?P<path>.*)$', serve, {'document_root': STATIC_ROOT}),
+	# url(r'^static/(?P<path>.*)$', serve, {'document_root': STATIC_ROOT}),
 	path('admin/', admin.site.urls),
 	path('', views.index),
 	path('account/', include('login.urls')),

@@ -129,7 +129,13 @@
                         <a href="javascript:;" data-url="/account/user/"><i class="fa fa-user icon"
                                                                             style="padding-left: 2.1px;padding-bottom:2.5px;opacity:0.8"></i><cite>用户管理</cite></a>
                     </li>
+
                 {% endif %}
+                <li class="layui-nav-item">
+                    <a id='tree' href="javascript:;" data-url="/account/role/"><img i="icon"
+                                                                                    src="{% static 'manager/icon/app.svg' %}"
+                                                                                    class="sideicon"><cite>角色管理</cite></a>
+                </li>
                 <li class="layui-nav-item">
                     <a id='tree' href="javascript:;" data-url="/manager/tree/"><img i="icon"
                                                                                     src="{% static 'manager/icon/app.svg' %}"
@@ -249,7 +255,7 @@
                     layer.msg(data.msg)
                     setTimeout(function(){
                         window.top.location.reload()
-                    },1200)
+                    },2000)
 
                     
                 }

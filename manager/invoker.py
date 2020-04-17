@@ -1576,22 +1576,36 @@ def _get_step_params(paraminfo, taskid, callername):
 					pass
 				
 				if isinstance(v, (str,)):
-					if v.__contains__('{{STEP_PARAMS}'):
-						logger.info('字符串发现STEP_PARAMS', v)
-						del cur[k]
-						# cur[k]=''
-						# logger.info(cur)
-				
+					find_var=len(re.findall('\{\{.*?\}\}', v))
+					if find_var:
+						if v.__contains__('{{STEP_PARAMS}}'):
+							logger.info('字符串发现STEP_PARAMS', v)
+							del cur[k]
+							# cur[k]=''
+							# logger.info(cur)
+						else:
+							user=User.objects.get(name=callername)
+							cur[k]=_replace_variable(user,v,taskid=taskid)[1]
+					
 				else:
 					_next(v)
 		
 		elif isinstance(cur, (list,)):
+			itemindex=-1
 			for sb in cur:
+				itemindex=itemindex+1
 				if isinstance(sb, (str,)):
-					if sb.__contains__('{{STEP_PARAMS}'):
-						# del parent[key]
-						cur.remove(sb)
-				
+					find_var=len(re.findall('\{\{.*?\}\}', sb))
+					if find_var:
+						if sb.__contains__('{{STEP_PARAMS}}'):
+							# del parent[key]
+							cur.remove(sb)
+						else:
+							user=User.objects.get(name=callername)
+							cur[itemindex]=_replace_variable(user,sb,taskid=taskid)[1]
+
+
+					
 				else:
 					_next(sb)
 	

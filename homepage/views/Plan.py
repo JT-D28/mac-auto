@@ -79,12 +79,12 @@ def queryPlanState(request):
 	planid = request.POST.get('id')[5:]
 	# if request.POST.get('refresh'):
 	# 	while 1:
-	# 		is_running = getRunningInfo('',planid,'isrunning')
+	# 		is_running = getRudnningInfo('',planid,'isrunning')
 	# 		print('3333312313333333333333333')
 	# 		if is_running in (0, '0'):
 	# 			return JsonResponse({'data': 1})
 	# 		time.sleep(1)
-	is_running = getRunningInfo('',planid,'isrunning')
+	is_running = '0' if getRunningInfo('',planid,'isrunning') =='0' else '1'
 	return JsonResponse({'data': is_running})
 
 
@@ -92,7 +92,8 @@ def queryPlanState(request):
 def planforceStop(request):
 	planid = request.POST.get('id')[5:]
 	try:
-		setRunningInfo(request.session.get("username"), planid, getRunningInfo('', planid, 'isrunning'),'', 0)
+		user = request.session.get("username")
+		setRunningInfo(user, planid,getRunningInfo(user,planid,'lastest_taskid'),0)
 		code = 0
 		msg = 'success'
 	except:

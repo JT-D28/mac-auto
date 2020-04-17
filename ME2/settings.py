@@ -249,4 +249,4 @@ CORS_ALLOW_HEADERS = (
 	'x-requested-with',
 )
 
-DEBUG = True
+DEBUG = False

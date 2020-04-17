@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import connection
 
 from ME2.settings import BASE_DIR
+from manager.context import getRunningInfo
 from manager.core import getpagedata
 
 
@@ -76,7 +77,8 @@ def doDebugInfo(request):
 			cursor.execute(sql, [id])
 			desc = cursor.description
 			row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-		return row, 'info', '', row[0]['is_running']
+		is_debug_unning = '1' if getRunningInfo('', id, 'isrunning') == 'debug' else '0'
+		return row, 'info', '', is_debug_unning
 	
 	if type == 'plan':
 		sql2 = '''

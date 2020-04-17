@@ -1041,7 +1041,7 @@ def third_party_call(request):
 	callername = res['callername']
 	is_verify = request.GET.get('is_verify')
 	
-	if getRunningInfo(callername, planid, 'isrunning') == '1':
+	if getRunningInfo(callername, planid, 'isrunning') != '0':
 		return JsonResponse(simplejson(code=1, msg="调用失败，任务正在运行中，稍后再试！"), safe=False)
 	
 	logger.info('调用方=>', callername)
@@ -1239,13 +1239,15 @@ def runtask(request):
 	for planid in list_:
 		plan = Plan.objects.get(id=planid)
 		username = request.session.get('username')
-		if getRunningInfo(username, planid, 'isrunning') == '1':
-			return JsonResponse(simplejson(code=1, msg="任务已在运行，请稍后！"), safe=False)
+		state_running =getRunningInfo(username, planid, 'isrunning')
+		if state_running != '0':
+			msg = '验证' if state_running == 'verify' else '调试'
+			return JsonResponse(simplejson(code=1, msg='计划正在运行[%s]任务，稍后再试！'%msg), safe=False)
 		
 		taskid = gettaskid(plan.__str__())
 		is_verify = request.POST.get('is_verify')
 		runplans(username, taskid, list_, is_verify)
-	return JsonResponse(simplejson(code=0, msg="你的任务正在运行中", taskid=taskid), safe=False)
+	return JsonResponse(simplejson(code=0, msg="你的任务开始运行", taskid=taskid), safe=False)
 
 
 @csrf_exempt

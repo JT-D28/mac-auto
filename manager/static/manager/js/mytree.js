@@ -390,7 +390,7 @@ var tree={
 				_post('/homepage/plandebug/', {'id': treeNode.id.substr(5), 'type': 'info'},
 					function (data) {
 						if (data.code == 1){
-							layer.msg("任务正在运行中，请稍后！")
+							layer.msg("计划正在运行[调试]任务中，请稍后！")
 						}else opendebug(treeNode)
 					})
 				return false;

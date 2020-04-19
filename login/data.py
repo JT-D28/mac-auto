@@ -1,4 +1,4 @@
-、、#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @Date    : 2020-04-17 16:00:23
 # @Author  : Blackstone
@@ -37,16 +37,16 @@ class RoleData():
 
 
     @classmethod
-    def delrole():
+    def delrole(cls):
         pass
 
     @classmethod
-    def updaterole():
+    def updaterole(cls):
         pass
 
     @classmethod
-    def queryrole():
-        pass、
+    def queryrole(cls):
+        pass
             
 
 

@@ -48,13 +48,14 @@ class UIControl(Model):
 	'''
 	code = CharField(max_length=24)
 	description = TextField(blank=True)
-	is_config = CharField(max_length=5)  # YES|NO
+	is_config = BooleanField(default=False)
+	is_open=BooleanField(default=False)
 	author = ForeignKey(User, on_delete=CASCADE)
 	createtime = DateTimeField(auto_now_add=True, null=True)
 	updatetime = DateTimeField(auto_now=True, null=True)
 
 
-class User_UI_Relation(Model):
+class User_UIControl(Model):
 	'''用户UI关联表
 	'''
 	kind = CharField(max_length=12)  # USER|ROLE

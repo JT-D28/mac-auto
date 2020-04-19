@@ -6,8 +6,7 @@ confs = configparser.ConfigParser()
 confs.read(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.ini'), encoding="utf-8")
 conf = confs['useconfig']
 
-#
-DEBUG=conf['DEBUG']
+
 #
 dbtype = conf['dbtype']
 ME2_URL = conf['ME2_URL']

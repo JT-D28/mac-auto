@@ -1,6 +1,5 @@
-a=(1,2)
-def test(a):
-    for x in a:
-        print(x)
+a="fda{{abc}}xxx"
 
-test(a)
+import re
+rs=re.findall('\{\{.*?\}\}', a)
+print(len(rs))

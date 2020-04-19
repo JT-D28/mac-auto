@@ -608,7 +608,7 @@ class BusinessDataEncoder(XJsonEncoder):
 	def __init__(self, **args):
 		super(BusinessDataEncoder, self).__init__(
 			['id', 'businessname', 'db_check', 'itf_check', 'params', 'postposition', 'preposition', 'count',
-			 'parser_id', 'parser_check'], **args)
+			 'parser_id', 'parser_check','description'], **args)
 	
 	def encode(self, obj):
 		from .cm import getchild

@@ -626,6 +626,7 @@ def addbusiness(request):
 		b.params = request.POST.get('params')
 		b.parser_check = request.POST.get('parser_check')
 		b.parser_id = request.POST.get('parser_id')
+		b.description=request.POST.get('description')
 		
 		# check_result=_check_params(b.params)
 		# logger.info('nn=>',check_result)
@@ -725,7 +726,7 @@ def editbusiness(request):
 		b.count = int(request.POST.get('count').strip()) if request.POST.get('count') != '' else int(1)
 		b.parser_check = request.POST.get('file_check')
 		b.parser_id = request.POST.get('parser_id')
-		
+		b.description=request.POST.get('description')
 		# check params
 		check_result = _check_params(b.params)
 		

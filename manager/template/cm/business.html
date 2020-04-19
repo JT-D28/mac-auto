@@ -115,7 +115,7 @@
                     </div>
                 </div>
 
-                <div class="layui-form-item">
+                <div class="layui-form-item ">
                     <label class="layui-form-label">前置操作</label>
                     <div class="layui-input-block">
                         <input type="text" id='pre' name="pre" placeholder="单个使用sleep(4),多个sleep(4)|dbexecute2(变量引用)"
@@ -143,36 +143,24 @@
                                class="layui-input" lay-verify="required">
                     </div>
                 </div>
-                <!--                 <div class="layui-form-item ">
-
-										<label class="layui-form-label required">文件校验</label>
-										<div class="layui-input-block">
-											<input type="text" id='file_check' name="file_check" placeholder="请输入" autocomplete="off"
-												   class="layui-input" lay-verify="required">
-										</div>
-
-
-								</div> -->
-                <!--                   <div class="layui-form-item">
-									<label class="layui-form-label">模板选择</label>
-									<div class="layui-input-block">
-									  <select name="template_list" lay-verify="">
-
-									  </select>
-									</div>
-								  </div> -->
-
-
-                <div class="layui-form-item " style="height: calc(100% - 350px)">
+                <div class="layui-form-item ">
                     <label class="layui-form-label required">参数信息</label>
-                    <div class="layui-input-block" style="height: 100%;">
+                    <div class="layui-input-block">
                         <textarea name="params" id='params' placeholder="接口时输入json字符串 函数时直接输入参数,多个时,分隔"
                                   autocomplete="off" class="layui-textarea" lay-verify="required"
-                                  style="min-height:100px!important;height: 100%;"></textarea>
+                                  style="min-height:140px!important;"></textarea>
+                    </div>
+                </div>
+                <div class="layui-form-item ">
+                    <label class="layui-form-label required">备注信息</label>
+                    <div class="layui-input-block">
+                        <textarea name="description" id='description' placeholder=""
+                                  autocomplete="off" class="layui-textarea" lay-verify="required"
+                                  style="min-height:140px!important;"></textarea>
                     </div>
                 </div>
                 <div class="layui-form-item" id="savaline">
-                    <button class="layui-btn" id='save' style="display:none;">保存</button>
+                    <button class="layui-btn" id='save' style="visibility:hidden;">保存</button>
                 </div>
             </form>
         </fieldset>
@@ -187,55 +175,23 @@
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
 <script type="text/javascript">
-    action = _get_query_param('action')
-    if (action != 'view') {
-        $('#save').css('display', 'block')
-        $('#busname').css('width', 'calc(78% - 20px)')
-    } else {
-        $('#save').css('display', 'none')
-        $('#savaline').css('height', 0)
-        $('#weight_item').css('display', 'block')
-        _set_form_not_editable()
-    }
-
-    function load_templates() {
-        success = function (e) {
-            if (e.code == 0) {
-                $("[name='template_list']").empty();
-                $("[name='template_list']").append("<option value='0'>请选择</option>");
-
-                for (var i = 0; i < e.data.length; i++) {
-                    console.log(e.data[i]);
-                    $("[name='template_list']").append("<option value='" + e.data[i]['value'] + "'>" + e.data[i]['name'] + "</option>")
-
-                }
-
-            }
-            layui.form.render('select');
-        };
-        _post('/manager/querytemplatelist/', {}, success);
-
-    }
-
-    add_var_prop_smart_inputs(['pre', 'post', 'itf_check', 'db_check', 'params'])
-    layui.use(['table', 'element', 'form', 'layer'], function () {
+    add_var_prop_smart_inputs(['pre','post','itf_check','db_check','params'])
+    layui.use(['table', 'element', 'form'], function () {
 
         var table = layui.table;
         var $ = layui.jquery
         var layer = layui.layer;
         var form = layui.form
-
-        load_templates()
         uid = _get_query_param('uid')
         pid = _get_query_param('pid')
+        action = _get_query_param('action')
         detail = 'addbusiness'
 
-
         if (action != 'view')
-            $('#save').css('display', 'inline')
+            $('#save').css('visibility', 'visible')
         else {
-            $('#save').css('visibility', 'none')
-            $('#savaline').css('height', 0)
+            $('#save').css('visibility', 'hidden')
+            $('#savaline').css('height',0)
             $('#weight_item').removeAttr('hidden')
 
             _set_form_not_editable()
@@ -257,11 +213,7 @@
                 $("[name='params']").val(data['params'])
                 $("[name='pre']").val(data['preposition'])
                 $("[name='post']").val(data['postposition'])
-                $("[name='file_check']").val(data['parser_check'])
-                $("[name='template_list']").val(data['parser_id'])
-
-                form.render('select');
-
+                $("[name='description']").val(data['description'])
 
             };
             _post('/manager/queryonebusiness/', {'vid': uid}, success);
@@ -270,6 +222,8 @@
 
         if (detail == 'addbusiness') {
             $("[name='count']").val(1)
+
+
         }
 
 
@@ -288,9 +242,7 @@
                 'preposition': $("[name='pre']").val(),
                 'postposition': $("[name='post']").val(),
                 'count': $("[name='count']").val(),
-                'file_check': $("[name='file_check']").val(),
-                'parser_id': $("[name='template_list']").val()
-                //'parser_id':$("[name='template_list']").attr('value'),
+                'description':$("[name='description']").val(),
 
             }
             _post('/manager/treecontrol/', data, function (e) {
@@ -321,15 +273,6 @@
             });
 
             return false;
-
-
-        });
-
-
-        //文件校验
-
-        $("#detail_btn").click(function () {
-            $('#detail_config').toggleClass('hide')
 
 
         });

@@ -10,6 +10,7 @@ from manager.models import *
 
 from django.conf import settings
 from login.models import *
+from .cm import addrelation
 from .core import *
 from .invoker import *
 from . import cm
@@ -3322,27 +3323,49 @@ def queryDbScheme(request):
 @csrf_exempt
 def getParamfromFetchData(request):
 	text = request.POST.get('fetchtest')
+	step_des=request.POST.get('description')
+	pid = request.POST.get('pid').split('_')[1]
+	bussiness_des = request.POST.get('bussiness_des')
 	code=0
 	data = ''
 	rq='{%s}'%text.split('fetch(')[1].rstrip(');').replace('\n','').replace(',',':',1)
 	try:
 		x = json.loads(rq)
 		for (k, v) in x.items():
-			data = {
-				'url': k,
-				'headers': v.get('headers', ''),
-				'referrer': v.get('referrer', ''),
-				'body': v.get('body', ''),
-				'method': v.get('method', ''),
-				'contenttype': v.get('headers', '').get('Content-Type', '')
-			}
+			print('url',k)
+			print('content-type',v.get('headers', '').get('Content-Type', ''))
+			headers = v.get('headers', {})
+			headers['Referer']=v.get('referrer','')
+			print('headers',headers)
+			print('method',v.get('method'))
 			parsed_result = {}
-			pairs = parse.parse_qsl(data['body'])
-			print(pairs)
+			pairs = parse.parse_qsl(v.get('body'))
 			for name, value in pairs:
-				print(name,value)
 				parsed_result[name] = value
-			print(parsed_result,'ddddddddd')
+			print('body',parsed_result)
+			
+			contenttype= v.get('headers', '').get('Content-Type', '')
+			if 'urlencode' in contenttype:
+				contenttype='urlencode'
+			elif 'json' in contenttype:
+				contenttype='json'
+			elif 'xml' in contenttype:
+				contenttype='xml'
+				
+			step = Step()
+			step.step_type = 'interface'
+			step.description = step_des
+			step.headers = headers
+			step.body = 'sleep'
+			step.url = k
+			step.method = v.get('method').lower()
+			step.content_type = contenttype
+			step.temp = ''
+			step.count = '1'
+			step.author = User.objects.get(name=request.session.get('username'))
+			step.db_id = ''
+			step.save()
+			addrelation('case_step', request.session.get('username'), pid, step.id)
 	except:
 		print(traceback.format_exc())
 		code=1

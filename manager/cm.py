@@ -402,9 +402,7 @@ def addstep(request):
 			url = url.strip()
 		method = request.POST.get('method')
 		content_type = request.POST.get('content_type')
-		db_check = request.POST.get('db_check')
-		itf_check = request.POST.get('itf_check')
-		logger.info('itf_check=>', itf_check)
+		count = request.POST.get('count')
 		tmp = request.POST.get('tmp')
 		author = request.session.get('username')
 		logger.info("author=>", author)
@@ -445,10 +443,8 @@ def addstep(request):
 		step.url = url
 		step.method = method
 		step.content_type = content_type
-		step.db_check = db_check
-		step.itf_check = itf_check
 		step.temp = tmp
-		
+		step.count=count
 		step.author = lm.User.objects.get(name=author)
 		
 		step.db_id = dbid

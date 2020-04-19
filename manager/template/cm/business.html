@@ -164,11 +164,7 @@
 
 
                 <div class="layui-form-item " style="height: calc(100% - 350px)">
-                    <label class="layui-form-label required">参数信息 <i id='importbusiness'
-                                                                     class="layui-icon layui-icon-search"
-                                                                     style="position: absolute;top:8px;right: 8px;"></i></label>
-
-
+                    <label class="layui-form-label required">参数信息</label>
                     <div class="layui-input-block" style="height: 100%;">
                         <textarea name="params" id='params' placeholder="接口时输入json字符串 函数时直接输入参数,多个时,分隔"
                                   autocomplete="off" class="layui-textarea" lay-verify="required"
@@ -327,21 +323,6 @@
             return false;
 
 
-        });
-
-
-        $("#importbusiness").click(function () {
-            layer.prompt({
-                title: '粘贴请求',
-                formType: 2,
-                area: ['500px', '300px'],
-                maxlength: 1000000000
-            }, function (text, index) {
-                layer.close(index);
-                _post_nl('/manager/getParamfromFetchData/', {fetchtest: text}, function (res) {
-                    $("[name='params']").val(res.data)
-                });
-            });
         });
 
 

@@ -132,7 +132,7 @@ class Interceptor(MiddlewareMixin):
 				else:
 					return ('success', '')
 			except:
-				logger.info(traceback.format_exc())
+				logger.error(traceback.format_exc())
 				return ('success', '')
 		
 		else:

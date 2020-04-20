@@ -317,10 +317,14 @@ def editcon(request):
 @csrf_exempt
 def editmultidbcon(request):
 	code = 0
-	msg = ''
+	msg='修改成功'
 	try:
 		datas = eval(request.POST.get('datas'))
 		for data in datas:
+			oldcon = DBCon.objects.filter(~Q(id=data['id']) & Q(description=data['description'], scheme=data['scheme']))
+			if len(oldcon)!=0:
+				msg = "配置方案【%s】下已存在描述为【%s】的数据连接" % (data['scheme'], data['description'])
+				break
 			con = DBCon.objects.get(id=data['id'])
 			con.kind = data['kind']
 			con.description = data['description']
@@ -331,10 +335,10 @@ def editmultidbcon(request):
 			con.port = data['port']
 			con.scheme = data['scheme']
 			con.save()
-		msg='修改成功'
 	except:
 		logme.error(traceback.format_exc())
 		msg=traceback.format_exc()
+		code = 1
 	finally:
 		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
@@ -647,6 +651,38 @@ def editvar(request):
 	
 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
+@csrf_exempt
+def editmultivar(request):
+	# 绑定计划修改不考虑
+	datas = eval(request.POST.get('datas'))
+	code = 0
+	msg = '修改成功'
+	try:
+		for data in datas:
+			bindplans=Tag.objects.get(var = Variable.objects.get(id=data['id'])).planids
+			state = varRepeatCheck(data['key'],bindplans,data['id'])
+			if state!= '':
+				msg = state
+				break
+			data['customize']=data['customize'].replace(
+				"<span class='layui-badge' onclick=tagSpanClick(this) style='cursor:pointer;'>",'').replace('</span> ',';')
+			var = Variable.objects.get(id=data['id'])
+			var.value = data['value']
+			var.description = data['description']
+			var.gain = data['gain']
+			var.key = data['key']
+			var.save()
+			tag = Tag.objects.get(var=var)
+			tag.customize = data['customize']
+			tag.save()
+	except:
+		logme.error(traceback.format_exc())
+		msg = traceback.format_exc()
+		code = 1
+	finally:
+		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+	
+	
 
 def varRepeatCheck(key, bindplans, editid=0):
 	# 校验重复：同一个key只能最多只能有一个全局变量：isglobal=1;可以有多个绑定了计划的变量，其中绑定的计划不能有重复项

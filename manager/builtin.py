@@ -178,7 +178,7 @@ def createTransNo(**kws):
 	 返回：name+当前时间（月日时分秒）+随机数字      共16位
 
 	'''
-	name=kws.get('name',None)
+	name=kws.get('name','')
 	if name != None:
 		n = 16 - len(name)
 	else:

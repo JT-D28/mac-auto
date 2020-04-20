@@ -33,7 +33,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'd6yqlb(u%mxu!t$4evtz@3#5zqo@zy8db09cj1pi2r38^6fi*y'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False###
+DEBUG = True###
 DEBUG_TOOLBAR_PATCH_SETTINGS = True
 INTERNAL_IPS = ("127.0.0.1",)
 DEBUG_TOOLBAR_PANELS = [
@@ -248,5 +248,4 @@ CORS_ALLOW_HEADERS = (
 	'x-csrftoken',
 	'x-requested-with',
 )
-
 DEBUG = False

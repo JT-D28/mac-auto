@@ -19,6 +19,7 @@ from .builtin import *
 from .db import Mysqloper as op
 from pyDes import *
 from django.conf import settings
+from manager.context import Me2Log as logger
 
 
 # 用户变量缓存 key=user.varname
@@ -455,6 +456,10 @@ class UserEncoder(XJsonEncoder):
 		super(UserEncoder, self).__init__(['id', 'createtime', 'updatetime', 'name', 'password'], **args)
 
 
+class RoleEncoder(XJsonEncoder):
+	def __init__(self, **args):
+		super(RoleEncoder, self).__init__(['id', 'createtime', 'updatetime', 'name', 'description','author','user'], **args)
+
 class ItfEncoder(XJsonEncoder):
 	def __init__(self, **args):
 		super(ItfEncoder, self).__init__(
@@ -748,6 +753,9 @@ def get_params(request):
 	o = {**dict(request.POST), **dict(request.GET)}
 	for ok in o:
 		o[ok] = o.get(ok)[0]
+
+	o['user']=md.User.objects.get(name=request.session.get('username'))
+	logger.info('request params : ',o)
 	
 	return o
 

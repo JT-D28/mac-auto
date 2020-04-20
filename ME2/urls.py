@@ -23,7 +23,7 @@ from ME2.settings import DEBUG
 from login import views
 
 urlpatterns = [
-	# url(r'^static/(?P<path>.*)$', serve, {'document_root': STATIC_ROOT}),
+	url(r'^static/(?P<path>.*)$', serve, {'document_root': STATIC_ROOT}),
 	path('admin/', admin.site.urls),
 	path('', views.index),
 	path('account/', include('login.urls')),
@@ -42,5 +42,5 @@ if DEBUG:
     urlpatterns.append(url(r'^__debug__/', include(debug_toolbar.urls)))
 
 
-handler404 = views.page_not_found
-handler500 = views.page_error
+# handler404 = views.page_not_found
+# handler500 = views.page_error

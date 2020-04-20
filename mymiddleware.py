@@ -58,18 +58,18 @@ class Interceptor(MiddlewareMixin):
 		tmp = request.path.split('?')[0]
 		# tmp=tmp.replace(tmp[-1],'')
 		simplename = tmp.split('/')[-2]
-		# print('simplename=>',simplename)
+		# logger.info('simplename=>',simplename)
 		
 		flag1 = simplename.startswith('add')
 		flag2 = simplename.startswith('edit')
 		
-		# print('flag=>',flag1,flag2)
+		# logger.info('flag=>',flag1,flag2)
 		if flag1:
 			key = simplename.replace('add', '').lower()
-			# print('key=>',key)
+			# logger.info('key=>',key)
 			mkey = getkey(_meta, key)
 			if mkey:
-				print('==[新增]字段重复校验====')
+				logger.info('==[新增]字段重复校验====')
 				actionV = request.POST.get(_meta[mkey])
 				callstr = "list(models.%s.objects.filter(%s='%s'))" % (mkey, _meta[mkey], actionV)
 				if mkey == 'Function':
@@ -86,8 +86,8 @@ class Interceptor(MiddlewareMixin):
 					else:
 						return 'fail', "配置方案【%s】下已存在描述为【%s】的数据连接" % (schemevalue, description)
 				qssize = len(eval(callstr))
-				print('callstr=>%s size=%s' % (callstr, qssize))
-				print('url[%s]字段[%s]重复验证 已存在[%s]条' % (request.path, _meta[mkey], qssize))
+				logger.info('callstr=>%s size=%s' % (callstr, qssize))
+				logger.info('url[%s]字段[%s]重复验证 已存在[%s]条' % (request.path, _meta[mkey], qssize))
 				if qssize == 0:
 					return ('success', '')
 				else:
@@ -100,17 +100,17 @@ class Interceptor(MiddlewareMixin):
 			call_str = ''
 			try:
 				key = simplename.replace('edit', '').lower()
-				# print('key=>',key)
+				# logger.info('key=>',key)
 				mkey = getkey(_meta, key)
 				if mkey:
-					print('==[编辑]字段重复校验====')
+					logger.info('==[编辑]字段重复校验====')
 					if mkey == 'DBCon':
 						schemevalue = request.POST.get('schemevalue')
 						description = request.POST.get('description')
 						id=request.POST.get('id')
 						oldcon = models.DBCon.objects.filter(~Q(id=id) & Q(description=description, scheme=schemevalue))
 						qssize = len(oldcon)
-						print(oldcon)
+						logger.info(oldcon)
 						if qssize == 0:
 							return 'success', ''
 						else:
@@ -118,11 +118,11 @@ class Interceptor(MiddlewareMixin):
 							return 'fail', msg
 					actionV = request.POST.get(_meta[mkey])
 					call_str = "models.%s.objects.get(%s='%s').id" % (mkey, _meta[mkey], actionV)
-					print('callstr=>', call_str)
+					logger.info('callstr=>', call_str)
 					call_id = request.POST.get('id')
 					repeatid = eval(call_str)
 					
-					print('repeatid=>', repeatid)
+					logger.info('repeatid=>', repeatid)
 					
 					if str(call_id) == str(repeatid):
 						return ('success', '')
@@ -132,7 +132,7 @@ class Interceptor(MiddlewareMixin):
 				else:
 					return ('success', '')
 			except:
-				print(traceback.format_exc())
+				logger.info(traceback.format_exc())
 				return ('success', '')
 		
 		else:
@@ -141,15 +141,12 @@ class Interceptor(MiddlewareMixin):
 	def _session_check(self, request):
 		'''
 		session校验
-		'''
-		_meta = ('/account/login/', '/manager/querytaskdetail/', '/test_expression/', '/test_expression1/','/test_xml/',
-		         '/manager/third_party_call/')
-		
+		'''		
 		if request.path.startswith('manager'):
 			if request.session.get('username', None):
 				return True
 			else:
-				print('session校验不通过 跳到登录页面')
+				logger.info('session校验不通过 跳到登录页面')
 				return False
 
 		return True
@@ -176,14 +173,14 @@ class Interceptor(MiddlewareMixin):
 			ol.description=''
 			ol.author=lm.User.objects.get(name=request.session.get('username'))
 			ol.save()
-			print('==记录树操作 %s'%ol)
+			logger.info('==记录树操作 %s'%ol)
 		
 
 
 
-	def _print_call_msg(self,request):
+	def _print_info_call_msg(self,request):
 		if not request.path.startswith('/static'):
-			print("=============================【%s】调用[%s]=============================" %(request.session.get('username','未登录'),request.path))
+			logger.info("=============================【%s】调用[%s]=============================" %(request.session.get('username','未登录'),request.path))
 		a=dict(request.GET)
 		b=dict(request.POST)
 		o={**a,**b}
@@ -195,7 +192,7 @@ class Interceptor(MiddlewareMixin):
 	
 	def process_request(self, request):
 
-		self._print_call_msg(request)
+		self._print_info_call_msg(request)
 
 		# self._log_operation(request)
 		

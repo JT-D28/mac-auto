@@ -116,6 +116,13 @@ urlpatterns = [
 	# path('queryonebusinessdata/', views.queryonebusinessdata),
 	path('querybusinessdatalist/', views.querybusinessdatalist),
 	path('queryUser/', views.queryUser),
+	path('queryrole/', views.queryrole),
+	path('queryonerole/', views.queryonerole),
+	path('addrole/', views.addrole),
+	path('delrole/', views.delrole),
+	path('updaterole/',views.updaterole),
+	path('queryroleusers/', views.query_transfer_data),
+
 	#
 	path('tag/', views.tag),
 	path('querytaglist/', views.querytaglist),

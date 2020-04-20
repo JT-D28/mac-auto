@@ -314,6 +314,34 @@ def editcon(request):
 		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
+@csrf_exempt
+def editmultidbcon(request):
+	code = 0
+	msg = ''
+	try:
+		datas = eval(request.POST.get('datas'))
+		for data in datas:
+			con = DBCon.objects.get(id=data['id'])
+			con.kind = data['kind']
+			con.description = data['description']
+			con.dbname = data['dbname']
+			con.username = data['username']
+			con.password = data['password']
+			con.host = data['host']
+			con.port = data['port']
+			con.scheme = data['scheme']
+			con.save()
+		msg='修改成功'
+	except:
+		logme.error(traceback.format_exc())
+		msg=traceback.format_exc()
+	finally:
+		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+
+
+
+
+
 def getplan(id, kind):
 	logger.info('get', id, kind)
 	if kind == 'case':

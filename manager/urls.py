@@ -100,6 +100,7 @@ urlpatterns = [
 	path('adddbcon/', views.addcon),
 	path('delcon/', views.delcon),
 	path('editdbcon/', views.editcon),
+	path('editmultidbcon/',views.editmultidbcon),
 	path('querydblist/', views.querydblist),
 	path('querydblistdefault/', views.querydblistdefault),
 	path('copyDbCon/', views.copyDbCon),

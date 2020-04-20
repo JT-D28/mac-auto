@@ -53,15 +53,16 @@
         <button class="layui-btn btn" id='addbtn'>新增</button>
         <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
         <button class="layui-btn btn" id='copybtn'>复制</button>
+        <button class="layui-btn btn" id='tablesave'>保存</button>
     </div>
 
 
-    <div class="layui-inline" style="float: right;width: 80%;">
+    <div class="layui-inline" style="float: right; width: calc(100% - 400px);">
         <button class="layui-btn btn" id='querybtn' style="float: right;">查询</button>
         <div class="layui-input-inline" style="float: right"><input id='search-value' type="text" name=""
                                                                     placeholder="名称|键|值"
                                                                     class="layui-input btn"></div>
-        <div class="layui-input-inline" style="margin-bottom: 0px;width: 14%;float: right;">
+        <div class="layui-input-inline" style="margin-bottom: 0px;width: 40%;float: right;">
             <el-select style="float: right" @change="schemeChange" v-model="querySchemeValue" filterable
                        placeholder="选择配置方案">
                 <el-option
@@ -576,34 +577,40 @@
         multiple_dbcon = [];
 
         function multiple_data(data) {
-            console.log(data)
-            multiple_dbcon.forEach(function (item, index) {
-                if (item.id === data.id) {
-                    multiple_dbcon.splice(index, 1);
-                    multiple_dbcon.push(data)
-                }else{
-                    multiple_dbcon.push(data)
+            if (multiple_dbcon.length === 0) {
+                multiple_dbcon.push(data)
+            } else {
+                var index = -1;
+                for (var i = 0; i < multiple_dbcon.length; i++) {
+                    if (multiple_dbcon[i].id === data.id) {
+                        index = i;
+                        break
+                    }
                 }
-            })
-            console.log(multiple_dbcon)
+                if (index !== -1) {
+                    multiple_dbcon.splice(index, 1)
+                }
+                multiple_dbcon.push(data)
+            }
+
         }
 
-        function update_by_table(data) {
-            _post('/manager/editdbcon/', {
-                'id': data.id,
-                'description': data.description,
-                'host': data.host,
-                'port': data.port,
-                'dbname': data.dbname,
-                'accountname': data.username,
-                'password': data.password,
-                'kind': data.kind,
-                'schemevalue': data.scheme
+
+        $("#tablesave").click(function () {
+            if (multiple_dbcon.length === 0) {
+                layer.msg('没有修改过数据')
+            } else {
+                update_by_table(multiple_dbcon)
+            }
+        });
+
+        function update_by_table(datas) {
+            _post_nl('/manager/editmultidbcon/', {
+                datas: JSON.stringify(datas)
             }, function (result) {
-                result = JSON.parse(result)
-                if (result.code != 0) {
-                    layer.alert(result.msg)
-                }
+                result = JSON.parse(result);
+                layer.msg(result.msg)
+                $("#querybtn").click()
             });
         }
     });

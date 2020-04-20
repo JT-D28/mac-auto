@@ -19,7 +19,7 @@ def querytaskid(request):  # 查询验证任务最新id
 	if action == 'plan':
 		planid = request.POST.get('planid')
 		taskid = getRunningInfo(username, planid, 'verify_taskid')
-		is_running = getRunningInfo(username, planid, 'isrunning')
+		is_running = '0' if getRunningInfo(username, planid, 'isrunning') == '0' else '1'
 	elif action == 'lastest':
 		taskid = getRunningInfo(username, '', 'latest_taskid')
 		print("控制台获取的最新taskid", taskid)

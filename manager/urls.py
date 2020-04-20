@@ -161,4 +161,5 @@ urlpatterns = [
 	#
 	path('changemode/', views.changemode),
 
+	path('getParamfromFetchData/',views.getParamfromFetchData)
 ]

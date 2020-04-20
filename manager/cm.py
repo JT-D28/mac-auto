@@ -39,7 +39,7 @@ def addproduct(request):
 				'pId': -1,
 				'name': product.description,
 				'type': 'product',
-				'textIcon': 'fa fa-home',
+				'textIcon': 'fa icon-fa-home',
 			}
 		}
 	
@@ -152,7 +152,7 @@ def addplan(request):
 				'pId': 'product_%s' % pid,
 				'name': plan.description,
 				'type': 'plan',
-				'textIcon': 'fa fa-product-hunt',
+				'textIcon': 'fa icon-fa-product-hunt',
 			}}
 	except:
 		return {
@@ -273,10 +273,12 @@ def run(request):
 	for planid in planids:
 		plan = mm.Plan.objects.get(id=planid)
 		taskid = gettaskid(plan.__str__())
-		if getRunningInfo(callername, planid, 'isrunning') == '1':
+		state_running =getRunningInfo(callername, planid, 'isrunning')
+		if state_running != '0':
+			msg = '验证' if state_running == 'verify' else '调试'
 			return {
 				'status': 'fail',
-				'msg': '任务已在运行，稍后再试！'
+				'msg': '计划正在运行[%s]任务，稍后再试！'%msg
 			}
 		runplans(callername, taskid, planids, is_verify)
 	
@@ -323,7 +325,7 @@ def addcase(request):
 				'pid': 'plan_%s' % pid,
 				'name': case.description,
 				'type': 'case',
-				'textIcon': 'fa fa-folder'
+				'textIcon': 'fa icon-fa-folder'
 			}
 			
 		}
@@ -400,9 +402,7 @@ def addstep(request):
 			url = url.strip()
 		method = request.POST.get('method')
 		content_type = request.POST.get('content_type')
-		db_check = request.POST.get('db_check')
-		itf_check = request.POST.get('itf_check')
-		logger.info('itf_check=>', itf_check)
+		count = request.POST.get('count')
 		tmp = request.POST.get('tmp')
 		author = request.session.get('username')
 		logger.info("author=>", author)
@@ -430,7 +430,7 @@ def addstep(request):
 					'pid': 'case_%s' % pid,
 					'name': case.description,
 					'type': 'case',
-					'textIcon': 'fa fa-folder',
+					'textIcon': 'fa icon-fa-folder',
 					
 				}
 			}
@@ -443,10 +443,8 @@ def addstep(request):
 		step.url = url
 		step.method = method
 		step.content_type = content_type
-		step.db_check = db_check
-		step.itf_check = itf_check
 		step.temp = tmp
-		
+		step.count=count
 		step.author = lm.User.objects.get(name=author)
 		
 		step.db_id = dbid
@@ -494,7 +492,7 @@ def addstep(request):
 				'pid': 'case_%s' % pid,
 				'name': step.description,
 				'type': 'step',
-				'textIcon': 'fa fa-file-o',
+				'textIcon': 'fa icon-fa-file-o',
 				
 			}
 		}
@@ -702,7 +700,7 @@ def addbusiness(request):
 				'pId': 'step_%s' % pid,
 				'name': bname,
 				'type': 'business',
-				'textIcon': 'fa fa-leaf',
+				'textIcon': 'fa icon-fa-leaf',
 			}
 		}
 	except:

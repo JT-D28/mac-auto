@@ -470,7 +470,7 @@ def remotecache(key, linemsg):
 _runninginfo = dict()
 
 
-def setRunningInfo(username, planid, taskid, isrunning, dbscheme='全局',is_verify=1):
+def setRunningInfo(username, planid, taskid, isrunning, dbscheme='全局',is_verify='1'):
 	if 'lastest_taskid' not in _runninginfo:
 		_runninginfo['lastest_taskid'] = {}
 	lastest_taskid = _runninginfo.get('lastest_taskid', {})
@@ -478,7 +478,10 @@ def setRunningInfo(username, planid, taskid, isrunning, dbscheme='全局',is_ver
 	if str(planid) not in _runninginfo:
 		_runninginfo[str(planid)] = {}
 	planinfo = _runninginfo.get(str(planid), {})
-	planinfo['isrunning'] = isrunning
+	if isrunning == 1:
+		planinfo['isrunning'] = 'verify' if is_verify == '1' else 'debug'
+	else:
+		planinfo['isrunning'] = '0'
 	planinfo['dbscheme'] = dbscheme
 	if 'verify' not in planinfo:
 		planinfo['verify']={}
@@ -493,9 +496,9 @@ def setRunningInfo(username, planid, taskid, isrunning, dbscheme='全局',is_ver
 	print("储存运行信息", _runninginfo)
 
 
-def getRunningInfo(username='', planid='', type='latest_taskid'):
+def getRunningInfo(username='', planid='', type='lastest_taskid'):
 	# print('getinfo:', username, planid, type)
-	if type == 'latest_taskid':
+	if type == 'lastest_taskid':
 		latest_taskids = _runninginfo.get('lastest_taskid', {})
 		latest_taskid = latest_taskids.get(username, None)
 		return latest_taskid

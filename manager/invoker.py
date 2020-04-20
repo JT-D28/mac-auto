@@ -953,7 +953,9 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
 	builtin = (methodname in builtinmethods)
 	
 	try:
+		logme.warn('获取自定义函数id %s' % functionid)
 		f = Function.objects.get(id=functionid)
+		logme.warn('获取自定义函数%s'%f.__str__())
 	except:
 		pass
 	
@@ -1859,6 +1861,7 @@ def _gain_compute(user, gain_str, src=1, taskid=None):
 			logger.info('flag1', flag)
 			ms = list(Function.objects.filter(flag=flag))
 			functionid = None
+			print('dddddddddd',ms)
 			if len(ms) == 0:
 				# functionid=None
 				# flag=Fu.tzm_compute(gain_str,'(.*?)\(.*?\)')

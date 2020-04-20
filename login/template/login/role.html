@@ -33,8 +33,8 @@
 <body style="height: calc(100% - 40px);padding: 20px">
 
 <div class="layui-inline">
-    <button class="layui-btn btn" id='adduser' style="margin-right: 5px">新建角色</button>
-    <!--<button class="layui-btn btn layui-btn-danger" id='deluser'>删除用户</button>!-->
+    <button class="layui-btn btn" id='addrole' style="margin-right: 5px">新建角色</button>
+    <button class="layui-btn btn layui-btn-danger" id='delrole'>删除角色</button>!
 </div>
 <div class="layui-inline" style="float: right;">
     <div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="名称|键|值"
@@ -45,29 +45,34 @@
     <div class="layui-form-item">
         <label class="layui-form-label">角色名</label>
         <div class="layui-input-block">
-            <input type="text" name="username" placeholder="请输入" autocomplete="off" class="layui-input">
+            <input type="text" name="name" placeholder="请输入" autocomplete="off" class="layui-input">
         </div>
     </div>
     <div class="layui-form-item">
         <label class="layui-form-label">描述</label>
         <div class="layui-input-block">
-            <input type="password" name="password" placeholder="请输入" autocomplete="off" class="layui-input">
+            <input type="description" name="description" placeholder="请输入" autocomplete="off" class="layui-input" id='description'>
         </div>
     </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">用户</label>
+        <div id='transfer'></div>
+    </div>
+
 </form>
 
-<table id='table-user' class="layui-table"
-       lay-data="{height:'full-100', cellMinWidth: 80, page: true, limit:10, url:'/account/queryaccount/'}" lay-filter='target'
+<table id='table-role' class="layui-table"
+       lay-data="{height:'full-100', cellMinWidth: 80, page: true, limit:10, url:'/manager/queryrole/'}" lay-filter='target'
        style="border: 2px solid red">
     <thead>
     <tr>
         <th lay-data="{type:'checkbox'}"></th>
         <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
         <th lay-data="{field: 'name',width:160, sort: true}">角色名</th>
-        <th lay-data="{field: 'password', sort: true}">描述</th>
+        <th lay-data="{field: 'description', sort: true}">描述</th>
 
         <th lay-data="{field: 'createtime',sort:true}">创建时间</th>
-        <th lay-data="{field: 'updatetime'}">创建者</th>
+        <th lay-data="{field: 'author'}">创建者</th>
         <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:100}">操作</th>
 
     </tr>
@@ -79,14 +84,48 @@
 <script src="{% static 'manager/js/utils.js' %}"></script>
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script type="text/javascript">
-    layui.use(['layer', 'table'], function () {
+
+
+
+function render_transfer(tr,leftdata,rightdata){
+
+    console.log('开始渲染穿梭数据.')
+    console.log('left：'+leftdata)
+    console.log('right:'+rightdata)
+
+    tr.render({
+      elem: '#transfer',  //绑定元素
+      showSearch:true,
+      width:300,
+      title:['可选用户','已选用户'],
+      id: 'demo1', //定义索引
+      data:leftdata,
+      value:rightdata,
+      parseData:function(res){
+        return{
+            'title':res.name,
+            'value':res.id,
+            'checked':false,
+            'disabled':false,
+        }
+
+      }
+
+    });
+    
+
+
+
+}
+layui.use(['layer', 'table','transfer'], function () {
         var table = layui.table;
         var layer = layui.layer;
-        var $ = layui.jquery
+        var transfer=layui.transfer;
+        var $ = layui.jquery;
 
 
         $("#querybtn").click(function (e) {
-            table.reload('table-user', {
+            table.reload('table-role', {
                 page: {
                     curr: 1
                 },
@@ -98,55 +137,76 @@
             });
         });
 
-        $('#adduser').click(function () {
+        $('#addrole').click(function () {
 
             $("#addhtml")[0].reset()
             layui.form.render()
+            
+            success=function(res){
+                //穿梭框数据加载
+                render_transfer(transfer,res.data[0],res.data[1])
+                var o=layer.open({
+                    type: 1,
 
-            layer.open({
-                type: 1,
+                    title: '新建角色',
+                    content: $('#addhtml'),
+                    btn: ['ok', 'cancel'],
+                    yes: function (index, layero) {
 
-                title: '新建用户',
-                content: $('#addhtml'),
-                btn: ['ok', 'cancel'],
-                yes: function (index, layero) {
+                        layer.close(index)
 
-                    layer.close(index)
+                        var getData = transfer.getData('demo1'); 
+                        userids=[]
+                        for(var i=0;i<getData.length;i++){
 
-                    success = function (e) {
-                        e = JSON.parse(e)
-                        if (e.code == 0) {
-                            layer.alert(e.msg, {icon: 1, time: 1000})
-                            table.reload('table-user', {
-                                page: {
-                                    curr: 1
-                                },
-                                where: {
-                                    searchvalue: $("#search-value").val()
+                            userids.splice(0, 0, getData[i]['value'])
+                        }
 
-                                }
+                        success = function (e) {
+                            
+                            if (e.code == 0) {
+                                layer.alert(e.msg, {icon: 1, time: 1000})
+                                table.reload('table-role', {
+                                    page: {
+                                        curr: 1
+                                    },
+                                    where: {
+                                        searchvalue: $("#search-value").val()
 
-                            });
-                        } else
-                            layer.alert(e.msg, {icon: 2})
+                                    }
+
+                                });
+                            } else
+                                layer.alert(e.msg, {icon: 2})
 
 
+                        }
+
+                        // alert($("[name='description']"))
+                        _post('/manager/addrole/', {
+                            'name': $("[name='name']").val(),
+                            'description': $('#description').val(),
+                            'userids':userids.join()
+                        }, success)
                     }
+                });
+               layer.full(o);
 
-                    _post('/account/addaccount/', {
-                        'username': $("[name='username']").val(),
-                        'password': $("[name='password']").val()
-                    }, success)
-                }
-            })
+            }
+
+            _post('/manager/queryroleusers/',{},success)
+
+
+
+
         });
 
-        $("#deluser").click(function () {
-            var checkStatus = table.checkStatus("table-user");
+        $("#delrole").click(function () {
+            var checkStatus = table.checkStatus("table-role");
             data = checkStatus.data;
             ids = []
             if (data.length < 1) {
-                layer.alert('你有选择用户么', {icon: 3, time: 1500})
+                layer.alert('你有选择角色么', {icon: 3, time: 1500})
                 return
             } else {
                 for (var index = 0; index < data.length; index++) {
@@ -158,10 +218,10 @@
             layer.confirm('确认删除么?', function (index) {
 
                 success = function (e) {
-                    e = JSON.parse(e)
+                  
                     if (e.code == 0) {
                         layer.alert(e.msg, {icon: 1, time: 1500})
-                        table.reload('table-user', {
+                        table.reload('table-role', {
                             page: {
                                 curr: 1
                             },
@@ -177,7 +237,7 @@
 
                 }
                 layer.close(index);
-                _post('/account/delaccount/', {'ids': ids.join()}, success)
+                _post('/manager/delrole/', {'ids': ids.join()}, success)
 
             })
 
@@ -191,10 +251,12 @@
                 success = function (data) {
                     // data=JSON.parse(data)
                     if (data.code == 0) {
-                        $("[name='username']").val(data.data['name']);
-                        $("[name='password']").val(data.data['password']);
+                        $("[name='name']").val(data.data['name']);
+                        $("[name='description']").val(data.data['description']);
 
-                        layer.open({
+                        render_transfer(transfer,data.data['all'],data.data['selected'])
+
+                        var o=layer.open({
                             type: 1,
                             title: '编辑用户',
                             content: $('#addhtml'),
@@ -202,7 +264,7 @@
                             yes: function (index, layero) {
                                 layer.close(index)
                                 success2 = function (e) {
-                                    e = JSON.parse(e)
+                                    // e = JSON.parse(e)
                                     if (e.code == 0) {
                                         layer.alert(e.msg, {icon: 1, time: 1000})
                                     } else {
@@ -211,22 +273,31 @@
 
 
                                 }
-                                _post('/account/editaccount/', {
+
+                                var getData = transfer.getData('demo1'); 
+                                userids=[]
+                                for(var i=0;i<getData.length;i++){
+
+                                    userids.splice(0, 0, getData[i]['value'])
+                                }
+                                _post('/manager/updaterole/', {
                                     'uid': id,
-                                    'username': $("[name='username']").val(),
-                                    'password': $("[name='password']").val(),
+                                    'name': $("[name='name']").val(),
+                                    'description': $('#description').val(),
+                                    'userids':userids.join()
                                 }, success2)
 
                             }
                         });
+                        layer.full(o)
 
                     } else {
-                        alert(e.msg, {icon: 2})
+                        layer.alert(e.msg, {icon: 2})
 
                     }
 
                 }
-                _post('/account/queryoneaccount/', {'uid': id}, success)
+                _post('/manager/queryonerole/', {'uid': id}, success)
 
             }
         })

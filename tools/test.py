@@ -1,5 +1,5 @@
-a="fda{{abc}}xxx"
+a='def kk()'
+b='def fa("11",2)'
 
 import re
-rs=re.findall('\{\{.*?\}\}', a)
-print(len(rs))
+print(re.findall('\((.*?)\)', b))

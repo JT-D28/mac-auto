@@ -39,7 +39,11 @@ class Role(Model):
 	'''
 	name = CharField(max_length=16)
 	description = TextField()
-	user = ManyToManyField(User, blank=True)
+	users = ManyToManyField(User, blank=True,related_name='users')
+	author = ForeignKey(User, on_delete=CASCADE)
+	createtime = DateTimeField(auto_now_add=True, null=True)
+	updatetime = DateTimeField(auto_now=True, null=True)
+
 
 
 class UIControl(Model):

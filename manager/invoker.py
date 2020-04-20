@@ -1004,6 +1004,14 @@ def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
 		methodname = ''
 		try:
 			methodname = re.findall('(.*?)\(', s)[0]
+			argstr=re.findall('\((.*?)\)', s)[0]
+			if argstr.strip():
+				argstr=argstr+','
+			argstr=argstr+"callername='%s',taskid='%s'"%(user.name,taskid)
+			call_str='%s(%s)'%(methodname,argstr)
+
+
+			##????????????????????????????
 		except:
 			return ('error', '解析%s[%s]失败[%s]' % (kind, s, traceback.format_exc()))
 		

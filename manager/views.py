@@ -308,6 +308,7 @@ def editcon(request):
 	
 	except:
 		msg = '编辑异常[%s]' % traceback.format_exc()
+		logme.error(msg)
 		code = 1
 	finally:
 		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
@@ -3555,21 +3556,35 @@ def changemode(request):
 	print(configpath)
 	lineindex=-1
 	lines=[]
-	msg='开启DEBUG模式'
+	msg = ''
 	with open(configpath,encoding='utf-8') as f:
 		lines=f.readlines()
-	for line in lines:
-		lineindex=lineindex+1
-		if line.strip()=='DEBUG = True' or line.strip()=='DEBUG = False':
-			break;
-
-	if lines[lineindex].strip()=='DEBUG = True':
-		lines[lineindex]='DEBUG = False'
-		msg='关闭DEBUG模式'
-	else:
-		lines[lineindex]='DEBUG = True'
-
-	with open(configpath,'w',encoding='utf-8') as f:
-		f.write(''.join(lines))
-
+	if request.POST.get('action')=='debug':
+		for line in lines:
+			lineindex=lineindex+1
+			if line.strip().replace(' ', '') == 'DEBUG=True':
+				lines[lineindex] = 'DEBUG = False\n'
+				msg = '调试模式关'
+				break
+			elif line.strip().replace(' ', '') == 'DEBUG=False':
+				lines[lineindex] = 'DEBUG = True\n'
+				msg = '调试模式开'
+				break
+		
+		with open(configpath,'w',encoding='utf-8') as f:
+			f.write(''.join(lines))
+	else :
+		for line in lines:
+			lineindex = lineindex + 1
+			if line.strip().replace(' ', '') == 'DEBUG_TOOLS_ON=True' :
+				lines[lineindex] = 'DEBUG_TOOLS_ON = False\n'
+				msg = '调试工具关'
+				break
+			elif line.strip().replace(' ', '') == 'DEBUG_TOOLS_ON=False' :
+				lines[lineindex] = 'DEBUG_TOOLS_ON = True\n'
+				msg = '调试工具开'
+				break
+		with open(configpath, 'w', encoding='utf-8') as f:
+			f.write(''.join(lines))
+	
 	return JsonResponse(pkg(code=0,msg=msg),safe=False)

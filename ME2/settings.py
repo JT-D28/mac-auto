@@ -14,6 +14,9 @@ import os
 import json
 from ME2 import configs
 
+DEBUG = True
+DEBUG_TOOLS_ON = False
+
 BASE_URL = 'http://' + configs.ME2_URL
 
 ##Redis配置
@@ -26,31 +29,27 @@ env_id = ''
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'd6yqlb(u%mxu!t$4evtz@3#5zqo@zy8db09cj1pi2r38^6fi*y'
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-DEBUG_TOOLBAR_PATCH_SETTINGS = True
+
+
 INTERNAL_IPS = ("127.0.0.1",)
 DEBUG_TOOLBAR_PANELS = [
 	'ddt_request_history.panels.request_history.RequestHistoryPanel',
-    'debug_toolbar.panels.timer.TimerPanel',
-    'debug_toolbar.panels.settings.SettingsPanel',
-    'debug_toolbar.panels.request.RequestPanel',
-    'debug_toolbar.panels.sql.SQLPanel',
-    'debug_toolbar.panels.staticfiles.StaticFilesPanel',
-    'debug_toolbar.panels.templates.TemplatesPanel',
-    'pympler.panels.MemoryPanel',
+	'debug_toolbar.panels.timer.TimerPanel',
+	'debug_toolbar.panels.settings.SettingsPanel',
+	'debug_toolbar.panels.request.RequestPanel',
+	'debug_toolbar.panels.sql.SQLPanel',
+	'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+	'debug_toolbar.panels.templates.TemplatesPanel',
+	'pympler.panels.MemoryPanel',
 ]
 
 ALLOWED_HOSTS = ['*']
 
-# Application definition
 
+# Application definition
 INSTALLED_APPS = [
 	'channels',
 	'django.contrib.admin',
@@ -68,8 +67,7 @@ INSTALLED_APPS = [
 	# 'django_crontab',
 ]
 
-MIDDLEWARE = [
-	'debug_toolbar.middleware.DebugToolbarMiddleware',
+MIDDLEWARE_O = [
 	'django.middleware.security.SecurityMiddleware',
 	'django.contrib.sessions.middleware.SessionMiddleware',
 	'corsheaders.middleware.CorsMiddleware',
@@ -79,8 +77,9 @@ MIDDLEWARE = [
 	'django.contrib.messages.middleware.MessageMiddleware',
 	'django.middleware.clickjacking.XFrameOptionsMiddleware',
 	'mymiddleware.Interceptor',
-
 ]
+
+MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware'] + MIDDLEWARE_O if DEBUG_TOOLS_ON else MIDDLEWARE_O
 
 # 指定ASGI的路由地址
 ASGI_APPLICATION = 'manager.routing.application'
@@ -184,7 +183,7 @@ LOGGING = {
 		'file': {
 			'level': 'INFO',
 			'class': 'logging.FileHandler',
-			'filename': BASE_DIR+'/logs/monitor.log',
+			'filename': BASE_DIR + '/logs/monitor.log',
 			'formatter': 'verbose'
 		},
 		'email': {
@@ -247,5 +246,3 @@ CORS_ALLOW_HEADERS = (
 	'x-csrftoken',
 	'x-requested-with',
 )
-
-DEBUG = False

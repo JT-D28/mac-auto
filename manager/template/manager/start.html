@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html >
+<html>
 <head>
     <meta charset="utf-8">
     <title>MEE_V2.0</title>
@@ -106,8 +106,9 @@
                                                                          id='console'><img
                         src="{% static 'manager/icon/monitor.svg' %}"
                         style="width:13px;height:13px;padding-right: 10px">控制台</a></li>
-                <li class="layui-nav-item" style="margin-left: 30px;margin-right: 5px"><a class="textcolor" style="padding: 0"
-                                                                         href="{{ BASE_URL }}/account/logout/"><img
+                <li class="layui-nav-item" style="margin-left: 30px;margin-right: 5px"><a class="textcolor"
+                                                                                          style="padding: 0"
+                                                                                          href="{{ BASE_URL }}/account/logout/"><img
                         src="{% static 'manager/icon/logout.svg' %}" style="width:13px;height:13px;padding-right: 10px">退出</a>
                 </li>
             </ul>
@@ -163,23 +164,23 @@
                 </li>
                 <li class="layui-nav-item">
                     <a href="javascript:;" data-url="/manager/uploadfile/"><img i="icon"
-                                                                              src="{% static 'manager/icon/space.svg' %}"
-                                                                              class="sideicon"><cite>我的空间</cite></a>
+                                                                                src="{% static 'manager/icon/space.svg' %}"
+                                                                                class="sideicon"><cite>我的空间</cite></a>
                 </li>
-                
-                    <li class="layui-nav-item">
-                        <a href="javascript:;" data-url="/manager/template/"><img i="icon"
-                                                                                  src="{% static 'manager/icon/template.svg' %}"
-                                                                                  class="sideicon"><cite>报文模板</cite></a>
-                    </li>
-                    {% if request.session.username == 'hujj' %}
+
+                <li class="layui-nav-item">
+                    <a href="javascript:;" data-url="/manager/template/"><img i="icon"
+                                                                              src="{% static 'manager/icon/template.svg' %}"
+                                                                              class="sideicon"><cite>报文模板</cite></a>
+                </li>
+                {% if request.session.username == 'hujj' %}
                     <li class="layui-nav-item">
                         <a href="javascript:;" data-url="/manager/authcontrol/"><img i="icon"
-                                                                                  src="{% static 'manager/icon/template.svg' %}"
-                                                                                  class="sideicon"><cite>权限控制</cite></a>
+                                                                                     src="{% static 'manager/icon/template.svg' %}"
+                                                                                     class="sideicon"><cite>权限控制</cite></a>
                     </li>
-                    {% endif %}
-              
+                {% endif %}
+
 
 
                 <li class="layui-nav-item">
@@ -247,25 +248,38 @@
         var taskkeys = []
         var curtaskindex = 0
 
-        $("#head").dblclick(function(){
-
-
-            _post_nl('/manager/changemode/',{},function(data){
-                if(data.code==0){
-                    layer.msg(data.msg)
-                    setTimeout(function(){
-                        window.top.location.reload()
-                    },2000)
-
-                    
+        $("#head").dblclick(function () {
+            layer.msg('调试切换', {
+                btn: ['模式', '工具', '取消']
+                , btn1:function(index, layero) {
+                    _post_nl('/manager/changemode/', {action: 'debug'}, function (data) {
+                        if (data.code === 0) {
+                            layer.close(index);
+                            layer.msg(data.msg);
+                            setTimeout(function () {
+                                window.top.location.reload()
+                            }, 2000)
+                        }
+                    });
+                },btn2: function(index) {
+                    _post_nl('/manager/changemode/', {action: 'debug_tool'}, function (data) {
+                        if (data.code === 0) {
+                            layer.close(index);
+                            layer.msg(data.msg);
+                            setTimeout(function () {
+                                window.top.location.reload()
+                            }, 2000)
+                        }
+                    });
+                },btn3: function(index) {
+                    layer.close(index)
                 }
-
-            })
+            });
         });
 
         $("#console").click(function () {
             _post_nl('/homepage/querytaskid/', {'action': 'lastest'}, function (data) {
-                data=JSON.parse(data)
+                data = JSON.parse(data)
                 let consoleSocket = new WebSocket("ws://" + host + "/ws/consolemsg/");
                 consoleSocket.onopen = function () {
                     // var username=$("#username").text()

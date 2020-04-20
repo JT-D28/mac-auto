@@ -197,15 +197,14 @@ def queryaccount(request):
 def addaccount(request):
 	code, msg = 0, ''
 	try:
-		
 		user = User()
 		user.name = request.POST.get('username')
 		user.password = EncryptUtils.md5_encrypt(request.POST.get('password'))
 		user.save()
-		print("用户【{}】新增成功".format(user.name))
+		logme.error("用户【{}】新增成功".format(user.name))
 		msg = '操作成功'
 	except:
-		print(traceback.format_exc())
+		logme.error(traceback.format_exc())
 		code = 1
 		msg = '操作失败'
 	
@@ -221,12 +220,12 @@ def delaccount(request):
 			user = User.objects.get(id=id_)
 			user.delete()
 		msg = '操作成功'
-		print("用户【{}】删除成功".format(user.name))
+		logme.error("用户【{}】删除成功".format(user.name))
 	except:
 		error = traceback.format_exc()
 		code = 4
 		msg = '操作异常[%s]' % error
-		print(msg)
+		logme.error(msg)
 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
@@ -240,24 +239,30 @@ def queryoneaccount(request):
 		return JsonResponse(jsonstr, safe=False)
 	except:
 		msg = '操作异常[%s]' % traceback.format_exc()
-		print(msg)
+		logme.error(msg)
 		return JsonResponse(simplejson(code=4, msg=msg), safe=False)
 
 
 @csrf_exempt
 def editaccount(request):
 	code, msg = 0, ''
+	id = request.POST.get('uid')
+	name = request.POST.get('username')
+	password = request.POST.get('password')
 	try:
-		user = User.objects.get(id=request.POST.get('uid'))
-		user.name = request.POST.get('username')
-		user.password = request.POST.get('password')
+		num_of_name=len(list(User.objects.exclude(id=id).filter(name=name)))
+		if num_of_name!=0:
+			raise Exception('已存在相同用户名')
+		user = User.objects.get(id=id)
+		user.name = name
+		user.password = password
 		user.save()
 		msg = '操作成功'
-		print("用户【{}】账号信息修改成功".format(user.name,user.password))
-	except:
+		logme.error("用户【{}】账号信息修改成功".format(user.name,user.password))
+	except Exception as e:
 		code = 4
-		msg = '操作异常[%s]' % traceback.format_exc()
-		print(msg)
+		msg = '操作异常[%s]' % e
+		logme.error(msg)
 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 

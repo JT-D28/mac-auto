@@ -1,3 +1,5 @@
+import difflib
+
 from django.db import connection
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
@@ -3324,52 +3326,105 @@ def queryDbScheme(request):
 def getParamfromFetchData(request):
 	text = request.POST.get('fetchtest')
 	step_des=request.POST.get('description')
-	pid = request.POST.get('pid').split('_')[1]
+	pid = request.POST.get('pid').split('_')[1] if request.POST.get('pid') !='false' else 'false'
+	uid = request.POST.get('uid').split('_')[1] if request.POST.get('uid') !='false' else 'false'
 	bussiness_des = request.POST.get('bussiness_des')
 	code=0
 	data = ''
-	rq='{%s}'%text.split('fetch(')[1].rstrip(');').replace('\n','').replace(',',':',1)
+	rq = '{%s}' % text.split('fetch(')[1].rstrip(');').replace('\n', '').replace(',', ':', 1)
 	try:
 		x = json.loads(rq)
 		for (k, v) in x.items():
-			print('url',k)
-			print('content-type',v.get('headers', '').get('Content-Type', ''))
+			print('url', k)
+			print('content-type', v.get('headers', '').get('Content-Type', ''))
 			headers = v.get('headers', {})
-			headers['Referer']=v.get('referrer','')
-			print('headers',headers)
-			print('method',v.get('method'))
-			parsed_result = {}
-			pairs = parse.parse_qsl(v.get('body'))
-			for name, value in pairs:
-				parsed_result[name] = value
-			print('body',parsed_result)
-			
-			contenttype= v.get('headers', '').get('Content-Type', '')
+			headers['Referer'] = v.get('referrer', '')
+			print('headers', headers)
+			print('method', v.get('method'))
+			contenttype = v.get('headers', '').get('Content-Type', '')
 			if 'urlencode' in contenttype:
-				contenttype='urlencode'
+				contenttype = 'urlencode'
+				parsed_result = {}
+				pairs = parse.parse_qsl(v.get('body'))
+				for name, value in pairs:
+					parsed_result[name] = value
+				print('body', parsed_result)
 			elif 'json' in contenttype:
-				contenttype='json'
-			elif 'xml' in contenttype:
-				contenttype='xml'
-				
-			step = Step()
-			step.step_type = 'interface'
-			step.description = step_des
-			step.headers = headers
-			step.body = 'sleep'
-			step.url = k
-			step.method = v.get('method').lower()
-			step.content_type = contenttype
-			step.temp = ''
-			step.count = '1'
-			step.author = User.objects.get(name=request.session.get('username'))
-			step.db_id = ''
-			step.save()
-			addrelation('case_step', request.session.get('username'), pid, step.id)
+				contenttype = 'json'
+				parsed_result=v.get('body')
+				print(parsed_result)
+			else:
+				return JsonResponse({'code': 1, 'data': '只支持urlencode/json'})
 	except:
 		print(traceback.format_exc())
-		code=1
-	return JsonResponse({'code': code,'data': parsed_result.__str__()})
+		return JsonResponse({'code': 1,'data': '解析失败，检查内容'})
+		
+	if uid == 'false':
+		# 增加步骤
+		step = Step()
+		step.step_type = 'interface'
+		step.description = step_des
+		step.headers = headers
+		step.body = 'sleep'
+		step.url = k
+		step.method = v.get('method').lower()
+		step.content_type = contenttype
+		step.temp = ''
+		step.count = '1'
+		step.author = User.objects.get(name=request.session.get('username'))
+		step.db_id = ''
+		step.save()
+		addrelation('case_step', request.session.get('username'), pid, step.id)
+		b = BusinessData()
+		b.businessname = bussiness_des
+		b.itf_check = ''
+		b.db_check = ''
+		b.params = parsed_result
+		b.parser_check = ''
+		b.parser_id = ''
+		b.description = ''
+		b.postposition = ''
+		b.preposition = ''
+		b.count = 1
+		b.save()
+		addrelation('step_business', request.session.get('username'), step.id, b.id)
+		returndata= {
+				'id': 'step_%s' % step.id,
+				'pid': 'case_%s' % pid,
+				'name': step_des,
+				'type': 'step',
+				'textIcon': 'fa icon-fa-file-o',
+		}
+		
+	if pid == 'false':
+		try:
+			step = Step.objects.get(id=uid)
+			if int(difflib.SequenceMatcher(None, step.url.split('/')[-1], k.split('/')[-1]).ratio()) < 0.9:
+				return JsonResponse({'code': 1, 'data': '两个接口可能不一样，请检查'})
+			b = BusinessData()
+			b.businessname = bussiness_des
+			b.itf_check = ''
+			b.db_check = ''
+			b.params = parsed_result
+			b.parser_check = ''
+			b.parser_id = ''
+			b.description = ''
+			b.postposition = ''
+			b.preposition = ''
+			b.count = 1
+			b.save()
+			addrelation('step_business', request.session.get('username'), uid, b.id)
+			returndata= {
+				'id': 'business_%s' % b.id,
+				'pId': 'step_%s' % uid,
+				'name': bussiness_des,
+				'type': 'business',
+				'textIcon': 'fa icon-fa-leaf',
+			}
+		except:
+			print(traceback.format_exc())
+			
+	return JsonResponse({'code': code,'data': returndata})
 
 
 

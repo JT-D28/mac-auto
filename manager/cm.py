@@ -39,7 +39,7 @@ def addproduct(request):
 				'pId': -1,
 				'name': product.description,
 				'type': 'product',
-				'textIcon': 'fa fa-home',
+				'textIcon': 'fa icon-fa-home',
 			}
 		}
 	
@@ -152,7 +152,7 @@ def addplan(request):
 				'pId': 'product_%s' % pid,
 				'name': plan.description,
 				'type': 'plan',
-				'textIcon': 'fa fa-product-hunt',
+				'textIcon': 'fa icon-fa-product-hunt',
 			}}
 	except:
 		return {
@@ -325,7 +325,7 @@ def addcase(request):
 				'pid': 'plan_%s' % pid,
 				'name': case.description,
 				'type': 'case',
-				'textIcon': 'fa fa-folder'
+				'textIcon': 'fa icon-fa-folder'
 			}
 			
 		}
@@ -430,7 +430,7 @@ def addstep(request):
 					'pid': 'case_%s' % pid,
 					'name': case.description,
 					'type': 'case',
-					'textIcon': 'fa fa-folder',
+					'textIcon': 'fa icon-fa-folder',
 					
 				}
 			}
@@ -492,7 +492,7 @@ def addstep(request):
 				'pid': 'case_%s' % pid,
 				'name': step.description,
 				'type': 'step',
-				'textIcon': 'fa fa-file-o',
+				'textIcon': 'fa icon-fa-file-o',
 				
 			}
 		}
@@ -700,7 +700,7 @@ def addbusiness(request):
 				'pId': 'step_%s' % pid,
 				'name': bname,
 				'type': 'business',
-				'textIcon': 'fa fa-leaf',
+				'textIcon': 'fa icon-fa-leaf',
 			}
 		}
 	except:

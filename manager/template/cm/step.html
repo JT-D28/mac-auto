@@ -59,7 +59,7 @@
 
             cursor: pointer;
             color: #009688;
-            font-weight: 10px;
+            font-weight: 500;
         }
 
         .func_btn_bar {
@@ -112,9 +112,9 @@
                 </div>
                 <div class="layui-form-item ">
                     <label class="layui-form-label required">描述
-                        <!--<i id='importbusiness'
-                                                                  class="layui-icon layui-icon-search"
-                                                                  style="position: absolute;top:8px;right: 8px;visibility:hidden"></i>--></label>
+                        <i id='importbusiness'
+                           class="layui-icon layui-icon-util"
+                           style="position: absolute;top:8px;right: 8px;visibility:hidden"></i></label>
                     <div class="layui-input-block">
                         <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input"
                                lay-verify="required">
@@ -123,7 +123,8 @@
                 <div class="layui-form-item">
                     <label class="layui-form-label required">url</label>
                     <div class="layui-input-block">
-                        <textarea id='url' type="textarea" name="url" placeholder="111" autocomplete="off" class="layui-textarea" style="min-height:100px!important;height: 100%;">
+                        <textarea id='url' type="textarea" name="url" placeholder="111" autocomplete="off"
+                                  class="layui-textarea" style="min-height:100px!important;height: 100%;">
                         </textarea>
                     </div>
                 </div>
@@ -219,7 +220,6 @@
         $("[name='itf-check']").parent().parent().show();
         $("[value='interface']").attr('checked', 'checked');
         $("[value='function']").removeAttr('checked')
-        $('#importbusiness').css('visibility', 'visible');
     }
 
     function selectfunction() {
@@ -259,7 +259,6 @@
         uid = _get_query_param('uid');
         pid = _get_query_param('pid');
 
-
         $("#importbusiness").click(function () {
             if ($("[name='description']").val() != '') {
                 layer.prompt({title: '请先输入测试点描述，并确认', formType: 3}, function (bussiness_des, index) {
@@ -276,15 +275,16 @@
                             'bussiness_des': bussiness_des,
                             'fetchtest': text
                         }, function (e) {
-                            /**if (e.code === 0) {
+                            if (e.code === 0) {
                                 var treeObj = parent.$.fn.zTree.getZTreeObj('case-manager');
-                                var node = treeObj.getNodeByParam('id', pid);
+                                id=pid?pid:uid;
+                                var node = treeObj.getNodeByParam('id', id);
                                 console.log('addstep=>' + JSON.stringify(e.data));
                                 treeObj.addNodes(node, e.data);
                                 treeObj.expandNode(node, true)
-                                layer.alert(e.msg, {icon: 1, time: 2000})
+                                layer.alert('新增成功', {icon: 1})
                             } else
-                                layer.alert(e.msg, {icon: 2})**/
+                                layer.alert(e.data, {icon: 2})
                         });
                     });
                 });
@@ -308,9 +308,10 @@
             //v=$("[name='step_type']").val()
             v = data.value;
             // console.log("选择"+v)
-            if (v === 'interface')
+            if (v === 'interface') {
                 selectinterface();
-            else if (v === 'function')
+                $('#importbusiness').css('visibility', 'visible');
+            } else if (v === 'function')
                 selectfunction()
             else
                 selectdir()
@@ -332,13 +333,12 @@
         detail = 'addstep';
         // alert(detail)
 
-        if (action != 'view'){
+        if (action != 'view') {
             $('#save').css('visibility', 'visible');
             $('#importbusiness').css('visibility', 'visible');
         } else {
-            $('#importbusiness').css('visibility', 'hidden');
             $('#weight_item').removeAttr('hidden');
-            _set_form_not_editable()
+            _set_form_not_editable();
         }
 
 

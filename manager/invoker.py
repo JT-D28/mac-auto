@@ -860,6 +860,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		headers = {}
 	
 	headers_rp = _replace_property(user, str(headers))
+
 	if headers_rp[0] is not 'success':
 		return ('', '', '', headers_rp[1])
 	headers_rv = _replace_variable(user, headers_rp[1], taskid=taskid)
@@ -904,6 +905,8 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		isxml = 0
 	else:
 		raise NotImplementedError("content_type=%s没实现" % content_type)
+
+	print('666'*100)
 	# logger.info("method=>",method)
 	rps = None
 	if method == "get":
@@ -919,12 +922,18 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	
 	elif method == 'post':
 		session = get_task_session('%s_%s' % (taskid, user.name))
+
 		if body:
 			if isinstance(body, (dict, list, bytes)):
-				rps = session.post(url, data=body, headers={**default, **headers})
+
+	
+				print(session)
+				rps = session.post(url, data=body, headers={**default, **headers},timeout=5)
+
 			else:
 				return ('', '', '', '参数类型不支持[dict,list of tuples,bytes]')
 		else:
+			print('ttt'*100)
 			rps = session.post(url, headers={**default, **headers})
 	
 	# logger.info("textfdafda=>",rps.text)
@@ -933,8 +942,10 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	
 	###响应报文中props处理
 	status, err = _find_and_save_property(user, props, rps.text)
+	print('yyyyyyyy'*100)
 	if status is not 'success':
 		return ('', '', '', err)
+	print('kkkkkk'*100)
 	return (rps.headers, rps.text, rps.status_code, "")
 
 
@@ -1954,7 +1965,7 @@ def _replace_property(user, str_, taskid=None):
 		
 		return ('success', old)
 	except Exception as e:
-		logger.info(traceback.format_exc())
+		logger.error(traceback.format_exc())
 		return ('error', '请检查是否定义属性%s 错误消息:%s' % (cur, traceback.format_exc()))
 
 

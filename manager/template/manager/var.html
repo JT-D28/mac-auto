@@ -647,7 +647,7 @@
                     , {field: 'key', width: '13%', title: '键名', edit: 'text'}
                     , {field: 'description', width: '13%', title: '描述', sort: true, edit: 'text'}
                     , {field: 'value', width: '13%', title: '值', event: 'var_value'}
-                    , {field: 'gain', width: '13%', title: '获取方式', edit: 'text', event: 'var_gain',}
+                    , {field: 'gain', width: '13%', title: '获取方式', event: 'var_gain',}
                     , {field: 'planids', width: '15%', title: '绑定计划'}
                     , {field: 'customize', width: '15%', title: '标记'}
                     , {field: 'author', width: '8%', title: '创建者', sort: true}
@@ -994,41 +994,63 @@
             } else if (e.event == 'detail') {
 
             } else if (e.event === 'var_value') {
-                layer.prompt({
-                    id: 'valueprompt',
-                    title: '变量描述【' + e.data.description + '】,键名【' + e.data.key + '】的值',
-                    value: e.data.value,
-                    formType: 2,
-                    shade: [0.8, '#393D49'],
-                    shadeClose: true,
-                    area: ['96%', '100%'],
-                    btn: ['编辑', '关闭']
-                }, function (text, index) {
-                    e.update({
-                        value: text
-                    });
-                    e.data.value = text;
-                    multiple_data(e.data);
-                    layer.close(index);
-                });
+                if (e.data.gain === '') {
+                    layer.prompt({
+                        id: 'valueprompt',
+                        title: '变量描述【' + e.data.description + '】,键名【' + e.data.key + '】的值',
+                        value: e.data.value,
+                        formType: 2,
+                        shade: [0.8, '#393D49'],
+                        shadeClose: true,
+                        area: ['96%', '100%'],
+                        btn: ['编辑', '关闭'],
+                        yes: function (index, layero) {
+                            var val = layero.find(".layui-layer-input").val();
+                            e.update({value: val});
+                            e.data.value = val;
+                            multiple_data(e.data);
+                            layer.close(index);
+                        }
+                    })
+                }
             } else if (e.event === 'var_gain') {
-                layer.prompt({
-                    id: 'gianprompt',
-                    title: '变量描述【' + e.data.description + '】,键名【' + e.data.key + '】的获取方式',
-                    value: e.data.gain,
-                    formType: 2,
-                    shade: [0.8, '#393D49'],
-                    shadeClose: true,
-                    area: ['96%', '100%'],
-                    btn: ['编辑', '关闭']
-                }, function (text, index) {
-                    e.update({
-                        gain: text
-                    });
-                    e.data.gain = text;
-                    multiple_data(e.data);
-                    layer.close(index);
-                });
+                if (e.data.value === '') {
+                    layer.prompt({
+                        id: 'gianprompt',
+                        title: '变量描述【' + e.data.description + '】,键名【' + e.data.key + '】的获取方式',
+                        value: e.data.gain,
+                        formType: 2,
+                        shade: [0.8, '#393D49'],
+                        shadeClose: true,
+                        area: ['96%', '100%'],
+                        btn: ['编辑', '关闭'],
+                        yes: function (index, layero) {
+                            var val = layero.find(".layui-layer-input").val();
+                            verify_str = val.replace(/\s*/g, "");
+                            ind = verify_str.search(/\w+\(.*?\)/i);
+                            flag = '';
+                            if (ind !== -1 && verify_str.lastIndexOf(')') === verify_str.length - 1) {
+                                flag = ''
+                            }else{
+                                flag = '输入的函数获取方式可能有误'
+                            }
+                            if (verify_str.split('@').length === 2) {
+                                str = verify_str.split('@')[1];
+                                lastchar = str[str.length - 1];
+                                flag = lastchar === ';' || lastchar === '；' ? '输入的sql获取方式可能有误' : ''
+                            }
+
+                            if (flag !== '') {
+                                layer.msg(flag);
+                                return false
+                            }
+                            e.update({gain: val});
+                            e.data.gain = val;
+                            multiple_data(e.data);
+                            layer.close(index);
+                        }
+                    })
+                }
             }
         });
 

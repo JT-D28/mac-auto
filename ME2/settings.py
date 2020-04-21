@@ -43,7 +43,7 @@ DEBUG_TOOLBAR_PANELS = [
 	'debug_toolbar.panels.sql.SQLPanel',
 	'debug_toolbar.panels.staticfiles.StaticFilesPanel',
 	'debug_toolbar.panels.templates.TemplatesPanel',
-	'pympler.panels.MemoryPanel',
+	# 'pympler.panels.MemoryPanel',
 ]
 
 ALLOWED_HOSTS = ['*']
@@ -63,11 +63,11 @@ INSTALLED_APPS = [
 	'homepage',
 	'corsheaders',
 	'debug_toolbar.apps.DebugToolbarConfig',
-	'pympler',
+	# 'pympler',
 	# 'django_crontab',
 ]
 
-MIDDLEWARE_O = [
+MIDDLEWARE_O= [
 	'django.middleware.security.SecurityMiddleware',
 	'django.contrib.sessions.middleware.SessionMiddleware',
 	'corsheaders.middleware.CorsMiddleware',
@@ -76,7 +76,8 @@ MIDDLEWARE_O = [
 	'django.contrib.auth.middleware.AuthenticationMiddleware',
 	'django.contrib.messages.middleware.MessageMiddleware',
 	'django.middleware.clickjacking.XFrameOptionsMiddleware',
-	'mymiddleware.Interceptor',
+	'mymiddleware.Interceptor'
+
 ]
 
 MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware'] + MIDDLEWARE_O if DEBUG_TOOLS_ON else MIDDLEWARE_O

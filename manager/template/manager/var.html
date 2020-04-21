@@ -15,6 +15,9 @@
             cursor: pointer;
         }
 
+        .layui-table-view .layui-table{
+            width: 100%;
+        }
         .btn {
             height: 34px;
             line-height: 34px;
@@ -641,8 +644,8 @@
                 cols: [[
                     {type: 'checkbox', fixed: 'left'}
                     , {field: 'id', title: 'ID', sort: true, fixed: 'left', hide: true}
-                    , {field: 'key', width: '12%', title: '键名', edit: 'text'}
-                    , {field: 'description', width: '12%', title: '描述', sort: true, edit: 'text'}
+                    , {field: 'key', width: '13%', title: '键名', edit: 'text'}
+                    , {field: 'description', width: '13%', title: '描述', sort: true, edit: 'text'}
                     , {field: 'value', width: '13%', title: '值', event: 'var_value'}
                     , {field: 'gain', width: '13%', title: '获取方式', edit: 'text', event: 'var_gain',}
                     , {field: 'planids', width: '15%', title: '绑定计划'}

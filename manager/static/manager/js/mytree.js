@@ -555,9 +555,6 @@ var tree={
 	}
 	,
 	_onClick:function(event,treeId,treeNode){
-		// alert(treeNode.html())
-		console.log(event)
-		console.log('onClick')
 
 		console.log('节点expand状态=>'+treeNode.open)
 
@@ -579,8 +576,22 @@ var tree={
 			console.log('获取子节点数据 =>',params)
 			data=JSON.parse(e)
 			treeObj.removeChildNodes(treeNode)
+			// console.warn(data.data)
 			treeObj.addNodes(treeNode, data.data);
 			treeObj.expandNode(treeNode,true)
+			//
+			for(var index=0;index<data.data.length;index++){
+				cnode=treeObj.getNodesByParam('id',data.data[index]['id'])[0]
+				switcherid='#'+cnode.tId+'_switch'
+				switcher=$(switcherid)
+				switcher.click(function(){
+					node_a_id=$(this).attr('id').replace('switch','a')
+					//alert(node_a_id)
+					$("#"+node_a_id).click();
+
+				});
+				
+			}
 
 		}
 		_post('/manager/querytreelist/',params,success)

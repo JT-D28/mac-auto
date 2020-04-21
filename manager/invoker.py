@@ -2468,6 +2468,8 @@ class Transformer(object):
 		self.transform_id = taskid
 		self.callername = callername
 		self._has_create_var = False
+		self.productid = ''
+		self.planid = ''
 	
 	def _difference_config_file(self, byte_list):
 		'''
@@ -3310,7 +3312,9 @@ class Transformer(object):
 					product.save()
 				else:
 					product = L[0]
-				
+				self.productid = product.id
+				self.planid = plan.id
+
 				order = Order()
 				order.kind = 'product_plan'
 				order.main_id = product.id
@@ -3557,6 +3561,12 @@ class Transformer(object):
 						var.value = self._get_may_sql_field_value(value)
 					var.author = User.objects.get(name=self.callername)
 					var.save()
+					tag = Tag()
+					tag.customize = ''
+					tag.planids = '{"%s":["%s","%s"]}' % ('迁移计划_%s' % self.transform_id, self.productid, self.planid)
+					tag.isglobal = 0
+					tag.var = var
+					tag.save()
 					logger.info('==添加变量[%s]' % var)
 			
 			logger.info('签名信息=>', signmethodname)
@@ -3592,6 +3602,13 @@ class Transformer(object):
 										var.gain = "%s(%s)" % (signmethodname, ','.join(f_pa))
 										var.author = User.objects.get(name=self.callername)
 										var.save()
+										tag = Tag()
+										tag.customize = ''
+										tag.planids = '{"%s":["%s","%s"]}' % (
+										'迁移计划_%s' % self.transform_id, self.productid, self.planid)
+										tag.isglobal = 0
+										tag.var = var
+										tag.save()
 										logger.info('--新建签名变量=>%s' % var)
 			
 			return ('success', '')

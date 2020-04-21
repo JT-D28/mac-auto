@@ -138,13 +138,18 @@
             height: calc(100% - 130px);
         }
 
+        .layui-btn {
+            margin-right: 16px;
+            margin-left: 0px !important;
+        }
+
     </style>
 </head>
 <body style="height: calc(100% - 40px);padding: 20px">
 <div id="var">
     <template>
         <div class="layui-form">
-            <div class="layui-inline">
+            <div class="layui-inline" style="width: 34%;">
                 <button class="layui-btn btn" id='addbtn'>新增</button>
                 <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
                 <button class="layui-btn btn" id='copybtn'>复制</button>
@@ -153,14 +158,14 @@
 					  <button class="layui-btn btn" id='editbtn'>标记</button>
 				  </el-tooltip>-->
             </div>
-            <div class="layui-inline" style="float: right; width: calc(100% - 400px);;">
-                <button class="layui-btn btn" id='querybtn' style="float: right;">查询</button>
-                <div class="layui-input-inline" style="float: right;">
+            <div class="layui-inline" style="float: right; width: 66%;">
+                <button class="layui-btn btn" id='querybtn' style="float: right;margin-right: 0px">查询</button>
+                <div class="layui-input-inline" style="float: right;width: 18%;font-size:12px">
                     <input id='search-value' type="text" name="" placeholder="描述|键|获取方式|值"
                            class="layui-input btn">
                 </div>
                 <el-select @change="tagChange" clearable collapse-tags filterable
-                           v-model="form.tagvalue" multiple style="width: 30%;float: right;">
+                           v-model="form.tagvalue" multiple style="width: 23%;float: right;;margin-right: 20px">
                     <el-option
                             v-for="i in tagvalues"
                             :key="i.id"
@@ -168,12 +173,12 @@
                             :value="i.id">
                     </el-option>
                 </el-select>
-                <div class="layui-input-inline" style="margin-bottom: 0px;width: 14%;float: right;">
+                <div class="layui-input-inline" style="margin-bottom: 0px;width: 18%;float: right;margin-right: 20px">
                     <select name="allplan" lay-filter="allplan" lay-verify="required" lay-search style="float: right;">
                         <option value="">全部</option>
                     </select>
                 </div>
-                <div class="layui-input-inline" style="margin-bottom: 0px;width: 14%;float: right;">
+                <div class="layui-input-inline" style="margin-bottom: 0px;width: 18%;float: right;margin-right: 20px">
                     <select name="user" lay-filter="user" lay-verify="required" lay-search style="float: right;">
                         <option value="0">我的变量</option>
                         <option value="-1">全部变量</option>
@@ -1014,6 +1019,9 @@
                     area: ['96%', '100%'],
                     btn: ['编辑', '关闭']
                 }, function (text, index) {
+                    e.update({
+                        gain: text
+                    });
                     e.data.gain = text;
                     multiple_data(e.data);
                     layer.close(index);

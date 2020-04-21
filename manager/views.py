@@ -386,7 +386,7 @@ def querydblist(request):
 				dbscheme = getplan(id.split('_')[1], id.split('_')[0])
 				res = list(
 					DBCon.objects.filter(scheme=dbscheme).annotate(name=F('description')).values('name'))
-				logger.info('...', res)
+				# logger.info('...', res)
 		except:
 			logger.info(traceback.format_exc())
 			code = 4

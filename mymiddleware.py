@@ -132,7 +132,7 @@ class Interceptor(MiddlewareMixin):
 				else:
 					return ('success', '')
 			except:
-				logger.info(traceback.format_exc())
+				logger.error(traceback.format_exc())
 				return ('success', '')
 		
 		else:
@@ -141,8 +141,8 @@ class Interceptor(MiddlewareMixin):
 	def _session_check(self, request):
 		'''
 		session校验
-		'''		
-		if request.path.startswith('manager'):
+		'''
+		if request.path.startswith('/manager'):
 			if request.session.get('username', None):
 				return True
 			else:

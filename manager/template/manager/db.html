@@ -17,14 +17,15 @@
         .el-select-dropdown {
             z-index: 20000000;
         }
-        .edit{
-            width:24px;
-            height:17px;
-            font-size:12px;
-            font-family:PingFang-SC-Medium,PingFang-SC;
-            font-weight:500;
-            color:rgba(0,151,136,1);
-            line-height:17px;
+
+        .edit {
+            width: 24px;
+            height: 17px;
+            font-size: 12px;
+            font-family: PingFang-SC-Medium, PingFang-SC;
+            font-weight: 500;
+            color: rgba(0, 151, 136, 1);
+            line-height: 17px;
         }
 
         .btn {
@@ -52,15 +53,16 @@
         <button class="layui-btn btn" id='addbtn'>新增</button>
         <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
         <button class="layui-btn btn" id='copybtn'>复制</button>
+        <button class="layui-btn btn" id='tablesave'>保存</button>
     </div>
 
 
-    <div class="layui-inline" style="float: right;width: 80%;">
+    <div class="layui-inline" style="float: right; width: calc(100% - 400px);">
         <button class="layui-btn btn" id='querybtn' style="float: right;">查询</button>
         <div class="layui-input-inline" style="float: right"><input id='search-value' type="text" name=""
                                                                     placeholder="名称|键|值"
                                                                     class="layui-input btn"></div>
-        <div class="layui-input-inline" style="margin-bottom: 0px;width: 14%;float: right;">
+        <div class="layui-input-inline" style="margin-bottom: 0px;width: 40%;float: right;">
             <el-select style="float: right" @change="schemeChange" v-model="querySchemeValue" filterable
                        placeholder="选择配置方案">
                 <el-option
@@ -80,17 +82,15 @@
         <tr>
             <th lay-data="{type:'checkbox',width:'5%'}"></th>
             <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
-            <th lay-data="{field: 'description',width:'16%', sort: true}">描述</th>
-            <th lay-data="{field: 'kind',width:'10%', sort: true}">类型</th>
-            <th lay-data="{field: 'dbname',width:'20%', sort: true}">库名/服务名/SID</th>
-            <th lay-data="{field: 'host',width:'12%', sort: true}">主机名</th>
-            <th lay-data="{field: 'port',width:'8%', sort: true}">端口</th>
-            <th lay-data="{field: 'scheme',width:'10%', sort: true}">方案</th>
+            <th lay-data="{field: 'description',width:'16%', sort: true,edit:'text'}">描述</th>
+            <th lay-data="{field: 'kind',width:'10%', sort: true,event:'select_dbtype'}">类型</th>
+            <th lay-data="{field: 'dbname',width:'20%', sort: true,edit:'text'}">库名/服务名/SID</th>
+            <th lay-data="{field: 'host',width:'12%', sort: true,edit:'text'}">主机名</th>
+            <th lay-data="{field: 'port',width:'8%', sort: true,edit:'text'}">端口</th>
+            <th lay-data="{field: 'scheme',width:'10%', sort: true,event:'select_scheme'}">方案</th>
             <th lay-data="{field: 'author',width:'7.4%', sort: true}">创建者</th>
-            <!--       <th lay-data="{field: 'username',width:160, sort: true}">账号名</th>
-				  <th lay-data="{field: 'password',width:160, sort: true}">密码</th> -->
-            <!--       <th lay-data="{field: 'createtime', width:160,sort:true}">创建时间</th>
-				  <th lay-data="{field: 'updatetime', width:160}">更改时间</th> -->
+            <th lay-data="{field: 'username',width:0, hide: true}">账号</th>
+            <th lay-data="{field: 'password', width:0, hide: true}">密码</th>
             <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:'12%'}">操作</th>
 
         </tr>
@@ -208,7 +208,7 @@
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
-
+<script src="{% static 'manager/js/lay-config.js' %}"></script>
 
 <script type="text/javascript">
 
@@ -285,18 +285,18 @@
             },
         },
         created: function () {
-            this.queryDbScheme(0)
+            this.queryDbScheme(0);
+            this.queryDbScheme(1)
         }
     });
 
 
-    layui.use(['table', 'layer'], function () {
+    layui.use(['table', 'layer', 'layuiTableColumnEdit', 'form', 'jquery'], function () {
         var table = layui.table;
         var $ = layui.jquery;
         var layer = layui.layer;
         var form = layui.form;
-
-
+        var layuiTableColumnEdit = layui.layuiTableColumnEdit;
         //复制操作
         $("#copybtn").click(function (e) {
             var checkStatus = table.checkStatus("table-var");
@@ -345,7 +345,6 @@
                     ids.splice(0, 0, data[index]['id'])
                 }
             }
-
             layer.confirm('确认删除么?', function (index) {
                 success = function (e) {
                     e = JSON.parse(e);
@@ -357,7 +356,6 @@
                         layer.alert(e.msg, {icon: 2})
                     }
                 };
-                //layer.close(index);
                 _post('/manager/delcon/', {'ids': ids.join()}, success)
             })
         });
@@ -374,8 +372,8 @@
                     // area:["350px","350px"],
                     content: $('#addhtml'),
                     btn: ['测试连接', '提交', '取消'],
-                    success:function(){
-                        setTimeout(()=>app.schemevalue='全局',20)
+                    success: function () {
+                        setTimeout(() => app.schemevalue = '全局', 20)
                     },
                     yes: function (index, layero) {
                         success = function (res) {
@@ -445,13 +443,9 @@
 
 //tool事件
         table.on("tool(target)", function (e) {
-            app.queryDbScheme(1)
-            console.log(e.event);
-            console.log(e);
-            // var checkStatus = table.checkStatus("table-var");
-            // data = checkStatus.data; //获取选中的数据
-            id = e.data['id']
-            if (e.event == 'edit') {
+            id = e.data['id'];
+            if (e.event === 'edit') {
+                app.queryDbScheme(1);
                 success = function (data) {
                     console.log(data.data);
                     kind = data.data['kind'];
@@ -461,7 +455,7 @@
                     port = data.data['port'];
                     accountname = data.data['username'];
                     password = data.data['password'];
-                    app.schemevalue=data.data['scheme'];
+                    app.schemevalue = data.data['scheme'];
                     $("[name='kind']").val(kind);
                     layui.form.render('select');
                     $("[name='description']").val(description);
@@ -538,14 +532,89 @@
                     layer.full(o);
                 };
                 _post('/manager/queryonedb/', {id: id}, success)
-            } else if (e.event == 'detail') {
+            } else if (e.event === 'detail') {
+            } else if (e.event === 'select_dbtype') {
+                var td = $(e.tr).find("td[data-field='kind']")[0];
+                var selectParams = [
+                    {name: 'pgsql', value: "pgsql"},
+                    {name: 'mysql', value: "mysql"},
+                    {name: 'oracle_sid', value: "oracle(SID)"},
+                    {name: 'oracle_servicename', value: "oracle(服务名)"},
+                ];
+                layuiTableColumnEdit.createSelect({
+                    data: selectParams,
+                    element: td,
+                    callback: function (obj1) {
+                        layuiTableColumnEdit.update({element: td, value: obj1.select.value});
+                        e.data['kind'] = obj1.select.name;
+                        multiple_data(e.data)
+                    }
+                });
+            } else if (e.event === 'select_scheme') {
+                selectParams = [];
+                app.schemeoptions.forEach(function (item, index) {
+                    selectParams.push({name: item.label, value: item.value})
+                });
+                var td = $(e.tr).find("td[data-field='scheme']")[0];
+                layuiTableColumnEdit.createSelect({
+                    data: selectParams,
+                    element: td,
+                    callback: function (obj1) {
+                        layuiTableColumnEdit.update({element: td, value: obj1.select.value});
+                        e.data.scheme = obj1.select.name;
+                        multiple_data(e.data)
+                    }
+                });
             }
         });
+
+
+        table.on('edit(target)', function (obj) {
+            multiple_data(obj.data)
+        });
+
+
+        multiple_dbcon = [];
+
+        function multiple_data(data) {
+            if (multiple_dbcon.length === 0) {
+                multiple_dbcon.push(data)
+            } else {
+                var index = -1;
+                for (var i = 0; i < multiple_dbcon.length; i++) {
+                    if (multiple_dbcon[i].id === data.id) {
+                        index = i;
+                        break
+                    }
+                }
+                if (index !== -1) {
+                    multiple_dbcon.splice(index, 1)
+                }
+                multiple_dbcon.push(data)
+            }
+        }
+
+
+        $("#tablesave").click(function () {
+            if (multiple_dbcon.length === 0) {
+                layer.msg('没有修改过数据')
+            } else {
+                update_by_table(multiple_dbcon)
+            }
+        });
+
+        function update_by_table(datas) {
+            _post_nl('/manager/editmultidbcon/', {
+                datas: JSON.stringify(datas)
+            }, function (result) {
+                result = JSON.parse(result);
+                layer.msg(result.msg)
+                $("#querybtn").click()
+            });
+        }
     });
 
-    // $(document).ready(function(){
 
-    // });
 </script>
 
 <script type="text/html" id="toolbar">

@@ -19,14 +19,15 @@
             height: 34px;
             line-height: 34px;
         }
-        .edit{
-            width:24px;
-            height:17px;
-            font-size:12px;
-            font-family:PingFang-SC-Medium,PingFang-SC;
-            font-weight:500;
-            color:rgba(0,151,136,1);
-            line-height:17px;
+
+        .edit {
+            width: 24px;
+            height: 17px;
+            font-size: 12px;
+            font-family: PingFang-SC-Medium, PingFang-SC;
+            font-weight: 500;
+            color: rgba(0, 151, 136, 1);
+            line-height: 17px;
         }
 
         .layui-table-view {
@@ -128,6 +129,15 @@
             padding-bottom: 0px;
         }
 
+        .layui-layer-prompt {
+            width: 80%;
+            height: 70%;
+        }
+
+        #gianprompt, #valueprompt {
+            height: calc(100% - 130px);
+        }
+
     </style>
 </head>
 <body style="height: calc(100% - 40px);padding: 20px">
@@ -138,11 +148,12 @@
                 <button class="layui-btn btn" id='addbtn'>新增</button>
                 <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
                 <button class="layui-btn btn" id='copybtn'>复制</button>
+                <button class="layui-btn btn" id='tablesave'>保存</button>
                 <!--  <el-tooltip class="item" effect="dark" content="批量替换标记！" placement="top">
 					  <button class="layui-btn btn" id='editbtn'>标记</button>
 				  </el-tooltip>-->
             </div>
-            <div class="layui-inline" style="float: right;width: 80%;">
+            <div class="layui-inline" style="float: right; width: calc(100% - 400px);;">
                 <button class="layui-btn btn" id='querybtn' style="float: right;">查询</button>
                 <div class="layui-input-inline" style="float: right;">
                     <input id='search-value' type="text" name="" placeholder="描述|键|获取方式|值"
@@ -320,6 +331,7 @@
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
+<script src="{% static 'manager/js/lay-config.js' %}"></script>
 
 
 <script type="text/javascript">
@@ -429,14 +441,14 @@
                 _post_nl('/manager/copyvar/', {
                     varids: varids,
                     bindplans: JSON.stringify(copybindplans),
-                    tags:copytag,
+                    tags: copytag,
                     action: action
                 }, function (res) {
                     if (res.code == 0) {
                         that.copyFormVisible = false;
-                        if (action==0){
+                        if (action == 0) {
                             layer.msg('修改成功')
-                        }else layer.msg('复制成功')
+                        } else layer.msg('复制成功')
                         that.copybindplans = []
                         that.querytaglist(1)
                     } else {
@@ -572,11 +584,12 @@
         }
     });
 
-    layui.use(['table', 'layer'], function () {
+    layui.use(['table', 'layer', 'layuiTableColumnEdit', 'form'], function () {
         var table = layui.table;
         var $ = layui.jquery;
         var layer = layui.layer;
         var form = layui.form;
+        var layuiTableColumnEdit = layui.layuiTableColumnEdit;
         fa.init();
         //获取用户
         _post_nl('/manager/queryUser/', {},
@@ -623,12 +636,12 @@
                 cols: [[
                     {type: 'checkbox', fixed: 'left'}
                     , {field: 'id', title: 'ID', sort: true, fixed: 'left', hide: true}
-                    , {field: 'key', width: '15%', title: '键名'}
-                    , {field: 'description', width: '15%', title: '描述', sort: true}
-                    , {field: 'value', width: '15%', title: '值'}
-                    // , {field: 'gain', width: '15%', title: '获取方式'}
-                    , {field: 'planids', width: '17%', title: '绑定计划'}
-                    , {field: 'customize', width: '17%', title: '标记'}
+                    , {field: 'key', width: '12%', title: '键名', edit: 'text'}
+                    , {field: 'description', width: '12%', title: '描述', sort: true, edit: 'text'}
+                    , {field: 'value', width: '13%', title: '值', event: 'var_value'}
+                    , {field: 'gain', width: '13%', title: '获取方式', edit: 'text', event: 'var_gain',}
+                    , {field: 'planids', width: '15%', title: '绑定计划'}
+                    , {field: 'customize', width: '15%', title: '标记'}
                     , {field: 'author', width: '8%', title: '创建者', sort: true}
                     , {align: 'center', toolbar: '#toolbar', fixed: 'right'}
                 ]],
@@ -972,10 +985,89 @@
 
             } else if (e.event == 'detail') {
 
+            } else if (e.event === 'var_value') {
+                layer.prompt({
+                    id: 'valueprompt',
+                    title: '变量描述【' + e.data.description + '】,键名【' + e.data.key + '】的值',
+                    value: e.data.value,
+                    formType: 2,
+                    shade: [0.8, '#393D49'],
+                    shadeClose: true,
+                    area: ['96%', '100%'],
+                    btn: ['编辑', '关闭']
+                }, function (text, index) {
+                    e.update({
+                        value: text
+                    });
+                    e.data.value = text;
+                    multiple_data(e.data);
+                    layer.close(index);
+                });
+            } else if (e.event === 'var_gain') {
+                layer.prompt({
+                    id: 'gianprompt',
+                    title: '变量描述【' + e.data.description + '】,键名【' + e.data.key + '】的获取方式',
+                    value: e.data.gain,
+                    formType: 2,
+                    shade: [0.8, '#393D49'],
+                    shadeClose: true,
+                    area: ['96%', '100%'],
+                    btn: ['编辑', '关闭']
+                }, function (text, index) {
+                    e.data.gain = text;
+                    multiple_data(e.data);
+                    layer.close(index);
+                });
             }
-
         });
+
+
+        table.on('edit(target)', function (obj) {
+            multiple_data(obj.data)
+        });
+
+
+        $("#tablesave").click(function () {
+            if (multiple_vars.length === 0) {
+                layer.msg('没有修改过数据')
+            } else {
+                update_by_table(multiple_vars)
+            }
+        });
+
+        multiple_vars = [];
+
+        function multiple_data(data) {
+            if (multiple_vars.length === 0) {
+                multiple_vars.push(data)
+            } else {
+                var index = -1;
+                for (var i = 0; i < multiple_vars.length; i++) {
+                    if (multiple_vars[i].id === data.id) {
+                        index = i;
+                        break
+                    }
+                }
+                if (index !== -1) {
+                    multiple_vars.splice(index, 1)
+                }
+                multiple_vars.push(data)
+            }
+            console.log(multiple_vars)
+        }
+
+
+        function update_by_table(datas) {
+            _post_nl('/manager/editmultivar/', {
+                datas: JSON.stringify(datas)
+            }, function (result) {
+                result = JSON.parse(result);
+                layer.msg(result.msg)
+                $("#querybtn").click()
+            });
+        }
     });
+
 
     function tagSpanClick(e) {
         v = $(e).text();

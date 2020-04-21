@@ -38,6 +38,7 @@ urlpatterns = [
 	path('addvariable/', views.addvar),
 	path('delvar/', views.delvar),
 	path('editvariable/', views.editvar),
+	path('editmultivar/',views.editmultivar),
 	path('copyvar/', views.copyVar),
 	
 	path('step/', views.step),
@@ -100,6 +101,7 @@ urlpatterns = [
 	path('adddbcon/', views.addcon),
 	path('delcon/', views.delcon),
 	path('editdbcon/', views.editcon),
+	path('editmultidbcon/',views.editmultidbcon),
 	path('querydblist/', views.querydblist),
 	path('querydblistdefault/', views.querydblistdefault),
 	path('copyDbCon/', views.copyDbCon),

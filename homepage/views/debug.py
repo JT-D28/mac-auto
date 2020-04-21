@@ -125,17 +125,19 @@ def doDebugInfo(request):
 				businessdata_row.append(i)
 		return businessdata_row, 'bussiness', taskid, 0
 	if type == 'bussiness':
+		info = id.split(';')
 		logname = BASE_DIR+"/logs/deal/" + taskid + ".log"
 		if os.path.exists(logname):
 			with open(logname, 'r', encoding='utf-8') as f:
 				res = f.read()
 			ress = res.split("========")
-			pattern = re.compile('开始执行步骤.*?' + id.split(';')[2] + '.*?测试点\[.*?' + id.split(';')[0] + '.*?<br>')
+			print('ddddddddd',)
+			pattern = re.compile('开始执行步骤.*?' + info[2] + '.*?测试点\[.*?' + info[0] + '.*?<br>')
+			pattern1 = re.compile('步骤执行结果.*?success')
+			res = '未匹配到日志记录，你可以试试下载并且查看完整日志！'
 			for i in ress:
-				if pattern.search(i):
+				if pattern.search(i) and not pattern1.search(i) :
 					return i, 'debuginfo', '', 0
-				else:
-					res = '未匹配到日志记录，你可以试试下载并且查看完整日志！'
 		else:
 			res = '请稍等！'
 		return res, 'debuginfo', '', 0

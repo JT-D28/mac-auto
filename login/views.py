@@ -5,7 +5,6 @@ from django.shortcuts import render, redirect, render_to_response
 from django.conf import settings
 from ME2 import configs
 from ME2.settings import logme
-from . import forms
 from manager.models import *
 from login.models import *
 from manager import models as mm

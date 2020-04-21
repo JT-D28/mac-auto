@@ -123,8 +123,6 @@ def upload(request):
 			return JsonResponse(simplejson(code=0, msg='文件上传完成'), safe=False)
 		else:
 			return JsonResponse(simplejson(code=3, msg='文件上传异常'), safe=False)
-		
-		return JsonResponse(simplejson(code=0, msg='文件上传成功'), safe=False)
 	else:
 		return JsonResponse(simplejson(code=4, msg='kind错误'), safe=False)
 

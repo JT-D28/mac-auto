@@ -2325,6 +2325,8 @@ def getParamfromFetchData(request):
 			print('headers', headers)
 			print('method', v.get('method'))
 			contenttype = v.get('headers', '').get('Content-Type', '')
+			if contenttype == '':
+				contenttype = v.get('headers','').get('content-type','')
 			if 'urlencoded' in contenttype:
 				contenttype = 'urlencode'
 				parsed_result = {}

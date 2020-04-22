@@ -118,6 +118,13 @@
                         </div>
                     </div>
                 </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">超时(秒)</label>
+                    <div class="layui-input-block">
+                        <input type="text" id='timeout' name="timeout" placeholder='' value='10' 
+                               autocomplete="off" class="layui-input" lay-verify="required">
+                    </div>
+                </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">前置操作</label>
@@ -256,6 +263,7 @@
                 'postposition': $("[name='post']").val(),
                 'count': $("[name='count']").val(),
                 'description':$("[name='description']").val(),
+                'timeout':$('#timeout').val()
 
             }
             _post('/manager/treecontrol/', data, function (e) {

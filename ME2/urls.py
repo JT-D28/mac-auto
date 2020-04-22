@@ -33,6 +33,7 @@ urlpatterns = [
 	path('test_expression1/', views.testexpress1),
 	path('test_expression2/', views.testexpress2),
 	path('test_xml/', views.testxml),
+    path('mocktimeout/',views.mocktimeout),
 	# path('',views.index),
 
 ]

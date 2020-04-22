@@ -290,6 +290,12 @@ def testexpress2(request):
 @csrf_exempt
 def testxml(request):
 	return render(request, 'manager/test.xml', content_type="application/xml")
+
+@csrf_exempt
+def mocktimeout(request):
+	time.sleep(20)
+	return JsonResponse(True,safe=False)
+	
 # '''
 # 测试特殊返回字符串
 # '''

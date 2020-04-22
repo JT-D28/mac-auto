@@ -76,6 +76,8 @@ class BusinessData(Model):
 	
 	parser_id = CharField(max_length=32, null=True)  # 解析器id
 	parser_check = TextField(null=True)  # 解析器校验
+	timeout=IntegerField(default=10)
+	
 	
 	def __str__(self):
 		return '[%s]%s' % (self.id, self.businessname)

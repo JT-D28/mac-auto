@@ -569,6 +569,7 @@ def _step_process_check(callername, taskid, order, kind):
 	try:
 		user = User.objects.get(name=callername)
 		businessdata = BusinessData.objects.get(id=order.follow_id)
+		timeout=10 if not businessdata.timeout else businessdata.timeout
 		
 		if businessdata.count == 0:
 			# viewcache(taskid,callername,None,'[%s]执行次数=0 略过..'%businessdata.businessname)
@@ -615,7 +616,7 @@ def _step_process_check(callername, taskid, order, kind):
 			if step.content_type == 'xml':
 				if re.search('webservice', step.url):
 					headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), 'post',
-					                                                    None, 'xml')
+					                                                    None, 'xml',timeout)
 					text = text.replace('&lt;', '<')
 					text = re.findall('(?<=\?>).*?(?=</ns1:out>)', text, re.S)[0]
 					text = '\n' + text
@@ -624,7 +625,7 @@ def _step_process_check(callername, taskid, order, kind):
 			else:
 				
 				headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), step.method,
-				                                                    step.headers, step.content_type, step.temp, kind)
+				                                                    step.headers, step.content_type, step.temp, kind,timeout)
 			
 			viewcache(taskid, username, kind,
 			          "<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>" % text)
@@ -794,7 +795,7 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
 		return ('', '', err)
 
 
-def _callinterface(taskid, user, url, body=None, method=None, headers=None, content_type=None, props=None, kind=None):
+def _callinterface(taskid, user, url, body=None, method=None, headers=None, content_type=None, props=None, kind=None,timeout=None):
 	"""
     返回(rps.text,rps.status_code,msg)
     """
@@ -906,7 +907,6 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	else:
 		raise NotImplementedError("content_type=%s没实现" % content_type)
 
-	print('666'*100)
 	# logger.info("method=>",method)
 	rps = None
 	if method == "get":
@@ -914,27 +914,60 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		
 		if body:
 			if isinstance(body, (dict, list, bytes)):
-				rps = session.get(url, params=body, headers={**default, **headers})
+				try:
+					rps = session.get(url, params=body, headers={**default, **headers},timeout=timeout)
+				except:
+					err=traceback.format_exc()
+					if 'requests.exceptions.ConnectTimeout' in err:
+						msg='请求超时 已设置超时时间%ss'%timeout
+						return ({}, msg, 200, "")
+					else:
+						msg='请求异常:%s'%err
+						return('','','',msg)
 			else:
 				return ('', '', '', '参数类型不支持[dict,list of tuples,bytes]')
 		else:
-			rps = session.get(url, headers={**default, **headers})
+			try:
+				rps = session.get(url, headers={**default, **headers},timeout=timeout)
+			except:
+				err=traceback.format_exc()
+				if 'requests.exceptions.ConnectTimeout' in err:
+					msg='请求超时 已设置超时时间%ss'%timeout
+					return ({}, msg, 200, "")
+				else:
+					msg='请求异常:%s'%err
+					return('','','',msg)
 	
 	elif method == 'post':
 		session = get_task_session('%s_%s' % (taskid, user.name))
 
 		if body:
 			if isinstance(body, (dict, list, bytes)):
-
-	
-				print(session)
-				rps = session.post(url, data=body, headers={**default, **headers},timeout=5)
+				try:
+					rps = session.post(url, data=body, headers={**default, **headers},timeout=timeout)
+				except:
+					err=traceback.format_exc()
+					print('是否超时 %s'%'requests.exceptions.ReadTimeout' in err)
+					if 'requests.exceptions.ReadTimeout' in err:
+						msg='请求超时 已设置超时时间%ss'%timeout
+						return ({}, msg, 200, "")
+					else:
+						msg='请求异常:%s'%err
+						return('','','',msg)
 
 			else:
 				return ('', '', '', '参数类型不支持[dict,list of tuples,bytes]')
 		else:
-			print('ttt'*100)
-			rps = session.post(url, headers={**default, **headers})
+			try:
+				rps = session.post(url, headers={**default, **headers},timeout=timeout)
+			except:
+				err=traceback.format_exc()
+				if 'requests.exceptions.ReadTimeout' in err:
+					msg='请求超时 已设置超时时间%ss'%timeout
+					return ({}, msg, 200, "")
+				else:
+					msg='请求异常:%s'%err
+					return('','','',msg)
 	
 	# logger.info("textfdafda=>",rps.text)
 	else:
@@ -942,10 +975,10 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	
 	###响应报文中props处理
 	status, err = _find_and_save_property(user, props, rps.text)
-	print('yyyyyyyy'*100)
+
 	if status is not 'success':
 		return ('', '', '', err)
-	print('kkkkkk'*100)
+
 	return (rps.headers, rps.text, rps.status_code, "")
 
 
@@ -1872,7 +1905,7 @@ def _gain_compute(user, gain_str, src=1, taskid=None):
 			logger.info('flag1', flag)
 			ms = list(Function.objects.filter(flag=flag))
 			functionid = None
-			print('dddddddddd',ms)
+		
 			if len(ms) == 0:
 				# functionid=None
 				# flag=Fu.tzm_compute(gain_str,'(.*?)\(.*?\)')

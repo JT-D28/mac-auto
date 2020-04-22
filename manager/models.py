@@ -93,10 +93,7 @@ class BusinessData(Model):
 			data = businessdatainst.params
 			
 			if step.step_type == 'interface':
-				if step.content_type in ['xml', 'urlencode']:
-					return ('success', data)
-				else:
-					
+				if step.content_type in['json','formdata']:
 					# data = data.replace('null', 'None').replace('true', 'True').replace('false', 'False')
 					if len(re.findall('\$\[(.*?)\((.*?)\)\]', data)) > 0:
 						##是函数调用
@@ -112,7 +109,8 @@ class BusinessData(Model):
 						# data = json.dumps(eval(data))
 					
 					return ('success', data)
-			
+				else:
+					return ('success', data)
 			
 			elif step.step_type == 'function':
 				return ('success', businessdatainst.params.split(','))

@@ -520,3 +520,10 @@ def getRunningInfo(username='', planid='', type='lastest_taskid'):
 		planinfo = _runninginfo.get(str(planid), {})
 		dbscheme = planinfo.get('dbscheme', '全局')
 		return dbscheme
+
+
+def get_space_dir(callername):
+	'''
+	获取我的空间绝对地址
+	'''
+	return os.path.join(os.path.dirname(__file__),'storage','private','File',callername)

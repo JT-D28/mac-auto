@@ -20,7 +20,7 @@ from manager.models import *
 from .core import ordered, Fu, getbuiltin, EncryptUtils, genorder, simplejson
 from .db import Mysqloper
 from .context import set_top_common_config, viewcache, get_task_session, \
-	clear_task_session, get_friendly_msg, setRunningInfo, getRunningInfo
+	clear_task_session, get_friendly_msg, setRunningInfo, getRunningInfo,get_space_dir
 
 import re, traceback, redis, time, threading, smtplib, requests, json, warnings, datetime, socket
 import copy, base64, datetime, xlrd, os
@@ -796,7 +796,17 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
 		err = traceback.format_exc()
 		logger.info(err)
 		return ('', '', err)
+def _getfiledict(callername,paraminfo):
+    pdict=dict()
+    for k,v in eval(paraminfo).items():
+    	if not k.__contains__('file'):
+    		pdict[k]=(None,v)
+    	else:
+    		if isinstance(v, (str,)):
+    			pdict[k]=(v,open(os.path.join(get_space_dir(callername),v),'rb'))
+    			
 
+    return pdict
 
 def _callinterface(taskid, user, url, body=None, method=None, headers=None, content_type=None, props=None, kind=None,timeout=None):
 	"""
@@ -805,8 +815,6 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	# url data headers过滤
 	viewcache(taskid, user.name, kind, "执行接口请求=>")
 	
-	if content_type == 'formdata':
-		return ('', '', '', 'form-data方式暂不支持..')
 	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>content_type=>%s</span>" % content_type)
 	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>原始url=>%s</span>" % url)
 	url_rp = _replace_property(user, url)
@@ -859,7 +867,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	# body=json.loads(body)
 	
 	# logger.info(type(headers))
-	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>原始headers=>%s</span>" % (headers))
+	viewcache(taskid, user.name, kind, "<span style='color:#009999;'>用户定义请求头=>%s</span>" % (headers))
 	if headers is None or len(headers.strip()) == 0:
 		headers = {}
 	
@@ -907,6 +915,8 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	
 	elif content_type == 'xml':
 		isxml = 0
+	elif content_type=='formdata':
+		body=_getfiledict(user.name,str(body))
 	else:
 		raise NotImplementedError("content_type=%s没实现" % content_type)
 
@@ -944,7 +954,21 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	elif method == 'post':
 		session = get_task_session('%s_%s' % (taskid, user.name))
 
-		if body:
+		if content_type=='formdata':
+			try:
+				viewcache(taskid, user.name,kind,'跑formdata分支')
+				rps=session.post(url,files=body,headers={**default, **headers},timeout=timeout)
+			except:
+				err=traceback.format_exc()
+				if 'requests.exceptions.ReadTimeout' in err:
+					msg='请求超时 已设置超时时间%ss'%timeout
+					return ({}, msg, 200, "")
+				else:
+					msg='请求异常:%s'%err
+					return('','','',msg)
+
+
+		elif body:
 			if isinstance(body, (dict, list, bytes)):
 				try:
 					rps = session.post(url, data=body, headers={**default, **headers},timeout=timeout)

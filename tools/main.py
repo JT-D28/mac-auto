@@ -1,35 +1,111 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# @Date    : 2019-09-11 10:29:52
-# @Author  : Blackstone
-# @to      :
-
-
-import winreg
-
-
-def connect_proxy():
-	"""
-	5s delay
-	"""
-	key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",
-	                     access=983103)
-	
-	print(winreg.QueryValue(key, 'ProxyEnable'))
-	print(winreg.QueryValue(key, 'ProxyServer'))
-	
-	# winreg.SetValue(key, 'ProxyEnable', winreg.REG_SZ, '1')
-	winreg.SetValueEx(key, 'ProxyEnable', 0, winreg.REG_DWORD, 1)
-	winreg.SetValue(key, 'ProxyServer', winreg.REG_SZ, '127.0.0.1:8888')
-
-
-def disconnect_proxy():
-	key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",
-	                     access=983103)
-	winreg.SetValueEx(key, 'ProxyEnable', 0, winreg.REG_DWORD, 0)
-
-
-# connect_proxy()
-disconnect_proxy()
-
-# print(eval('0xF003F'))
+s='''
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:out="http://outsystem.ats.com.cn">
+   <soapenv:Header></soapenv:Header>
+   <soapenv:Body>
+      <out:outSystemWS>
+         <out:in0>
+          <![CDATA[
+<MBS>
+  <pub>
+    <SRCOUTSYSTEMCODE>NC</SRCOUTSYSTEMCODE>
+    <SRCBATCHNO>{{createReqSeqID}}</SRCBATCHNO>
+    <TRANSCODE>PMSQ01</TRANSCODE>
+    <TRANSDATETIME>{{getNow}}</TRANSDATETIME>
+    <MD5>123456</MD5>
+  </pub>
+  <req>
+    <head>
+      <ALLAMOUNT>3860</ALLAMOUNT>
+      <ALLCOUNT>3</ALLCOUNT>
+    </head>
+    <list>
+          <detail>
+        <SRCSERIALNO>{{createTransNo}}</SRCSERIALNO>
+        <SRCNOTECODE>{{createTransNo}}</SRCNOTECODE>
+        <ORGCODE>001004</ORGCODE>
+        <APPLYORGCODE>001004</APPLYORGCODE>
+        <PAYDATE>{{PAYDATE}}</PAYDATE>
+        <PAYTYPECODE>200</PAYTYPECODE>
+        <SETTLEMENTMODECODE>101</SETTLEMENTMODECODE>
+        <OURORGCODE>001004</OURORGCODE>
+        <OURBANKACCOUNTNUMBER>10000001</OURBANKACCOUNTNUMBER>
+        <OURCURCODE>CNY</OURCURCODE>
+        <OURAMOUNT>396</OURAMOUNT>
+        <ISURGENT>0</ISURGENT>
+        <OPPBANKACCOUNTNAME>秦燕</OPPBANKACCOUNTNAME>
+        <OPPBANKACCOUNTNUMBER>4213491430102000</OPPBANKACCOUNTNUMBER>
+        <OPPOBJECTNAME>秦燕</OPPOBJECTNAME>
+        <OPPOBJECTCODE>00001</OPPOBJECTCODE>
+        <OPPBANKLOCATIONS>甘肃榆中农村合作银行龙泉分理处</OPPBANKLOCATIONS>
+        <OPPDIRECTCURCODE>CNY</OPPDIRECTCURCODE>
+        <OPPPRIVATEFLAG>1</OPPPRIVATEFLAG>
+        <PURPOSE>天使投资</PURPOSE>
+        <EXTFIELD1>啦啦啦啦啦</EXTFIELD1>    
+        <PROJECTITEMCODE>s01,s02</PROJECTITEMCODE>
+        <CONTRACTNUMBER>HT01</CONTRACTNUMBER>
+        <FINVOUCHERCODE>PZ08</FINVOUCHERCODE>
+      </detail>
+        <detail>
+        <SRCSERIALNO>{{createTransNo}}</SRCSERIALNO>
+        <SRCNOTECODE>{{createTransNo}}</SRCNOTECODE>
+        <ORGCODE>001004</ORGCODE>
+        <APPLYORGCODE>001004</APPLYORGCODE>
+        <PAYDATE>{{PAYDATE}}</PAYDATE>
+        <PAYTYPECODE>200</PAYTYPECODE>
+        <SETTLEMENTMODECODE>101</SETTLEMENTMODECODE>
+        <OURORGCODE>001004</OURORGCODE>
+        <OURBANKACCOUNTNUMBER>10000001</OURBANKACCOUNTNUMBER>
+        <OURCURCODE>CNY</OURCURCODE>
+        <OURAMOUNT>964</OURAMOUNT>
+        <ISURGENT>0</ISURGENT>
+        <OPPBANKACCOUNTNAME>陈翔</OPPBANKACCOUNTNAME>
+        <OPPBANKACCOUNTNUMBER>345675476545</OPPBANKACCOUNTNUMBER>
+        <OPPOBJECTNAME>陈翔</OPPOBJECTNAME>
+        <OPPOBJECTCODE>00001</OPPOBJECTCODE>
+        <OPPBANKLOCATIONS>甘肃榆中农村合作银行龙泉分理处</OPPBANKLOCATIONS>
+        <OPPDIRECTCURCODE>CNY</OPPDIRECTCURCODE>
+        <OPPPRIVATEFLAG>1</OPPPRIVATEFLAG>
+        <PURPOSE></PURPOSE>
+        <EXTFIELD1>啦啦啦啦啦</EXTFIELD1>    
+        <PROJECTITEMCODE>s01,s02</PROJECTITEMCODE>
+        <CONTRACTNUMBER>HT02</CONTRACTNUMBER>
+        <FINVOUCHERCODE>PZ01</FINVOUCHERCODE>
+      </detail>
+      <detail>
+        <SRCSERIALNO>{{createTransNo}}</SRCSERIALNO>
+        <SRCNOTECODE>{{createTransNo}}</SRCNOTECODE>
+        <ORGCODE>001004</ORGCODE>
+        <APPLYORGCODE>001004</APPLYORGCODE>
+        <PAYDATE>{{PAYDATE}}</PAYDATE>
+        <PAYTYPECODE>200</PAYTYPECODE>
+        <SETTLEMENTMODECODE>101</SETTLEMENTMODECODE>
+        <OURORGCODE>001004</OURORGCODE>
+        <OURBANKACCOUNTNUMBER>10000001</OURBANKACCOUNTNUMBER>
+        <OURCURCODE>CNY</OURCURCODE>
+        <OURAMOUNT>2500</OURAMOUNT>
+        <ISURGENT>0</ISURGENT>
+        <OPPBANKACCOUNTNAME>李四</OPPBANKACCOUNTNAME>
+        <OPPBANKACCOUNTNUMBER>85543902453</OPPBANKACCOUNTNUMBER>
+        <OPPOBJECTNAME>李四</OPPOBJECTNAME>
+        <OPPOBJECTCODE>00001</OPPOBJECTCODE>
+        <OPPBANKLOCATIONS>甘肃榆中农村合作银行龙泉分理处</OPPBANKLOCATIONS>
+        <OPPDIRECTCURCODE>CNY</OPPDIRECTCURCODE>
+        <OPPPRIVATEFLAG>1</OPPPRIVATEFLAG>
+        <PURPOSE></PURPOSE>
+        <EXTFIELD1>啦啦啦啦啦</EXTFIELD1>    
+        <PROJECTITEMCODE>s01,s02</PROJECTITEMCODE>
+        <CONTRACTNUMBER>HT02</CONTRACTNUMBER>
+        <FINVOUCHERCODE>PZ01</FINVOUCHERCODE>
+      </detail>
+    </list>
+  </req>
+</MBS>
+ ]]>
+         </out:in0>
+      </out:outSystemWS>
+   </soapenv:Body>
+</soapenv:Envelope>
+'''
+import re
+s = re.findall('(?<=\?>).*?(?=</ns1:out>)', s, re.S)[0]
+print(s)

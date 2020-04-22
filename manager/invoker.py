@@ -615,11 +615,14 @@ def _step_process_check(callername, taskid, order, kind):
 			
 			if step.content_type == 'xml':
 				if re.search('webservice', step.url):
-					headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), 'post',
-					                                                    None, 'xml',timeout)
-					text = text.replace('&lt;', '<')
-					text = re.findall('(?<=\?>).*?(?=</ns1:out>)', text, re.S)[0]
-					text = '\n' + text
+					headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), 'post',None, 'xml',timeout)
+					if not itf_msg:
+						text = text.replace('&lt;', '<')
+
+						text = re.findall('(?<=\?>).*?(?=</ns1:out>)', text, re.S)[0]
+						text = '\n' + text
+					else:
+						return ('error',itf_msg)
 				else:
 					text, statuscode, itf_msg = _callsocket(taskid, user, step.url, body=str(paraminfo))
 			else:

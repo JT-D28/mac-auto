@@ -615,7 +615,7 @@ def _step_process_check(callername, taskid, order, kind):
 			
 			if step.content_type == 'xml':
 				if re.search('webservice', step.url):
-					headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), 'post',None, 'xml',timeout)
+					headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), 'post',None, 'xml',step.temp,kind,timeout)
 					if not itf_msg:
 						text = text.replace('&lt;', '<')
 

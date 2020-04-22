@@ -2325,7 +2325,7 @@ def getParamfromFetchData(request):
 			print('headers', headers)
 			print('method', v.get('method'))
 			contenttype = v.get('headers', '').get('Content-Type', '')
-			if 'urlencode' in contenttype:
+			if 'urlencoded' in contenttype:
 				contenttype = 'urlencode'
 				parsed_result = {}
 				pairs = parse.parse_qsl(v.get('body'))

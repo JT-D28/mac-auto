@@ -10,8 +10,7 @@ import re
 import time
 import logging, traceback
 import os
-
-from ME2.settings import logme
+from manager.context import Me2Log as logger
 from manager import models
 from .context import get_top_common_config, viewcache, getRunningInfo
 
@@ -31,7 +30,7 @@ class Mysqloper:
 		if conname is None:
 			raise RuntimeError('传入配置错误 未知数据库连接名！')
 		
-		print('===查询和使用配置方案[%s]数据库[%s]的配置信息' % (scheme, configname))
+		logger.info('===查询和使用配置方案[%s]数据库[%s]的配置信息' % (scheme, configname))
 		
 		# c=Mysqloper._pool.get(str(conname),None)
 		c = None
@@ -58,11 +57,11 @@ class Mysqloper:
 				self.pwd = dbcon.password
 				
 				# print("=>没查到可用配置,准备新配一个")
-				print("数据库配置所属方案=>", dbcon.scheme)
-				print("数据库类型=>", self.dbtype)
-				print("数据库名(服务名|SID)=>", self.dbname)
-				print("数据库地址=>", self.host, self.port)
-				print("数据库账号=>", self.user, self.pwd)
+				logger.info("数据库配置所属方案=>", dbcon.scheme)
+				logger.info("数据库类型=>", self.dbtype)
+				logger.info("数据库名(服务名|SID)=>", self.dbname)
+				logger.info("数据库地址=>", self.host, self.port)
+				logger.info("数据库账号=>", self.user, self.pwd)
 				
 				if self.dbtype.lower() == 'mysql':
 					import pymysql
@@ -152,6 +151,7 @@ class Mysqloper:
 		sql查询返回结果
 		非查询返回影响条数
 		"""
+		logger.info('传入task:{},sql:{}'.format(taskid,sql))
 		sqlresult, error = None, ''
 		conname = None
 		# 判断当前连接是否正常
@@ -162,6 +162,7 @@ class Mysqloper:
 			
 			dbnamecache = get_top_common_config(taskid)
 			scheme = getRunningInfo(planid=base64.b64decode(taskid).decode().split('_')[0], type='dbscheme')
+			logger.info('使用数据连接方案',scheme)
 			if dbnamecache == conname:
 				print('使用数据库缓存配置')
 				conname = dbnamecache

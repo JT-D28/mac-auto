@@ -8,6 +8,7 @@ from django.conf import settings
 from manager import models
 from hashlib import md5
 from ME2.settings import logme, BASE_DIR
+from manager.models import Plan
 
 '''
 日志打印
@@ -518,5 +519,6 @@ def getRunningInfo(username='', planid='', type='lastest_taskid'):
 		return str(isrunning)
 	elif type == 'dbscheme':
 		planinfo = _runninginfo.get(str(planid), {})
-		dbscheme = planinfo.get('dbscheme', '全局')
+		nofind = Plan.objects.get(id=planid).schemename
+		dbscheme = planinfo.get('dbscheme', nofind)
 		return dbscheme

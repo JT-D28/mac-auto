@@ -413,7 +413,8 @@ var tree={
 								shadeClose: true,
 								success: function () {
 									$("#log_text").html('点击左侧失败用例查看日志');
-									querydebug(treeNode.id.substr(5), 'plan', data.data[0]['taskid'])
+									querydebug(treeNode.id.substr(5), 'plan', data.data[0]['taskid']);
+									$("#downloadlog").unbind('click');
 									$("#downloadlog").click(function () {
 										taskid=data.data[0]["taskid"]
 										const req = new XMLHttpRequest();
@@ -497,7 +498,7 @@ var tree={
 							click: function (obj) {
 								$("#debuginfo").css('display','inherit');
 								_post_nl('/homepage/plandebug/', {
-									'id': obj.data.title+";"+obj.data.casename+";"+obj.data.stepname,
+									'id': obj.data.title+";"+obj.data.casename+";"+obj.data.stepname+";"+obj.data.id,
 									'type': 'bussiness',
 									'taskid':  data.taskid
 								}, function (data) {

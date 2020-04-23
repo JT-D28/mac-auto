@@ -462,7 +462,7 @@
                     that.test_dbscheme=that.dbschemes[0].scheme
                 }
                 if (that.testsql_plan==''){
-                    that.testsql_plan=that.varplans[0].label
+                    that.testsql_plan=that.varplans[0].value
                 }
                 _post_nl('/manager/varSqltest/', {
                     'scheme': that.test_dbscheme,

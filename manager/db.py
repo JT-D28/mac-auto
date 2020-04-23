@@ -227,7 +227,41 @@ class Mysqloper:
 			# return RuntimeError('执行sql[%s],发生未知错误[%s].'%(sql,str(ee)))
 			print(traceback.format_exc())
 			return ('error', "数据库[%s]执行sql[%s]发生异常:\n[%s]" % (conname, sql, traceback.format_exc()))
-
+		
+	def db_exec_test(self,sql,scheme):
+		logger.info('传入sql:{},数据连接方案:{}'.format(sql, scheme))
+		try:
+			ql = sql.split("@")
+			sql = ql[0]
+			conname = ql[1]
+			msg, self.conn = self.db_connect(conname, scheme)
+			if msg is not 'success':
+				return (msg, self.conn)
+			cur = self.conn.cursor()  # 获取一个游标
+			sql = sql.replace(chr(13), '').replace(chr(10), '').strip()
+			self.sqlcount += 1
+			cur.execute(str(sql))
+			data = list(cur.fetchall())
+			print("sql[%s]执行结果=>%s" % (sql.lower(), data))
+			state,sqlresult = 'fail',''
+			msg = '%s----查询无结果'%sql
+			if data:
+				l1 = len(data)
+				l2 = len(data[0])
+				#单zu数据单字段
+				if l1 * l2 == 1:
+					sqlresult = str(data[0][0])
+					msg = '%s----查询结果为[%s]'%(sql,sqlresult)
+					state = 'success'
+				#多字段 or 多组数据
+				else:
+					sqlresult = data
+					msg = "%s----查询结果为[%s]存在多组数据或多个字段 不支持" %(sql,sqlresult)
+			cur.close()
+			return (state,sqlresult,msg)
+		except:
+			print(traceback.format_exc())
+			return ('fail','',"%s----在数据库[%s]执行发生异常:\n[%s]" % (sql,conname, traceback.format_exc()))
 
 class DBError(Exception):
 	def __init__(self, value):

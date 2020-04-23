@@ -105,6 +105,9 @@ urlpatterns = [
 	path('querydblist/', views.querydblist),
 	path('querydblistdefault/', views.querydblistdefault),
 	path('copyDbCon/', views.copyDbCon),
+	path('queryDbSchemebyVar/',views.queryDbSchemebyVar),
+	path('varSqltest/',views.varSqltest),
+	
 	
 	path('mailconfig/', views.mailconfig),
 	path('querymailconfig/', views.querymailconfig),

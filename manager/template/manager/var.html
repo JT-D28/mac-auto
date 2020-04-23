@@ -11,13 +11,23 @@
 
     <title>变量管理</title>
     <style type="text/css">
+        .meta {
+            background-color: #fafafa;
+            overflow-y: auto;
+            height: calc(100% - 85px);
+            transition: height .2s;
+            border: 2px;
+            width:calc(100% - 20px);
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
         .layui-icon:hover {
             cursor: pointer;
         }
 
-        .layui-table-view .layui-table{
-            width: 100%;
-        }
+
         .btn {
             height: 34px;
             line-height: 34px;
@@ -125,6 +135,26 @@
 
         .el-form-item {
             margin-bottom: 15px;
+        }
+
+        #sqltest .el-dialog {
+            height: 70%;
+        }
+
+        #sqltest .el-dialog__body {
+            height: calc(100% - 150px);
+            padding-bottom: 0px;
+        }
+
+
+
+        #sqltest .el-form-item__content {
+            margin-left: auto;
+            float: right;
+            width: calc(100% - 70px);
+        }
+        #sqltest .el-select{
+            width: 100%;
         }
 
         #varcopy > .el-dialog > .el-dialog__body {
@@ -332,6 +362,39 @@
                 <el-button @click="copyFormcancel">取 消</el-button>
             </div>
         </el-dialog>
+
+
+        <el-dialog id="sqltest" :inline="true" title="变量sql测试" :visible.sync="sqltestVisible">
+            <el-form :inline="true" :model="form" class="demo-form-inline">
+                <el-form-item label="DB方案" label-width="70px"  style="width: calc(50% - 40px);margin-right:0px">
+                    <el-select v-model="test_dbscheme" filterable
+                               placeholder="选择配置方案">
+                        <el-option
+                                v-for="item in dbschemes"
+                                :key="item.scheme"
+                                :label="item.scheme"
+                                :value="item.scheme">
+                        </el-option>
+                    </el-select>
+                </el-form-item><el-form-item label="计划" label-width="70px" style="width: calc(50% - 40px);margin-right:0px">
+                    <el-select v-model="testsql_plan" filterable
+                               placeholder="选择计划">
+                        <el-option
+                                v-for="item in varplans"
+                                :key="item.label"
+                                :label="item.label"
+                                :value="item.value">
+                        </el-option>
+                    </el-select>
+                </el-form-item><el-form-item style="margin-right:0px;width: 80px;float: right">
+                    <el-button type="primary" @click="sqltestbtn" style="float: right">测试</el-button>
+                </el-form-item>
+            </el-form>
+            <div class="meta" v-html="sqltestres"></div>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="sqltestVisible = false">关 闭</el-button>
+            </div>
+        </el-dialog>
     </template>
 </div>
 </body>
@@ -368,6 +431,7 @@
                 },
                 bindplans: [],
                 tagvalues: [],
+                dbschemes: ['全局'],
                 form: {
                     tagvalue: '',
                 },
@@ -377,6 +441,12 @@
                 wantTag: '',
                 tagFormVisible: false,
                 copyFormVisible: false,
+                sqltestVisible: false,
+                sqltestres: '',
+                test_dbscheme: '',
+                testsql: '',
+                testsql_plan: '',
+                varplans: [],
                 formLabelWidth: '120px',
                 cpoyinfo: '',
                 copybindplans: [],
@@ -386,6 +456,22 @@
 
         },
         methods: {
+            sqltestbtn() {
+                var that = this;
+                if (that.test_dbscheme==''){
+                    that.test_dbscheme=that.dbschemes[0].scheme
+                }
+                if (that.testsql_plan==''){
+                    that.testsql_plan=that.varplans[0].label
+                }
+                _post_nl('/manager/varSqltest/', {
+                    'scheme': that.test_dbscheme,
+                    'sql': that.testsql,
+                    'plan': that.testsql_plan
+                }, function (data) {
+                    that.sqltestres = '<h3>初始SQL:</h3><hr>'+that.testsql+'<hr>'+'<h3>最终执行:</h3><hr>'+data.msg.split('----')[0]+'<hr>'+data.msg.split('----')[1]
+                });
+            },
             tagfocus() {
                 var that = this;
                 that.tagvalue = '';
@@ -1017,31 +1103,50 @@
                 if (e.data.value === '') {
                     layer.prompt({
                         id: 'gianprompt',
+                        zIndex: 1000,
                         title: '变量描述【' + e.data.description + '】,键名【' + e.data.key + '】的获取方式',
                         value: e.data.gain,
                         formType: 2,
                         shade: [0.8, '#393D49'],
                         shadeClose: true,
                         area: ['96%', '100%'],
-                        btn: ['编辑', '关闭'],
+                        btn: ['测试', '编辑', '关闭'],
                         yes: function (index, layero) {
                             var val = layero.find(".layui-layer-input").val();
-                            verify_str = val.replace(/\s*/g, "");
-                            ind = verify_str.search(/\w+\(.*?\)/i);
-                            flag = '';
-                            if (ind !== -1 && verify_str.lastIndexOf(')') === verify_str.length - 1) {
-                                flag = ''
-                            }else{
-                                flag = '输入的函数获取方式可能有误'
+                            res = is_sqlorfunc(val);
+                            if (res[0] !== '') {
+                                layer.msg(is_sqlorfunc(val)[0]);
+                                return false
                             }
-                            if (verify_str.split('@').length === 2) {
-                                str = verify_str.split('@')[1];
-                                lastchar = str[str.length - 1];
-                                flag = lastchar === ';' || lastchar === '；' ? '输入的sql获取方式可能有误' : ''
+                            if (res[1] === 'sql') {
+                                app.sqltestres = '';
+                                app.testsql_plan = '';
+                                app.varplans = [];
+                                app.dbschemes = [];
+                                _post_nl('/manager/queryDbSchemebyVar/', {
+                                    'db': val.split('@')[1],
+                                    'id': e.data.id
+                                }, function (data) {
+                                    if (data.code === 0) {
+                                        app.testsql = val;
+                                        app.varplans = data.plans;
+                                        //app.testsql_plan = data.plans[0].value;
+                                        app.dbschemes = data.data;
+                                        //app.test_dbscheme = data.data[0].scheme;
+                                        app.sqltestVisible = true
+                                    } else {
+                                        layer.msg(data.msg)
+                                    }
+                                })
+                            } else {
+                                layer.msg('还不支持测试函数')
                             }
 
-                            if (flag !== '') {
-                                layer.msg(flag);
+                        },
+                        btn2: function (index, layero) {
+                            var val = layero.find(".layui-layer-input").val();
+                            if (is_sqlorfunc(val)[0] !== '') {
+                                layer.msg(is_sqlorfunc(val)[0]);
                                 return false
                             }
                             e.update({gain: val});
@@ -1054,6 +1159,20 @@
             }
         });
 
+        function is_sqlorfunc(text) {
+            var verify_str = text.replace(/\s*/g, "");
+            var ind = verify_str.search(/\w+\(.*?\)/i);
+            var flag = '';
+            var kind = '';
+            if (ind !== -1 && verify_str.lastIndexOf(')') === verify_str.length - 1) {
+                kind = 'func'
+            } else if (verify_str.split('@').length === 2 && verify_str.substr(0, 6).toLowerCase().search('select') === 0) {
+                kind = 'sql';
+            } else {
+                flag = '输入错误'
+            }
+            return [flag, kind]
+        }
 
         table.on('edit(target)', function (obj) {
             multiple_data(obj.data)

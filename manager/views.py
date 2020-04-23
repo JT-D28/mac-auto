@@ -6,18 +6,16 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.http import HttpResponse, JsonResponse
 
-from ME2.settings import logme
 from django.db.models import Q
 from manager.models import *
-
+from manager.db import Mysqloper
 from django.conf import settings
 from login.models import *
 from .cm import addrelation
 from .core import *
 from .invoker import *
 from . import cm
-# from .context import querytestdata, gettestdatastep, mounttestdata, gettestdataparams, queryafteradd as qa,queryafterdel as qd, queryafteredit as qe, queryaftercopy as qc
-import json, operator, xlrd, base64, traceback
+import json, xlrd, base64, traceback
 from .pa import MessageParser
 from .ar import Grant,RoleData
 
@@ -306,7 +304,7 @@ def editcon(request):
 	
 	except:
 		msg = '编辑异常[%s]' % traceback.format_exc()
-		logme.error(msg)
+		logger.error(msg)
 		code = 1
 	finally:
 		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
@@ -334,7 +332,7 @@ def editmultidbcon(request):
 			con.scheme = data['scheme']
 			con.save()
 	except:
-		logme.error(traceback.format_exc())
+		logger.error(traceback.format_exc())
 		msg=traceback.format_exc()
 		code = 1
 	finally:
@@ -674,7 +672,7 @@ def editmultivar(request):
 			tag.customize = data['customize']
 			tag.save()
 	except:
-		logme.error(traceback.format_exc())
+		logger.error(traceback.format_exc())
 		msg = traceback.format_exc()
 		code = 1
 	finally:
@@ -2306,6 +2304,30 @@ def queryDbScheme(request):
 
 
 @csrf_exempt
+def queryDbSchemebyVar(request):
+	code = 0
+	msg = ''
+	dbs = list((DBCon.objects.values('scheme').filter(description=request.POST.get('db'))))
+	try:
+		planbinds = json.loads(Tag.objects.values('planids').get(var=Variable.objects.get(id=request.POST.get('id'))).get('planids'))
+		plans=[]
+		for i in planbinds:
+			plans.append({'label':i,'value':'"%s":%s'%(i,json.dumps(planbinds[i]).replace(' ',''))})
+		if not plans:
+			plans.append({'label':'全局','value':'{}'})
+	except:
+		print(traceback.format_exc())
+		code = 1
+		msg = '这个变量可能有些问题'
+		planbinds={}
+	if len(dbs) == 0:
+		code = 1
+		msg = '@的库名没有在任何方案下找到'
+	return JsonResponse({'code':code,'msg':msg,'data':dbs,'plans':plans})
+	
+
+
+@csrf_exempt
 def getParamfromFetchData(request):
 	text = request.POST.get('fetchtest')
 	step_des=request.POST.get('description')
@@ -2638,3 +2660,65 @@ def changemode(request):
 			f.write(''.join(lines))
 	
 	return JsonResponse(pkg(code=0,msg=msg),safe=False)
+
+
+@csrf_exempt
+def varSqltest(request):
+	print(request.POST)
+	scheme = request.POST.get('scheme')
+	scheme = '全局' if scheme=='' else scheme
+	sql = request.POST.get('sql')
+	plan = request.POST.get('plan')
+	if plan == '' or plan is None:
+		plan = '{}'
+	state, data,msg = simple_compute(sql,plan,scheme)
+	code = 1 if state != 'success' else 0
+	return JsonResponse({'code': code,'msg':msg})
+
+
+def simple_replace_var(str_,plan,scheme):
+	print('替换',str_,plan,scheme)
+	try:
+		old = str_
+		varnames = re.findall('{{(.*?)}}', str_)
+		for varname in varnames:
+			try:
+				with connection.cursor() as cursor:
+					sql = '''SELECT v.gain,v.`value` FROM `manager_tag` t , manager_variable v
+					where  v.`key`='%s' and v.id = t.var_id  and planids like '%s' '''%(varname,'%{}%'.format(plan))
+					logger.info('变量查询sql=>',sql)
+					cursor.execute(sql)
+					rows = cursor.fetchall()
+					if len(rows)>1:
+						raise Exception('变量[%s]替换异常,可能该计划下有多个相同的变量键名，请检查' % varname)
+					elif len(rows)==0:
+						raise Exception('该计划下没有匹配到变量[%s],请检查'%varname)
+					else:
+						gain = rows[0][0]
+						value = rows[0][1]
+						print(value, gain)
+						if len(gain) == 0:
+							info = '变量{},{}'.format(varname,value)
+							state, res = simple_replace_var(value, plan, scheme)
+						elif len(value) == 0:
+							state, res, msg = simple_compute(gain, plan, scheme)
+						if state != 'success':
+							return state, msg
+			except Exception as e:
+				logger.error(e)
+				state = 'fail'
+				return 'fail',str(e)
+			old = old.replace('{{%s}}' % varname, str(res), 1)
+		return ('success', old)
+	except Exception as e:
+		logger.info(traceback.format_exc())
+		return ('error', '字符串[%s]变量替换异常[%s] 请检查包含变量是否已配置' % (str_, traceback.format_exc()))
+
+
+def simple_compute(gain, plan, scheme):
+	print('计算',gain,plan,scheme)
+	state, gain = simple_replace_var(gain, plan,scheme)
+	if state != 'success':
+		return state, '',gain
+	op = Mysqloper()
+	return op.db_exec_test(gain, scheme)

@@ -1774,7 +1774,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
 			if len(gain) == 0 and len(value) == 0:
 				warnings.warn("变量%s的获取方式和默认值至少填一项" % varname)
 			elif len(gain) > 0 and len(value) > 0:
-				old = old.replace('{{%s}}' % varname, str(value))
+				old = old.replace('{{%s}}' % varname, str(value),1)
 				# __replace_route["%s.%s"%(user.name,varname)]=value
 				warnings.warn('变量%s获取方式和值都设定将被当做常量，获取方式和缓存失效' % varname)
 			
@@ -1802,7 +1802,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
 				
 				else:
 					v = _gain_compute(user, gain, src=src, taskid=taskid)
-					logger.info('变量获取方式')
+					logger.info('变量获取结果：', v[1])
 					if v[0] is not 'success':
 						# logger.info(11999)
 						return v
@@ -1811,7 +1811,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
 					
 					# if v is None:
 					#   return ('error','')
-					old = old.replace('{{%s}}' % varname, str(v))
+					old = old.replace('{{%s}}' % varname, str(v),1)
 					viewcache(taskid, user.name, None, '替换变量 {{%s}}=>%s' % (varname, v))
 		
 		return ('success', old)

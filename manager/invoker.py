@@ -2429,11 +2429,6 @@ class MainSender:
 			server.sendmail(sender_name, list(to_receive.split(',')), msg.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
 			server.quit()  # 关闭连接
 		
-		
-		
-		
-		
-		
 		except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
 			logger.info(traceback.format_exc())
 			ret = 2

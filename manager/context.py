@@ -522,3 +522,10 @@ def getRunningInfo(username='', planid='', type='lastest_taskid'):
 		nofind = Plan.objects.get(id=planid).schemename
 		dbscheme = planinfo.get('dbscheme', nofind)
 		return dbscheme
+
+
+def get_space_dir(callername):
+	'''
+	获取我的空间绝对地址
+	'''
+	return os.path.join(os.path.dirname(__file__),'storage','private','File',callername)

@@ -7,7 +7,7 @@ class User(Model):
 	name = CharField(max_length=128, unique=True)
 	password = CharField(max_length=256)
 	createtime = DateTimeField(auto_now_add=True, null=True)
-	
+	updatetime = DateTimeField(auto_now=True, null=True)
 	def __str__(self):
 		return self.name
 	

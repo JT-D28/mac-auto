@@ -177,30 +177,21 @@ class Mysqloper:
 			self.sqlcount += 1
 			# print('sqlfda=>',sql,len(sql),len(sql.strip()))
 			cur.execute(str(sql))
-			
-			##查询sql时候
-			if re.match(r'(select).*(from).+(where){0,1}.*', sql.lower()) or re.match(r'(select).*(curdate).*',
-			                                                                          sql.lower()):
-				# for cs in range(15):
+			cur.close()
+			# 查询sql时候
+			if re.match(r'(select).*(from).+(where){0,1}.*', sql.lower()) or re.match(r'(select).*(curdate).*',sql.lower()):
 				data = cur.fetchall()
 				data = list(data)
-			
 				print("sql[%s]执行结果=>%s" % (sql.lower(), data))
-				
 				if data and len(data) > 0:
-					# [('f1','f2'),()]
 					l1 = len(data)
 					l2 = len(data[0])
-					
-					##单zu数据单字段
+					# 单组数据单字段
 					if l1 == 1 and l2 == 1:
 						sqlresult = str(data[0][0])
-					##多字段 or 多组数据
+					# 多字段 or 多组数据
 					else:
-						r = []
-						
-						return ('error', "sql[%s]查询结果返回存在多组数据或多个字段 不支持" % sql)
-				
+						return ('error', "sql[%s]查询结果为%s存在多组数据或多个字段 不支持" % (sql,data))
 				elif sqlresult == None:
 					viewcache(taskid, callername, None, "sql <span style='color:#009999;'>%s</span> 查询无结果"%(sql))
 					return ('success', '')
@@ -218,15 +209,13 @@ class Mysqloper:
 			# print(msg)
 			viewcache(taskid, callername, None, msg)
 			
-			cur.close()
-			
 			return ('success', sqlresult)
 		
 		except Exception as ee:
 			# traceback.print_exc()
 			# return RuntimeError('执行sql[%s],发生未知错误[%s].'%(sql,str(ee)))
 			print(traceback.format_exc())
-			return ('error', "数据库[%s]执行sql[%s]发生异常:\n[%s]" % (conname, sql, traceback.format_exc()))
+			return ('error', "数据库[%s]执行sql[%s]发生异常:\n[%s]" % (conname, sql, ee))
 		
 	def db_exec_test(self,sql,scheme):
 		logger.info('传入sql:{},数据连接方案:{}'.format(sql, scheme))
@@ -259,9 +248,9 @@ class Mysqloper:
 					msg = "%s----查询结果为[%s]存在多组数据或多个字段 不支持" %(sql,sqlresult)
 			cur.close()
 			return (state,sqlresult,msg)
-		except:
+		except Exception as e:
 			print(traceback.format_exc())
-			return ('fail','',"%s----在数据库[%s]执行发生异常:\n[%s]" % (sql,conname, traceback.format_exc()))
+			return ('fail','',"%s----在数据库[%s]执行发生异常:\n[%s]" % (sql,conname, e))
 
 class DBError(Exception):
 	def __init__(self, value):

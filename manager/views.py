@@ -16,6 +16,8 @@ from .core import *
 from .invoker import *
 from . import cm
 import json, xlrd, base64, traceback
+
+from .invoker import _is_function_call
 from .pa import MessageParser
 from .ar import Grant,RoleData
 
@@ -2716,9 +2718,42 @@ def simple_replace_var(str_,plan,scheme):
 
 
 def simple_compute(gain, plan, scheme):
-	print('计算',gain,plan,scheme)
-	state, gain = simple_replace_var(gain, plan,scheme)
-	if state != 'success':
-		return state, '',gain
-	op = Mysqloper()
-	return op.db_exec_test(gain, scheme)
+	if _is_function_call(gain):
+		return 'fail','','变量获取暂时支持sql方式'
+		# flag = Fu.tzm_compute(gain, '(.*?)\((.*?)\)')
+		# ms = list(Function.objects.filter(flag=flag))
+		# functionid = None
+		# if len(ms) == 0:
+		# 	pass
+		# elif len(ms) == 1:
+		# 	functionid = ms[0].id
+		# else:
+		# 	functionid = ms[0].id
+		# a = re.findall('(.*?)\((.*?)\)', gain)
+		# methodname = a[0][0]
+		# call_method_params = a[0][1].split(',')
+		# if functionid is None:
+		# 	state = 'fail'
+		# 	msg = '没查到匹配函数请先定义[%s,%s]' % (gain, flag)
+		# else:
+		# 	f = None
+		# 	builtinmethods = [x.name for x in getbuiltin()]
+		# 	builtin = (methodname in builtinmethods)
+		#
+		# 	try:
+		# 		f = Function.objects.get(id=functionid)
+		# 	except:
+		# 		pass
+		# 	call_method_params = [x for x in call_method_params if x]
+		# 	call_str = '%s(%s)' % (methodname, ','.join(call_method_params))
+		# 	state, res = simple_replace_var(call_str,plan,scheme)
+		# 	if state is not 'success':
+		# 		return state,'',res
+		# 	state,res =Fu.call(f, call_str, builtin=builtin)
+		# 	return state,res,'' if state == 'success' else state,'',res
+	else:
+		state, gain = simple_replace_var(gain, plan,scheme)
+		if state != 'success':
+			return state, '',gain
+		op = Mysqloper()
+		return op.db_exec_test(gain, scheme)

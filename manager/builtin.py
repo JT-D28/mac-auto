@@ -267,3 +267,24 @@ def local_file_check(filename, templatename, checklist, **kws):
 	cout('待校验字段[%s]' % '|'.join(checklist), taskid=taskid, callername=callername)
 	status, msg = SpaceMeta.local_file_check(filename, templatename, checklist, callername)
 	return (status, msg)
+
+
+def remote_xml_read(xmlcontent,key,**kws):
+	'''
+	融汇远程xml文件校验
+	'''
+	from manager.invoker import XMLParser
+
+	#
+	xmlmsg=xmlcontent['data']['msg']
+	pv=kws.get('p')
+	if pv:
+		if pv==xmlmsg[0:5]:
+			#cout('msg前置数字串校验通过',taskid=kws['taskid'],callername=kws['callername'])
+			pass
+		else:
+			return ('fail','msg前置数字串校验失败 实际值：%s'%xmlmsg[0:5])
+
+	xmlmsg=xmlmsg[xmlmsg.index('<'):]
+	p=XMLParser(xmlmsg)
+	return p.getValue(key)

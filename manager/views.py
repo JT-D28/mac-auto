@@ -1834,7 +1834,7 @@ def queryonebusiness(request):
 		# logger.info('business=>', business)
 		# jsonstr = json.dumps(business, cls=BusinessDataEncoder)
 		sql = '''
-		SELECT b.id,count,businessname,itf_check,db_check,params,preposition,postposition,value as weight,parser_id,parser_check,description
+		SELECT b.id,count,businessname,timeout,itf_check,db_check,params,preposition,postposition,value as weight,parser_id,parser_check,description
 		FROM manager_businessdata b, manager_order o WHERE b.id=%s and o.follow_id=b.id
 		'''
 		with connection.cursor() as cursor:
@@ -2549,7 +2549,34 @@ def authcontrol(request):
 @csrf_exempt
 def queryuicontrol(request):
 	res = Grant.query_ui_grant_table(request.GET.get('searchvalue'))
+	logger.info('获得UI权限表:',res)
 	return JsonResponse(res, safe=False)
+
+@csrf_exempt
+def queryoneuicontrol(request):
+	return JsonResponse(Grant.query_one_ui_control(request.POST.get('uid')),safe=False)
+
+@csrf_exempt
+def queryalluicontrolusers(request):
+	return JsonResponse(Grant.queryalluicontrolusers(),safe=False)
+
+@csrf_exempt
+def adduicontrol(request):
+	return JsonResponse(Grant.add_ui_control(**get_params(request)),safe=False)
+
+@csrf_exempt
+def deluicontrol(request):
+	res=Grant.del_ui_control(**get_params(request))
+	return JsonResponse(res,safe=False)
+
+@csrf_exempt
+def updateuicontrol(request):
+	return JsonResponse(Grant.edit_ui_control(**get_params(request)),safe=False)
+	
+@csrf_exempt
+def updateuicontrolstatus(request):
+	return JsonResponse(Grant. updateuicontrolstatus(**get_params(request)),safe=False)
+
 
 @csrf_exempt
 def queryrole(request):

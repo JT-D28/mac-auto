@@ -3,7 +3,7 @@
 # @Date    : 2019-09-27 14:45:12
 # @Author  : Blackstone
 # @to      :
-import ast
+import ast,threading
 from urllib import parse
 
 from django.conf import settings
@@ -50,13 +50,14 @@ _tempinfo = dict()
 _taskmap = dict()
 
 
-def db_connect(config):
+def db_connect(config,timeout=5):
 	"""
     测试数据库连接
     """
 	logger.info('==测试数据库连接===')
 	
 	conn = None
+
 	
 	try:
 		
@@ -99,6 +100,7 @@ def db_connect(config):
 		
 		else:
 			return ('fail', '连接类型不支持')
+
 		
 		return ('success', '数据库[%s]连接成功!.' % description)
 	
@@ -1029,15 +1031,10 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
 		logme.warn('获取自定义函数%s'%f.__str__())
 	except:
 		pass
-	
-	# flag
-	# if call_method_name in ('dbexecute2', 'dbexecute', 'local_to_ftp', 'ftp_to_local', 'local_file_check'):
-	#   call_method_params.append("taskid='%s'" % taskid)
-	#   call_method_params.append("callername='%s'" % user.name)
-	
+
 	call_method_params.append("taskid='%s'" % taskid)
 	call_method_params.append("callername='%s'" % user.name)
-	call_method_params.append('location=%s'%1)
+	# call_method_params.append("location='%s'"%get_space_dir(user.name))
 	call_method_params = [x for x in call_method_params if x]
 	
 	call_str = '%s(%s)' % (call_method_name, ','.join(call_method_params))
@@ -1050,9 +1047,7 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
 	res, call_str = ok[0], ok[1]
 	if res is not 'success':
 		return (res, call_str)
-	
-	logger.info('ttttttttttttttt=>', call_str)
-	
+		
 	return Fu.call(f, call_str, builtin=builtin)
 
 
@@ -1148,6 +1143,7 @@ def _compute(taskid, user, checkexpression, type=None, target=None, kind=None, p
 				logger.info('check', item)
 				old = item
 				item = _legal(item)
+				target=target.replace('null', "'None'").replace('true',"'True'").replace('false',"'False'")
 				ress = _eval_expression(user, item, need_chain_handle=True, data=target, taskid=taskid,
 				                        parse_type=parse_type, rps_header=rps_header)
 				logger.info('ress2=>', ress)
@@ -1429,22 +1425,16 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 			logger.info('表达式计算异常.')
 			return ('error', '表达式[%s]计算异常[%s]' % (ourexpression, traceback.format_exc()))
 		
-		# res=None
 		exp = None
 		try:
 			
-			# logger.info("ourexpression=>",ourexpression)
 			exp_rp = _replace_property(user, ourexpression)
-			# logger.info('qqqqq=>',exp_rp)
-			
-			# logger.info('exp-pr=>',exp_rp)
 			if exp_rp[0] is not 'success':
 				return exp_rp
 			
 			exp_rv = _replace_variable(user, exp_rp[1], taskid=taskid)
 			if exp_rv[0] is not 'success':
 				return exp_rv
-			# logger.info('exp_rv=<',exp_rv)
 			
 			exp = exp_rv[1]
 			
@@ -1455,7 +1445,6 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 				k, v, op = _separate_expression(exp)
 				logger.info('获取的项=>', k, v, op)
 				data = data.replace('null', "'None'").replace('true', "'True'").replace("false", "'False'")
-				# logger.info('data=>',data)
 				
 				if 'response.text' == k:
 					if op == '$':
@@ -1493,23 +1482,13 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 					if parse_type == 'json':
 						p = JSONParser(data)
 					elif parse_type == 'xml':
-						# logger.info('类型=>',type(parse_type))
-						# logger.info('data=>')
-						# logger.info(data)
 						# 消除content-type首行
 						data = '\n'.join(data.split('\n')[1:])
 						logger.info('reee', data)
 						p = XMLParser(data)
 					
 					oldk = k
-					
 					k = p.getValue(k)
-				# try:
-				#   if eval(str(k)) in(None,True,False):
-				#       k=str(k)
-				#       v=str(v)
-				# except:
-				#   pass
 				
 				##处理左边普通字符串的情况
 				
@@ -1600,7 +1579,7 @@ def _replace_function(user, str_, taskid=None):
 		except:
 			pass
 		
-		appendstr = "callername='%s',taskid='%s'" % (user.name, taskid)
+		appendstr = "taskid='%s',callername='%s'" % (taskid,user.name)
 		itlist = []
 		if call_str[1]:
 			itlist.append(call_str[1])
@@ -1608,7 +1587,6 @@ def _replace_function(user, str_, taskid=None):
 		# 计算表达式
 		invstr = '%s(%s)' % (fname, ','.join(itlist))
 		# viewcache(taskid, user.name,None,'计算表达式=>%s'%invstr)
-		logger.info('*' * 1000)
 		logger.info('invstr=>', invstr)
 		
 		# 替换表达式
@@ -1804,7 +1782,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
 			
 			
 			elif len(gain) == 0 and len(value) > 0:
-				old = old.replace('{{%s}}' % varname, str(value))
+				old = old.replace('{{%s}}' % varname, str(value),1)
 				viewcache(taskid, user.name, None, '替换变量 {{%s}}=>%s' % (varname, value))
 			# __replace_route["%s.%s"%(user.name,varname)]=value
 			
@@ -1819,7 +1797,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
 							return v
 						else:
 							v = v[1]
-						old = old.replace('{{%s}}' % varname, str(v))
+						old = old.replace('{{%s}}' % varname, str(v),1)
 						viewcache(taskid, user.name, None, '替换变量 {{%s}}=>%s' % (varname, v))
 				
 				

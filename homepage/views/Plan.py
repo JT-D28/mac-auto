@@ -16,7 +16,7 @@ from manager.models import Plan
 def queryallplan(request):
 	if configs.dbtype == 'mysql':
 		sql = '''SELECT plan.id,CONCAT(pro.description,'-',plan.description) as planname
-		FROM `manager_plan` plan,manager_product pro,manager_order o WHERE pro.id=o.main_id AND plan.id=o.follow_id order by pro.id'''
+		FROM `manager_plan` plan,manager_product pro,manager_order o WHERE pro.id=o.main_id AND plan.id=o.follow_id and kind='product_plan'  order by pro.id'''
 	else:
 		sql = '''SELECT plan.id, pro.description||'-'||plan.description as planname  FROM `manager_plan` plan,manager_product pro,manager_order o WHERE pro.id=o.main_id AND plan.id=o.follow_id order by pro.id   '''
 	

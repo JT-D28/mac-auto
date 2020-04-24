@@ -148,7 +148,7 @@ class Step(Model):
 	##如果是接口类型 这个字段暂时无用
 	related_id = CharField(max_length=32, blank=True, null=True)
 	description = CharField(max_length=500, null=True)
-	headers = CharField(max_length=500, blank=True, null=True)
+	headers = TextField(blank=True, null=True)
 	body = TextField(blank=True, null=True)
 	url = TextField(blank=True, null=True)
 	method = CharField(max_length=128, blank=True, null=True)

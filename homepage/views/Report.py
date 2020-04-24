@@ -5,6 +5,7 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from ME2.settings import BASE_DIR
+from manager.context import getRunningInfo
 from manager.core import simplejson
 from manager.invoker import MainSender
 from manager.models import Plan, ResultDetail, MailConfig, User
@@ -21,12 +22,17 @@ def sendreport(request):
 	config_id = plan.mail_config_id
 	if detail is None:
 		msg = "任务还没有运行过！"
-	elif plan.is_running in ('1', 1):
+	elif getRunningInfo('',planid,'isrunning') in ('1', 1):
 		msg = "任务运行中，请稍后！"
 	else:
+		config = MailConfig.objects.get(id=plan.mail_config_id)
+		if config.is_send_mail=='close':
+			info = '邮件发送没有开启;'
+		if config.is_send_dingding == 'close':
+			info += '钉钉发送没有开启;'
 		taskid = detail[0].taskid
 		threading.Thread(target=sendmail, args=(config_id, username, taskid)).start()
-		msg = '发送中...'
+		msg = '发送中...<br> {}'.format(info)
 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 def sendmail(config_id, username, taskid):

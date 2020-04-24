@@ -1804,7 +1804,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
 				
 				else:
 					v = _gain_compute(user, gain, src=src, taskid=taskid)
-					logger.info('变量获取方式')
+					logger.info('变量获取结果：', v[1])
 					if v[0] is not 'success':
 						# logger.info(11999)
 						return v
@@ -2406,11 +2406,6 @@ class MainSender:
 			server.login(sender_name, sender_pass)  # 括号中对应的是发件人邮箱账号、邮箱密码
 			server.sendmail(sender_name, list(to_receive.split(',')), msg.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
 			server.quit()  # 关闭连接
-		
-		
-		
-		
-		
 		
 		except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
 			logger.info(traceback.format_exc())

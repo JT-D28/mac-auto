@@ -1682,7 +1682,7 @@ def _del_product_force(product_id):
 def _del_plan_force(plan_id):
 	# 取消上层依赖
 	try:
-		mm.objects.get(kind='product_plan', follow_id=plan_id).delete()
+		mm.Order.objects.get(kind='product_plan', follow_id=plan_id).delete()
 	except:
 		logger.info('取消上层依赖异常.')
 	try:

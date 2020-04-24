@@ -152,7 +152,12 @@ urlpatterns = [
 	
 	path('authcontrol/', views.authcontrol),
 	path('queryuicontrol/', views.queryuicontrol),
-	
+	path('queryoneuicontrol/',views.queryoneuicontrol),
+	path('deluicontrol/', views.deluicontrol),
+	path('adduicontrol/', views.adduicontrol),
+	path('updateuicontrol/', views.updateuicontrol),
+	path('queryalluicontrolusers/', views.queryalluicontrolusers),
+	path('updateuicontrolstatus/', views.updateuicontrolstatus),
 	#
 	path('queryoneproduct/', views.queryoneproduct),
 	path('tree/', views.treetest),

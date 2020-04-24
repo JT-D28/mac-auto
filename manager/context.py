@@ -529,3 +529,9 @@ def get_space_dir(callername):
 	获取我的空间绝对地址
 	'''
 	return os.path.join(os.path.dirname(__file__),'storage','private','File',callername)
+
+def get_temp_dir():
+	'''
+	获取模板文件绝对地址
+	'''
+	return[os.path.join(os.path.dirname(__file__),'template'),os.path.join(os.path.dirname(os.path.dirname(__file__)),'login','template')]

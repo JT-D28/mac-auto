@@ -82,7 +82,7 @@ class RoleData():
             role.name=kws['name']
             role.description=kws['description']
             role.users.clear()
-            userids=kws['userids'].split(',')
+            userids=[idx for idx in kws['userids'].split(',') if idx.strip()]
             for idx in userids:
                 role.users.add(User.objects.get(id=idx))
 
@@ -93,6 +93,7 @@ class RoleData():
             }
 
         except:
+            logger.error('更新角色异常:',traceback.format_exc())
             return {
                 'code':4,
                 'msg':'更新角色异常'
@@ -129,71 +130,24 @@ class RoleData():
                 'code':4,
                 'msg':'查询角色明细异常[%s]'%traceback.format_exc()
             }
-
-
-    # @classmethod
-    # def updateuser(**kws):
-    #     '''
-    #     角色添加用户
-    #     '''
-    #     try:
-    #         role_id=kws['row_id']
-    #         user_ids=kws['user_ids']
-    #         role=Role.objects.get(id=role_id)
-    #         role.user.clear()
-    #         for user_id in user_ids.split(','):
-
-    #             role.user.add(User.objects.get(id=user_id))##???????????????    
-
-    #         return{
-    #             'code':0,
-    #             'msg':'关联用户成功'
-    #         }
-
-    #     except:
-    #         return{
-    #             'code':4,
-    #             'msg':'关联用户异常'
-    #         }
-
-    # @classmethod
-    # def deluser(**kws):
-    #     try:
-    #         role_id=kws['row_id']
-    #         user_ids=kws['user_ids']
-    #         role=Role.objects.get(id=role_id)
-    #         for user_id in user_ids.split(','):
-    #             role.user.remove(User.objects.get(id=user_id))             
-
-    #         return{
-    #             'code':0,
-    #             'msg':'去除关联用户成功'
-    #         }
-
-    #     except:
-    #         return{
-    #             'code':4,
-    #             'msg':'去除关联用户异常'
-    #         }
-
             
-
 class Grant(object):
     '''
     权限操作
     ''' 
     @classmethod
-    def _isconfig():
-        return 'NO'
+    def _isconfig(cls):
+        return False
     
     @classmethod
-    def _add_ui_control_user(cls, ucid, userlist):
+    def _add_ui_control_user(cls, ucid, userlist,user):
         try:
             for userstr in userlist:
-                uir = User_UI_Relation()
+                uir = User_UIControl()
                 uir.kind = userstr.split('_')[0]
                 uir.uc_id = ucid
                 uir.user_id = userstr.split('_')[1]
+                uir.author=user
                 uir.save()
         
         except:
@@ -204,25 +158,61 @@ class Grant(object):
     def _update_ui_control_user(cls, ucid, updateuserlist):
         try:
             has_user = dict()
-            L = list(User_UI_Relation.objects.filter(uc_id=ucid))
+            L = list(User_UIControl.objects.filter(uc_id=ucid))
             for u in L:
                 has_user[u.id] = '%s_%s' % (u.kind, u.user_id)
             
-            need_add = [x for x in updateuserlist if x not in list(has_user.values())]
+            need_add = [x for x in updateuserlist if x not in list(has_user.values()) and x.strip()]
             need_del = [x for x in list(has_user.values()) if x not in updateuserlist]
             
             for x in need_add:
-                uir = User_UI_Relation()
+                uir = User_UIControl()
                 uir.uc_id = ucid
-                uir.kind = x.split('=')[0]
-                uir.user_id = x.split('=')[1]
+                uir.kind = x.split('_')[0]
+                uir.user_id = x.split('_')[1]
                 uir.save()
             
             for x in need_add:
-                uir = User_UI_Relation.objects.get(kind=x.split('=')[0], user_id=x.split('=')[1])
+                uir = User_UIControl.objects.get(kind=x.split('_')[0], user_id=x.split('_')[1])
         except:
             raise RuntimeError('更新视图控制用户信息异常')
     
+    @classmethod
+    def query_one_ui_control(cls,uid):
+        try:
+            u=UIControl.objects.get(id=uid)
+            selected_user_data=[]
+            all_user_data=cls.queryalluicontrolusers()['data'][0]
+            for ak in list(User_UIControl.objects.filter(uc_id=uid)):
+                name=User.objects.get(id=ak.user_id).name if ak.kind=='USER' else Role.objects.get(id=ak.user_id).name
+                selected_user_data.append(
+                    '%s_%s'%(ak.kind,ak.user_id))
+
+            return{
+                'code':0,
+                'msg':'',
+                'data':{
+                    'code':u.code,
+                    'description':u.description,
+                    'isvalid':u.is_valid,
+                    'isopen':u.is_open,
+                    'all':all_user_data,
+                    'selected':selected_user_data
+
+                }
+
+            }
+
+
+
+        except:
+            logger.error('ui控制查询用户异常',traceback.format_exc())
+            return{
+                'code':4,
+                'msg':'ui控制查询用户异常'
+            }
+
+
     @classmethod
     def add_ui_control(cls, **config):
         try:
@@ -230,9 +220,10 @@ class Grant(object):
             uc.code = config['code']
             uc.description = config['description']
             uc.is_config = cls._isconfig()
-            uc.author = config['creater']
+            uc.is_valid=config['isvalid']
+            uc.author = config['user']
             uc.save()
-            cls._add_ui_control_user(uc.id, config['userstrs'].split(','))
+            cls._add_ui_control_user(uc.id, [x for x in config['userstrs'].split(',') if x.strip()],uc.author)
             
             return {
                 'code': 0,
@@ -248,14 +239,17 @@ class Grant(object):
             }
     
     @classmethod
-    def del_ui_control(cls, ucid):
+    def del_ui_control(cls, **kws):
         try:
-            uc = UIControl.objects.get(code=ucid)
-            dl = list(User_UI_Relation.objects.filter(ucid=uc.id))
-            for x in dl:
-                x.delete()
+            ucid=kws['ucids']
+            ids=[x for x in ucid.split(',') if x.strip()]
+            for idx in ids:
+                uc = UIControl.objects.get(id=idx)
+                dl = list(User_UIControl.objects.filter(id=uc.id))
+                for x in dl:
+                    x.delete()
             
-            uc.delete()
+                uc.delete()
             return {
                 'code': 0,
                 'msg': '删除权限[%s]成功' % uc.description
@@ -276,6 +270,7 @@ class Grant(object):
             uc.code = config['code']
             uc.description = config['description']
             uc.is_config = cls._isconfig()
+            uc.is_valid=config['isvalid']
             uc.save()
             
             cls._update_ui_control_user(uc.id, config['userstrs'].split(','))
@@ -304,16 +299,12 @@ class Grant(object):
                 uicall = UIControl.objects.all()
             for x in uicall:
                 datax = dict()
+                datax['id']=x.id
                 datax['code'] = x.code
                 datax['description'] = x.description
-                datax['author'] = x.author
-                
-                userstr = []
-                uirlist = list(User_UI_Relation.objects.filter(uc_id=x.id))
-                for y in uirlist:
-                    userstr.append('%s_%s' % (y.kind, y.user_id))
-                
-                datax['user'] = ','.join(userstr)
+                datax['authorname'] = x.author.name
+                datax['isopen']=x.is_open
+                datax['isvalid']=x.is_valid
                 datax['isconfig'] = cls._isconfig()
                 data.append(datax)
             
@@ -323,7 +314,51 @@ class Grant(object):
                 'data': data
             }
         except:
+            logger.error('获取权限表查询异常:',traceback.format_exc())
             return {
                 'code': 4,
                 'msg': 'UI权限表查询异常[%s]' % traceback.format_exc()
+            }
+    @classmethod
+    def queryalluicontrolusers(cls):
+        '''
+        返回新增可用用户列表
+
+        '''
+        res=list()
+        users=User.objects.all()
+        roles=Role.objects.all()
+        for user in  users:
+            res.append({
+                'id':'_'.join(['USER',str(user.id)]),
+                'name':user.name
+                })
+
+        for role in roles:
+            res.append({
+                'id':'_'.join(['ROLE',str(role.id)]),
+                'name':role.name
+                })
+
+        return {
+            'code':0,
+            'msg':'',
+            'data':[res,[]]
+        }
+
+    @classmethod
+    def updateuicontrolstatus(cls,**kws):
+        try:
+            u=UIControl.objects.get(id=kws['uid'])
+            u.is_open=kws['isopen']
+            u.save()
+
+            return{
+                'code':0,
+                'msg':'操作成功.'
+            }
+        except:
+            return{
+             'code':4,
+             'msg':'操作异常'
             }

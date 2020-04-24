@@ -4,12 +4,16 @@
 <head>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-<title>空白模板</title>
-<meta name="description" content="">
+<title>权限
+</title>
+<meta  content="">
 <meta name="keywords" content="">
 <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
 <link href="" rel="stylesheet">
 <style type="text/css">
+        .layui-icon:hover {
+            cursor: pointer;
+        }
       .btn {
           height: 34px;
           line-height: 34px;
@@ -41,27 +45,27 @@
       <div class="layui-tab-content">
         <div class="layui-tab-item layui-show" style="padding:20px;">
             <div class="layui-inline"> 
-              <button class="layui-btn btn" id='addbtn'>新增</button>
-              <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
+              <button class="layui-btn btn" id='addbtn_ui'>新增</button>
+              <button class="layui-btn btn layui-btn-danger" id='delbtn_ui'>删除</button>
             </div>
             <div class="layui-inline" style="float:right;">
               <div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="模板名称|创建者" class="layui-input"></div>
-              <button class="layui-btn btn" id='querybtn'>查询</button>
+              <button class="layui-btn btn" id='querybtn_ui'>查询</button>
             </div>
-          <table id='table-view' class="layui-table"
+          <table id='table-ui-view' class="layui-table"
                  lay-data="{height: 'full-100', cellMinWidth: 80, page: true, limit:10, url:'/manager/queryuicontrol/'}"
                  lay-filter='target'>
               <thead>
               <tr>
                   <th lay-data="{type:'checkbox'}"></th>
                   <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
-                  <th lay-data="{field: 'description', sort: true}">权限码</th>
+                  <th lay-data="{field: 'code', sort: true}">权限码</th>
                   <th lay-data="{field: 'description', sort: true}">功能描述</th>
-                  <th lay-data="{field: 'kind', sort: true}">可见用户</th>
-                  <th lay-data="{field: 'kind', sort: true}">页面是否配置</th>
-                  <th lay-data="{field: 'dbname', sort: true}">创建者</th>
-                  <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar'}">操作</th>
-
+  <!--                 <th lay-data="{field: 'users', sort: true}">可见用户</th> -->
+                  <th lay-data="{field: 'isconfig', sort: true,width:100,templet: '#configTpl'}">识别</th>
+                  <th lay-data="{field: 'authorname', sort: true,width:100}">创建者</th>
+                  <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar_ui',width:80}">操作</th>
+                  <th lay-data="{fixed: 'right',align:'center', toolbar: '#openTpl',width:80}">状态</th>
               </tr>
               </thead>
           </table>
@@ -69,14 +73,14 @@
         <div class="layui-tab-item " style="padding: 20px;">
 
               <div class="layui-inline"> 
-                <button class="layui-btn btn" id='addbtn'>新增</button>
-                <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
+                <button class="layui-btn btn" id='addbtn_url'>新增</button>
+                <button class="layui-btn btn layui-btn-danger" id='delbtn_url'>删除</button>
               </div>
               <div class="layui-inline" style="float:right;">
                 <div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="模板名称|创建者" class="layui-input"></div>
-                <button class="layui-btn btn" id='querybtn'>查询</button>
+                <button class="layui-btn btn" id='querybtn_url'>查询</button>
               </div>
-          <table id='table-view' class="layui-table"
+          <table id='table-url-view' class="layui-table"
                  lay-data="{height: 'full-100', cellMinWidth: 80, page: true, limit:10, url:'/manager/querydb/'}"
                  lay-filter='target'>
               <thead>
@@ -97,7 +101,33 @@
       </div>
 
 
-    </div>      
+    </div>  
+
+    <form id='adduicontrol' hidden=true class="layui-form" style="padding: 10px;" lay-filter="adduicontrol">
+      <div class="layui-form-item">
+        <label class="layui-form-label">权限码</label>
+        <div class="layui-input-block">
+          <input type="text" name="code_ui" placeholder="请输入" autocomplete="off" class="layui-input">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">描述</label>
+        <div class="layui-input-block">
+          <input type="text" name="description_ui" placeholder="请输入" autocomplete="off" class="layui-input">
+        </div>
+      </div>
+      <div class="layui-form-item" pane="">
+          <label class="layui-form-label">状态</label>
+          <div class="layui-input-block">
+              <input type="radio" name="valid_ui" value="1" title="有效" checked lay-filter='run_type'>
+              <input type="radio" name="valid_ui" value='0' title="无效" lay-filter='run_type'>
+          </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">可见用户</label>
+        <div id='transfer'></div>
+      </div>
+    </form>    
 </body>
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/layui/layui.js' %}"></script>
@@ -105,10 +135,265 @@
 
 <script type="text/javascript">
     
-layui.use(['table', 'layer', 'code','element'], function (){
+
+function render_transfer(tr,leftdata,rightdata){
+
+    console.log('开始渲染穿梭数据.')
+    // console.log('left：'+leftdata)
+    // console.log('right:'+rightdata)
+
+    tr.render({
+      elem: '#transfer',  //绑定元素
+      showSearch:true,
+      width:300,
+      title:['可选用户','已选用户'],
+      id: 'demo1', //定义索引
+      data:leftdata,
+      value:rightdata,
+      parseData:function(res){
+        return{
+            'title':res.name,
+            'value':res.id,
+            'checked':false,
+            'disabled':false,
+        }
+
+      }
+
+    });
+  
+}
+layui.use(['table', 'layer','element','transfer'], function (){
 
   var element=layui.element;
+  var table=layui.table;
+  var transfer=layui.transfer;
+  var layer=layui.layer;
+  var form=layui.form;
+//
+
+  $("#querybtn_ui").click(function (e) {
+      table.reload('table-ui-view', {
+          page: {
+              curr: 1
+          },
+          where: {
+              searchvalue: $("#search-value").val()
+
+          }
+
+      });
+  });
+
+//
+$('#addbtn_ui').click(function(){
+  $("#adduicontrol")[0].reset()
+  layui.form.render()
+
+  success=function(res){
+    if(res.code!=0)return
+
+    render_transfer(transfer,res.data[0],res.data[1])
+
+    var o=layer.open({
+      'title':'新增',
+      'type':1,
+      'content':$('#adduicontrol'),
+      'btn':['确认','取消'],
+      'yes':function(index, layero){
+        layer.close(index)
+        var getData = transfer.getData('demo1'); 
+        userids=[]
+        for(var i=0;i<getData.length;i++){
+
+            userids.splice(0, 0, getData[i]['value'])
+        }
+        success=function(e){
+          if (e.code == 0) {
+              layer.alert(e.msg, {icon: 1, time: 1000})
+              table.reload('table-ui-view', {
+                  page: {
+                      curr: 1
+                  },
+                  where: {
+                      searchvalue: $("#search-value").val()
+
+                  }
+              });
+          } else
+              layer.alert(e.msg, {icon: 2})
+
+        }
+
+        _post('/manager/adduicontrol/',{
+          'code':$("[name='code_ui']").val(),
+          'isvalid':$("[name='valid_ui']:checked").val(),
+          'description':$("[name='description_ui']").val(),
+          'userstrs':userids.join(),
+
+        },success);
+      }
+    });
+
+    layer.full(o);
+  };
+
+  _post('/manager/queryalluicontrolusers/',{},success);
+
 });
+
+$('#delbtn_ui').click(function(){
+    var checkStatus = table.checkStatus("table-ui-view");
+    data = checkStatus.data;
+    // alert(JSON.stringify(data))
+    ids = []
+    if (data.length < 1) {
+      layer.alert('你有选择要删除的项么', {icon: 3, time: 1500})
+      return
+    } else {
+      for (var index = 0; index < data.length; index++) {
+          ids.splice(0, 0, data[index]['id'])
+      }
+    }
+
+    success=function(e){
+      if(e.code==0){
+        layer.alert(e.msg,{icon:1})
+        table.reload('table-ui-view', {
+            page: {
+                curr: 1
+            },
+            where: {
+                searchvalue: $("#search-value").val()
+
+            }
+        });
+      }
+      else
+        layer.alert(e.msg,{icon:2})
+
+    };
+    _post('/manager/deluicontrol/',{'ucids':ids.join()},success);
+
+
+});
+
+//editui
+  table.on("tool(target)", function (e) {
+      id = e.data['id']
+      alert(e.event)
+      if (e.event == 'edit_ui') {
+          layer.msg('editui')
+          success = function (data) {
+              // data=JSON.parse(data)
+              if (data.code == 0) {
+                  $("[name='code_ui']").val(data.data['code']);
+                  $("[name='name_ui']").val(data.data['name']);
+                  $("[name='description_ui']").val(data.data['description']);
+                  form.val('adduicontrol',{
+                    'valid_ui':data.data['isvalid']==0?0:1
+
+                  })
+                  render_transfer(transfer,data.data['all'],data.data['selected'])
+
+                  var o=layer.open({
+                      type: 1,
+                      title: '编辑组件权限',
+                      content: $('#adduicontrol'),
+                      btn: ['提交', '取消'],
+                      yes: function (index, layero) {
+                          layer.close(index)
+                          success2 = function (e) {
+                              // e = JSON.parse(e)
+                              if (e.code == 0) {
+                                table.reload('table-ui-view', {
+                                    page: {
+                                        curr: 1
+                                    },
+                                    where: {
+                                        searchvalue: $("#search-value").val()
+
+                                    }
+                                });
+                                  layer.alert(e.msg, {icon: 1, time: 1000})
+                              } else {
+                                  layer.alert(e.msg, {icon: 2})
+                              }
+
+
+                          }
+
+                          var getData = transfer.getData('demo1'); 
+                          userids=[]
+                          for(var i=0;i<getData.length;i++){
+
+                              userids.splice(0, 0, getData[i]['value'])
+                          }
+                          _post('/manager/updateuicontrol/', {
+                              'cid': id,
+                              'name': $("[name='name_ui']").val(),
+                              'code':$("[name='code_ui']").val(),
+                              'description': $("[name='description_ui']").val(),
+                              'isvalid':$("[name='valid_ui']:checked").val(),
+                              'userstrs':userids.join()
+                          }, success2)
+
+                      }
+                  });
+                  layer.full(o)
+
+              } else {
+                  layer.alert(data.msg, {icon: 2})
+
+              }
+
+          }
+          _post('/manager/queryoneuicontrol/', {'uid': id}, success)
+
+      }
+      else if (e.event=='bck'){
+        alert(1)
+        layer.msg('openui')
+
+      }
+  });
+
+  form.on('switch(bck)',function(data){
+    isopen=data.elem.checked==true?1:0
+    
+    success=function(e){
+      if(e.code==0)
+        layer.alert(e.msg,{icon:1})
+      else
+        layer.alert(e.msg,{icon:2})
+
+    }
+    _post('/manager/updateuicontrolstatus/',{'uid':data.elem.id,'isopen':isopen},success)
+
+
+  });
+
+
+});
+</script>
+<script type="text/html" id="toolbar_ui">
+  <i class="layui-icon edit" lay-event="edit_ui">编辑</i>
+</script>
+
+<script type="text/html" id="configTpl">
+{% verbatim %}
+{{# if(d.isconfig==1){}}  
+  <i class="layui-icon layui-icon-ok" style="color:#009688;font-weight:bold;"></i>
+{{#} else {}}
+  <i class="layui-icon layui-icon-close" style="color:#FF5722;font-weight: bold;"></i>
+{{# }}}
+ {% endverbatim %}
+</script>
+<script type="text/html" id="openTpl">
+{% verbatim %}
+
+  <input type="checkbox" name="bck" lay-skin="switch" lay-text="开|关" lay-filter="bck" {{d.isopen==1?'checked':''}} id='{{d.id}}'>
+ {% endverbatim %}
 </script>
 </html>
 

@@ -21,7 +21,7 @@ def querytaskid(request):  # 查询验证任务最新id
 		taskid = getRunningInfo(username, planid, 'verify_taskid')
 		is_running = '0' if getRunningInfo(username, planid, 'isrunning') == '0' else '1'
 	elif action == 'lastest':
-		taskid = getRunningInfo(username, '', 'latest_taskid')
+		taskid = getRunningInfo(username, '', 'lastest_taskid')
 		print("控制台获取的最新taskid", taskid)
 	
 	if taskid is None:

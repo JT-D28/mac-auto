@@ -229,7 +229,6 @@
 </div>
 
 
-
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
 <script src="{% static 'manager/layui/layui.js' %}"></script>
@@ -250,7 +249,7 @@
         $("#head").dblclick(function () {
             layer.msg('调试切换', {
                 btn: ['模式', '工具', '取消']
-                , btn1:function(index, layero) {
+                , btn1: function (index, layero) {
                     _post_nl('/manager/changemode/', {action: 'debug'}, function (data) {
                         if (data.code === 0) {
                             layer.close(index);
@@ -260,7 +259,7 @@
                             }, 2000)
                         }
                     });
-                },btn2: function(index) {
+                }, btn2: function (index) {
                     _post_nl('/manager/changemode/', {action: 'debug_tool'}, function (data) {
                         if (data.code === 0) {
                             layer.close(index);
@@ -270,7 +269,7 @@
                             }, 2000)
                         }
                     });
-                },btn3: function(index) {
+                }, btn3: function (index) {
                     layer.close(index)
                 }
             });
@@ -284,10 +283,9 @@
                     // var username=$("#username").text()
                     console.log("开始获取" + username + "控制台消息..")
                     consoleSocket.send('console.msg::read::' + username + '::' + data.data)
-                }
+                };
                 consoleSocket.onmessage = function (e) {
                     console.log(e.data);
-                    console.log(e.data.indexOf("[key-value]"))
                     if (e.data.indexOf("hasRead") === -1)
                         $("#msgview").append("<p class='console-line-msg'>" + e.data + "</p>")
                     else {
@@ -304,14 +302,13 @@
                     title: '运行消息',
                     type: 1,
                     content: $('#consoleview'),
-                    btn: ['next'],
+                    btn: ['关闭'],
                     area: ["750px", "450px"],
                     maxmin: true,
                     yes: function (index, layero) {
-
-                        console.log("next..")
-                        consoleSocket.send("console.msg::next")
-
+                        consoleSocket.close()
+                        $("#msgview").empty()
+                        layer.close(index)
                     },
                     cancel: function (index, layero) {
                         consoleSocket.close()

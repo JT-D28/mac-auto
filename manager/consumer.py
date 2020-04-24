@@ -47,13 +47,9 @@ class ConsoleConsumer(WebsocketConsumer):
 	def __init__(self, args):
 		super(ConsoleConsumer, self).__init__(args)
 		self._flag = False
-		self._next = False
 	
 	def terminate(self):
 		self._flag = True
-	
-	def next(self):
-		self._next = True
 	
 	def reset(self):
 		try:
@@ -66,61 +62,21 @@ class ConsoleConsumer(WebsocketConsumer):
 			pass
 	
 	def sendmsg(self, username, taskid):
-		# msg = ""
-		# self.keys = self.con.keys("console.msg::%s::%s" % (username, taskid))
-		# print("查询到的任务id(%s)=>%s" % (len(self.keys), self.keys))
-		# if self.keys:
-		# 	key = self.keys[0]
-		# 	while True:
-		# 		if self._flag == True:
-		# 			print('=' * 40)
-		# 			print("================结束向用户[%s]控制台发送消息===============" % username)
-		# 			print('=' * 40)
-		# 			break
-		# 		sep = self.con.rpop(key)
-		# 		if sep is not None and "任务【<span style='color" in sep:
-		# 			self.send(sep)
-		# 			while True:
-		# 				time.sleep(0.05)
-		# 				if self._flag == True:
-		# 					break
-		# 				if self._next == True:
-		# 					self._next = False
-		# 					break;
-		# 				sep = self.con.rpop(key)
-		# 				if sep is not None:
-		# 					self.send(sep)
-		# 		else:
-		# 			self.send("hasRead")
-		# 			break
-		# else:
-		# 	self.send("hasRead")
-		
-		msg = ""
-		print(ConsoleConsumer.__handled)
-		self.keys = [x for x in self.con.keys("console.msg::%s*" % username) if x not in ConsoleConsumer.__handled]
-		self.keys.sort()
-		# self.send("[key-value]"+",".join(self.keys))
-		print("查询到的任务id(%s)=>%s" % (len(self.keys), self.keys))
+		key = self.con.keys("console.msg::%s::%s" %(username,taskid))
+		if not key:
+			self.send('hasRead')
+			return
+		else:
+			key=key[0]
+		print("查询到的任务id=>%s" %key)
 		while True:
-			if self._flag == True:
-				print('=' * 40)
+			if self._flag:
 				print("================结束向用户[%s]控制台发送消息===============" % username)
-				print('=' * 40)
 				break
-			for key in self.keys:
-				if self._flag == True:
-					break
-				while True:
-					time.sleep(0.05)
-					if self._flag == True:
-						break
-					if self._next == True:
-						self._next = False
-						break;
-					sep = self.con.rpop(key)
-					if sep is not None:
-						self.send(sep)
+			sep = self.con.rpop(key)
+			if sep:
+				self.send(sep)
+			time.sleep(0.03)
 	
 	def connect(self):
 		# 连接时触发
@@ -134,8 +90,8 @@ class ConsoleConsumer(WebsocketConsumer):
 	def disconnect(self, code):
 		# 关闭连接时触发
 		print("用户[%s]关闭console 结束会话" % self.username)
-		ConsoleConsumer.__handled = ConsoleConsumer.__handled + self.keys
-		print("当前过滤key值=>", ConsoleConsumer.__handled)
+		# ConsoleConsumer.__handled = ConsoleConsumer.__handled + self.keys
+		# print("当前过滤key值=>", ConsoleConsumer.__handled)
 		self.terminate()
 	
 	def receive(self, text_data=None, bytes_data=None):
@@ -152,9 +108,6 @@ class ConsoleConsumer(WebsocketConsumer):
 			self.thread = threading.Thread(target=self.sendmsg, args=(self.username, self.taskid))
 			self.thread.setDaemon(True)
 			self.thread.start()
-		
-		if text_data.startswith("console.msg::next"):
-			self.next()
 
 
 class logConsumer(WebsocketConsumer):

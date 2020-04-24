@@ -188,7 +188,6 @@ class Case(Model):
 class Plan(Model):
 	author = ForeignKey(User, on_delete=CASCADE)
 	description = CharField(max_length=128)
-	cases = ManyToManyField(Case, blank=True)
 	db_id = CharField(max_length=64, blank=True, null=True)
 	schemename = CharField(max_length=64, blank=True, null=True)
 	createtime = DateTimeField(auto_now_add=True)

@@ -4,17 +4,9 @@ from ME2.settings import logme
 # Create your models here.
 
 class User(Model):
-	gender = (
-		('male', "男"),
-		('female', "女"),
-	)
-	
 	name = CharField(max_length=128, unique=True)
 	password = CharField(max_length=256)
-	email = EmailField(blank=True)
-	sex = CharField(max_length=32, choices=gender, default="男")
 	createtime = DateTimeField(auto_now_add=True, null=True)
-	updatetime = DateTimeField(auto_now=True, null=True)
 	
 	def __str__(self):
 		return self.name
@@ -35,33 +27,32 @@ class User(Model):
 
 
 class Role(Model):
-	'''角色表
-	'''
+	"""角色表
+	"""
 	name = CharField(max_length=16)
 	description = TextField()
-	users = ManyToManyField(User, blank=True,related_name='users')
+	users = ManyToManyField(User, blank=True, related_name='users')
 	author = ForeignKey(User, on_delete=CASCADE)
 	createtime = DateTimeField(auto_now_add=True, null=True)
 	updatetime = DateTimeField(auto_now=True, null=True)
 
 
-
 class UIControl(Model):
-	'''
+	"""
 	ui控制
-	'''
+	"""
 	code = CharField(max_length=24)
 	description = TextField(blank=True)
 	is_config = BooleanField(default=False)
-	is_open=BooleanField(default=False)
+	is_open = BooleanField(default=False)
 	author = ForeignKey(User, on_delete=CASCADE)
 	createtime = DateTimeField(auto_now_add=True, null=True)
 	updatetime = DateTimeField(auto_now=True, null=True)
 
 
 class User_UIControl(Model):
-	'''用户UI关联表
-	'''
+	"""用户UI关联表
+	"""
 	kind = CharField(max_length=12)  # USER|ROLE
 	user_id = IntegerField()
 	uc_id = IntegerField()

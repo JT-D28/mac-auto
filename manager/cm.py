@@ -19,30 +19,25 @@ from .core import gettaskid
 from manager.context import Me2Log as logger
 
 
-##addproduct
-
+# addproduct
 def addproduct(request):
 	product = None
 	try:
-		
-		product = mm.Product()
-		product.description = request.POST.get('description')
-		product.author = lm.User.objects.get(name=request.session.get('username'))
-		
+		description = request.POST.get('description')
+		author = lm.User.objects.get(name=request.session.get('username'))
+		product = mm.Product(description=description, author=author)
 		product.save()
-		
 		return {
 			'status': 'success',
-			'msg': '新增[%s]成功' % product.description,
+			'msg': '新增[%s]成功' % description,
 			'data': {
 				'id': 'product_%s' % product.id,
 				'pId': -1,
-				'name': product.description,
+				'name': description,
 				'type': 'product',
 				'textIcon': 'fa icon-fa-home',
 			}
 		}
-	
 	except:
 		logger.info(traceback.format_exc())
 		return {
@@ -81,16 +76,16 @@ def delproduct(request):
 
 def editproduct(request):
 	uid = request.POST.get('uid')
+	description = request.POST.get('description')
 	try:
 		p = mm.Product.objects.get(id=int(uid.split('_')[1]))
-		p.description = request.POST.get('description')
+		p.description = description
 		p.save()
 		return {
-			
 			'status': 'success',
 			'msg': '编辑成功',
 			'data': {
-				'name': p.description
+				'name': description
 			}
 		}
 	
@@ -98,43 +93,31 @@ def editproduct(request):
 		logger.error(traceback.format_exc())
 		return {
 			'status': 'error',
-			'msg': '编辑异常'
+			'msg': '编辑[%s]异常' % description
 		}
 
 
-##plan
+# plan
 def addplan(request):
 	msg = ''
 	try:
 		pid = request.POST.get('pid').split('_')[1]
-		
-		plan = mm.Plan()
-		plan.description = request.POST.get('description')
-		plan.db_id = request.POST.get('dbid')
-		plan.schemename = request.POST.get('scheme')
-		
-		plan.author = lm.User.objects.get(name=request.session.get('username', None))
-		
-		plan.run_type = request.POST.get('run_type')
-		plan.save()
-		
-		addrelation('product_plan', request.session.get('username'), pid, plan.id)
-		
-		mail_config = mm.MailConfig()
-		if request.POST.get('is_send_mail') == 'true':
-			mail_config.is_send_mail = 'open'
-		else:
-			mail_config.is_send_mail = 'close'
-		if request.POST.get('is_send_dingding') == 'true':
-			mail_config.is_send_dingding = 'open'
-		else:
-			mail_config.is_send_dingding = 'close'
+		description = request.POST.get('description')
+		db_id = request.POST.get('dbid')
+		schemename = request.POST.get('scheme')
+		author = lm.User.objects.get(name=request.session.get('username', None))
+		run_type = request.POST.get('run_type')
+		is_send_mail = 'open' if request.POST.get('is_send_mail') == 'true' else 'close'
+		is_send_dingding = 'open' if request.POST.get('is_send_dingding') == 'true' else 'close'
+		mail_config = mm.MailConfig(is_send_mail=is_send_mail, is_send_dingding=is_send_dingding)
 		mail_config.save()
 		
-		plan.mail_config_id = mail_config.id
+		plan = mm.Plan(description=description, db_id=db_id, schemename=schemename, author=author,
+		               run_type=run_type, mail_config_id=mail_config.id)
 		plan.save()
+		addrelation('product_plan', author, pid, plan.id)
 		
-		if plan.run_type == '定时运行':
+		if run_type == '定时运行':
 			config = request.POST.get('config')
 			crontab = mm.Crontab()
 			crontab.taskid = gettaskid(plan.__str__())
@@ -146,11 +129,11 @@ def addplan(request):
 		
 		return {
 			'status': 'success',
-			'msg': '新增[%s]成功' % plan.description,
+			'msg': '新增[%s]成功' % description,
 			'data': {
 				'id': 'plan_%s' % plan.id,
 				'pId': 'product_%s' % pid,
-				'name': plan.description,
+				'name': description,
 				'type': 'plan',
 				'textIcon': 'fa icon-fa-product-hunt',
 			}}

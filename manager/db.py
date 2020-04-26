@@ -177,10 +177,10 @@ class Mysqloper:
 			self.sqlcount += 1
 			# print('sqlfda=>',sql,len(sql),len(sql.strip()))
 			cur.execute(str(sql))
-			cur.close()
 			# 查询sql时候
 			if re.match(r'(select).*(from).+(where){0,1}.*', sql.lower()) or re.match(r'(select).*(curdate).*',sql.lower()):
 				data = cur.fetchall()
+				cur.close()
 				data = list(data)
 				print("sql[%s]执行结果=>%s" % (sql.lower(), data))
 				if data and len(data) > 0:
@@ -203,6 +203,7 @@ class Mysqloper:
 			else:
 				sqlresult = cur.rowcount
 				self.db_commit()
+				cur.close()
 			
 			msg = "[<span style='color:#009999;'>%s</span>]执行sql <span style='color:#009999;'>%s</span> 结果为 <span style='color:#009999;'>%s</span>" % (
 				conname, sql, sqlresult)
@@ -215,7 +216,7 @@ class Mysqloper:
 			# traceback.print_exc()
 			# return RuntimeError('执行sql[%s],发生未知错误[%s].'%(sql,str(ee)))
 			print(traceback.format_exc())
-			return ('error', "数据库[%s]执行sql[%s]发生异常:\n[%s]" % (conname, sql, ee))
+			return ('error', "数据库[%s]执行sql[%s]发生异常:\n[%s]" % (conname, sql, traceback.format_exc()))
 		
 	def db_exec_test(self,sql,scheme):
 		logger.info('传入sql:{},数据连接方案:{}'.format(sql, scheme))

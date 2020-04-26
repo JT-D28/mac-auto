@@ -334,7 +334,7 @@ def _get_upper_case_leaf_id(caseid):
 		return caseid
 	else:
 		cur=e[0].main_id
-		return _get_upper_case_leaf_id(kind='case_case',follow_id=cur)
+		return _get_upper_case_leaf_id(cur)
 
 
 def _get_final_run_node_id(startnodeid):
@@ -433,6 +433,8 @@ def runplans(username, taskid, planids, is_verify, kind=None,startnodeid=None):
 
 def _runcase(username, taskid, case0, plan, planresult, is_verify, kind,startnodeid=None):
 	
+	groupskip=[]
+	logger.info('_runcase方法......')
 	caseresult = []
 
 	dbid = getDbUse(taskid, case0.db_id)
@@ -459,7 +461,6 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind,startnod
 				_runcase(username, taskid, case, plan, planresult, is_verify, kind,startnodeid=startnodeid)
 				continue;
 
-			
 			stepid = o.follow_id
 			try:
 				stepcount = Step.objects.get(id=stepid).count
@@ -478,9 +479,11 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind,startnod
 							start = time.time()
 							spend = 0
 							if groupid not in groupskip:
+
 								#logger.info('传入order=>', order.value)
 								#logger.info('startnodeid:',startnodeid)
 								L=_get_final_run_node_id(startnodeid)
+								logger.info('L:',L)
 								
 								if order.follow_id not in L:
 									logger.info('测试点[%s]不在执行链中 忽略'%order.follow_id)
@@ -493,26 +496,27 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind,startnod
 									groupskip.append(groupid)
 							else:
 								result, error = 'skip', 'skip'
+							
+							# 保存结果
+							try:
+								logger.info("准备保存结果===")
+								detail = ResultDetail(taskid=taskid, plan=plan, case=case0,
+								                      step=Step.objects.get(id=o.follow_id),
+								                      businessdata=BusinessData.objects.get(id=order.follow_id),
+								                      result=result,
+								                      error=error, spend=spend, loop_id=1, is_verify=is_verify)
+								detail.save()
+								logger.info('保存结果=>', detail)
+							except:
+								logger.info('保存结果异常=>', traceback.format_exc())
+							caseresult.append(result)
+							result = "<span class='layui-bg-%s'>%s</span>" % (color_res.get(result,'orange'),result)
+								
+							if 'omit' not in result:
+								error = '   原因=>%s'%error if result=='success' else ''
+								viewcache(taskid, username, kind, "步骤执行结果%s%s" % (result, error))
+							#continue;
 
-							
-						# 保存结果
-						try:
-							logger.info("准备保存结果===")
-							detail = ResultDetail(taskid=taskid, plan=plan, case=case0,
-							                      step=Step.objects.get(id=o.follow_id),
-							                      businessdata=BusinessData.objects.get(id=order.follow_id),
-							                      result=result,
-							                      error=error, spend=spend, loop_id=1, is_verify=is_verify)
-							detail.save()
-							logger.info('保存结果=>', detail)
-						except:
-							logger.info('保存结果异常=>', traceback.format_exc())
-						caseresult.append(result)
-						result = "<span class='layui-bg-%s'>%s</span>" % (color_res.get(result,'orange'),result)
-							
-						if 'omit' not in result:
-							error = '   原因=>%s'%error
-							viewcache(taskid, username, kind, "步骤执行结果%s%s" % (result, error))
 			except:
 				continue
 	
@@ -565,19 +569,19 @@ def runplan(callername, taskid, planid, is_verify, kind=None,startnodeid=None):
 		
 		viewcache(taskid, callername, kind,
 		          "开始执行计划[<span style='color:#FF3399'>%s</span>],数据连接使用配置：[%s]" % (plan.description, dbscheme))
-		caseslist=[]
-		before_plan = plan.before_plan
-		if before_plan not in [None,'']:
-			before_des,before_kind,before_id = before_plan.split("@")
-			before_id = base64.b64decode(before_id).decode('utf-8')
-			if before_kind == 'plan':
-				caseslist.extend(ordered(list(Order.objects.filter(main_id=before_id, kind='plan_case'))))
-				logger.info('执行初始计划%s'%before_des)
-			elif before_kind == 'case':
-				caseslist.extend(ordered(list(Order.objects.filter(follow_id=before_id, kind='plan_case'))))
-			viewcache(taskid, callername, kind,"加入前置计划/用例[<span style='color:#FF3399'>%s</span>]" % (before_plan.split("_")[0]))
+		caseslist=ordered(list(Order.objects.filter(main_id=planid, kind='plan_case')))
+		# before_plan = plan.before_plan
+		# if before_plan not in [None,'']:
+		# 	before_des,before_kind,before_id = before_plan.split("@")
+		# 	before_id = base64.b64decode(before_id).decode('utf-8')
+		# 	if before_kind == 'plan':
+		# 		caseslist.extend(ordered(list(Order.objects.filter(main_id=before_id, kind='plan_case'))))
+		# 		logger.info('执行初始计划%s'%before_des)
+		# 	elif before_kind == 'case':
+		# 		caseslist.extend(ordered(list(Order.objects.filter(follow_id=before_id, kind='plan_case'))))
+		# 	viewcache(taskid, callername, kind,"加入前置计划/用例[<span style='color:#FF3399'>%s</span>]" % (before_plan.split("_")[0]))
 		
-		caseslist.extend(ordered(list(Order.objects.filter(main_id=planid, kind='plan_case'))))
+		# caseslist.extend(ordered(list(Order.objects.filter(main_id=planid, kind='plan_case'))))
 
 		cases = [Case.objects.get(id=x.follow_id) for x in caseslist]
 		logger.info('cases=>', cases)

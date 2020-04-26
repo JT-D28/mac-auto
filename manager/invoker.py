@@ -379,20 +379,20 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind):
 						try:
 							logger.info("准备保存结果===")
 							detail = ResultDetail(taskid=taskid, plan=plan, case=case0,
-								                step=Step.objects.get(id=o.follow_id),
-								                businessdata=BusinessData.objects.get(id=order.follow_id),
-								                result=result,
-								                error=error, spend=spend, loop_id=1, is_verify=is_verify)
+							                      step=Step.objects.get(id=o.follow_id),
+							                      businessdata=BusinessData.objects.get(id=order.follow_id),
+							                      result=result,
+							                      error=error, spend=spend, loop_id=1, is_verify=is_verify)
 							detail.save()
 							logger.info('保存结果=>', detail)
 						except:
 							logger.info('保存结果异常=>', traceback.format_exc())
-							caseresult.append(result)
-							result = "<span class='layui-bg-%s'>%s</span>" % (color_res.get(result,'orange'),result)
+						caseresult.append(result)
+						result = "<span class='layui-bg-%s'>%s</span>" % (color_res.get(result,'orange'),result)
 							
-							if 'omit' not in result:
-								error = ' 原因=>%s'%error
-								viewcache(taskid, username, kind, "步骤执行结果%s" % (result, error))
+						if 'omit' not in result:
+							error = '   原因=>%s'%error
+							viewcache(taskid, username, kind, "步骤执行结果%s%s" % (result, error))
 			except:
 				continue
 	
@@ -441,7 +441,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, dbscheme=None):
 			before_id = base64.b64decode(before_id).decode('utf-8')
 			if before_kind == 'plan':
 				caseslist.extend(ordered(list(Order.objects.filter(main_id=before_id, kind='plan_case'))))
-				logger.info('执行初始计划%s', before_des)
+				logger.info('执行初始计划%s'%before_des)
 			elif before_kind == 'case':
 				caseslist.extend(ordered(list(Order.objects.filter(follow_id=before_id, kind='plan_case'))))
 			viewcache(taskid, callername, kind,"加入前置计划/用例[<span style='color:#FF3399'>%s</span>]" % (before_plan.split("_")[0]))

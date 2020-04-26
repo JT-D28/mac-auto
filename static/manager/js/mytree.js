@@ -778,14 +778,10 @@ function getRightMenu(event, treeNode) {
         createMenu([
             {'id': 'get_node_info', 'des': '获取节点信息'},
             {'id': 'run', 'des': '调试'},
-            {'id': 'cpoy', 'des': '复制'},
-            {'id': 'cut', 'des': '剪切'},
         ])
     } else if (treeNode.type === 'case') {
         createMenu([
             {'id': 'get_node_info', 'des': '获取节点信息'},
-            {'id': 'cpoy', 'des': '复制'},
-            {'id': 'cut', 'des': '剪切'},
         ])
     }
 }

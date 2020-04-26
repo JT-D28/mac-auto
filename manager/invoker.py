@@ -437,7 +437,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, dbscheme=None):
 		caseslist=[]
 		before_plan = plan.before_plan
 		if before_plan not in [None,'']:
-			before_des,before_kind,before_id = before_plan.split("_")
+			before_des,before_kind,before_id = before_plan.split("@")
 			before_id = base64.b64decode(before_id).decode('utf-8')
 			if before_kind == 'plan':
 				caseslist.extend(ordered(list(Order.objects.filter(main_id=before_id, kind='plan_case'))))

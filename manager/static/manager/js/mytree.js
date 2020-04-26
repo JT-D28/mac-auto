@@ -41,6 +41,7 @@ var tree={
 	            onDrop:this._onDrop,
 	            onExpand:this._onExpand,
 	            onCollapse:this._onCollapse,
+                onRightClick:this._onRightClick,
 				// beforeEditName: this._beforeEditName,
 		  //   	beforeRemove: this._beforeRemove,
 				// beforeRename: this._beforeRename,
@@ -711,7 +712,7 @@ var tree={
         $("ul#contextmenu").on("click", "li", function () {      //只需要找到你点击的是哪个ul里面的就行
             if ($(this)[0].id === 'get_node_info') {
                 let oInput = document.createElement('input');
-                oInput.value = treeNode.name + '_' + treeNode.id.split('_')[0] + '_' + btoa(treeNode.id.split('_')[1]);
+                oInput.value = treeNode.name + '@' + treeNode.id.split('_')[0] + '@' + btoa(treeNode.id.split('_')[1]);
                 document.body.appendChild(oInput);
                 oInput.select(); // 选择对象;
                 document.execCommand("Copy");

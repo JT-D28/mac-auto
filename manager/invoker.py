@@ -569,19 +569,19 @@ def runplan(callername, taskid, planid, is_verify, kind=None,startnodeid=None):
 		
 		viewcache(taskid, callername, kind,
 		          "开始执行计划[<span style='color:#FF3399'>%s</span>],数据连接使用配置：[%s]" % (plan.description, dbscheme))
-		caseslist=ordered(list(Order.objects.filter(main_id=planid, kind='plan_case')))
-		# before_plan = plan.before_plan
-		# if before_plan not in [None,'']:
-		# 	before_des,before_kind,before_id = before_plan.split("@")
-		# 	before_id = base64.b64decode(before_id).decode('utf-8')
-		# 	if before_kind == 'plan':
-		# 		caseslist.extend(ordered(list(Order.objects.filter(main_id=before_id, kind='plan_case'))))
-		# 		logger.info('执行初始计划%s'%before_des)
-		# 	elif before_kind == 'case':
-		# 		caseslist.extend(ordered(list(Order.objects.filter(follow_id=before_id, kind='plan_case'))))
-		# 	viewcache(taskid, callername, kind,"加入前置计划/用例[<span style='color:#FF3399'>%s</span>]" % (before_plan.split("_")[0]))
+		caseslist=[]
+		before_plan = plan.before_plan
+		if before_plan not in [None,'']:
+			before_des,before_kind,before_id = before_plan.split("@")
+			before_id = base64.b64decode(before_id).decode('utf-8')
+			if before_kind == 'plan':
+				caseslist.extend(ordered(list(Order.objects.filter(main_id=before_id, kind='plan_case'))))
+				logger.info('执行初始计划%s'%before_des)
+			elif before_kind == 'case':
+				caseslist.extend(ordered(list(Order.objects.filter(follow_id=before_id, kind='plan_case'))))
+			viewcache(taskid, callername, kind,"加入前置计划/用例[<span style='color:#FF3399'>%s</span>]" % (before_plan.split("_")[0]))
 		
-		# caseslist.extend(ordered(list(Order.objects.filter(main_id=planid, kind='plan_case'))))
+		caseslist.extend(ordered(list(Order.objects.filter(main_id=planid, kind='plan_case'))))
 
 		cases = [Case.objects.get(id=x.follow_id) for x in caseslist]
 		logger.info('cases=>', cases)

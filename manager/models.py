@@ -188,12 +188,11 @@ class Case(Model):
 class Plan(Model):
 	author = ForeignKey(User, on_delete=CASCADE)
 	description = CharField(max_length=128)
-	cases = ManyToManyField(Case, blank=True)
 	db_id = CharField(max_length=64, blank=True, null=True)
 	schemename = CharField(max_length=64, blank=True, null=True)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
-	
+	before_plan = CharField(max_length=128, blank=True, null=True)
 	# 运行方式:手动运行|定时运行
 	run_type = CharField(max_length=32)
 	# run_value=CharField(max_length=64)

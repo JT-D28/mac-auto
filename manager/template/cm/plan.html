@@ -113,6 +113,12 @@
                     </div>
                 </div>
                 <div class="layui-form-item">
+                    <label class="layui-form-label">运行前执行</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="before_plan" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
                     <button class="layui-btn" id='save' style="visibility:hidden;">保存</button>
                 </div>
             </form>
@@ -179,14 +185,16 @@
                 layui.form.render('select');
                 run_type = data['run_type'];
                 description = data['description'];
+                var before_plan = data['before_plan'] ==='None'?'':data['before_plan'];
+                $("[name='before_plan']").val(before_plan);
                 form.val("addplan", {
-                    "mail": data['is_send_mail'] === "open" ? true : false,
-                    "dingding": data['is_send_dingding'] === "open" ? true : false
+                    "mail": data['is_send_mail'] === "open",
+                    "dingding": data['is_send_dingding'] === "open"
                 });
 
                 $("[value='" + run_type + "']").attr('checked', 'checked');
                 layui.form.render('radio');
-                if ('定时运行' == run_type) {
+                if ('定时运行' === run_type) {
                     $("#config-set").show()
                 } else {
                     $("#config-set").hide()
@@ -211,6 +219,12 @@
                 alert("计划名中不能有‘__’");
                 return false
             }
+            before_plan = $("[name='before_plan']").val()
+            if(before_plan!='' && before_plan.search('_')==-1){
+                layer.msg('任务可能错误')
+                return false
+            }
+
             _post('/manager/treecontrol/', {
                 'uid': uid,
                 'pid': pid,
@@ -221,7 +235,8 @@
                 'dbid': $("[name='db_id']").val(),
                 'is_send_dingding': $("[name='dingding']").is(':checked'),
                 'is_send_mail': $("[name='mail']").is(':checked'),
-                'scheme': $("[name='scheme']").val()
+                'scheme': $("[name='scheme']").val(),
+                'before_plan':before_plan
             }, function (e) {
                 if (e.code == 0) {
                     // console.log(window)

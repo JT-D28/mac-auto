@@ -1840,13 +1840,14 @@ def queryonebusiness(request):
 		# logger.info('business=>', business)
 		# jsonstr = json.dumps(business, cls=BusinessDataEncoder)
 		sql = '''
-		SELECT b.id,count,businessname,timeout,itf_check,db_check,params,preposition,postposition,value as weight,parser_id,parser_check,description
+		SELECT b.id,count,businessname,b.timeout,itf_check,db_check,params,preposition,postposition,value as weight,parser_id,parser_check,description
 		FROM manager_businessdata b, manager_order o WHERE b.id=%s and o.follow_id=b.id
 		'''
 		with connection.cursor() as cursor:
 			cursor.execute(sql, [request.POST.get('vid').split('_')[1]])
 			desc = cursor.description
 			row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+			row[0]['timeout'] = 10 if row[0]['timeout'] is None else row[0]['timeout']
 		return JsonResponse({'code': 0, 'data': row})
 	# return JsonResponse(jsonstr, safe=False)
 	except:

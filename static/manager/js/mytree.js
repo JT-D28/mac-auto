@@ -41,6 +41,7 @@ var tree={
 	            onDrop:this._onDrop,
 	            onExpand:this._onExpand,
 	            onCollapse:this._onCollapse,
+                onRightClick:this._onRightClick,
 				// beforeEditName: this._beforeEditName,
 		  //   	beforeRemove: this._beforeRemove,
 				// beforeRename: this._beforeRename,
@@ -591,7 +592,7 @@ var tree={
 					$("#"+node_a_id).click();
 
 				});
-				
+
 			}
 
 		}
@@ -692,9 +693,111 @@ var tree={
 			_post('/manager/querytreelist/',params,success)
 
 
+        })
+    },
+
+    _onRightClick: function OnRightClick(event, treeId, treeNode) {
+        $('ul#contextmenu li').remove();
+        getRightMenu(event, treeNode);
+        //Display contextmenu:
+        $(".contextmenu").css({
+            "left": posLeft,
+            "top": posTop
+        }).show();
+        $(document).click(function () {
+            $(".contextmenu").hide();
+        });
+
+        $("ul#contextmenu").unbind('click');
+        $("ul#contextmenu").on("click", "li", function () {      //只需要找到你点击的是哪个ul里面的就行
+            if ($(this)[0].id === 'get_node_info') {
+                let oInput = document.createElement('input');
+                oInput.value = treeNode.name + '@' + treeNode.id.split('_')[0] + '@' + btoa(treeNode.id.split('_')[1]);
+                document.body.appendChild(oInput);
+                oInput.select(); // 选择对象;
+                document.execCommand("Copy");
+                layer.msg('获取成功，在前/后置操作中粘贴')
+                oInput.remove()
+            } else if ($(this)[0].id === 'run') {
+                _post('/manager/treecontrol/', {
+                    'action': 'run', 'ids': treeNode.id, 'is_verify': '0'
+                }, function (data) {
+                    if (data.code == 0) {
+                        layer.confirm('你已提交任务 ID=' + data.msg, {
+                            btn: ['打开控制台', '查看调试信息', '关闭'] //按钮
+                        }, function () {
+                            window.top.document.getElementById("console").click()
+                        }, function () {
+                            layer.msg("将在完成后打开")
+                            opendebug(treeNode)
+                        }, function (index, layero) {
+                            layer.close(index)
+                        });
+                    } else {
+                        layer.alert(data.msg)
+                    }
+                })
+            } else {
+                layer.msg('暂不支持')
+            }
+        });
+    }
 
 
+}
 
-		})
-	},
+
+function getRightMenu(event, treeNode) {
+    var winWidth = $(document).width();
+    var winHeight = $(document).height();
+    //Get pointer position:
+    var posX = event.pageX;
+    var posY = event.pageY;
+    //Get contextmenu size:
+    var menuWidth = $(".contextmenu").width();
+    var menuHeight = $(".contextmenu").height();
+    //Security margin:
+    var secMargin = 10;
+    //Prevent page overflow:
+    if (posX + menuWidth + secMargin >= winWidth
+        && posY + menuHeight + secMargin >= winHeight) {
+        //Case 1: right-bottom overflow:
+        posLeft = posX - menuWidth - secMargin + "px";
+        posTop = posY - menuHeight - secMargin + "px";
+    } else if (posX + menuWidth + secMargin >= winWidth) {
+        //Case 2: right overflow:
+        posLeft = posX - menuWidth - secMargin + "px";
+        posTop = posY + secMargin + "px";
+    } else if (posY + menuHeight + secMargin >= winHeight) {
+        //Case 3: bottom overflow:
+        posLeft = posX + secMargin + "px";
+        posTop = posY - menuHeight - secMargin + "px";
+    } else {
+        //Case 4: default values:
+        posLeft = posX + secMargin + "px";
+        posTop = posY + secMargin + "px";
+    }
+
+
+    if (treeNode.type === 'plan') {
+        createMenu([
+            {'id': 'get_node_info', 'des': '获取节点信息'},
+            {'id': 'run', 'des': '调试'},
+        ])
+    } else if (treeNode.type === 'case') {
+        createMenu([
+            {'id': 'get_node_info', 'des': '获取节点信息'},
+        ])
+    }
+}
+
+
+function createMenu(menuData) {
+    menuData.forEach(function (item, index) {
+        var ul = document.getElementById('contextmenu');
+        var li = document.createElement("li");
+        li.innerHTML = "<a href='#'>" + item.des + "</a>";
+        li.setAttribute("id", item.id);
+        ul.appendChild(li);
+    });
 }

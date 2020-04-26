@@ -409,6 +409,6 @@ layui.define(["jquery","laydate"],function(exports) {
             singleInstance.date(options);
         }
     };
-    layui.link(layui.cache.base + 'css/layuiTableColumnEdit.css');
+    layui.link(layui.cache.base + 'layuiTableColumnEdit/css/layuiTableColumnEdit.css');
     exports('layuiTableColumnEdit', active);
 });

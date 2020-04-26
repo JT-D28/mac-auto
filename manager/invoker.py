@@ -332,99 +332,69 @@ def runplans(username, taskid, planids, is_verify, kind=None, dbscheme=None):
 
 
 def _runcase(username, taskid, case0, plan, planresult, is_verify, kind):
-	caseresult = []
+	caseresult, groupskip = [], []
 	dbid = getDbUse(taskid, case0.db_id)
-	# dbid = case0.db_id
 	if dbid:
 		desp = DBCon.objects.get(id=int(dbid)).description
 		set_top_common_config(taskid, desp, src='case')
 	
-	groupskip = []
 	viewcache(taskid, username, kind, "开始执行用例[<span style='color:#FF3399'>%s</span>]" % case0.description)
 	steporderlist = ordered(list(Order.objects.filter(Q(kind='case_step') | Q(kind='case_case'), main_id=case0.id)))
-	##case执行次数
-	casecount = int(case0.count) if case0.count is not None else 1
-	# logger.info('ccc=>',steporderlist)
-	
+	# case执行次数
+	casecount = int(case0.count) if case0.count else 1
+	color_res = {
+		'success': 'green',
+		'fail': 'red',
+		'skip': 'orange',
+		'omit': 'green',
+	}
 	for lid in range(0, casecount):
 		for o in steporderlist:
 			if o.kind == 'case_case':
 				case = Case.objects.get(id=o.follow_id)
 				_runcase(username, taskid, case, plan, planresult, is_verify, kind)
-				continue;
+				continue
 			
 			stepid = o.follow_id
-			
 			try:
-				
 				stepcount = Step.objects.get(id=stepid).count
-				if stepcount == 0:
-					continue;
-				
-				else:
-					# 步骤执行次数>0
-					for ldx in range(0, stepcount):
-						businessorderlist = ordered(list(Order.objects.filter(kind='step_business', main_id=stepid)))
-						# logger.info('bbb=>',businessorderlist)
-						for order in businessorderlist:
-							groupid = order.value.split(".")[0]
-							# step=Step.objects.get(id=order.follow_id)
-							start = time.time()
-							spend = 0
-							if groupid not in groupskip:
-								logger.info('传入order=>', order.value)
-								result, error = _step_process_check(username, taskid, order, kind)
-								spend = int((time.time() - start) * 1000)
-								
-								if result not in ('success', 'omit'):
-									groupskip.append(groupid)
-							else:
-								result, error = 'skip', 'skip'
+				for ldx in range(0, stepcount):
+					businessorderlist = ordered(list(Order.objects.filter(kind='step_business', main_id=stepid)))
+					for order in businessorderlist:
+						groupid = order.value.split(".")[0]
+						# step=Step.objects.get(id=order.follow_id)
+						start = time.time()
+						spend = 0
+						if groupid not in groupskip:
+							logger.info('传入order=>', order.value)
+							result, error = _step_process_check(username, taskid, order, kind)
+							error = '表达式不成立' if error is False else error
+							spend = int((time.time() - start) * 1000)
+							if result not in ('success', 'omit'):
+								groupskip.append(groupid)
+						else:
+							result, error = 'skip', 'skip'
 							
-							##保存结果
-							try:
-								logger.info("准备保存结果===")
-								detail = ResultDetail()
-								detail.taskid = taskid
-								detail.plan = plan
-								detail.case = case0
-								detail.step = Step.objects.get(id=o.follow_id)
-								detail.businessdata = BusinessData.objects.get(id=order.follow_id)
-								detail.result = result
-								detail.error = error
-								detail.spend = spend
-								detail.loop_id = 1
-								detail.is_verify = is_verify
-								detail.save()
-								
-								logger.info('保存结果=>', detail)
-							except:
-								logger.info('保存结果异常=>', traceback.format_exc())
-							##
+						# 保存结果
+						try:
+							logger.info("准备保存结果===")
+							detail = ResultDetail(taskid=taskid, plan=plan, case=case0,
+								                step=Step.objects.get(id=o.follow_id),
+								                businessdata=BusinessData.objects.get(id=order.follow_id),
+								                result=result,
+								                error=error, spend=spend, loop_id=1, is_verify=is_verify)
+							detail.save()
+							logger.info('保存结果=>', detail)
+						except:
+							logger.info('保存结果异常=>', traceback.format_exc())
 							caseresult.append(result)
-							##
-							if "success" in result:
-								result = "<span class='layui-bg-green'>%s</span>" % result
+							result = "<span class='layui-bg-%s'>%s</span>" % (color_res.get(result,'orange'),result)
 							
-							elif "fail" in result:
-								result = "<span class='layui-bg-red'>%s</span>" % result
-							elif "skip" in result:
-								result = "<span class='layui-bg-orange'>%s</span>" % result
-							elif "omit" in result:
-								result = "<span class='layui-bg-green'>%s</span>" % result
-							##
-							# logger.info(len(result),len('success'),result=='success')
-							if 'success' in result:
-								viewcache(taskid, username, kind, "步骤执行结果%s" % (result))
-							elif 'omit' in result:
-								continue
-							else:
-								if error is False:
-									error = '表达式不成立'
-								viewcache(taskid, username, kind, "步骤执行结果%s 原因=>%s" % (result, error))
-			
+							if 'omit' not in result:
+								error = ' 原因=>%s'%error
+								viewcache(taskid, username, kind, "步骤执行结果%s" % (result, error))
 			except:
-				continue;
+				continue
 	
 	casere = (len([x for x in caseresult if x in ('success', 'omit')]) == len([x for x in caseresult]))
 	planresult.append(casere)
@@ -450,14 +420,11 @@ def getDbUse(taskid, dbname):
 
 def runplan(callername, taskid, planid, is_verify, kind=None, dbscheme=None):
 	groupskip = []
-	username = callername
 	try:
 		plan = Plan.objects.get(id=planid)
 		dbscheme = plan.schemename if dbscheme is None or dbscheme == '' else dbscheme
-		setRunningInfo(callername, planid, taskid, 1, dbscheme,is_verify)
+		setRunningInfo(callername, planid, taskid, 1, dbscheme, is_verify)
 		logger.info('plan=>', plan)
-		plan.is_running = 1
-		plan.save()
 		dbid = getDbUse(taskid, plan.db_id)
 		# dbid = plan.db_id
 		if dbid:
@@ -465,69 +432,69 @@ def runplan(callername, taskid, planid, is_verify, kind=None, dbscheme=None):
 			desp = DBCon.objects.get(id=int(dbid)).description
 			set_top_common_config(taskid, desp, src='plan')
 		
-		viewcache(taskid, username, kind,
-		          "开始执行计划[<span style='color:#FF3399'>%s</span>,数据连接使用配置：[%s]" % (plan.description, dbscheme))
-		cases = [Case.objects.get(id=x.follow_id) for x in
-		         ordered(list(Order.objects.filter(main_id=planid, kind='plan_case')))]
-		result, error = "", ""
-		# caseresult=[]
-		planresult = []
+		viewcache(taskid, callername, kind,
+		          "开始执行计划[<span style='color:#FF3399'>%s</span>],数据连接使用配置：[%s]" % (plan.description, dbscheme))
+		caseslist=[]
+		before_plan = plan.before_plan
+		if before_plan not in [None,'']:
+			before_des,before_kind,before_id = before_plan.split("_")
+			before_id = base64.b64decode(before_id).decode('utf-8')
+			if before_kind == 'plan':
+				caseslist.extend(ordered(list(Order.objects.filter(main_id=before_planid, kind='plan_case'))))
+				logger.info('执行初始计划%s', before_des)
+			elif before_kind == 'case':
+				caseslist.extend(ordered(list(Order.objects.filter(main_id=before_planid, kind='plan_case'))))
+			viewcache(taskid, callername, kind,"加入前置计划/用例[<span style='color:#FF3399'>%s</span>]" % (before_plan.split("_")[0]))
+		
+		caseslist.extend(ordered(list(Order.objects.filter(main_id=planid, kind='plan_case'))))
+
+		cases = [Case.objects.get(id=x.follow_id) for x in caseslist]
 		logger.info('cases=>', cases)
+		planresult = []
 		
 		for case in cases:
-			if case.count == 0 or case.count == '0':
-				continue;
-			else:
-				# for ldx in range(0,case.count):
-				_runcase(username, taskid, case, plan, planresult, is_verify, kind=None)
+			if case.count not in ['0', 0]:
+				_runcase(callername, taskid, case, plan, planresult, is_verify, kind=None)
 		
-		# plan
 		planre = (len([x for x in planresult]) == len([x for x in planresult if x == True]))
-		
 		if planre:
-			plan.last = 'success'
-			setRunningInfo(callername, planid, taskid, 0, dbscheme,is_verify)
-			plan.is_running = 0
-			plan.save()
-			viewcache(taskid, username, kind,
-			          "结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-green'>success</span>" % plan.description)
+			plan.last, color = 'success', 'green'
 		else:
-			plan.last = 'fail'
-			setRunningInfo(callername, planid, taskid, 0, dbscheme,is_verify)
-			plan.is_running = 0
-			plan.save()
-			viewcache(taskid, username, kind,
-			          "结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-red'>fail</span>" % plan.description)
+			plan.last, color = 'fail', 'red'
+		plan.save()
+		viewcache(taskid, callername, kind,
+		          "结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-%s'>%s</span>" % (
+			          plan.description, color, plan.last))
+		setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
+		
 		# 处理日志
 		threading.Thread(target=dealDeBuginfo, args=(taskid,)).start()
-		
-		##清除请求session
+		# 清除请求session
 		clear_task_session('%s_%s' % (taskid, callername))
-		##产生内置属性
+		# 产生内置属性
+		_save_builtin_property(taskid, callername)
 		
-		_save_builtin_property(taskid, username)
-		
-		##生成本地报告
+		# 生成本地报告
 		MainSender.gen_report(taskid, MainSender.gethtmlcontent(taskid, ''))
-		##发送报告
+		# 发送报告
 		config_id = plan.mail_config_id
 		if config_id:
 			mail_config = MailConfig.objects.get(id=config_id)
-			user = User.objects.get(name=username)
+			user = User.objects.get(name=callername)
 			mail_res = MainSender.send(taskid, user, mail_config)
 			dingding_res = MainSender.dingding(taskid, user, mail_config)
 			logger.info("发送邮件 结果[%s]" % mail_res)
-			viewcache(taskid, username, kind, mail_res)
+			viewcache(taskid, callername, kind, mail_res)
 			logger.info("发送钉钉通知 结果[%s]" % dingding_res)
-			viewcache(taskid, username, kind, dingding_res)
+			viewcache(taskid, callername, kind, dingding_res)
 	
 	except Exception as e:
 		# traceback.logger.info_exc()
-		logger.info(traceback.format_exc())
-		viewcache(taskid, username, kind, '执行计划未知异常[%s]' % traceback.format_exc())
+		logger.error(traceback.format_exc())
+		viewcache(taskid, callername, kind, '执行计划未知异常[%s]' % e)
 	
 	finally:
-		clear_data(username, _tempinfo)
+		clear_data(callername, _tempinfo)
 
 
 def dealDeBuginfo(taskid):
@@ -567,14 +534,12 @@ def _step_process_check(callername, taskid, order, kind):
     return (resultflag,msg)
     order.follw_id:业务数据id
     """
-	result = "not start"
 	try:
 		user = User.objects.get(name=callername)
 		businessdata = BusinessData.objects.get(id=order.follow_id)
 		timeout=10 if not businessdata.timeout else businessdata.timeout
 		
 		if businessdata.count == 0:
-			# viewcache(taskid,callername,None,'[%s]执行次数=0 略过..'%businessdata.businessname)
 			return ('omit', "测试点[%s]执行次数=0 略过." % businessdata.businessname)
 		preplist = businessdata.preposition.split("|") if businessdata.preposition is not None else ''
 		postplist = businessdata.postposition.split("|") if businessdata.postposition is not None else ''
@@ -798,6 +763,8 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
 		err = traceback.format_exc()
 		logger.info(err)
 		return ('', '', err)
+		
+		
 def _getfiledict(callername,paraminfo):
     pdict=dict()
     for k,v in eval(paraminfo).items():

@@ -107,13 +107,14 @@ def addplan(request):
 		schemename = request.POST.get('scheme')
 		author = lm.User.objects.get(name=request.session.get('username', None))
 		run_type = request.POST.get('run_type')
+		before_plan = request.POST.get('before_plan')
 		is_send_mail = 'open' if request.POST.get('is_send_mail') == 'true' else 'close'
 		is_send_dingding = 'open' if request.POST.get('is_send_dingding') == 'true' else 'close'
 		mail_config = mm.MailConfig(is_send_mail=is_send_mail, is_send_dingding=is_send_dingding)
 		mail_config.save()
 		
 		plan = mm.Plan(description=description, db_id=db_id, schemename=schemename, author=author,
-		               run_type=run_type, mail_config_id=mail_config.id)
+		               run_type=run_type, mail_config_id=mail_config.id,before_plan=before_plan)
 		plan.save()
 		addrelation('product_plan', author, pid, plan.id)
 		
@@ -202,6 +203,7 @@ def editplan(request):
 		olddescription = plan.description
 		plan.description = newdescription
 		plan.db_id = request.POST.get('dbid')
+		plan.before_plan = request.POST.get('before_plan')
 		plan.schemename = request.POST.get('scheme')
 		logger.info('description=>', plan.description)
 		plan.run_type = request.POST.get('run_type')

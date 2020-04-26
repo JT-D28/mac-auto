@@ -137,9 +137,9 @@ var tree={
 			'root':['add'],
 			'product':['add','edit','del','mimport'],
 			'plan':['add','edit','del','run','mexport','logs','config'],
-			'case':['add','edit','del'],
-			'step':['add','edit','del'],
-			'business':['edit','del']
+			'case':['add','edit','del','run'],
+			'step':['add','edit','del','run'],
+			'business':['edit','del','run']
 		}
 		_opinfo={
 
@@ -355,7 +355,7 @@ var tree={
 			if (run_btn) run_btn.bind("click", function () {
 				_post('/manager/treecontrol/', {
 					'action': 'run',
-					'ids': treeNode.id,
+					'ids':treeNode.id,
 					'is_verify':'0'
 				}, function (data) {
 					if (data.code == 0) {

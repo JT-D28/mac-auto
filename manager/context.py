@@ -534,4 +534,9 @@ def get_temp_dir():
 	'''
 	获取模板文件绝对地址
 	'''
-	return[os.path.join(os.path.dirname(__file__),'template'),os.path.join(os.path.dirname(os.path.dirname(__file__)),'login','template')]
+	dirs=[]
+	dirs.append(os.path.join(os.path.dirname(__file__),'template','cm'))
+	dirs.append(os.path.join(os.path.dirname(__file__),'template','manager'))
+	dirs.append(os.path.join(os.path.dirname(os.path.dirname(__file__)),'login','template','login'))
+
+	return dirs

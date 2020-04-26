@@ -14,7 +14,7 @@ from ME2.settings import logme
 
 from login import models as lm
 from .context import *
-from .invoker import runplan, DataMove, runplans
+from .invoker import runplan, DataMove, runplans,get_run_node_plan_id
 from .core import gettaskid
 from manager.context import Me2Log as logger
 
@@ -268,20 +268,24 @@ def editplan(request):
 
 def run(request):
 	callername = request.session.get('username')
-	planids = [x.split('_')[1] for x in request.POST.get('ids').split(',')]
+	runids = [x for x in request.POST.get('ids').split(',')]
+	logger.info('runids:',runids)
 	is_verify = request.POST.get('is_verify')
-	for planid in planids:
+	for runid in runids:
+		planid=get_run_node_plan_id(runid)
+		logger.info('获取待运行节点计划ID:',planid)
 		plan = mm.Plan.objects.get(id=planid)
 		taskid = gettaskid(plan.__str__())
-		state_running =getRunningInfo(callername, planid, 'isrunning')
+		state_running =getRunningInfo(callername,planid, 'isrunning')
 		if state_running != '0':
 			msg = '验证' if state_running == 'verify' else '调试'
 			return {
 				'status': 'fail',
 				'msg': '计划正在运行[%s]任务，稍后再试！'%msg
 			}
-		runplans(callername, taskid, planids, is_verify)
-	
+		# logger.info('runidd:',runid)
+		t=threading.Thread(target=runplan,args=(callername, taskid, planid, is_verify,None,runid))
+		t.start()
 	return {
 		'status': 'success',
 		'msg': str(taskid)

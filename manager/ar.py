@@ -8,7 +8,7 @@ import os, traceback
 from login.models import *
 from manager.models import Role,User_UIControl
 from django.db.models import Q
-from manager.context import Me2Log as logger
+from manager.context import Me2Log as logger,get_temp_dir
 
 class RoleData():
     '''
@@ -136,7 +136,16 @@ class Grant(object):
     权限操作
     ''' 
     @classmethod
-    def _isconfig(cls):
+    def _isconfig(cls,code):
+
+        scandirs=get_temp_dir()
+        for path in scandirs:
+            for filename in os.listdir(path):
+                if filename.split('.')[1]=='html':
+                    with open(os.path.join(path,filename),encoding='utf-8') as f:
+                        if '{{%s}}'%code in f.read():
+                            return True
+            
         return False
     
     @classmethod
@@ -219,7 +228,7 @@ class Grant(object):
             uc = UIControl()
             uc.code = config['code']
             uc.description = config['description']
-            uc.is_config = cls._isconfig()
+            uc.is_config = cls._isconfig(uc.code)
             uc.is_valid=config['isvalid']
             uc.author = config['user']
             uc.save()
@@ -269,7 +278,7 @@ class Grant(object):
             uc = UIControl.objects.get(id=config['cid'])
             uc.code = config['code']
             uc.description = config['description']
-            uc.is_config = cls._isconfig()
+            uc.is_config = cls._isconfig(uc.code)
             uc.is_valid=config['isvalid']
             uc.save()
             
@@ -305,7 +314,7 @@ class Grant(object):
                 datax['authorname'] = x.author.name
                 datax['isopen']=x.is_open
                 datax['isvalid']=x.is_valid
-                datax['isconfig'] = cls._isconfig()
+                datax['isconfig'] = cls._isconfig(x.code)
                 data.append(datax)
             
             return {

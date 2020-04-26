@@ -1,2 +1,5 @@
-s='vdlajfdla<ldlalda'
-print(s[s.index('<'):])
+a={}
+if a:
+    print(1)
+else:
+    print(2)

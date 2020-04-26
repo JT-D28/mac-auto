@@ -1028,19 +1028,25 @@ def querytaskdetail(request):
 
 @csrf_exempt
 def runtask(request):
-	planids = request.POST.get("ids")
-	list_ = [int(x) for x in planids.split(",")]
-	for planid in list_:
-		plan = Plan.objects.get(id=planid)
-		username = request.session.get('username')
-		state_running =getRunningInfo(username, planid, 'isrunning')
+	callername = request.session.get('username')
+	runids = [x for x in request.POST.get('ids').split(',')]
+	is_verify = request.POST.get('is_verify')
+	for runid in runids:
+		planid=get_run_node_plan_id('plan_%s'%runid)
+		logger.info('获取待运行节点计划ID:',planid)
+
+		plan =Plan.objects.get(id=planid)
+		taskid = gettaskid(plan.__str__())
+		state_running =getRunningInfo(callername,planid, 'isrunning')
 		if state_running != '0':
 			msg = '验证' if state_running == 'verify' else '调试'
-			return JsonResponse(simplejson(code=1, msg='计划正在运行[%s]任务，稍后再试！'%msg), safe=False)
-		
-		taskid = gettaskid(plan.__str__())
-		is_verify = request.POST.get('is_verify')
-		runplans(username, taskid, list_, is_verify)
+			return {
+				'status': 'fail',
+				'msg': '计划正在运行[%s]任务，稍后再试！'%msg
+			}
+		# logger.info('runidd:',runid)
+		t=threading.Thread(target=runplan,args=(callername, taskid, planid, is_verify,None,'plan_%s'%runid))
+		t.start()
 	return JsonResponse(simplejson(code=0, msg="你的任务开始运行", taskid=taskid), safe=False)
 
 

@@ -182,7 +182,7 @@ class Case(Model):
 	
 	def __str__(self):
 		# return '[%s]%s'%(self.id,self.description)
-		return '%s' % self.id
+		return '[%s]%s' % (self.id,self.description)
 
 
 class Plan(Model):

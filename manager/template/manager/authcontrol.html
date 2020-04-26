@@ -362,10 +362,10 @@ $('#delbtn_ui').click(function(){
     isopen=data.elem.checked==true?1:0
     
     success=function(e){
-      if(e.code==0)
-        layer.alert(e.msg,{icon:1})
-      else
-        layer.alert(e.msg,{icon:2})
+      // if(e.code==0)
+      //   layer.alert(e.msg,{icon:1})
+      // else
+      //   layer.alert(e.msg,{icon:2})
 
     }
     _post('/manager/updateuicontrolstatus/',{'uid':data.elem.id,'isopen':isopen},success)

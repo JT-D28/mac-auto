@@ -305,16 +305,117 @@ def gettaskresult(taskid):
 
 def check_user_task():
 	def run():
-		# while True:
-		#   time.sleep(2)
-		# logger.info("do task.")
 		for username, tasks in _taskmap.items():
 			for taskid, plans in tasks.items():
 				for planid in plans:
 					runplan(planid)
 
 
-def runplans(username, taskid, planids, is_verify, kind=None, dbscheme=None):
+def _get_down_case_leaf_id(caseids,cur=None):
+	'''
+	获取指定case节点最下游caseID
+	'''
+	if isinstance(caseids, (int,)):
+		caseids=[caseids]
+	for caseid in caseids:
+		e=Order.objects.filter(kind='case_case',main_id=caseid)
+		if e.exists():
+			_get_final_case_leaf_id([x.follow_id for x in e],cur)
+		else:
+			cur.append(caseid)
+
+
+def _get_upper_case_leaf_id(caseid):
+	'''
+	获取指定case节点最上游caseID
+	'''
+	e=Order.objects.filter(kind='case_case',follow_id=caseid)
+	if not e.exists():
+		return caseid
+	else:
+		cur=e[0].main_id
+		return _get_upper_case_leaf_id(kind='case_case',follow_id=cur)
+
+
+def _get_final_run_node_id(startnodeid):
+	'''
+	获取实际需要执行的测试点ID列表
+	'''
+	final=[]
+	try:
+		logger.info('开始获取运行节点[%s]执行计划id '%startnodeid)
+
+		kind=startnodeid.split('_')[0]
+		nid=startnodeid.split('_')[1]
+		if kind=='plan':
+			ol=Order.objects.filter(kind='plan_case',main_id=nid)
+			for o in ol:
+				caseid=o.follow_id
+				down_ids=[]
+				_get_down_case_leaf_id(caseid,down_ids)
+				for cid in down_ids:
+					stepids=[x.follow_id for x in Order.objects.filter(kind='case_step',main_id=cid)]
+					for stepid in stepids:
+						final=final+[x.follow_id for x in Order.objects.filter(kind='step_business',main_id=stepid)]
+
+		elif kind=='business':
+			final.append(int(nid))
+		elif kind=='step':
+			ob=Order.objects.filter(kind='step_business',main_id=nid)
+			for o in ob:
+				final.append(o.follow_id)
+
+		elif  kind=='case':
+			#case-step 
+			ob=Order.objects.filter(kind='case_step',main_id=nid)
+			stepids=[]
+			for o in ob:
+				stepid=o.follow_id
+				os=Order.objects.filter(kind='step_business',main_id=stepid)
+				for o0  in os:
+					final.append(o0.follow_id)
+			##case-case
+			final_leaf_case_ids=[]
+			_get_final_case_leaf_id([nid],final_leaf_case_ids)
+			logger.info('获取最终case子节点待运行:',final_leaf_case_ids)
+
+		logger.info('结果:',final)
+	except:
+		logger.error('获取最终执行测试点异常:',traceback.format_exc())
+	finally:
+		return   final
+
+
+
+
+def get_run_node_plan_id(startnodeid):
+	'''
+	获取运行节点归属计划ID
+	'''
+	logger.info('startndoe ID:',startnodeid)
+	kind=startnodeid.split('_')[0]
+	nid=startnodeid.split('_')[1]
+	if kind=='plan':
+		return nid
+
+	elif kind=='case':
+		caseid=_get_upper_case_leaf_id(nid)
+		planid=Order.objects.get(kind='plan_case',follow_id=caseid).main_id
+		return planid
+		
+	elif kind=='step':
+		case_id=Order.objects.get(kind='case_step',follow_id=nid).main_id
+		logger.info('caseid:',case_id)
+		up_case_id=_get_upper_case_leaf_id(case_id)
+		logger.info('upper caseid:',up_case_id)
+		planid=Order.objects.get(kind='plan_case',follow_id=up_case_id).main_id
+		return planid
+	elif kind=='business':
+		stepid=Order.objects.get(kind='step_business',follow_id=nid).main_id
+		return get_run_node_plan_id('step_%s'%stepid)
+
+
+def runplans(username, taskid, planids, is_verify, kind=None,startnodeid=None):
 	"""
     任务运行
     kind 运行方式 手动其他
@@ -328,10 +429,11 @@ def runplans(username, taskid, planids, is_verify, kind=None, dbscheme=None):
 	viewcache(taskid, username, kind,
 	          "=======开始%s%s任务【<span style='color:#FF3399'>%s</span>】====" % (kindmsg, verifymsg, taskid))
 	for planid in planids:
-		threading.Thread(target=runplan, args=(username, taskid, planid, is_verify, kind, dbscheme)).start()
+		threading.Thread(target=runplan, args=(username, taskid, planid, is_verify, kind,startnodeid)).start()
 
 
-def _runcase(username, taskid, case0, plan, planresult, is_verify, kind):
+def _runcase(username, taskid, case0, plan, planresult, is_verify, kind,startnodeid=None):
+	
 	caseresult = []
 	dbid = getDbUse(taskid, case0.db_id)
 	# dbid = case0.db_id
@@ -345,12 +447,11 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind):
 	##case执行次数
 	casecount = int(case0.count) if case0.count is not None else 1
 	# logger.info('ccc=>',steporderlist)
-	
 	for lid in range(0, casecount):
 		for o in steporderlist:
 			if o.kind == 'case_case':
 				case = Case.objects.get(id=o.follow_id)
-				_runcase(username, taskid, case, plan, planresult, is_verify, kind)
+				_runcase(username, taskid, case, plan, planresult, is_verify, kind,startnodeid=startnodeid)
 				continue;
 			
 			stepid = o.follow_id
@@ -372,7 +473,14 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind):
 							start = time.time()
 							spend = 0
 							if groupid not in groupskip:
-								logger.info('传入order=>', order.value)
+								#logger.info('传入order=>', order.value)
+								#logger.info('startnodeid:',startnodeid)
+								L=_get_final_run_node_id(startnodeid)
+								
+								if order.follow_id not in L:
+									logger.info('测试点[%s]不在执行链中 忽略'%order.follow_id)
+									continue;
+
 								result, error = _step_process_check(username, taskid, order, kind)
 								spend = int((time.time() - start) * 1000)
 								
@@ -448,14 +556,21 @@ def getDbUse(taskid, dbname):
 	return dbid
 
 
-def runplan(callername, taskid, planid, is_verify, kind=None, dbscheme=None):
+def runplan(callername, taskid, planid, is_verify, kind=None,startnodeid=None):
 	groupskip = []
 	username = callername
+	kindmsg = ''
+	if kind is not None:
+		kindmsg = kind
+	verifymsg = '调试' if is_verify in ('0', None, '', 0) else '验证'
+	viewcache(taskid, username, kind,
+	          "=======开始%s%s任务【<span style='color:#FF3399'>%s</span>】====" % (kindmsg, verifymsg, taskid))
 	try:
 		plan = Plan.objects.get(id=planid)
-		dbscheme = plan.schemename if dbscheme is None or dbscheme == '' else dbscheme
+		dbscheme = plan.schemename
 		setRunningInfo(callername, planid, taskid, 1, dbscheme,is_verify)
-		logger.info('plan=>', plan)
+		logger.info('开始执行计划：', plan)
+		logger.info('startnodeid:',startnodeid)
 		plan.is_running = 1
 		plan.save()
 		dbid = getDbUse(taskid, plan.db_id)
@@ -478,8 +593,8 @@ def runplan(callername, taskid, planid, is_verify, kind=None, dbscheme=None):
 			if case.count == 0 or case.count == '0':
 				continue;
 			else:
-				# for ldx in range(0,case.count):
-				_runcase(username, taskid, case, plan, planresult, is_verify, kind=None)
+				logger.info('runcount:',case.count)
+				_runcase(username, taskid, case, plan, planresult, is_verify, kind=None,startnodeid=startnodeid)
 		
 		# plan
 		planre = (len([x for x in planresult]) == len([x for x in planresult if x == True]))
@@ -522,8 +637,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, dbscheme=None):
 			viewcache(taskid, username, kind, dingding_res)
 	
 	except Exception as e:
-		# traceback.logger.info_exc()
-		logger.info(traceback.format_exc())
+		logger.error('执行计划未知异常：',traceback.format_exc())
 		viewcache(taskid, username, kind, '执行计划未知异常[%s]' % traceback.format_exc())
 	
 	finally:
@@ -594,8 +708,8 @@ def _step_process_check(callername, taskid, order, kind):
 		
 		viewcache(taskid, username, kind, "--" * 100)
 		viewcache(taskid, username, kind,
-		          "开始执行步骤[<span style='color:#FF3399'>%s-%s</span>] 测试点[<span style='color:#FF3399'>%s</span>]" % (
-			          order.value, step.description, businessdata.businessname))
+		          "开始执行步骤[<span style='color:#FF3399'>%s</span>] 测试点[<span style='color:#FF3399'>%s</span>]" % (
+			           step.description, businessdata.businessname))
 		
 		dbid = getDbUse(taskid, step.db_id)
 		# dbid = step.db_id
@@ -2025,7 +2139,7 @@ def _save_builtin_property(taskid, username):
      #${PLAN_SUCCESS_RATE}
     '''
 	detail = gettaskresult(taskid)
-	if detail == {}:
+	if not detail:
 		logger.info('==内置属性赋值提前结束，执行结果表无数据')
 		return
 	
@@ -2302,16 +2416,14 @@ class MainSender:
 		name, addr = parseaddr(s)
 		return formataddr((Header(name, 'utf-8').encode(), addr))
 	
-	# @classmethod
-	# def getworkcontent(cls):
-	#   msg=''
-	#   for line in cls.workcontent:
-	#       msg+="<p>%s</p>"%line
-	#   return msg
 	@classmethod
 	def gethtmlcontent(cls, taskid, rich_text):
-		
+
 		data = gettaskresult(taskid)
+		logger.info('报告data:',data)
+
+		if not data:
+			return '<html>无运行数据..</html>'
 		
 		# cls.subject='%s自动化测试报告-%s'%(data['planname'],str(datetime.datetime.now())[0:10])
 		cls.subject = '%s自动化测试报告-%s' % (data['planname'], '2019-10-31')

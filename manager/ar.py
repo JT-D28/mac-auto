@@ -147,6 +147,25 @@ class Grant(object):
                             return True
             
         return False
+
+    @classmethod
+    def _is_ui_display(cls,code,username):
+        '''
+        UI组件显示控制
+        '''
+        user=User.objects.get(name=username)
+        user_id=user.id
+        user_role_ids=[x.id for x in user.role_set.all()]
+
+        ms=UIControl.objects.filter(code=code)
+        if ms.exists():
+            uid=ms[0].id
+            User_UIControl.objects.filter(uc_id=uid)
+
+
+
+
+        return True
     
     @classmethod
     def _add_ui_control_user(cls, ucid, userlist,user):

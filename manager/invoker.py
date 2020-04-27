@@ -1883,7 +1883,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
 						pass
 				if var is None:
 					logger.info(traceback.format_exc())
-					return ('error', '字符串[%s]变量替换异常,未在局部变量和全局变量中找到，请检查是否已正确配置' % str_)
+					return ('error', '字符串[%s]变量【%s】替换异常,未在局部变量和全局变量中找到，请检查是否已正确配置' % (str_,varname))
 			
 			gain_rv = _replace_variable(user, var.gain, src=src, taskid=taskid)
 			if gain_rv[0] is not 'success':

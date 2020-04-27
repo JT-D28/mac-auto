@@ -139,7 +139,7 @@ def doDebugInfo(request):
 				if pattern.search(i) and not pattern1.search(i) :
 					return i, 'debuginfo', '', 0
 		else:
-			res = '请稍等！'
+			res = '日志可能还没处理完成，请稍等！'
 		return res, 'debuginfo', '', 0
 
 

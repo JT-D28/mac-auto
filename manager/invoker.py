@@ -467,14 +467,14 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
 			if o.kind == 'case_case':
 				case = Case.objects.get(id=o.follow_id)
 				_runcase(username, taskid, case, plan, planresult, is_verify, kind, startnodeid=startnodeid, L=L)
-				continue;
+				continue
 			
 			stepid = o.follow_id
 			try:
 				stepcount = Step.objects.get(id=stepid).count
 				
 				if stepcount == 0:
-					continue;
+					continue
 				
 				else:
 					# 步骤执行次数>0
@@ -492,7 +492,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
 								# logger.info('startnodeid:',startnodeid)
 								
 								if order.follow_id not in L:
-									logger.info('测试点[%s]不在执行链中 忽略' % order.follow_id)
+									# logger.info('测试点[%s]不在执行链中 忽略' % order.follow_id)
 									continue
 
 
@@ -521,7 +521,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
 							result = "<span class='layui-bg-%s'>%s</span>" % (color_res.get(result, 'orange'), result)
 							
 							if 'omit' not in result:
-								error = '   原因=>%s' % error if result == 'success' else ''
+								error = '   原因=>%s' % error if 'success' not in result else ''
 								viewcache(taskid, username, kind, "步骤执行结果%s%s" % (result, error))
 			
 			except:
@@ -540,7 +540,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
 
 
 def getDbUse(taskid, dbname):
-	scheme = getRunningInfo('', base64.b64decode(taskid).decode().split('_')[0], 'scheme')
+	scheme = getRunningInfo('', base64.b64decode(taskid).decode().split('_')[0], 'dbscheme')
 	try:
 		dbid = DBCon.objects.get(scheme=scheme, description=dbname).id
 	except:
@@ -606,7 +606,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 		
 		for case in cases:
 			if case.count == 0 or case.count == '0':
-				continue;
+				continue
 			else:
 				logger.info('runcount:', case.count)
 				_runcase(username, taskid, case, plan, planresult, is_verify, kind=None, startnodeid=startnodeid, L=L)
@@ -718,12 +718,12 @@ def _step_process_check(callername, taskid, order, kind):
 			          step.description, businessdata.businessname))
 		
 		dbid = getDbUse(taskid, step.db_id)
-		# dbid = step.db_id
+
 		if dbid:
 			desp = DBCon.objects.get(id=int(dbid)).description
 			set_top_common_config(taskid, desp, src='step')
 		
-		##前置操作
+		# 前置操作
 		status, res = _call_extra(user, preplist, taskid=taskid, kind='前置操作')  ###????
 		if status is not 'success':
 			return (status, res)

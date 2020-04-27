@@ -656,6 +656,7 @@ def dealDeBuginfo(taskid):
 	logname = BASE_DIR + "/logs/" + taskid + ".log"
 	dealogname = BASE_DIR + "/logs/deal/" + taskid + ".log"
 	if os.path.exists(logname):
+		logger.info('存在{}日志文件'.format(taskid))
 		ma = []
 		with open(logname, 'r', encoding='utf-8') as f:
 			tmep1 = ''
@@ -679,6 +680,7 @@ def dealDeBuginfo(taskid):
 			for case in case_matchs:
 				step_matchs = re.findall(r"开始执行步骤.*?步骤执行.*?结果.*?<br>", case)
 				for step in step_matchs:
+					print('step:',step)
 					with open(dealogname, 'a', encoding='UTF-8') as f:
 						f.write(step.replace("        ", '\n') + '\n========\n')
 			logger.info('处理日志完成------')
@@ -1177,17 +1179,17 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
 
 
 def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
-	# logger.info('执行[%s]:%s'%(kind,call_strs))
+	
 	f = None
 	builtinmethods = [x.name for x in getbuiltin()]
-	# call_list=call_strs.split('|');
 	for s in call_strs:
 		if not s.strip():
 			continue
 		
 		if s == 'None' or s is None:
-			continue;
-		
+			continue
+			
+		viewcache(taskid, user, None, "执行%s:%s" % (kind, s))
 		status, call_str = _replace_variable(user, s, 1, taskid)
 		if status is not 'success':
 			return (status, call_str)

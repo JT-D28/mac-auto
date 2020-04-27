@@ -445,7 +445,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
 		set_top_common_config(taskid, desp, src='case')
 	
 	case_run_nodes=_get_final_run_node_id('case_%s'%case0.id)
-	subflag=True if set(case_run_nodes).issubset(L) else False
+	subflag=True if set(L).issubset(case_run_nodes) else False
 
 	logger.info('[%s]下测试点ID：%s'%(case0.description,case_run_nodes))
 	logger.info('运行节电下测试点ID：%s'%L)

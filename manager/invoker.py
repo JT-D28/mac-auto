@@ -514,7 +514,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
 							result = "<span class='layui-bg-%s'>%s</span>" % (color_res.get(result, 'orange'), result)
 							
 							if 'omit' not in result:
-								error = '   原因=>%s' % error if result == 'success' else ''
+								error = '   原因=>%s' % error if 'success' not in result else ''
 								viewcache(taskid, username, kind, "步骤执行结果%s%s" % (result, error))
 			
 			except:

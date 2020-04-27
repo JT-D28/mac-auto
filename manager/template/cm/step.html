@@ -4,212 +4,156 @@
 <head>
     <meta charset="UTF-8">
     <title>测试步骤</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'manager/bootstrap/bootstrap.min.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
     <style type="text/css">
-
-    {{UI_MENU_QXGL}}
-
-        .hide {
-            display: none;
+        .layui-input {
+            padding: 0 14px;
+            background-color: rgb(252, 252, 252);
         }
 
-        .layui-icon:hover {
-            cursor: pointer;
-
+        .layui-form-item .layui-form-checkbox[lay-skin="primary"] {
+            margin-right: 9px;
         }
 
-        .icon-tool {
-            float: right;
-
+        .layui-form-selectup dl {
+            top: 42px;
+            bottom: unset;
         }
 
-        .icon-tool-item:hover {
-            cursor: pointer;
-        }
+        {{UI_MENU_QXGL}}
 
-        .icon-tool-item {
-            margin-left: 5px;
-        }
-
-        #case-selected p {
-            height: 30px;
-            padding: 0;
-            /* text-overflow: ellipsis;*/
-            /*     max-width:200px;*/
-        }
-
-        #can-select p:hover {
-            background-color: #009688;
-            color: white;
-
-        }
-
-        #is-selected p:hover {
-            background-color: #009688;
-            color: white;
-
-        }
-
-        .func_btn {
-
-            font-size: 10px;
-            margin: 5px;
-        }
-
-        .func_btn:hover {
-
-            cursor: pointer;
-            color: #009688;
-            font-weight: 500;
-        }
-
-        .func_btn_bar {
-
-            /*        background-color: red;*/
-        }
-
-        .mailpadding {
-            padding: 9px 1px;
-        }
     </style>
 
 </head>
-<body>
-
-<div class="layui-row" style="height: 100%">
-    <div class="layui-col-md12" style="height: 100%;padding:0 15px">
-        <fieldset style="height:95%">
-            <legend style="font-size: 20px;border-top-width:0px !important;">
-                  <span class="layui-breadcrumb">
-                      <a href="">用例管理</a>
-                      <a href="">测试步骤</a>
-                  </span>
-            </legend>
-            <form id='addstep' class="layui-form layui-form-pane" action="">
-                <div class="layui-form-item" id='weight_item' hidden>
-                    <label class="layui-form-label ">权重</label>
-                    <div class="layui-input-block">
-                        <input id='weight' type="text" name="weight" placeholder="" autocomplete="off"
-                               class="layui-input" disabled>
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <label class="layui-form-label required">执行次数</label>
-                    <div class="layui-input-block">
-                        <input type="text" name="count" placeholder="请输入" autocomplete="off" class="layui-input"
-                               id='count'>
-                    </div>
-
-                </div>
-
-
-                <div class="layui-form-item" pane="">
-                    <label class="layui-form-label">步骤类型</label>
-                    <div class="layui-input-block">
-                        <input type="radio" name="step_type" value="interface" title="接口" lay-filter='kind' checked>
-                        <input type="radio" name="step_type" value='function' title="函数" lay-filter='kind'>
-                        <input type="radio" name="step_type" value='dir' title="文件夹" lay-filter='kind'>
-                    </div>
-                </div>
-                <div class="layui-form-item ">
-                    <label class="layui-form-label required">描述
-                        <i id='importbusiness'
-                           class="layui-icon layui-icon-util"
-                           style="position: absolute;top:8px;right: 8px;visibility:hidden"></i></label>
-                    <div class="layui-input-block">
-                        <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input"
-                               lay-verify="required">
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <label class="layui-form-label required">url</label>
-                    <div class="layui-input-block">
-                        <textarea name="url" id='url' placeholder="请输入"
-                                  autocomplete="off" class="layui-textarea" lay-verify="required"
-                                  style="min-height:38px!important;height: 38px"></textarea>
-                    </div>
-                </div>
-                <div class="layui-form-item" pane="">
-                    <label class="layui-form-label">content-type</label>
-                    <div class="layui-input-block">
-                        <input type="radio" name="content-type" value="formdata" title="form-data" checked
-                               lay-filter='content_type'>
-                        <input type="radio" name="content-type" value="urlencode" title="urlencode"
-                               lay-filter='content_type'>
-                        <input type="radio" name="content-type" value='json' title="json" lay-filter='content_type'>
-                        <input type="radio" name="content-type" value='xml' title="xml" lay-filter='content_type'>
-                    </div>
-                </div>
-                <div class="layui-form-item" id='header-div'>
-                    <label class="layui-form-label">请求头</label>
-                    <div class="layui-input-block">
-                        <input type="text" id='header' name="header" placeholder="请输入" autocomplete="off"
-                               class="layui-input">
-                    </div>
-                </div>
-                <div class="layui-form-item" pane="" id='method-div'>
-                    <label class="layui-form-label">method</label>
-                    <div class="layui-input-block">
-                        <input type="radio" name="method" value="get" title="GET">
-                        <input type="radio" name="method" value='post' title="POST" checked>
-                    </div>
-                </div>
-
-                <div class="layui-form-item">
-                    <label class="layui-form-label">属性</label>
-                    <div class="layui-input-block">
-                        <input type="text" id='property' name="property"
-                               placeholder="这里定义如{'token':'data.value.token'} 使用时用${token}" autocomplete="off"
-                               class="layui-input">
-                    </div>
-                </div>
-
-                <div class="layui-form-item" hidden>
-                    <label class="layui-form-label">标签</label>
-                    <div class="layui-input-block">
-                        <select name="tag" lay-verify="">
-                            <option value="">请选择</option>
-                            <!--         <option value="mysql">mysql</option>
-									<option value="oracle">oracle</option> -->
-                            <!--         <option value="db2">db2</option> -->
-                        </select>
-                    </div>
-                </div>
-
-
-                <div class="layui-form-item" hidden>
-                    <label class="layui-form-label required">调用函数</label>
-                    <div class="layui-input-block">
-                        <select name='body'></select>
-                    </div>
-                </div>
-
-                <div class="layui-form-item">
-                    <label class="layui-form-label">DB选择</label>
-                    <div class="layui-input-block">
-                        <select name="db_id" lay-verify="" lay-search>
-                            <!--         <option value="">请选择</option>
-									<option value="">mysql</option> -->
-                        </select>
-                    </div>
-                </div>
-
-
-                <div class="layui-form-item">
-                    <button class="layui-btn" id='save' style="visibility:hidden;position: center">保存</button>
-                </div>
-            </form>
-        </fieldset>
+<body style="height: 100%">
+<div style="width: 100%;height: 6%;background:rgba(245,245,246,1);">
+    <legend style="position: relative;top:50%;transform:translateY(-50%);padding-left: 30px">
+                <span class="layui-breadcrumb">
+                    <a href="">用例管理</a>
+                    <a href="">步骤</a>
+                </span>
+    </legend>
+</div>
+<form id='addstep' class="layui-form" style="margin: 20px 30px 0 20px;">
+    <div class="layui-form-item" id='weight_item' hidden>
+        <label class="layui-form-label ">权重</label>
+        <div class="layui-input-block">
+            <input id='weight' type="text" name="weight" placeholder="" autocomplete="off"
+                   class="layui-input" disabled>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label required">执行次数</label>
+        <div class="layui-input-block">
+            <input type="text" name="count" placeholder="请输入" autocomplete="off" class="layui-input"
+                   id='count'>
+        </div>
 
     </div>
-</div>
+
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">步骤类型</label>
+        <div class="layui-input-block"
+             style="border: 1px solid #e6e6e6;background-color: rgba(252,252,252,1);padding: 0 14px;">
+            <input type="radio" name="step_type" value="interface" title="接口" lay-filter='kind' checked>
+            <input type="radio" name="step_type" value='function' title="函数" lay-filter='kind'>
+            <input type="radio" name="step_type" value='dir' title="文件夹" lay-filter='kind'>
+        </div>
+    </div>
+    <div class="layui-form-item ">
+        <i id='importbusiness'
+           class="layui-icon layui-icon-util"
+           style="position: absolute;top:8px;right: 8px;visibility:hidden"></i>
+        <label class="layui-form-label required">描述</label>
+        <div class="layui-input-block">
+            <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input"
+                   lay-verify="required">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label required">url</label>
+        <div class="layui-input-block">
+            <textarea name="url" id='url' placeholder="请输入" autocomplete="off"
+                      class="layui-textarea" lay-verify="required" style="min-height:38px!important;height: 38px;
+                      background:rgb(252, 252, 252);line-height: 1.6"></textarea>
+        </div>
+    </div>
+    <div class="layui-form-item" pane="">
+        <label class="layui-form-label">content-type</label>
+        <div class="layui-input-block"
+             style="border: 1px solid #e6e6e6;background-color: rgba(252,252,252,1);padding: 0 14px;">
+            <input type="radio" name="content-type" value="formdata" title="form-data" checked
+                   lay-filter='content_type'>
+            <input type="radio" name="content-type" value="urlencode" title="urlencode"
+                   lay-filter='content_type'>
+            <input type="radio" name="content-type" value='json' title="json" lay-filter='content_type'>
+            <input type="radio" name="content-type" value='xml' title="xml" lay-filter='content_type'>
+        </div>
+    </div>
+    <div class="layui-form-item" id='header-div'>
+        <label class="layui-form-label">请求头</label>
+        <div class="layui-input-block">
+            <input type="text" id='header' name="header" placeholder="请输入" autocomplete="off"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item" pane="" id='method-div'>
+        <label class="layui-form-label">method</label>
+        <div class="layui-input-block"
+             style="border: 1px solid #e6e6e6;background-color: rgba(252,252,252,1);padding: 0 14px;">
+            <input type="radio" name="method" value="get" title="GET">
+            <input type="radio" name="method" value='post' title="POST" checked>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">属性</label>
+        <div class="layui-input-block">
+            <input type="text" id='property' name="property"
+                   placeholder="这里定义如{'token':'data.value.token'} 使用时用${token}" autocomplete="off"
+                   class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item" hidden>
+        <label class="layui-form-label">标签</label>
+        <div class="layui-input-block">
+            <select name="tag" lay-verify="">
+                <option value="">请选择</option>
+            </select>
+        </div>
+    </div>
+
+
+    <div class="layui-form-item" hidden>
+        <label class="layui-form-label required">调用函数</label>
+        <div class="layui-input-block">
+            <select name='body'></select>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">DB选择</label>
+        <div class="layui-input-block">
+            <select name="db_id" lay-verify="" lay-search>
+            </select>
+        </div>
+    </div>
+
+
+    <div class="layui-form-item" style="margin-bottom: 0;">
+        <button class="layui-btn" id='save' style="visibility:hidden;position: center;
+        width:72px;margin-left:110px;height: 34px;line-height: 34px">保存
+        </button>
+    </div>
+</form>
+
 
 </body>
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
-<script src="{% static 'manager/js/step.js' %}"></script>
 
 
 <script type="text/javascript">
@@ -221,7 +165,9 @@
         $("[name='content-type']").parent().parent().show();
         $("[name='itf-check']").parent().parent().show();
         $("[value='interface']").attr('checked', 'checked');
-        $("[value='function']").removeAttr('checked')
+        $("[value='function']").removeAttr('checked');
+        $("[name='property']").parent().parent().show();
+        $("[name='db_id']").parent().parent().show()
     }
 
     function selectfunction() {
@@ -279,7 +225,7 @@
                         }, function (e) {
                             if (e.code === 0) {
                                 var treeObj = parent.$.fn.zTree.getZTreeObj('case-manager');
-                                id=pid?pid:uid;
+                                id = pid ? pid : uid;
                                 var node = treeObj.getNodeByParam('id', id);
                                 console.log('addstep=>' + JSON.stringify(e.data));
                                 treeObj.addNodes(node, e.data);

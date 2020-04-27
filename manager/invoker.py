@@ -3,7 +3,8 @@
 # @Date    : 2019-09-27 14:45:12
 # @Author  : Blackstone
 # @to      :
-import ast,threading
+import ast, threading
+from itertools import chain
 from urllib import parse
 
 from django.conf import settings
@@ -20,7 +21,7 @@ from manager.models import *
 from .core import ordered, Fu, getbuiltin, EncryptUtils, genorder, simplejson
 from .db import Mysqloper
 from .context import set_top_common_config, viewcache, get_task_session, \
-	clear_task_session, get_friendly_msg, setRunningInfo, getRunningInfo,get_space_dir
+	clear_task_session, get_friendly_msg, setRunningInfo, getRunningInfo, get_space_dir
 
 import re, traceback, redis, time, threading, smtplib, requests, json, warnings, datetime, socket
 import copy, base64, datetime, xlrd, os
@@ -50,14 +51,13 @@ _tempinfo = dict()
 _taskmap = dict()
 
 
-def db_connect(config,timeout=5):
+def db_connect(config, timeout=5):
 	"""
     测试数据库连接
     """
 	logger.info('==测试数据库连接===')
 	
 	conn = None
-
 	
 	try:
 		
@@ -100,7 +100,6 @@ def db_connect(config,timeout=5):
 		
 		else:
 			return ('fail', '连接类型不支持')
-
 		
 		return ('success', '数据库[%s]连接成功!.' % description)
 	
@@ -311,16 +310,16 @@ def check_user_task():
 					runplan(planid)
 
 
-def _get_down_case_leaf_id(caseids,cur=None):
+def _get_down_case_leaf_id(caseids, cur=None):
 	'''
 	获取指定case节点最下游caseID
 	'''
 	if isinstance(caseids, (int,)):
-		caseids=[caseids]
+		caseids = [caseids]
 	for caseid in caseids:
-		e=Order.objects.filter(kind='case_case',main_id=caseid)
+		e = Order.objects.filter(kind='case_case', main_id=caseid)
 		if e.exists():
-			_get_down_case_leaf_id([x.follow_id for x in e],cur)
+			_get_down_case_leaf_id([x.follow_id for x in e], cur)
 		else:
 			cur.append(caseid)
 
@@ -329,11 +328,11 @@ def _get_upper_case_leaf_id(caseid):
 	'''
 	获取指定case节点最上游caseID
 	'''
-	e=Order.objects.filter(kind='case_case',follow_id=caseid)
+	e = Order.objects.filter(kind='case_case', follow_id=caseid)
 	if not e.exists():
 		return caseid
 	else:
-		cur=e[0].main_id
+		cur = e[0].main_id
 		return _get_upper_case_leaf_id(cur)
 
 
@@ -341,81 +340,85 @@ def _get_final_run_node_id(startnodeid):
 	'''
 	获取实际需要执行的测试点ID列表
 	'''
-	final=[]
+	final = []
 	try:
-		logger.info('开始获取运行节点[%s]执行计划id '%startnodeid)
-
-		kind=startnodeid.split('_')[0]
-		nid=startnodeid.split('_')[1]
-		if kind=='plan':
-			ol=Order.objects.filter(kind='plan_case',main_id=nid)
+		logger.info('开始获取运行节点[%s]执行计划id ' % startnodeid)
+		
+		kind = startnodeid.split('_')[0]
+		nid = startnodeid.split('_')[1]
+		if kind == 'plan':
+			# 获取预先执行的用例
+			caseslist, des = beforePlanCases(nid)
+			logger.info('获取运行前节点[%s]' % des)
+			
+			ol = Order.objects.filter(kind='plan_case', main_id=nid)
+			ol = chain(caseslist, ol)
 			for o in ol:
-				caseid=o.follow_id
-				down_ids=[]
-				_get_down_case_leaf_id(caseid,down_ids)
+				caseid = o.follow_id
+				down_ids = []
+				_get_down_case_leaf_id(caseid, down_ids)
 				for cid in down_ids:
-					stepids=[x.follow_id for x in Order.objects.filter(kind='case_step',main_id=cid)]
+					stepids = [x.follow_id for x in Order.objects.filter(kind='case_step', main_id=cid)]
 					for stepid in stepids:
-						final=final+[x.follow_id for x in Order.objects.filter(kind='step_business',main_id=stepid)]
-
-		elif kind=='business':
+						final = final + [x.follow_id for x in
+						                 Order.objects.filter(kind='step_business', main_id=stepid)]
+		
+		elif kind == 'business':
 			final.append(int(nid))
-		elif kind=='step':
-			ob=Order.objects.filter(kind='step_business',main_id=nid)
+		elif kind == 'step':
+			ob = Order.objects.filter(kind='step_business', main_id=nid)
 			for o in ob:
 				final.append(o.follow_id)
-
-		elif  kind=='case':
-			#case-step 
-			ob=Order.objects.filter(kind='case_step',main_id=nid)
-			stepids=[]
+		
+		elif kind == 'case':
+			# case-step
+			ob = Order.objects.filter(kind='case_step', main_id=nid)
+			stepids = []
 			for o in ob:
-				stepid=o.follow_id
-				os=Order.objects.filter(kind='step_business',main_id=stepid)
-				for o0  in os:
+				stepid = o.follow_id
+				os = Order.objects.filter(kind='step_business', main_id=stepid)
+				for o0 in os:
 					final.append(o0.follow_id)
 			##case-case
-			final_leaf_case_ids=[]
-			_get_down_case_leaf_id([nid],final_leaf_case_ids)
-			logger.info('获取最终case子节点待运行:',final_leaf_case_ids)
-
-		logger.info('结果:',final)
+			final_leaf_case_ids = []
+			_get_down_case_leaf_id([nid], final_leaf_case_ids)
+			logger.info('获取最终case子节点待运行:', final_leaf_case_ids)
+		
+		logger.info('结果:', final)
 	except:
-		logger.error('获取最终执行测试点异常:',traceback.format_exc())
+		logger.error('获取最终执行测试点异常:', traceback.format_exc())
 	finally:
-		return   final
-
-
+		return final
 
 
 def get_run_node_plan_id(startnodeid):
 	'''
 	获取运行节点归属计划ID
 	'''
-	logger.info('startndoe ID:',startnodeid)
-	kind=startnodeid.split('_')[0]
-	nid=startnodeid.split('_')[1]
-	if kind=='plan':
+	logger.info('startndoe ID:', startnodeid)
+	kind = startnodeid.split('_')[0]
+	nid = startnodeid.split('_')[1]
+	if kind == 'plan':
 		return nid
-
-	elif kind=='case':
-		caseid=_get_upper_case_leaf_id(nid)
-		planid=Order.objects.get(kind='plan_case',follow_id=caseid).main_id
+	
+	elif kind == 'case':
+		caseid = _get_upper_case_leaf_id(nid)
+		planid = Order.objects.get(kind='plan_case', follow_id=caseid).main_id
 		return planid
-		
-	elif kind=='step':
-		case_id=Order.objects.get(kind='case_step',follow_id=nid).main_id
-		logger.info('caseid:',case_id)
-		up_case_id=_get_upper_case_leaf_id(case_id)
-		logger.info('upper caseid:',up_case_id)
-		planid=Order.objects.get(kind='plan_case',follow_id=up_case_id).main_id
+	
+	elif kind == 'step':
+		case_id = Order.objects.get(kind='case_step', follow_id=nid).main_id
+		logger.info('caseid:', case_id)
+		up_case_id = _get_upper_case_leaf_id(case_id)
+		logger.info('upper caseid:', up_case_id)
+		planid = Order.objects.get(kind='plan_case', follow_id=up_case_id).main_id
 		return planid
-	elif kind=='business':
-		stepid=Order.objects.get(kind='step_business',follow_id=nid).main_id
-		return get_run_node_plan_id('step_%s'%stepid)
+	elif kind == 'business':
+		stepid = Order.objects.get(kind='step_business', follow_id=nid).main_id
+		return get_run_node_plan_id('step_%s' % stepid)
 
 
-def runplans(username, taskid, planids, is_verify, kind=None,startnodeid=None):
+def runplans(username, taskid, planids, is_verify, kind=None, startnodeid=None):
 	"""
     任务运行
     kind 运行方式 手动其他
@@ -429,14 +432,14 @@ def runplans(username, taskid, planids, is_verify, kind=None,startnodeid=None):
 	viewcache(taskid, username, kind,
 	          "=======开始%s%s任务【<span style='color:#FF3399'>%s</span>】====" % (kindmsg, verifymsg, taskid))
 	for planid in planids:
-		threading.Thread(target=runplan, args=(username, taskid, planid, is_verify, kind,startnodeid)).start()
+		threading.Thread(target=runplan, args=(username, taskid, planid, is_verify, kind, startnodeid)).start()
 
-def _runcase(username, taskid, case0, plan, planresult, is_verify, kind,startnodeid=None):
-	
-	groupskip=[]
+
+def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startnodeid=None, L=[]):
+	groupskip = []
 	logger.info('_runcase方法......')
 	caseresult = []
-
+	
 	dbid = getDbUse(taskid, case0.db_id)
 	if dbid:
 		desp = DBCon.objects.get(id=int(dbid)).description
@@ -444,7 +447,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind,startnod
 	
 	viewcache(taskid, username, kind, "开始执行用例[<span style='color:#FF3399'>%s</span>]" % case0.description)
 	steporderlist = ordered(list(Order.objects.filter(Q(kind='case_step') | Q(kind='case_case'), main_id=case0.id)))
-
+	
 	##case执行次数
 	casecount = int(case0.count) if case0.count is not None else 1
 	color_res = {
@@ -453,18 +456,18 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind,startnod
 		'skip': 'orange',
 		'omit': 'green',
 	}
-
+	
 	for lid in range(0, casecount):
 		for o in steporderlist:
 			if o.kind == 'case_case':
 				case = Case.objects.get(id=o.follow_id)
-				_runcase(username, taskid, case, plan, planresult, is_verify, kind,startnodeid=startnodeid)
+				_runcase(username, taskid, case, plan, planresult, is_verify, kind, startnodeid=startnodeid, L=L)
 				continue;
-
+			
 			stepid = o.follow_id
 			try:
 				stepcount = Step.objects.get(id=stepid).count
-
+				
 				if stepcount == 0:
 					continue;
 				
@@ -479,16 +482,14 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind,startnod
 							start = time.time()
 							spend = 0
 							if groupid not in groupskip:
-
-								#logger.info('传入order=>', order.value)
-								#logger.info('startnodeid:',startnodeid)
-								L=_get_final_run_node_id(startnodeid)
-								logger.info('L:',L)
+								
+								# logger.info('传入order=>', order.value)
+								# logger.info('startnodeid:',startnodeid)
 								
 								if order.follow_id not in L:
-									logger.info('测试点[%s]不在执行链中 忽略'%order.follow_id)
-									continue;
-
+									logger.info('测试点[%s]不在执行链中 忽略' % order.follow_id)
+									continue
+								
 								result, error = _step_process_check(username, taskid, order, kind)
 								spend = int((time.time() - start) * 1000)
 								
@@ -510,13 +511,12 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind,startnod
 							except:
 								logger.info('保存结果异常=>', traceback.format_exc())
 							caseresult.append(result)
-							result = "<span class='layui-bg-%s'>%s</span>" % (color_res.get(result,'orange'),result)
-								
+							result = "<span class='layui-bg-%s'>%s</span>" % (color_res.get(result, 'orange'), result)
+							
 							if 'omit' not in result:
-								error = '   原因=>%s'%error if result=='success' else ''
+								error = '   原因=>%s' % error if result == 'success' else ''
 								viewcache(taskid, username, kind, "步骤执行结果%s%s" % (result, error))
-							#continue;
-
+			
 			except:
 				continue
 	
@@ -542,7 +542,31 @@ def getDbUse(taskid, dbname):
 	return dbid
 
 
-def runplan(callername, taskid, planid, is_verify, kind=None,startnodeid=None):
+def beforePlanCases(planid):
+	caseslist = []
+	before_des = ''
+	before_plan = Plan.objects.get(id=planid).before_plan
+	if before_plan not in [None, '']:
+		before_des, before_kind, before_id = before_plan.split("@")
+		before_id = base64.b64decode(before_id).decode('utf-8')
+		if before_kind == 'plan':
+			caseslist = Order.objects.filter(main_id=before_id, kind='plan_case')
+		elif before_kind == 'case':
+			caseslist = Order.objects.filter(follow_id=before_id, kind='plan_case')
+	return caseslist, before_des
+
+
+def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
+	plan = Plan.objects.get(id=planid)
+	dbscheme = plan.schemename
+	setRunningInfo(callername, planid, taskid, 1, dbscheme, is_verify)
+	viewcache(taskid, callername, kind, "=======正在初始化任务中=======")
+	logger.info('开始执行计划：', plan)
+	logger.info('startnodeid:', startnodeid)
+	logger.info('--------初始化测试点--------')
+	L = _get_final_run_node_id(startnodeid)
+	logger.info('L:', L)
+	
 	groupskip = []
 	username = callername
 	kindmsg = ''
@@ -550,39 +574,23 @@ def runplan(callername, taskid, planid, is_verify, kind=None,startnodeid=None):
 		kindmsg = kind
 	verifymsg = '调试' if is_verify in ('0', None, '', 0) else '验证'
 	viewcache(taskid, username, kind,
-	          "=======开始%s%s任务【<span style='color:#FF3399'>%s</span>】====" % (kindmsg, verifymsg, taskid))
+	          "=======计划【%s】开始执行%s%s任务【<span style='color:#FF3399'>%s</span>】,使用数据连接配置【%s】====" % (
+		          plan.description, kindmsg, verifymsg, taskid, dbscheme))
 	try:
-		plan = Plan.objects.get(id=planid)
-		dbscheme = plan.schemename
-		setRunningInfo(callername, planid, taskid, 1, dbscheme,is_verify)
-		logger.info('开始执行计划：', plan)
-		logger.info('startnodeid:',startnodeid)
-		plan.is_running = 1
-		plan.save()
-
 		dbid = getDbUse(taskid, plan.db_id)
-		# dbid = plan.db_id
 		if dbid:
 			logger.info('plan dbid=>', dbid)
 			desp = DBCon.objects.get(id=int(dbid)).description
 			set_top_common_config(taskid, desp, src='plan')
 		
-		viewcache(taskid, callername, kind,
-		          "开始执行计划[<span style='color:#FF3399'>%s</span>],数据连接使用配置：[%s]" % (plan.description, dbscheme))
-		caseslist=[]
-		before_plan = plan.before_plan
-		if before_plan not in [None,'']:
-			before_des,before_kind,before_id = before_plan.split("@")
-			before_id = base64.b64decode(before_id).decode('utf-8')
-			if before_kind == 'plan':
-				caseslist.extend(ordered(list(Order.objects.filter(main_id=before_id, kind='plan_case'))))
-				logger.info('执行初始计划%s'%before_des)
-			elif before_kind == 'case':
-				caseslist.extend(ordered(list(Order.objects.filter(follow_id=before_id, kind='plan_case'))))
-			viewcache(taskid, callername, kind,"加入前置计划/用例[<span style='color:#FF3399'>%s</span>]" % (before_plan.split("_")[0]))
+		caseslist = []
+		if startnodeid.split('_')[0] == 'plan':
+			beforeCases, before_des = beforePlanCases(planid)
+			caseslist.extend(ordered(list(beforeCases)))
+			viewcache(taskid, callername, kind, "加入前置计划/用例[<span style='color:#FF3399'>%s</span>]" % (before_des))
 		
 		caseslist.extend(ordered(list(Order.objects.filter(main_id=planid, kind='plan_case'))))
-
+		
 		cases = [Case.objects.get(id=x.follow_id) for x in caseslist]
 		logger.info('cases=>', cases)
 		planresult = []
@@ -591,9 +599,9 @@ def runplan(callername, taskid, planid, is_verify, kind=None,startnodeid=None):
 			if case.count == 0 or case.count == '0':
 				continue;
 			else:
-				logger.info('runcount:',case.count)
-				_runcase(username, taskid, case, plan, planresult, is_verify, kind=None,startnodeid=startnodeid)
-	
+				logger.info('runcount:', case.count)
+				_runcase(username, taskid, case, plan, planresult, is_verify, kind=None, startnodeid=startnodeid, L=L)
+		
 		planre = (len([x for x in planresult]) == len([x for x in planresult if x == True]))
 		if planre:
 			plan.last, color = 'success', 'green'
@@ -627,9 +635,9 @@ def runplan(callername, taskid, planid, is_verify, kind=None,startnodeid=None):
 			viewcache(taskid, callername, kind, dingding_res)
 	
 	except Exception as e:
-		logger.error('执行计划未知异常：',traceback.format_exc())
+		logger.error('执行计划未知异常：', traceback.format_exc())
 		viewcache(taskid, username, kind, '执行计划未知异常[%s]' % traceback.format_exc())
-
+	
 	
 	finally:
 		clear_data(callername, _tempinfo)
@@ -675,7 +683,7 @@ def _step_process_check(callername, taskid, order, kind):
 	try:
 		user = User.objects.get(name=callername)
 		businessdata = BusinessData.objects.get(id=order.follow_id)
-		timeout=10 if not businessdata.timeout else businessdata.timeout
+		timeout = 10 if not businessdata.timeout else businessdata.timeout
 		
 		if businessdata.count == 0:
 			return ('omit', "测试点[%s]执行次数=0 略过." % businessdata.businessname)
@@ -698,7 +706,7 @@ def _step_process_check(callername, taskid, order, kind):
 		viewcache(taskid, username, kind, "--" * 100)
 		viewcache(taskid, username, kind,
 		          "开始执行步骤[<span style='color:#FF3399'>%s</span>] 测试点[<span style='color:#FF3399'>%s</span>]" % (
-			           step.description, businessdata.businessname))
+			          step.description, businessdata.businessname))
 		
 		dbid = getDbUse(taskid, step.db_id)
 		# dbid = step.db_id
@@ -720,20 +728,22 @@ def _step_process_check(callername, taskid, order, kind):
 			
 			if step.content_type == 'xml':
 				if re.search('webservice', step.url):
-					headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), 'post',None, 'xml',step.temp,kind,timeout)
+					headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), 'post',
+					                                                    None, 'xml', step.temp, kind, timeout)
 					if not itf_msg:
 						text = text.replace('&lt;', '<')
-
+						
 						text = re.findall('(?<=\?>).*?(?=</ns1:out>)', text, re.S)[0]
 						text = '\n' + text
 					else:
-						return ('error',itf_msg)
+						return ('error', itf_msg)
 				else:
 					text, statuscode, itf_msg = _callsocket(taskid, user, step.url, body=str(paraminfo))
 			else:
 				
 				headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), step.method,
-				                                                    step.headers, step.content_type, step.temp, kind,timeout)
+				                                                    step.headers, step.content_type, step.temp, kind,
+				                                                    timeout)
 			
 			viewcache(taskid, username, kind,
 			          "<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>" % text)
@@ -901,21 +911,22 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
 		err = traceback.format_exc()
 		logger.info(err)
 		return ('', '', err)
+
+
+def _getfiledict(callername, paraminfo):
+	pdict = dict()
+	for k, v in eval(paraminfo).items():
+		if not k.__contains__('file'):
+			pdict[k] = (None, v)
+		else:
+			if isinstance(v, (str,)):
+				pdict[k] = (v, open(os.path.join(get_space_dir(callername), v), 'rb'))
 	
-		
-def _getfiledict(callername,paraminfo):
-    pdict=dict()
-    for k,v in eval(paraminfo).items():
-    	if not k.__contains__('file'):
-    		pdict[k]=(None,v)
-    	else:
-    		if isinstance(v, (str,)):
-    			pdict[k]=(v,open(os.path.join(get_space_dir(callername),v),'rb'))
-    			
+	return pdict
 
-    return pdict
 
-def _callinterface(taskid, user, url, body=None, method=None, headers=None, content_type=None, props=None, kind=None,timeout=None):
+def _callinterface(taskid, user, url, body=None, method=None, headers=None, content_type=None, props=None, kind=None,
+                   timeout=None):
 	"""
     返回(rps.text,rps.status_code,msg)
     """
@@ -979,7 +990,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		headers = {}
 	
 	headers_rp = _replace_property(user, str(headers))
-
+	
 	if headers_rp[0] is not 'success':
 		return ('', '', '', headers_rp[1])
 	headers_rv = _replace_variable(user, headers_rp[1], taskid=taskid)
@@ -1022,11 +1033,11 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	
 	elif content_type == 'xml':
 		isxml = 0
-	elif content_type=='formdata':
-		body=_getfiledict(user.name,str(body))
+	elif content_type == 'formdata':
+		body = _getfiledict(user.name, str(body))
 	else:
 		raise NotImplementedError("content_type=%s没实现" % content_type)
-
+	
 	# logger.info("method=>",method)
 	rps = None
 	if method == "get":
@@ -1035,73 +1046,73 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		if body:
 			if isinstance(body, (dict, list, bytes)):
 				try:
-					rps = session.get(url, params=body, headers={**default, **headers},timeout=timeout)
+					rps = session.get(url, params=body, headers={**default, **headers}, timeout=timeout)
 				except:
-					err=traceback.format_exc()
+					err = traceback.format_exc()
 					if 'requests.exceptions.ConnectTimeout' in err:
-						msg='请求超时 已设置超时时间%ss'%timeout
+						msg = '请求超时 已设置超时时间%ss' % timeout
 						return ({}, msg, 200, "")
 					else:
-						msg='请求异常:%s'%err
-						return('','','',msg)
+						msg = '请求异常:%s' % err
+						return ('', '', '', msg)
 			else:
 				return ('', '', '', '参数类型不支持[dict,list of tuples,bytes]')
 		else:
 			try:
-				rps = session.get(url, headers={**default, **headers},timeout=timeout)
+				rps = session.get(url, headers={**default, **headers}, timeout=timeout)
 			except:
-				err=traceback.format_exc()
+				err = traceback.format_exc()
 				if 'requests.exceptions.ConnectTimeout' in err:
-					msg='请求超时 已设置超时时间%ss'%timeout
+					msg = '请求超时 已设置超时时间%ss' % timeout
 					return ({}, msg, 200, "")
 				else:
-					msg='请求异常:%s'%err
-					return('','','',msg)
+					msg = '请求异常:%s' % err
+					return ('', '', '', msg)
 	
 	elif method == 'post':
 		session = get_task_session('%s_%s' % (taskid, user.name))
-
-		if content_type=='formdata':
+		
+		if content_type == 'formdata':
 			try:
-				viewcache(taskid, user.name,kind,'跑formdata分支')
-				rps=session.post(url,files=body,headers={**default, **headers},timeout=timeout)
+				viewcache(taskid, user.name, kind, '跑formdata分支')
+				rps = session.post(url, files=body, headers={**default, **headers}, timeout=timeout)
 			except:
-				err=traceback.format_exc()
+				err = traceback.format_exc()
 				if 'requests.exceptions.ReadTimeout' in err:
-					msg='请求超时 已设置超时时间%ss'%timeout
+					msg = '请求超时 已设置超时时间%ss' % timeout
 					return ({}, msg, 200, "")
 				else:
-					msg='请求异常:%s'%err
-					return('','','',msg)
-
-
+					msg = '请求异常:%s' % err
+					return ('', '', '', msg)
+		
+		
 		elif body:
 			if isinstance(body, (dict, list, bytes)):
 				try:
-					rps = session.post(url, data=body, headers={**default, **headers},timeout=timeout)
+					rps = session.post(url, data=body, headers={**default, **headers}, timeout=timeout)
 				except:
-					err=traceback.format_exc()
-					print('是否超时 %s'%'requests.exceptions.ReadTimeout' in err)
+					err = traceback.format_exc()
+					print('是否超时 %s' % 'requests.exceptions.ReadTimeout' in err)
 					if 'requests.exceptions.ReadTimeout' in err:
-						msg='请求超时 已设置超时时间%ss'%timeout
+						msg = '请求超时 已设置超时时间%ss' % timeout
 						return ({}, msg, 200, "")
 					else:
-						msg='请求异常:%s'%err
-						return('','','',msg)
-
+						msg = '请求异常:%s' % err
+						return ('', '', '', msg)
+			
 			else:
 				return ('', '', '', '参数类型不支持[dict,list of tuples,bytes]')
 		else:
 			try:
-				rps = session.post(url, headers={**default, **headers},timeout=timeout)
+				rps = session.post(url, headers={**default, **headers}, timeout=timeout)
 			except:
-				err=traceback.format_exc()
+				err = traceback.format_exc()
 				if 'requests.exceptions.ReadTimeout' in err:
-					msg='请求超时 已设置超时时间%ss'%timeout
+					msg = '请求超时 已设置超时时间%ss' % timeout
 					return ({}, msg, 200, "")
 				else:
-					msg='请求异常:%s'%err
-					return('','','',msg)
+					msg = '请求异常:%s' % err
+					return ('', '', '', msg)
 	
 	# logger.info("textfdafda=>",rps.text)
 	else:
@@ -1109,10 +1120,10 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	
 	###响应报文中props处理
 	status, err = _find_and_save_property(user, props, rps.text)
-
+	
 	if status is not 'success':
 		return ('', '', '', err)
-
+	
 	return (rps.headers, rps.text, rps.status_code, "")
 
 
@@ -1133,10 +1144,10 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
 	try:
 		logme.warn('获取自定义函数id %s' % functionid)
 		f = Function.objects.get(id=functionid)
-		logme.warn('获取自定义函数%s'%f.__str__())
+		logme.warn('获取自定义函数%s' % f.__str__())
 	except:
 		pass
-
+	
 	call_method_params.append("taskid='%s'" % taskid)
 	call_method_params.append("callername='%s'" % user.name)
 	# call_method_params.append("location='%s'"%get_space_dir(user.name))
@@ -1152,7 +1163,7 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
 	res, call_str = ok[0], ok[1]
 	if res is not 'success':
 		return (res, call_str)
-		
+	
 	return Fu.call(f, call_str, builtin=builtin)
 
 
@@ -1175,14 +1186,13 @@ def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
 		methodname = ''
 		try:
 			methodname = re.findall('(.*?)\(', s)[0]
-			argstr=re.findall('\((.*?)\)', s)[0]
+			argstr = re.findall('\((.*?)\)', s)[0]
 			if argstr.strip():
-				argstr=argstr+','
-			argstr=argstr+"callername='%s',taskid='%s'"%(user.name,taskid)
-			call_str='%s(%s)'%(methodname,argstr)
-
-
-			##????????????????????????????
+				argstr = argstr + ','
+			argstr = argstr + "callername='%s',taskid='%s'" % (user.name, taskid)
+			call_str = '%s(%s)' % (methodname, argstr)
+		
+		##????????????????????????????
 		except:
 			return ('error', '解析%s[%s]失败[%s]' % (kind, s, traceback.format_exc()))
 		
@@ -1248,7 +1258,7 @@ def _compute(taskid, user, checkexpression, type=None, target=None, kind=None, p
 				logger.info('check', item)
 				old = item
 				item = _legal(item)
-				target=target.replace('null', "'None'").replace('true',"'True'").replace('false',"'False'")
+				target = target.replace('null', "'None'").replace('true', "'True'").replace('false', "'False'")
 				ress = _eval_expression(user, item, need_chain_handle=True, data=target, taskid=taskid,
 				                        parse_type=parse_type, rps_header=rps_header)
 				logger.info('ress2=>', ress)
@@ -1672,7 +1682,7 @@ def _replace_function(user, str_, taskid=None):
 	str_ = str(str_)
 	
 	call_str_list = re.findall('\$\[(.*?)\((.*?)\)\]', str_)
-	#viewcache(taskid, user.name, None, '发现函数部分=>%s' % call_str_list)
+	# viewcache(taskid, user.name, None, '发现函数部分=>%s' % call_str_list)
 	
 	if len(call_str_list) == 0: return ('success', str_)
 	
@@ -1684,7 +1694,7 @@ def _replace_function(user, str_, taskid=None):
 		except:
 			pass
 		
-		appendstr = "taskid='%s',callername='%s'" % (taskid,user.name)
+		appendstr = "taskid='%s',callername='%s'" % (taskid, user.name)
 		itlist = []
 		if call_str[1]:
 			itlist.append(call_str[1])
@@ -1735,41 +1745,41 @@ def _get_step_params(paraminfo, taskid, callername):
 				v = cur[k]
 				try:
 					v = eval(v)
-					# logger.info('类型：',type(v))
+				# logger.info('类型：',type(v))
 				except:
 					pass
 				
 				if isinstance(v, (str,)):
-					find_var=len(re.findall('\{\{.*?\}\}', v))
+					find_var = len(re.findall('\{\{.*?\}\}', v))
 					if find_var:
 						if v.__contains__('{{STEP_PARAMS}}'):
 							logger.info('字符串发现STEP_PARAMS', v)
 							del cur[k]
-							# cur[k]=''
-							# logger.info(cur)
+						# cur[k]=''
+						# logger.info(cur)
 						else:
-							user=User.objects.get(name=callername)
-							cur[k]=_replace_variable(user,v,taskid=taskid)[1]
-					
+							user = User.objects.get(name=callername)
+							cur[k] = _replace_variable(user, v, taskid=taskid)[1]
+				
 				else:
 					_next(v)
 		
 		elif isinstance(cur, (list,)):
-			itemindex=-1
+			itemindex = -1
 			for sb in cur:
-				itemindex=itemindex+1
+				itemindex = itemindex + 1
 				if isinstance(sb, (str,)):
-					find_var=len(re.findall('\{\{.*?\}\}', sb))
+					find_var = len(re.findall('\{\{.*?\}\}', sb))
 					if find_var:
 						if sb.__contains__('{{STEP_PARAMS}}'):
 							# del parent[key]
 							cur.remove(sb)
 						else:
-							user=User.objects.get(name=callername)
-							cur[itemindex]=_replace_variable(user,sb,taskid=taskid)[1]
-
-
-					
+							user = User.objects.get(name=callername)
+							cur[itemindex] = _replace_variable(user, sb, taskid=taskid)[1]
+				
+				
+				
 				else:
 					_next(sb)
 	
@@ -1799,8 +1809,8 @@ def _get_step_params(paraminfo, taskid, callername):
 					import json
 					logger.info('p1=>', p1)
 					dl[p1] = eval(p2)
-					
-					# logger.info('类型：',type(dl[p1]))
+				
+				# logger.info('类型：',type(dl[p1]))
 				except:
 					# traceback.logger.info_exc()
 					dl[p1] = p2
@@ -1881,13 +1891,13 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
 			if len(gain) == 0 and len(value) == 0:
 				warnings.warn("变量%s的获取方式和默认值至少填一项" % varname)
 			elif len(gain) > 0 and len(value) > 0:
-				old = old.replace('{{%s}}' % varname, str(value),1)
+				old = old.replace('{{%s}}' % varname, str(value), 1)
 				# __replace_route["%s.%s"%(user.name,varname)]=value
 				warnings.warn('变量%s获取方式和值都设定将被当做常量，获取方式和缓存失效' % varname)
 			
 			
 			elif len(gain) == 0 and len(value) > 0:
-				old = old.replace('{{%s}}' % varname, str(value),1)
+				old = old.replace('{{%s}}' % varname, str(value), 1)
 				viewcache(taskid, user.name, None, '替换变量 {{%s}}=>%s' % (varname, value))
 			# __replace_route["%s.%s"%(user.name,varname)]=value
 			
@@ -1902,7 +1912,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
 							return v
 						else:
 							v = v[1]
-						old = old.replace('{{%s}}' % varname, str(v),1)
+						old = old.replace('{{%s}}' % varname, str(v), 1)
 						viewcache(taskid, user.name, None, '替换变量 {{%s}}=>%s' % (varname, v))
 				
 				
@@ -1918,7 +1928,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
 					
 					# if v is None:
 					#   return ('error','')
-					old = old.replace('{{%s}}' % varname, str(v),1)
+					old = old.replace('{{%s}}' % varname, str(v), 1)
 					viewcache(taskid, user.name, None, '替换变量 {{%s}}=>%s' % (varname, v))
 		
 		return ('success', old)
@@ -2015,7 +2025,7 @@ def _gain_compute(user, gain_str, src=1, taskid=None):
 			logger.info('flag1', flag)
 			ms = list(Function.objects.filter(flag=flag))
 			functionid = None
-		
+			
 			if len(ms) == 0:
 				# functionid=None
 				# flag=Fu.tzm_compute(gain_str,'(.*?)\(.*?\)')
@@ -2409,10 +2419,10 @@ class MainSender:
 	
 	@classmethod
 	def gethtmlcontent(cls, taskid, rich_text):
-
+		
 		data = gettaskresult(taskid)
-		logger.info('报告data:',data)
-
+		logger.info('报告data:', data)
+		
 		if not data:
 			return '<html>无运行数据..</html>'
 		
@@ -2521,7 +2531,7 @@ class MainSender:
 	def gen_report(cls, taskid, htmlcontent):
 		logger.info('==本地缓存测试报告')
 		
-		filepath = '%s/logs/local_reports/report_%s.html' %(BASE_DIR,taskid)
+		filepath = '%s/logs/local_reports/report_%s.html' % (BASE_DIR, taskid)
 		if os.path.exists(filepath):
 			with open(filepath, 'w') as f:
 				f.write(htmlcontent)
@@ -3099,7 +3109,8 @@ class Transformer(object):
 				# logger.info(varname)
 				if x.__contains__('lv_Signature') and si and li:
 					old = old.replace(x, '{{%s_%s_%s_%s}}' % (str(varname[0]).split('$')[0], si, li, self.transform_id))
-					logger.info('替换签名变量名=>', '{{%s_%s_%s_%s}}' % (str(varname[0]).split('$')[0], si, li, self.transform_id))
+					logger.info('替换签名变量名=>',
+					            '{{%s_%s_%s_%s}}' % (str(varname[0]).split('$')[0], si, li, self.transform_id))
 				else:
 					old = old.replace(x, '{{%s_%s}}' % (varname[0], self.transform_id))
 		
@@ -3461,7 +3472,7 @@ class Transformer(object):
 					product = L[0]
 				self.productid = product.id
 				self.planid = plan.id
-
+				
 				order = Order()
 				order.kind = 'product_plan'
 				order.main_id = product.id
@@ -3752,7 +3763,7 @@ class Transformer(object):
 										tag = Tag()
 										tag.customize = ''
 										tag.planids = '{"%s":["%s","%s"]}' % (
-										'迁移计划_%s' % self.transform_id, self.productid, self.planid)
+											'迁移计划_%s' % self.transform_id, self.productid, self.planid)
 										tag.isglobal = 0
 										tag.var = var
 										tag.save()

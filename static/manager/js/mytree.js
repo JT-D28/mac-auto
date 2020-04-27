@@ -596,7 +596,7 @@ var tree={
 			}
 
 		}
-		_post('/manager/querytreelist/',params,success)
+		_post_nl('/manager/querytreelist/',params,success)
 
 
 	},
@@ -716,7 +716,7 @@ var tree={
                 document.body.appendChild(oInput);
                 oInput.select(); // 选择对象;
                 document.execCommand("Copy");
-                layer.msg('获取成功，在前/后置操作中粘贴')
+                layer.msg('获取成功')
                 oInput.remove()
             } else if ($(this)[0].id === 'run') {
                 _post('/manager/treecontrol/', {
@@ -748,34 +748,12 @@ var tree={
 
 
 function getRightMenu(event, treeNode) {
-    var winWidth = $(document).width();
-    var winHeight = $(document).height();
-    //Get pointer position:
-    var posX = event.pageX;
-    var posY = event.pageY;
-    //Get contextmenu size:
+    posLeft = event.clientX ;
+    posTop = event.clientY + document.getElementById("treelist").scrollTop;
     var menuWidth = $(".contextmenu").width();
-    var menuHeight = $(".contextmenu").height();
-    //Security margin:
-    var secMargin = 10;
-    //Prevent page overflow:
-    if (posX + menuWidth + secMargin >= winWidth
-        && posY + menuHeight + secMargin >= winHeight) {
-        //Case 1: right-bottom overflow:
-        posLeft = posX - menuWidth - secMargin + "px";
-        posTop = posY - menuHeight - secMargin + "px";
-    } else if (posX + menuWidth + secMargin >= winWidth) {
-        //Case 2: right overflow:
-        posLeft = posX - menuWidth - secMargin + "px";
-        posTop = posY + secMargin + "px";
-    } else if (posY + menuHeight + secMargin >= winHeight) {
-        //Case 3: bottom overflow:
-        posLeft = posX + secMargin + "px";
-        posTop = posY - menuHeight - secMargin + "px";
-    } else {
-        //Case 4: default values:
-        posLeft = posX + secMargin + "px";
-        posTop = posY + secMargin + "px";
+    var treelistwidth = document.getElementById("treelist").clientWidth
+    if (event.pageX + menuWidth + 10 > treelistwidth) {
+        posLeft = event.pageX - menuWidth
     }
 
 

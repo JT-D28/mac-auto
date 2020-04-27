@@ -34,7 +34,7 @@
                 </span>
     </legend>
 </div>
-<form id='addstep' class="layui-form" style="margin: 20px 30px 0 20px;">
+<form id='addstep' class="layui-form" style="margin: 14px 30px 0 20px;">
     <div class="layui-form-item" id='weight_item' hidden>
         <label class="layui-form-label ">权重</label>
         <div class="layui-input-block">
@@ -116,15 +116,6 @@
         </div>
     </div>
 
-    <div class="layui-form-item" hidden>
-        <label class="layui-form-label">标签</label>
-        <div class="layui-input-block">
-            <select name="tag" lay-verify="">
-                <option value="">请选择</option>
-            </select>
-        </div>
-    </div>
-
 
     <div class="layui-form-item" hidden>
         <label class="layui-form-label required">调用函数</label>
@@ -133,7 +124,7 @@
         </div>
     </div>
 
-    <div class="layui-form-item">
+    <div class="layui-form-item" style="margin-bottom: 0">
         <label class="layui-form-label">DB选择</label>
         <div class="layui-input-block">
             <select name="db_id" lay-verify="" lay-search>
@@ -142,8 +133,8 @@
     </div>
 
 
-    <div class="layui-form-item" style="margin-bottom: 0;">
-        <button class="layui-btn" id='save' style="visibility:hidden;position: center;
+    <div class="layui-form-item" style="margin-bottom: 0">
+        <button class="layui-btn" id='save' style="display: none;position: center;
         width:72px;margin-left:110px;height: 34px;line-height: 34px">保存
         </button>
     </div>
@@ -282,7 +273,8 @@
         // alert(detail)
 
         if (action != 'view') {
-            $('#save').css('visibility', 'visible');
+            $('#save').css('display', 'inherit');
+            $('#save').css('margin-top','14px')
             $('#importbusiness').css('visibility', 'visible');
         } else {
             $('#weight_item').removeAttr('hidden');

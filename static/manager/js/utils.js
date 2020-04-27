@@ -365,7 +365,7 @@ function _post(url,data,success){
 
             layui.use(['layer'], function () {
                 loadIndex = layer.load(1, {
-                    shade: [0.7, '#393D49']
+                    shade: [0.2, '#393D49']
                 });
             })
 

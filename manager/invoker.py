@@ -320,7 +320,7 @@ def _get_down_case_leaf_id(caseids,cur=None):
 	for caseid in caseids:
 		e=Order.objects.filter(kind='case_case',main_id=caseid)
 		if e.exists():
-			_get_final_case_leaf_id([x.follow_id for x in e],cur)
+			_get_down_case_leaf_id([x.follow_id for x in e],cur)
 		else:
 			cur.append(caseid)
 
@@ -376,7 +376,7 @@ def _get_final_run_node_id(startnodeid):
 					final.append(o0.follow_id)
 			##case-case
 			final_leaf_case_ids=[]
-			_get_final_case_leaf_id([nid],final_leaf_case_ids)
+			_get_down_case_leaf_id([nid],final_leaf_case_ids)
 			logger.info('获取最终case子节点待运行:',final_leaf_case_ids)
 
 		logger.info('结果:',final)

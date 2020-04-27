@@ -220,7 +220,7 @@
                 return false
             }
             before_plan = $("[name='before_plan']").val()
-            if(before_plan!='' && before_plan.search('_')==-1){
+            if(before_plan!='' && before_plan.search('@')==-1){
                 layer.msg('任务可能错误')
                 return false
             }

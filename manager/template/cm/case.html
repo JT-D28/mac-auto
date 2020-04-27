@@ -4,121 +4,80 @@
 <head>
     <meta charset="UTF-8">
     <title>用例</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'manager/bootstrap/bootstrap.min.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
     <style type="text/css">
-        .layui-icon:hover {
-            cursor: pointer;
+        .layui-input {
+            padding: 0 14px;
+            background-color: rgb(252, 252, 252);
         }
 
-        .icon-tool {
-            float: right;
+        .layui-form-item .layui-form-checkbox[lay-skin="primary"] {
+            margin-right: 9px;
         }
 
-        .icon-tool-item:hover {
-            cursor: pointer;
-        }
-
-        .icon-tool-item {
-            margin-left: 5px;
-        }
-
-        #case-selected p {
-            height: 30px;
-            padding: 0;
-            /* text-overflow: ellipsis;*/
-            /*     max-width:200px;*/
-        }
-
-        #can-select p:hover {
-            background-color: #009688;
-            color: white;
-        }
-
-        #is-selected p:hover {
-            background-color: #009688;
-            color: white;
-        }
-
-        .func_btn {
-            font-size: 10px;
-            margin: 5px;
-        }
-
-        .func_btn:hover {
-            cursor: pointer;
-            color: #009688;
-            font-weight: 10px;
-        }
-
-        .func_btn_bar {
-            /*        background-color: red;*/
-        }
-
-        .mailpadding {
-            padding: 9px 1px;
+        .layui-form-selectup dl {
+            top: 42px;
+            bottom: unset;
         }
     </style>
 
 </head>
-<body>
-<div class="layui-row" style="height: 100%">
-    <div class="layui-col-md12" style="height: 100%;padding:0 15px">
-        <fieldset style="height:95%">
-            <legend style="font-size: 20px;border-top-width:0px !important;">
+
+<body style="height: 100%">
+<div style="width: 100%;height: 6%;background:rgba(245,245,246,1);">
+    <legend style="position: relative;top:50%;transform:translateY(-50%);padding-left: 30px">
                 <span class="layui-breadcrumb">
                     <a href="">用例管理</a>
                     <a href="">用例</a>
                 </span>
-            </legend>
-            <form id='addcase' class="layui-form layui-form-pane" action="">
-                <div class="layui-form-item" id='weight_item' hidden>
-                    <label class="layui-form-label">权重</label>
-                    <div class="layui-input-block">
-                        <input type="text" name="weight" placeholder="请输入" autocomplete="off" class="layui-input"
-                               id='weight' disabled>
-                    </div>
-                </div>
-
-                <div class="layui-form-item">
-                    <label class="layui-form-label required">执行次数</label>
-                    <div class="layui-input-block">
-                        <input type="text" name="count" placeholder="请输入" autocomplete="off" class="layui-input"
-                               id='count'>
-                    </div>
-
-                </div>
-                <div class="layui-form-item">
-                    <label class="layui-form-label">用例名称</label>
-                    <div class="layui-input-block">
-                        <input type="text" name="description" placeholder="请输入" autocomplete="off" class="layui-input">
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <label class="layui-form-label">DB选择</label>
-                    <div class="layui-input-block">
-                        <select name="db_id" lay-verify="" lay-search></select>
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <button class="layui-btn" id='save' style="visibility:hidden;position: center">保存</button>
-                </div>
-            </form>
-        </fieldset>
-    </div>
+    </legend>
 </div>
+
+<form id='addcase' class="layui-form" style="margin: 20px 30px 0 20px;">
+    <div class="layui-form-item" id='weight_item' hidden>
+        <label class="layui-form-label">权重</label>
+        <div class="layui-input-block">
+            <input type="text" name="weight" autocomplete="off" class="layui-input"
+                   id='weight' disabled>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">执行次数</label>
+        <div class="layui-input-block">
+            <input type="text" name="count" autocomplete="off" class="layui-input"
+                   id='count'>
+        </div>
+
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">用例名称</label>
+        <div class="layui-input-block">
+            <input type="text" name="description" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">DB选择</label>
+        <div class="layui-input-block">
+            <select name="db_id" lay-verify="" lay-search></select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <button class="layui-btn" id='save' style="visibility:hidden;position: center;width:72px;margin-left:110px;height: 34px;line-height: 34px">保存</button>
+    </div>
+</form>
+
 </body>
 
 
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
-<script src="{% static 'manager/js/case.js' %}"></script>
+
 <script type="text/javascript">
 
 
-    layui.use(['table', 'layer', 'form', 'element'], function () {
-        var table = layui.table;
+    layui.use(['layer', 'form', 'element'], function () {
         var $ = layui.jquery;
         var layer = layui.layer;
         var form = layui.form;
@@ -127,7 +86,7 @@
         id = uid ? uid : pid;
         action = _get_query_param('action');
         detail = 'addcase';
-        if (action != 'view')
+        if (action !== 'view')
             $('#save').css('visibility', 'visible');
         else {
             $('#save').css('visibility', 'hidden');
@@ -144,14 +103,14 @@
                     for (var index = 0; index < res.data.length; index++) {
                         $("[name='db_id']").append("<option value='" + res.data[index]['name'] + "'>" + res.data[index]['name'] + "</option>")
                     }
-                    console.log('加载数据库信息列表成功')
+                    console.log('加载数据库信息列表成功');
                     layui.form.render('select');
                     _post('/manager/queryonecase/', {id: uid}, function (data) {
                         description = data.data[0]['description'];
                         //alert(description)
                         $("[name='description']").val(description);
                         $("[name='db_id']").val(data.data[0]['db_id']);
-                        layui.form.render('select')
+                        layui.form.render('select');
                         $("[name='weight']").val(data.data[0]['weight']);
                         $("[name='count']").val(data.data[0]['count']);
                     })
@@ -160,18 +119,17 @@
                 }
             });
         } else {
-            _load_db_dropdownlist('',id)
+            _load_db_dropdownlist('', id)
         }
 
 
         //set default
-        if (detail == 'addcase')
-            $("[name='count']").val(1)
+        if (detail === 'addcase')
+            $("[name='count']").val(1);
 
         //save
         btn = $('#save')
         if (btn) btn.bind('click', function (e) {
-
             data = {
                 'uid': uid,
                 'pid': pid,
@@ -179,33 +137,25 @@
                 'description': $("[name='description']").val(),
                 'dbid': $("[name='db_id']").val(),
                 'count': $("[name='count']").val()
-
-            }
+            };
 
             _post('/manager/treecontrol/', data, function (data) {
-
-                if (data.code == 0) {
+                if (data.code === 0) {
                     var treeObj = parent.$.fn.zTree.getZTreeObj('case-manager');
-                    if (detail == 'addcase') {
+                    if (detail === 'addcase') {
                         var node = treeObj.getNodeByParam('id', pid);
-                        console.log('addcase=>' + JSON.stringify(data.data))
+                        console.log('addcase=>' + JSON.stringify(data.data));
                         treeObj.addNodes(node, data.data);
                         treeObj.expandNode(node, true)
-
                     } else {
                         var node = treeObj.getNodeByParam('id', uid);
-                        node.name = data.data['name']
+                        node.name = data.data['name'];
                         treeObj.updateNode(node)
-
                     }
                     layer.alert(data.msg, {icon: 1, time: 2000})
                 } else
                     layer.alert(data.msg, {icon: 2})
-
-
             });
-
-
             return false;
         });
     });

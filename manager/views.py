@@ -29,6 +29,7 @@ from manager.context import Me2Log as logger
 @csrf_exempt
 def index(request):
 	if request.session.get('is_login', None):
+		UI_MENU_YHGL=Grant.is_ui_display('UI_MENU_YHGL', request.session.get('username'))
 		return render(request, 'manager/start.html', locals())
 	
 	else:

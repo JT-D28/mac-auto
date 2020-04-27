@@ -149,23 +149,29 @@ class Grant(object):
         return False
 
     @classmethod
-    def _is_ui_display(cls,code,username):
+    def is_ui_display(cls,code,username):
         '''
         UI组件显示控制
         '''
+        uc=UIControl.objects.filter(code=code)
+        isopen=0
+        if uc.exists():
+            isopen=uc[0].is_open
+
         user=User.objects.get(name=username)
         user_id=user.id
         user_role_ids=[x.id for x in user.role_set.all()]
 
-        ms=UIControl.objects.filter(code=code)
-        if ms.exists():
-            uid=ms[0].id
-            User_UIControl.objects.filter(uc_id=uid)
+        f1=User_UIControl.objects.filter(user_id=user_id,kind='USER')
+        if f1.exists() and isopen:
+            return 'none!important'
 
+        for idx in user_role_ids:
+            f2=User_UIControl.objects.filter(user_id=idx,kind='ROLE')
+            if f2.exists() and isopen:
+                return 'none!important'
 
-
-
-        return True
+        return '!important'
     
     @classmethod
     def _add_ui_control_user(cls, ucid, userlist,user):
@@ -378,6 +384,14 @@ class Grant(object):
     def updateuicontrolstatus(cls,**kws):
         try:
             u=UIControl.objects.get(id=kws['uid'])
+            openstatus=kws['isopen']
+            if int(openstatus)==1:
+                if not cls._isconfig(u.code):
+                    return{
+                        'code':2,
+                        'msg':"代码有埋点么"
+                    }
+            
             u.is_open=kws['isopen']
             u.save()
 

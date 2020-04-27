@@ -435,9 +435,8 @@ def runplans(username, taskid, planids, is_verify, kind=None, startnodeid=None):
 		threading.Thread(target=runplan, args=(username, taskid, planid, is_verify, kind, startnodeid)).start()
 
 
-def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startnodeid=None, L=[]):
+def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startnodeid=None, L=None):
 	groupskip = []
-	logger.info('_runcase方法......')
 	caseresult = []
 	
 	dbid = getDbUse(taskid, case0.db_id)
@@ -445,7 +444,13 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
 		desp = DBCon.objects.get(id=int(dbid)).description
 		set_top_common_config(taskid, desp, src='case')
 	
-	viewcache(taskid, username, kind, "开始执行用例[<span style='color:#FF3399'>%s</span>]" % case0.description)
+	case_run_nodes=_get_final_run_node_id('case_%s'%case0.id)
+	subflag=True if set(case_run_nodes).issubset(L) else False
+
+	logger.info('[%s]下测试点ID：%s'%(case0.description,case_run_nodes))
+	logger.info('运行节电下测试点ID：%s'%L)
+	if subflag:
+		viewcache(taskid, username, kind, "开始执行用例[<span style='color:#FF3399'>%s</span>]" % case0.description)
 	steporderlist = ordered(list(Order.objects.filter(Q(kind='case_step') | Q(kind='case_case'), main_id=case0.id)))
 	
 	##case执行次数
@@ -489,6 +494,8 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
 								if order.follow_id not in L:
 									logger.info('测试点[%s]不在执行链中 忽略' % order.follow_id)
 									continue
+
+
 								
 								result, error = _step_process_check(username, taskid, order, kind)
 								spend = int((time.time() - start) * 1000)
@@ -522,12 +529,14 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
 	
 	casere = (len([x for x in caseresult if x in ('success', 'omit')]) == len([x for x in caseresult]))
 	planresult.append(casere)
-	if casere:
-		viewcache(taskid, username, kind,
-		          "结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-green'>success</span>" % case0.description)
-	else:
-		viewcache(taskid, username, kind,
-		          "结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-red'>fail</span>" % case0.description)
+
+	if subflag:
+		if casere  :
+			viewcache(taskid, username, kind,
+			          "结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-green'>success</span>" % case0.description)
+		else:
+			viewcache(taskid, username, kind,
+			          "结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-red'>fail</span>" % case0.description)
 
 
 def getDbUse(taskid, dbname):

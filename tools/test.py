@@ -1,5 +1,3 @@
-a={}
-if a:
-    print(1)
-else:
-    print(2)
+a=[21097, 21098]
+b=[21097, 21098]
+print(set(a).issubset(b))

@@ -173,8 +173,9 @@
                     processData: false,
                     contentType: false,
                     success: function (response) {
-                        response = JSON.parse(response)
+                        response = JSON.parse(response);
                         if (response.code === 0) {
+                            layer.closeAll()
                             that.$message({
                                 type: 'success',
                                 message: response.msg
@@ -218,15 +219,15 @@
                 title: '上传文件',
                 content: $('#upload'),
                 area: ['80%', '80%'],
-                success: function () {
-                    app.fileList=[]
+                success: function (index) {
+                    app.fileList = []
                 }
             });
         });
 
         $('#delbtn').click(function () {
             var checkStatus = table.checkStatus("table-file");
-            data = checkStatus.data; //获取选中的数据
+            data = checkStatus.data;
             if (data.length === 0) {
                 layer.alert('你有选择删除的文件么?', {icon: 3, time: 1500});
                 return
@@ -235,15 +236,10 @@
                 btn1: function (index, layero) {
                     layer.close(index)
                     success = function (e) {
-                        // e=JSON.parse(e)
                         if (e.code === 0) {
                             table.reload('table-file', {
-                                page: {
-                                    curr: 1
-                                },
-                                where: {
-                                    searchvalue: $("#search-value").val()
-                                }
+                                page: {curr: 1},
+                                where: {searchvalue: $("#search-value").val()}
                             });
                             layer.alert(e.msg, {icon: 1, time: 1500})
                         } else

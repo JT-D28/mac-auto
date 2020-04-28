@@ -827,6 +827,29 @@ def movenode(request):
 			'msg': '移动异常'
 		}
 
+def movemulitnodes(request):
+	try:
+		is_copy = request.POST.get('is_copy')
+		movetype = request.POST.get('move_type')
+		src_ids = request.POST.get('src_ids')[:-1]
+		src_ids = src_ids.split(';')
+		targetid = request.POST.get('target_id')
+		user = lm.User.objects.get(name=request.session.get('username'))
+		for srcid in src_ids:
+			print('111111111',srcid, targetid, movetype)
+			_build_all(srcid, targetid, movetype, user, is_copy, user.name)
+		
+		return {
+			'status': 'success',
+			'msg': '操作成功'}
+	except:
+		logger.info(traceback.format_exc())
+		return {
+			'status': 'error',
+			'msg': '移动异常'
+		}
+
+
 
 ################
 

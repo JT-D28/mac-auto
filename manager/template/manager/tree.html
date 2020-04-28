@@ -221,44 +221,22 @@
 <script src="{% static 'manager/ztree/jquery.ztree.core.js' %}"></script>
 <script src="{% static 'manager/ztree/jquery.ztree.excheck.min.js' %}"></script>
 <script src="{% static 'manager/ztree/jquery.ztree.exedit.js' %}"></script>
-<script src="{% static 'manager/js/mytree.js' %}"></script>
+<script src="{% static 'manager/js/mytree_1.js' %}"></script>
 
-<script src="{% static 'manager/js/bootstrap.bundle.min.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/js/plugins/piexif.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/js/plugins/sortable.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/js/fileinput.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/js/locales/fr.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/js/locales/es.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/themes/fas/theme.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.js' %}"></script>
+
 <script type="text/javascript">
-    tree.init()
+    tree.init();
 
     $('#searchbtn').click(function (argument) {
         tree.init($('#search').val())
-    });
-
-    $('#add_product').click(function (e) {
-        layer.prompt({
-            formType: 0,
-            value: '',
-            title: '新建产品'
-        }, function (value, index, elem) {
-            layer.close(index);
-            _post('/manager/treecontrol/', {'description': value, 'action': 'addproduct'}, function (data) {
-                if (data.code == 0)
-                    layer.alert(data.msg, {icon: 1, time: 2000})
-                else
-                    layer.alert(data.msg, {icon: 2})
-            })
-        })
     });
 
     window.onload = function () {
         document.documentElement.style.overflow = 'hidden';
     };
 
-/**    layui.use(['util'], function () {
+
+    /**    layui.use(['util'], function () {
         var util = layui.util;
         util.fixbar({
             bar1: "↻"
@@ -269,7 +247,7 @@
             }
         });
     });
-**/
+     **/
 </script>
 </body>
 </html>

@@ -1,128 +1,200 @@
-{%load static%}
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="height: 100%">
 <head>
     <meta charset="UTF-8">
-    <!-- bootstrap 4.x is supported. You can also use the bootstrap css 3.3.x versions -->
-    <link rel="stylesheet" href="https://cdn.bootcss.com/twitter-bootstrap/4.3.1/css/bootstrap.min.css" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" crossorigin="anonymous">
-    <link href="{% static 'manager/bootstrap-fileinput-master/css/fileinput.css'%}" media="all" rel="stylesheet" type="text/css"/>
-    <link href="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.css'%}" media="all" rel="stylesheet" type="text/css"/>
-    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
-    <title>我的空间</title>
+    <script src="{% static 'homepage/vue.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'homepage/eleui/theme-chalk/index.css' %}">
+    <script src="{% static 'homepage/eleui/index.js' %}"></script>
+    <title>数据迁移</title>
     <style type="text/css">
-      
-      .layui-icon:hover{
-        cursor: pointer;
-      }
+        .el-upload {
+            margin-top: 8%;
+            width: 50%;
+            height: 180px;
+        }
+
+        .el-upload-list__item .el-icon-close {
+            top: 14px
+        }
+
+        .upload-demo {
+            min-height: 50%;
+        }
+
+        .el-upload-dragger {
+            width: 100%;
+            height: 100%;
+        }
+
+        .el-upload-list {
+            margin: 0 25%;
+        }
+
+        .el-upload-list__item-name {
+            background-color: rgba(247, 250, 250, 1);
+            margin-right: 0;
+            line-height: 38px;
+            height: 38px;
+            font-size: 12px;
+            font-family: PingFang-SC-Regular, PingFang-SC;
+            font-weight: 400;
+            color: rgba(53, 59, 75, 1);
+        }
+
+        .el-upload-list__item-status-label {
+            top: 9px
+        }
+
     </style>
 </head>
-<body   style="height:calc(100% - 40px);padding: 20px">
+<body style="height:calc(100% - 40px);padding: 20px;margin:0">
+
+<div id="kv-upload" style="height: 100%;text-align: center;">
+    <el-upload
+            ref="upload"
+            style="text-align: center;"
+            class="upload-demo"
+            drag
+            action=""
+            :auto-upload="false"
+            :on-remove="removeFile"
+            :file-list="fileList"
+            :on-change="handleChange"
+            multiple
+    >
+        <i class="el-icon-upload"></i>
+        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+    </el-upload>
+    <el-button style="margin-top: 20px;width: 72px;height: 34px;line-height: 0px" type="info" @click="uploadFile">上传
+    </el-button>
+
+</div>
 
 
-
-
-
-   <input id="kv-explorer" type="file" multiple>         
 </body>
 
 
-
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
-<script src="{% static 'manager/js/utils.js' %}"></script>
-<script src="{% static 'manager/layui/layui.js' %}"></script>
 
-<script src="{% static 'manager/js/bootstrap.bundle.min.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/js/plugins/piexif.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/js/plugins/sortable.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/js/fileinput.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/js/locales/fr.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/js/locales/es.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/themes/fas/theme.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.js' %}"></script>
 
 <script type="text/javascript">
-layui.use(['table','layer','upload','element'], function(){
-  var table = layui.table;
-  var upload=layui.upload;
-  var $=layui.jquery
-  var layer=layui.layer;
-  var form = layui.form;
+    var app = new Vue({
+        el: '#kv-upload',
+        data() {
+            return {
+                fileList: [],
+            }
+        },
+        methods: {
+            handleChange(fileList) {
+                this.fileList.push(fileList)
+            },
+            removeFile(file) {
+                let arr = [];
+                for (let i = 0; i < this.fileList.length; i++) {
+                    if (this.fileList[i].uid !== file.uid) {
+                        arr.push(this.fileList[i])
+                    }
+                }
+                this.fileList = arr
+            },
+            uploadFile() {
+                var that=this;
+                if (that.fileList.length === 0) {
+                    that.$message.warning('请选取文件');
+                    return
+                }
+                const formData = new FormData();
+                that.fileList.forEach((file) => {
+                    formData.append('file_data', file.raw)
+                });
+                formData.append('kind', 'datamovein');
+                formData.append('content_type', 'json');
+                $.ajax({
+                    type: "post",
+                    url: "/manager/upload/",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        response = JSON.parse(response)
+                        if (response.code === 0) {
+                            that.$message({
+                                type: 'success',
+                                message: response.msg
+                            });
+                        } else {
+                            that.$message.error(response.msg)
+                        }
+                    }
+                });
+            }
+        }
+    });
+
+
+    /**layui.use(['table', 'layer', 'upload', 'element'], function () {
+        var table = layui.table;
+        var upload = layui.upload;
+        var $ = layui.jquery
+        var layer = layui.layer;
+        var form = layui.form;
 
 //
 
-$("#kv-explorer").on("filebatchselected",function(event,files){
+        $("#kv-explorer").on("filebatchselected", function (event, files) {
 
-  // for(var i=0;i<files.length;i++){
-  //   console.log('选择文件=>'+files[i].name)
-  // }
-  len=files.length
-  if(len>0)
-    console.log(files[0].name)
-  else
-    console.log('len=0')
+            // for(var i=0;i<files.length;i++){
+            //   console.log('选择文件=>'+files[i].name)
+            // }
+            len = files.length
+            if (len > 0)
+                console.log(files[0].name)
+            else
+                console.log('len=0')
 
-});
-
-
+        });
 
 
-$("#kv-explorer").fileinput({
-    // 'showBrowse': false,
-    'theme': 'explorer-fas',
-    'uploadUrl': '/manager/upload/',
-    'minFileCount':1,
-    'uploadAsync':false,
-    'maxFileSize': 0,
-    uploadExtraData: function(previewId, index) {   //额外参数的关键点
-        var obj = {
+        $("#kv-explorer").fileinput({
+            // 'showBrowse': false,
+            'theme': 'explorer-fas',
+            'uploadUrl': '/manager/upload/',
+            'minFileCount': 1,
+            'uploadAsync': false,
+            'maxFileSize': 0,
+            uploadExtraData: function (previewId, index) {   //额外参数的关键点
+                var obj = {};
+                obj.kind = 'datamovein'
+                obj.content_type = 'json'
 
-        };
-        obj.kind='datamovein'
-        obj.content_type='json'
+                return obj;
+            }
 
-        return obj;
-    }
-    // 'allowedFileTypes':['json','xlsx']
-    // overwriteInitial: false,
-
-});
+        });
 
 
-$('#kv-explorer').on('filebatchuploaderror', function(event, data, msg) {
-  layer.alert('转换异常['+msg+']',{icon:2})
- 
-});
+        $('#kv-explorer').on('filebatchuploaderror', function (event, data, msg) {
+            layer.alert('转换异常[' + msg + ']', {icon: 2})
 
-$('#kv-explorer').on('filebatchuploadsuccess', function(event, data, previewId, index) { 
- // alert(JSON.stringify(data))
+        });
 
- response=JSON.parse(data.response)
+        $('#kv-explorer').on('filebatchuploadsuccess', function (event, data, previewId, index) {
+            // alert(JSON.stringify(data))
 
- if(response.code==0){
-  layer.alert(response.msg,{icon:1})
- }else{
-  layer.alert(response.msg,{icon:2})
- }
-});
-  //
+            response = JSON.parse(data.response)
 
+            if (response.code == 0) {
+                layer.alert(response.msg, {icon: 1})
+            } else {
+                layer.alert(response.msg, {icon: 2})
+            }
+        });
 
 
+    });
+     **/
 
-  });
-
-
-
-
-
-
-</script>
-
-<script type="text/html" id="toolbar">
-  <i class="layui-icon layui-icon-form" lay-event="detail"></i>
-  <i class="layui-icon layui-icon-edit" lay-event="edit"></i>
-
-  
 </script>
 </html>

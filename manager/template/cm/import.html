@@ -1,240 +1,99 @@
-
-{%load static%}
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="height: 100%">
 <head>
     <meta charset="UTF-8">
-<!--     <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'manager/bootstrap/bootstrap.min.css' %}"> -->
-
-    <link rel="stylesheet" href="https://cdn.bootcss.com/twitter-bootstrap/4.3.1/css/bootstrap.min.css" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" crossorigin="anonymous">
-
-    <link href="{% static 'manager/bootstrap-fileinput-master/css/fileinput.css'%}" media="all" rel="stylesheet" type="text/css"/>
-    <link href="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.css'%}" media="all" rel="stylesheet" type="text/css"/>
-    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
-
-    <title>计划管理</title>
+    <script src="{% static 'homepage/vue.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'homepage/eleui/theme-chalk/index.css' %}">
+    <script src="{% static 'homepage/eleui/index.js' %}"></script>
+    <title>导入</title>
     <style type="text/css">
-      .layui-icon:hover{
-        cursor: pointer;
-
-      }
-      .icon-tool{
-        float: right;
-
-      }
-      .icon-tool-item:hover{
-        cursor: pointer;
-      }
-      .icon-tool-item{
-        margin-left: 5px;
-      }
-
-      #case-selected p{
-        height: 30px;
-        padding: 0;
-       /* text-overflow: ellipsis;*/
-   /*     max-width:200px;*/
-      }
-      #can-select p:hover{
-        background-color: #009688;
-        color: white;
-
-      }
-      #is-selected p:hover{
-        background-color: #009688;
-        color:white;
-
-      }
-      .func_btn{
-
-        font-size: 10px;
-        margin:5px;
-      }
-      .func_btn:hover{
-
-        cursor: pointer;
-        color:#009688;
-        font-weight:10px;
-      }
-      .func_btn_bar{
-        
-/*        background-color: red;*/
-      }
-
     </style>
 
 </head>
-<body>
-
-<div id='import-div'>
-  <input id="file-explorer" type="file" multiple>
+<body style="height: 90%">
+<div id="upload" style="height: 90%">
+    <el-upload
+            style="text-align: center;position: relative;top:40%;transform:translateY(-50%)"
+            class="upload-demo"
+            name="file_data"
+            drag
+            action="/manager/upload/"
+            :data="uploaddata"
+            :limit="1"
+            :on-success="uploadsuccess"
+            :on-error="uploaderror"
+    >
+        <i class="el-icon-upload"></i>
+        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+    </el-upload>
 </div>
 </body>
 
-<script src="{% static 'manager/js/jquery.min.js' %}"></script>
-<script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
-<script src="{% static 'manager/js/plan.js' %}"></script>
-
-<script src="{% static 'manager/js/bootstrap.bundle.min.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/js/plugins/piexif.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/js/plugins/sortable.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/js/fileinput.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/js/locales/fr.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/js/locales/es.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/themes/fas/theme.js' %}"></script>
-<script src="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.js' %}"></script>
 
 <script type="text/javascript">
+    var app = new Vue({
+        el: '#upload',
+        data() {
+            return {
+                uploaddata: {
+                    kind: 'dataimport',
+                    productid: _get_query_param('pid')
+                }
+            }
+        },
+        methods: {
+            uploadsuccess(response, file, fileList) {
+                response = JSON.parse(response)
+                if (response.code == 0) {
+                    this.$message({
+                        type: 'success',
+                        message: response.msg
+                    });
+                } else {
+                    this.$message({
+                        type: 'warning',
+                        message: response.msg
+                    });
+                }
+            },
+            uploaderror(response, file, fileList) {
+                this.$message.error("转换异常")
+            }
+        }
+    });
+    /**   $("#file-explorer").fileinput({
+        'theme': 'explorer-fas',
+        'uploadUrl': '/manager/upload/',
+        'minFileCount': 1,
+        'uploadAsync': false,
+        uploadExtraData: function (previewId, index) {   //额外参数的关键点
+            var obj = {};
+            obj.kind = 'dataimport'
+            obj.productid = _get_query_param('pid')
+            return obj;
+        }
+    });
 
 
+     $('#file-explorer').on('filebatchuploaderror', function (event, data, msg) {
+        layer.alert('转换异常[' + msg + ']', {icon: 2})
 
-layui.use(['table','layer','layedit','upload'], function(){
-  var table = layui.table;
-  var $=layui.jquery
-  var layer=layui.layer;
-  var form = layui.form;
-  var layedit = layui.layedit;
-  var le=layedit.build('rich_text'); //建立编辑器
-  var upload=layui.upload;
+    });
 
-//
+     $('#file-explorer').on('filebatchuploadsuccess', function (event, data, previewId, index) {
+        response = JSON.parse(data.response)
 
-$("#import").click(function(e) {
-  // 
-  // alert('import')
+        if (response.code == 0) {
+            layer.alert(response.msg, {icon: 1})
+        } else {
+            layer.alert(response.msg, {icon: 2})
+        }
+    });
 
-  var o=layer.open(
-    {
-      title:'导入计划',
-      type:1,
-      content:$('#import-div'),
-      btn:['OK',],
-      area:["900px","450px"],
-
-      yes: function(index, layero){
-        //按钮【按钮一】的回调
-       // console.log('yes')
-       layer.close(index);
-      },
-
-
-  });
-
-});
-//执行上传操作
-$("#file-explorer").fileinput({
-    'theme': 'explorer-fas',
-    'uploadUrl': '/manager/upload/',
-    'minFileCount':1,
-    'uploadAsync':false,
-    uploadExtraData: function(previewId, index) {   //额外参数的关键点
-        var obj = {
-
-        };
-        obj.kind='dataimport'
-        obj.productid=_get_query_param('pid')
-
-        return obj;
-    }
-    // 'allowedFileTypes':['json','xlsx']
-    // overwriteInitial: false,
-
-});
-
-
-$('#file-explorer').on('filebatchuploaderror', function(event, data, msg) {
-  layer.alert('转换异常['+msg+']',{icon:2})
- 
-});
-
-$('#file-explorer').on('filebatchuploadsuccess', function(event, data, previewId, index){ 
- // alert(JSON.stringify(data))
- // alert('success')
-// console.log(data)
- response=JSON.parse(data.response)
-
- if(response.code==0){
-  layer.alert(response.msg,{icon:1})
- }else{
-  layer.alert(response.msg,{icon:2})
- }
-});
-
-
-});
-
-
-//
-
-
-//导出用例
-
-
-//运行用例
-
-//添加用例
-
-//查询功能
-
-
-//删除功能
-
-//新增功能
-
-
-//tool事件
- 
-
-
+     **/
 </script>
 
-<script type="text/html" id="toolbar">
-{% verbatim %} 
-  <i class="layui-icon layui-icon-form" lay-event='detail' style="color:#c2c2c2;"></i>
-  <i class="layui-icon layui-icon-edit" lay-event='edit' style="color:#c2c2c2;"></i>
-  <i class="layui-icon layui-icon-link" lay-event='link' style="color:#c2c2c2;" title="{{d.invoke_url}}"></i>
 
-
-{{# if (d.last=='success') { }}
-  <a class="layui-btn layui-btn-xs layui-bg-green" lay-event='history'>历史</a>
-{{# } else if(d.last=='fail'){ }}
-  <a class="layui-btn layui-btn-xs layui-bg-red" lay-event='history'>历史</a>
-
-{{# }else if(d.last==''){}}
-  <a class="layui-btn layui-btn-xs layui-bg-gray" lay-event='history'>历史</a>
-{{#} }}
-
-{% endverbatim %}
-</script>
-
-<script type="text/html" id="toolbar_mail">
-{% verbatim %} 
-  <i class="layui-icon layui-icon-edit" lay-event='editmail'></i>
-  {{# if (d.is_send_mail=='close') { }}
-  <input type="checkbox" name="mail-control" lay-skin="switch" lay-text="ON|OFF" lay-filter='mail' id='
-  {{d.id}}'>
-  {{#}else if(d.is_send_mail=='open'){ }}
-  <input type="checkbox" name="mail-control" lay-skin="switch" lay-text="ON|OFF" lay-filter='mail' id='
-  {{d.id}}' checked>
-  {{# }else if(d.is_send_mail=='disabled'){ }}
-  <input type="checkbox" name="mail-control" lay-skin="switch" lay-text="ON|OFF" lay-filter='mail' id='
-  {{d.id}}' disabled="">
-  {{# } }}
-{% endverbatim %}
-</script>
-
-<script type="text/html" id="toolbar_timing">
-{% verbatim %}
-  {{# if (d.run_type=='定时运行') { }}
-  <input type="checkbox" name="task-control" lay-skin="switch" lay-text="ON|OFF">
-  {{#}else{ }}
-  <input type="checkbox" name="task-control" lay-skin="switch" lay-text="ON|OFF" disabled>
-  {{#} }}
-
-
-{% endverbatim %}
-</script>
 </html>

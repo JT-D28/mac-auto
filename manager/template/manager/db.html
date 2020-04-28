@@ -120,6 +120,7 @@
                             filterable
                             allow-create
                             default-first-option
+                            @blur="dbschemeinput"
                             placeholder="请选择数据库方案（填入内容并且回车可自定义方案名）">
                         <el-option
                                 v-for="item in schemeoptions"
@@ -183,6 +184,7 @@
                             v-model="schemevalue"
                             filterable
                             allow-create
+                             @blur="dbschemeinput"
                             default-first-option
                             placeholder="请选择数据库方案（填入内容并且回车可自定义方案名）">
                         <el-option
@@ -226,6 +228,23 @@
             }
         },
         methods: {
+            dbschemeinput() {
+                var that = this;
+                var flag = 0;
+                temp = $(".el-select-dropdown__item.hover")[0].innerText;
+                that.schemeoptions.forEach(function (item,index) {
+                    if (item.value === temp) {
+                        flag = 1
+                    }
+                });
+                if (flag == 0) {
+                    that.schemeoptions.push({
+                        value: temp,
+                        key: temp
+                    });
+                    that.schemevalue = temp
+                }
+            },
             copydbSubmit(data, action) {
                 //1是复制并且修改，0是仅修改
                 var that = this;

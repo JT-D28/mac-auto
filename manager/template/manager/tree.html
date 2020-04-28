@@ -160,7 +160,7 @@
         <span class='btn-text'>查询</span></button>
     </div>
     <ul class="contextmenu" id="contextmenu"></ul>
-    <ul id="case-manager" class="ztree" style="margin-bottom: 20px;padding:10px 0 0 0 "></ul>
+    <ul id="case-manager" class="ztree" style="margin-bottom: 20px;padding:10px 0 0 15px "></ul>
 
 </div>
 
@@ -168,11 +168,6 @@
     <iframe id='tree-content' name='tree-content' title="test" scrolling="yes" frameborder="0" src=""
             style="overflow-y:auto;width:100%;" onload="changeFrameHeight()"></iframe>
 
-</div>
-
-
-<div id='import-div' style="padding:5px;" hidden>
-    <input id="file-explorer" type="file" multiple>
 </div>
 
 
@@ -239,18 +234,9 @@
 <script type="text/javascript">
     tree.init()
 
-
-    //search
-    //  $('#search').on('input propertychange', function() {
-    //   console.log($('#search').val())
-    //   tree.init($('#search').val())
-    // });
-
     $('#searchbtn').click(function (argument) {
         tree.init($('#search').val())
-    })
-
-    //add
+    });
 
     $('#add_product').click(function (e) {
         layer.prompt({
@@ -258,62 +244,19 @@
             value: '',
             title: '新建产品'
         }, function (value, index, elem) {
-
             layer.close(index);
             _post('/manager/treecontrol/', {'description': value, 'action': 'addproduct'}, function (data) {
                 if (data.code == 0)
                     layer.alert(data.msg, {icon: 1, time: 2000})
                 else
                     layer.alert(data.msg, {icon: 2})
-
             })
         })
-
-
-    })
-
-
-    //
-
-    $("#file-explorer").fileinput({
-        'theme': 'explorer-fas',
-        'uploadUrl': '/manager/upload/',
-        'minFileCount': 1,
-        'uploadAsync': false,
-        uploadExtraData: function (previewId, index) {   //额外参数的关键点
-            var obj = {};
-            obj.kind = 'dataimport'
-            // obj.content_type='json'
-
-            return obj;
-        }
-        // 'allowedFileTypes':['json','xlsx']
-        // overwriteInitial: false,
-
-    });
-
-
-    $('#file-explorer').on('filebatchuploaderror', function (event, data, msg) {
-        layer.alert('转换异常[' + msg + ']', {icon: 2})
-
-    });
-
-    $('#file-explorer').on('filebatchuploadsuccess', function (event, data, previewId, index) {
-        // alert(JSON.stringify(data))
-        // alert('success')
-// console.log(data)
-        response = JSON.parse(data.response)
-
-        if (response.code == 0) {
-            layer.alert(response.msg, {icon: 1})
-        } else {
-            layer.alert(response.msg, {icon: 2})
-        }
     });
 
     window.onload = function () {
         document.documentElement.style.overflow = 'hidden';
-    }
+    };
 
 /**    layui.use(['util'], function () {
         var util = layui.util;

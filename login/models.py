@@ -52,9 +52,8 @@ class UIControl(Model):
 	'''
 	code = CharField(max_length=24)
 	description = TextField(blank=True)
-	is_config = IntegerField(default=0)
 	is_open=IntegerField(default=0)
-	is_valid=IntegerField(default=0)
+	# is_valid=IntegerField(default=0)
 	author = ForeignKey(User, on_delete=CASCADE)
 	createtime = DateTimeField(auto_now_add=True, null=True)
 	updatetime = DateTimeField(auto_now=True, null=True)

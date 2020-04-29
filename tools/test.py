@@ -1,3 +1,5 @@
-a=[21097, 21098]
-b=[21097, 21098]
-print(set(a).issubset(b))
+a=set()
+a.add(1)
+bb=set()
+bb.add(2)
+print(a|bb)

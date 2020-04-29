@@ -310,7 +310,7 @@ def check_user_task():
 					runplan(planid)
 
 
-def _get_down_case_leaf_id(caseids, cur=None):
+def _get_down_case_leaf_id(caseids, cur=None,ignore=False):
 	'''
 	获取指定case节点最下游caseID
 	'''
@@ -318,10 +318,10 @@ def _get_down_case_leaf_id(caseids, cur=None):
 		caseids = [caseids]
 	for caseid in caseids:
 		e = Order.objects.filter(kind='case_case', main_id=caseid)
-		if e.exists():
+		if e.exists() and not ignore:
 			_get_down_case_leaf_id([x.follow_id for x in e], cur)
 		else:
-			cur.append(caseid)
+			cur.add(caseid)
 
 
 def _get_upper_case_leaf_id(caseid):
@@ -336,39 +336,39 @@ def _get_upper_case_leaf_id(caseid):
 		return _get_upper_case_leaf_id(cur)
 
 
-def _get_final_run_node_id(startnodeid):
+def _get_final_run_node_id(startnodeid,ignore=False):
 	'''
 	获取实际需要执行的测试点ID列表
 	'''
-	final = []
+	final = set()
 	try:
-		logger.info('开始获取运行节点[%s]执行计划id ' % startnodeid)
+		#logger.info('开始获取运行节点[%s]执行计划id ' % startnodeid)
 		
 		kind = startnodeid.split('_')[0]
 		nid = startnodeid.split('_')[1]
 		if kind == 'plan':
 			# 获取预先执行的用例
 			caseslist, des = beforePlanCases(nid)
-			logger.info('获取运行前节点[%s]' % des)
+			# logger.info('获取运行前节点[%s]' % des)
 			
 			ol = Order.objects.filter(kind='plan_case', main_id=nid)
 			ol = chain(caseslist, ol)
 			for o in ol:
 				caseid = o.follow_id
-				down_ids = []
+				down_ids = set()
 				_get_down_case_leaf_id(caseid, down_ids)
 				for cid in down_ids:
 					stepids = [x.follow_id for x in Order.objects.filter(kind='case_step', main_id=cid)]
 					for stepid in stepids:
-						final = final + [x.follow_id for x in
-						                 Order.objects.filter(kind='step_business', main_id=stepid)]
+						final = final|set([x.follow_id for x in
+						                 Order.objects.filter(kind='step_business', main_id=stepid)])
 		
 		elif kind == 'business':
-			final.append(int(nid))
+			final.add(int(nid))
 		elif kind == 'step':
 			ob = Order.objects.filter(kind='step_business', main_id=nid)
 			for o in ob:
-				final.append(o.follow_id)
+				final.add(o.follow_id)
 		
 		elif kind == 'case':
 			# case-step
@@ -378,13 +378,17 @@ def _get_final_run_node_id(startnodeid):
 				stepid = o.follow_id
 				os = Order.objects.filter(kind='step_business', main_id=stepid)
 				for o0 in os:
-					final.append(o0.follow_id)
+					final.add(o0.follow_id)
 			##case-case
-			final_leaf_case_ids = []
-			_get_down_case_leaf_id([nid], final_leaf_case_ids)
-			logger.info('获取最终case子节点待运行:', final_leaf_case_ids)
-		
-		logger.info('结果:', final)
+			if not ignore:
+				final_leaf_case_ids = set()
+				_get_down_case_leaf_id([nid], final_leaf_case_ids)
+				logger.info('节点[%s]获取最终case子节点待运行:'%nid, final_leaf_case_ids)
+				for caseid in final_leaf_case_ids:
+					final=final|_get_final_run_node_id('case_%s'%caseid,ignore=True)
+
+
+		# logger.info('获取最终执行测试点结果:', final)
 	except:
 		logger.error('获取最终执行测试点异常:', traceback.format_exc())
 	finally:
@@ -447,8 +451,8 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
 	case_run_nodes=_get_final_run_node_id('case_%s'%case0.id)
 	subflag=True if set(case_run_nodes).issubset(L) else False
 
-	logger.info('[%s]下测试点ID：%s'%(case0.description,case_run_nodes))
-	logger.info('运行节电下测试点ID：%s'%L)
+	logger.info('节点[%s]下有测试点ID：%s'%(case0.description,case_run_nodes))
+	logger.info('传入的最终执行测试点ID：%s'%L)
 	if subflag:
 		viewcache(taskid, username, kind, "开始执行用例[<span style='color:#FF3399'>%s</span>]" % case0.description)
 	steporderlist = ordered(list(Order.objects.filter(Q(kind='case_step') | Q(kind='case_case'), main_id=case0.id)))
@@ -495,8 +499,6 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
 									# logger.info('测试点[%s]不在执行链中 忽略' % order.follow_id)
 									continue
 
-
-								
 								result, error = _step_process_check(username, taskid, order, kind)
 								spend = int((time.time() - start) * 1000)
 								
@@ -572,9 +574,8 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 	viewcache(taskid, callername, kind, "=======正在初始化任务中=======")
 	logger.info('开始执行计划：', plan)
 	logger.info('startnodeid:', startnodeid)
-	logger.info('--------初始化测试点--------')
 	L = _get_final_run_node_id(startnodeid)
-	logger.info('L:', L)
+	logger.info('准备传入的L:', L)
 	
 	groupskip = []
 	username = callername

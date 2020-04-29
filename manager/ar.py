@@ -228,7 +228,6 @@ class Grant(object):
                 'data':{
                     'code':u.code,
                     'description':u.description,
-                    'isvalid':u.is_valid,
                     'isopen':u.is_open,
                     'all':all_user_data,
                     'selected':selected_user_data
@@ -253,8 +252,6 @@ class Grant(object):
             uc = UIControl()
             uc.code = config['code']
             uc.description = config['description']
-            uc.is_config = cls._isconfig(uc.code)
-            uc.is_valid=config['isvalid']
             uc.author = config['user']
             uc.save()
             cls._add_ui_control_user(uc.id, [x for x in config['userstrs'].split(',') if x.strip()],uc.author)
@@ -303,8 +300,7 @@ class Grant(object):
             uc = UIControl.objects.get(id=config['cid'])
             uc.code = config['code']
             uc.description = config['description']
-            uc.is_config = cls._isconfig(uc.code)
-            uc.is_valid=config['isvalid']
+           
             uc.save()
             
             cls._update_ui_control_user(uc.id, config['userstrs'].split(','))
@@ -338,7 +334,7 @@ class Grant(object):
                 datax['description'] = x.description
                 datax['authorname'] = x.author.name
                 datax['isopen']=x.is_open
-                datax['isvalid']=x.is_valid
+                
                 datax['isconfig'] = cls._isconfig(x.code)
                 data.append(datax)
             

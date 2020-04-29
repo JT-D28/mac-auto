@@ -31,7 +31,6 @@ def index(request):
 	if request.session.get('is_login', None):
 		username=request.session.get('username')
 		UI_MENU_YHGL=Grant.is_ui_display('UI_MENU_YHGL', username)
-		print(1111)
 		UI_MENU_QXGL=Grant.is_ui_display('UI_MENU_QXGL', username)
 		UI_MENU_JSGL=Grant.is_ui_display('UI_MENU_JSGL', username)
 		UI_MENU_BWMB=Grant.is_ui_display('UI_MENU_BWMB', username)

@@ -807,6 +807,11 @@ def movenode(request):
 		is_copy = request.POST.get('is_copy')
 		movetype = request.POST.get('move_type')
 		srcid = request.POST.get('src_id')
+		if srcid.split('_')[0] in ['product','plan','root']:
+			return {
+				'status': 'error',
+				'msg': '操作失败，不允许移动'
+			}
 		targetid = request.POST.get('target_id')
 		user = lm.User.objects.get(name=request.session.get('username'))
 		# elementclass=srcid.split('_')[0]
@@ -835,8 +840,9 @@ def movemulitnodes(request):
 		src_ids = src_ids.split(';')
 		targetid = request.POST.get('target_id')
 		user = lm.User.objects.get(name=request.session.get('username'))
+		logger.info('开始批量移动/复制')
 		for srcid in src_ids:
-			print('111111111',srcid, targetid, movetype)
+			logger.info('移动/复制节点：{}，目标节点{},复制{},移动类型{}'.format(srcid,targetid,is_copy,movetype))
 			_build_all(srcid, targetid, movetype, user, is_copy, user.name)
 		
 		return {

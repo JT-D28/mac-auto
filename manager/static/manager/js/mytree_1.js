@@ -7,11 +7,11 @@ var tree = {
                 view: {
                     addHoverDom: this._addHoverDom, //当鼠标移动到节点上时，显示用户自定义控件
                     removeHoverDom: this._removeHoverDom, //离开节点时的操作
+                    selectedMulti: true,
                     showLine: false,
                     nameIsHTML: true,
                     addDiyDom: this._addDiyDom,
                     fontCss: this._setFontCss,
-                    selectedMulti: true
                 },
 
                 edit: {
@@ -118,14 +118,13 @@ var tree = {
 
     },
     _addDiyDom: function (treeId, treeNode) {
-        mmm = $("#" + treeNode.tId + "_span").html();
-        if (mmm !== undefined) {
+        var spantxt = $("#" + treeNode.tId + "_span").html();
+        if (spantxt !== undefined) {
             var spaceWidth = 5;
             var switchObj = $("#" + treeNode.tId + "_switch"),
                 icoObj = $("#" + treeNode.tId + "_ico");
             switchObj.remove();
             icoObj.parent().before(switchObj);
-            var spantxt = $("#" + treeNode.tId + "_span").html();
             if (treeNode.type == 'step' & spantxt.length > 15) {
                 spantxt = spantxt.substring(0, 15) + "...";
                 $("#" + treeNode.tId + "_span").html(spantxt);
@@ -557,7 +556,7 @@ var tree = {
 
     _beforeClick: function (treeId, treeNode, clickFlag) {
         if (clickFlag === 2 || clickFlag === 0) {
-            if (treeNode.type == 'case' | treeNode.type == 'step' | treeNode.type == 'business') {
+            if (treeNode.type == 'case' || treeNode.type == 'step' || treeNode.type == 'business') {
                 var treeObj = $.fn.zTree.getZTreeObj("case-manager");
                 flag = 0;
                 var selectnodes = treeObj.getSelectedNodes();
@@ -583,6 +582,7 @@ var tree = {
 
     _onClick: function (event, treeId, treeNode, clickFlag) {
         if (clickFlag === 2 || clickFlag === 0) {
+            //按了ctrl多选时不展开节点
             return
         }
 
@@ -629,16 +629,13 @@ var tree = {
 
 
     },
-    // _onDblClick:function(event,treeId,treeNode){
-    // 	console.log('_onDblClick')
-    // 	this._onClick(event,treeId,treeNode)
 
-    // },
     _beforeDrag: function (treeId, treeNodes) {
 
-        // if(treeNodes[0].type=='product'||treeNodes[0].type=='plan' )
-        // 	return false
-
+        if (treeNodes[0].type == 'product' || treeNodes[0].type == 'root' || treeNodes[0].type == 'plan') {
+            //三个节点类型不给拖动
+            return false
+        }
         return true
     },
     _beforeDrop: function (treeId, treeNodes, targetNode, moveType, isCopy) {
@@ -709,7 +706,7 @@ var tree = {
             return
         }
         if (treeNodes.length > 1 && moveType === 'inner') {
-            var nodeids = ''
+            var nodeids = '';
             treeNodes.forEach(function (item) {
                 nodeids += item.id + ';'
             });
@@ -732,7 +729,7 @@ var tree = {
                 }
                 _post('/manager/querytreelist/', params, success)
             })
-        } else {
+        } else if (treeNodes.length === 1) {
             _post('/manager/treecontrol/', {
                 'action': 'movenode',
                 'move_type': moveType,
@@ -830,16 +827,10 @@ function getRightMenu(event, treeNode) {
         createMenu([
             {'id': 'get_node_info', 'des': '获取节点信息'},
             {'id': 'run', 'des': '调试'},
-            {'id': 'get_select_nodes', 'des': '获取选择节点'},
         ])
     } else if (treeNode.type === 'case') {
         createMenu([
             {'id': 'get_node_info', 'des': '获取节点信息'},
-            {'id': 'get_select_nodes', 'des': '获取选择节点'},
-        ])
-    } else {
-        createMenu([
-            {'id': 'get_select_nodes', 'des': '获取选择节点'},
         ])
     }
 }

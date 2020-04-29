@@ -136,9 +136,10 @@ class Grant(object):
     权限操作
     ''' 
     @classmethod
-    def _isconfig(cls,code):
+    def isconfig(cls,code):
 
         scandirs=get_temp_dir()
+        logger.info('UI组件扫描位置:',scandirs)
         for path in scandirs:
             for filename in os.listdir(path):
                 if filename.split('.')[1]=='html':
@@ -157,20 +158,31 @@ class Grant(object):
         isopen=0
         if uc.exists():
             isopen=uc[0].is_open
+        else:
+            logger.info('组件[%s]没配置 放行'%code)
+            return '!important'
 
         user=User.objects.get(name=username)
         user_id=user.id
-        user_role_ids=[x.id for x in user.role_set.all()]
+        user_role_ids=[]
 
+        for r in Role.objects.all():
+            if user in r.users.all():
+                user_role_ids.append(r.id)
+
+        logger.info('用户[%s]ID[%s]'%(username,User.objects.get(name=username).id))
+        logger.info('用户[%s]角色ID:%s'%(username,user_role_ids))
         f1=User_UIControl.objects.filter(user_id=user_id,kind='USER')
         if f1.exists() and isopen:
+            logger.info('用户[%s]看不到UI组件[%s]'%(username,uc[0].description))
             return 'none!important'
 
         for idx in user_role_ids:
             f2=User_UIControl.objects.filter(user_id=idx,kind='ROLE')
             if f2.exists() and isopen:
+                logger.info('角色[%s]看不到UI组件[%s]'%(Role.objects.get(id=idx).name,uc[0].description))
                 return 'none!important'
-
+        logger.info('用户[%s]能看到UI组件[%s]'%(username,uc[0].description))
         return '!important'
     
     @classmethod
@@ -334,8 +346,7 @@ class Grant(object):
                 datax['description'] = x.description
                 datax['authorname'] = x.author.name
                 datax['isopen']=x.is_open
-                
-                datax['isconfig'] = cls._isconfig(x.code)
+                datax['isconfig'] = cls.isconfig(x.code)
                 data.append(datax)
             
             return {
@@ -382,7 +393,7 @@ class Grant(object):
             u=UIControl.objects.get(id=kws['uid'])
             openstatus=kws['isopen']
             if int(openstatus)==1:
-                if not cls._isconfig(u.code):
+                if not cls.isconfig(u.code):
                     return{
                         'code':2,
                         'msg':"代码有埋点么"

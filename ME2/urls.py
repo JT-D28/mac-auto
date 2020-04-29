@@ -34,6 +34,7 @@ urlpatterns = [
 	path('test_expression2/', views.testexpress2),
 	path('test_xml/', views.testxml),
     path('mocktimeout/',views.mocktimeout),
+    path('updateauth/', views.updateroledata),
 	# path('',views.index),
 
 ]

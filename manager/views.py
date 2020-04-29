@@ -29,12 +29,18 @@ from manager.context import Me2Log as logger
 @csrf_exempt
 def index(request):
 	if request.session.get('is_login', None):
-		UI_MENU_YHGL=Grant.is_ui_display('UI_MENU_YHGL', request.session.get('username'))
+		username=request.session.get('username')
+		UI_MENU_YHGL=Grant.is_ui_display('UI_MENU_YHGL', username)
+		print(1111)
+		UI_MENU_QXGL=Grant.is_ui_display('UI_MENU_QXGL', username)
+		UI_MENU_JSGL=Grant.is_ui_display('UI_MENU_JSGL', username)
+		UI_MENU_BWMB=Grant.is_ui_display('UI_MENU_BWMB', username)
+		UI_CONFIG_GLOBAL_SET=Grant.is_ui_display('UI_CONFIG_GLOBAL_SET', username)
+		# logger.info('组件显示结果:',locals())
 		return render(request, 'manager/start.html', locals())
 	
 	else:
 		return redirect("/account/login/")
-
 
 def help(request):
 	me2url=request.get_raw_uri().replace(request.path,'')

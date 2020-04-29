@@ -12,6 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse
 from manager.core import *
 from django.db.models import Q
+from manager.ar import Grant
 
 
 # Create your views here
@@ -355,7 +356,8 @@ def updateroledata(request):
 		uc.code=code
 		uc.description=description
 		if Grant.isconfig(uc.code):
-			uc.is_open=1
+			#uc.is_open=1
+			pass
 		uc.save()
 	#添加组件默认权限
 	uuc=User_UIControl()

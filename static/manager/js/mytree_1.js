@@ -556,7 +556,7 @@ var tree = {
 
     _beforeClick: function (treeId, treeNode, clickFlag) {
         if (clickFlag === 2 || clickFlag === 0) {
-            if (treeNode.type == 'case' || treeNode.type == 'step' || treeNode.type == 'business') {
+            if (treeNode.type !== 'product' || treeNode.type !== 'root') {
                 var treeObj = $.fn.zTree.getZTreeObj("case-manager");
                 flag = 0;
                 var selectnodes = treeObj.getSelectedNodes();
@@ -632,8 +632,8 @@ var tree = {
 
     _beforeDrag: function (treeId, treeNodes) {
 
-        if (treeNodes[0].type == 'product' || treeNodes[0].type == 'root' || treeNodes[0].type == 'plan') {
-            //三个节点类型不给拖动
+        if (treeNodes[0].type == 'product' || treeNodes[0].type == 'root') {
+            //两个节点类型不给拖动
             return false
         }
         return true

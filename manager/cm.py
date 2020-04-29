@@ -807,7 +807,7 @@ def movenode(request):
 		is_copy = request.POST.get('is_copy')
 		movetype = request.POST.get('move_type')
 		srcid = request.POST.get('src_id')
-		if srcid.split('_')[0] in ['product','plan','root']:
+		if srcid.split('_')[0] in ['product','root']:
 			return {
 				'status': 'error',
 				'msg': '操作失败，不允许移动'

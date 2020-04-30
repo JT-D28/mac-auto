@@ -115,7 +115,7 @@
                     <i id='username' class="textcolor">{{ request.session.username }}</i>
                 </li>
  
-                    <li class="layui-nav-item" style="margin-left: 30px;"><a style="padding: 0" class="textcolor UI_CONFIG_GLOBAL_SET"href="#" id='globalsetting'><img
+                    <li class="layui-nav-item UI_CONFIG_GLOBAL_SET" style="margin-left: 30px;"><a style="padding: 0" class="textcolor"href="#" id='globalsetting'><img
                             src="{% static 'manager/icon/setting.svg' %}"
                             style="width:18px;height:18px;padding-right: 10px">全局设置</a></li>
            
@@ -123,12 +123,15 @@
                                                                          id='console'><img
                         src="{% static 'manager/icon/monitor.svg' %}"
                         style="width:13px;height:13px;padding-right: 10px">控制台</a></li>
+                <li class="layui-nav-item" style="margin-left: 30px;"><a class="textcolor" style="padding: 0" href="#"
+                                                                         id='recvmsg'>消息<span class="layui-badge-dot layui-bg-red"></span></a></li>
                 <li class="layui-nav-item" style="margin-left: 30px;margin-right: 5px"><a class="textcolor"
                                                                                           style="padding: 0"
                                                                                           href="{{ BASE_URL }}/account/logout/"><img
                         src="{% static 'manager/icon/logout.svg' %}" style="width:13px;height:13px;padding-right: 10px">退出</a>
                 </li>
             </ul>
+
         </div>
     </div>
     <!-- 左侧导航 -->
@@ -384,6 +387,12 @@
                 })
             }
         );
+
+        $('#recvmsg').click(function(){
+            layer.msg('暂未开放')
+
+
+        });
 
         function setIframeHeight(iframe) {
             if (iframe) {

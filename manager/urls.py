@@ -43,34 +43,17 @@ urlpatterns = [
 	
 	path('step/', views.step),
 	path('queryonestep/', views.queryonestep),
-	# path('querystep/', views.querystep),
-	# path('addstep/', views.addstep),
-	# path('delstep/', views.delstep),
-	# path('editstep/', views.editstep),
-	
-	# path('itf/', views.itf),
-	# path('addinterface/', views.additf),
-	# path('delitf/', views.delitf),
-	# path('queryitf/', views.queryitf),
-	# path('editinterface/', views.edititf),
 	
 	path('case/', views.case),
-	# path('addcase/', views.addcase),
-	# path('delcase/', views.delcase),
 	path('queryonecase/', views.queryonecase),
-	# path('querycase/', views.querycase),
-	# path('editcase/', views.editcase),
 	
 	path('transform/', views.transform),
 	path('third_party_call/', views.third_party_call),
 	path('plan/', views.plan),
 	path('mailcontrl/', views.mailcontrol),
 	path('runplan', views.runtask),
-	# path('addplan/', views.addplan),
-	# path('delplan/', views.delplan),
 	path('queryoneplan/', views.queryoneplan),
-	# path('queryplan/', views.queryplan),
-	# path('editplan/', views.editplan),
+
 	path('queryplantaskid/', views.queryplantaskid),
 	
 	path('resultdetail/', views.resultdetail),
@@ -85,14 +68,7 @@ urlpatterns = [
 	path('editfunction/', views.editfunc),
 	path('updatefunc/', views.updatefunc),
 	path('queryfunclist/', views.queryfunclist),
-	
-	# path("queryafteradd/", views.queryafteradd),
-	# path("queryafterdel/", views.queryafterdel),
-	
-	# path("testgenorder/", views.testgenorder),
-	# path("changepos/", views.changepos),
-	# path("aftergroup/", views.aftergroup),
-	
+		
 	path('dbcon/', views.dbcon),
 	path('queryDbScheme/', views.queryDbScheme),
 	path('testdbcon/', views.testdbcon),

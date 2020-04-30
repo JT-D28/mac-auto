@@ -15,11 +15,12 @@ from ME2.settings import logme
 from login import models as lm
 from .context import *
 from .invoker import runplan, DataMove, runplans,get_run_node_plan_id
-from .core import gettaskid
+from .core import gettaskid,get_params
 from manager.context import Me2Log as logger
 
 
 # addproduct
+@monitor(action='添加产品')
 def addproduct(request):
 	product = None
 	try:
@@ -45,7 +46,7 @@ def addproduct(request):
 			'msg': '新增[%s]异常' % product.description
 		}
 
-
+@monitor(action='删除产品')
 def delproduct(request):
 	p = None
 	try:
@@ -73,7 +74,7 @@ def delproduct(request):
 			'msg': '删除[%s]异常' % p.description
 		}
 
-
+@monitor(action='编辑产品')
 def editproduct(request):
 	uid = request.POST.get('uid')
 	description = request.POST.get('description')
@@ -98,6 +99,7 @@ def editproduct(request):
 
 
 # plan
+@monitor(action='新建计划')
 def addplan(request):
 	msg = ''
 	try:
@@ -146,6 +148,7 @@ def addplan(request):
 		}
 
 
+@monitor(action='删除计划')
 def delplan(request):
 	id_ = request.POST.get('ids')
 	msg = ''
@@ -192,6 +195,7 @@ def handlebindplans(olddescription, newdescription, id_):
 			logger.info(str(edittag.id) + '更新完成')
 
 
+@monitor(action='编辑计划')
 def editplan(request):
 	id_ = request.POST.get('uid').split('_')[1]
 	newdescription = request.POST.get('description')
@@ -251,6 +255,7 @@ def editplan(request):
 		}
 
 
+@monitor(action='运行用例')
 def run(request):
 	callername = request.session.get('username')
 	runids = [x for x in request.POST.get('ids').split(',')]
@@ -276,7 +281,7 @@ def run(request):
 		'msg': str(taskid)
 	}
 
-
+@monitor(action='导出计划')
 def export(request):
 	flag = str(datetime.datetime.now()).split('.')[0]
 	version = request.GET.get('version')
@@ -295,6 +300,7 @@ def importplan(request):
 
 
 ##
+@monitor(action='新建用例')
 def addcase(request):
 	msg = ''
 	try:
@@ -325,6 +331,7 @@ def addcase(request):
 		}
 
 
+@monitor(action='编辑用例')
 def editcase(request):
 	id_ = request.POST.get('uid').split('_')[1]
 	msg = ''
@@ -348,7 +355,7 @@ def editcase(request):
 	except:
 		return {'status': 'error', 'msg': '编辑失败[%s]' % traceback.format_exc()}
 
-
+@monitor(action='删除用例')
 def delcase(request):
 	id_ = request.POST.get('ids')
 	ids = id_.split(',')
@@ -378,6 +385,7 @@ def delcase(request):
 
 
 ##
+@monitor(action='新加步骤')
 def addstep(request):
 	from .core import getbuiltin
 	try:
@@ -491,7 +499,7 @@ def addstep(request):
 			'msg': "添加失败[%s]" % traceback.format_exc()
 		}
 
-
+@monitor(action='编辑步骤')
 def editstep(request):
 	id_ = request.POST.get('uid').split('_')[1]
 	try:
@@ -556,7 +564,7 @@ def editstep(request):
 			'msg': '编辑失败[%s]' % traceback.format_exc()
 		}
 
-
+@monitor(action='删除步骤')
 def delstep(request):
 	id_ = request.POST.get('ids')
 	ids = id_.split(',')
@@ -601,6 +609,7 @@ def _check_params(param_value):
 
 
 ##
+@monitor(action='新建测试点')
 def addbusiness(request):
 	from .core import getbuiltin, Fu
 	bname = ''
@@ -700,6 +709,7 @@ def addbusiness(request):
 		}
 
 
+@monitor(action='编辑测试点')
 def editbusiness(request):
 	from .core import getbuiltin, Fu
 	bname = ''
@@ -779,6 +789,7 @@ def editbusiness(request):
 		}
 
 
+@monitor(action='删除测试点')
 def delbusiness(request):
 	try:
 		
@@ -802,6 +813,7 @@ def delbusiness(request):
 		}
 
 
+@monitor(action='移动|复制节点')
 def movenode(request):
 	try:
 		is_copy = request.POST.get('is_copy')

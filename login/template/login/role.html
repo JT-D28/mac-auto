@@ -70,9 +70,8 @@
         <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
         <th lay-data="{field: 'name',width:160, sort: true}">角色名</th>
         <th lay-data="{field: 'description', sort: true}">描述</th>
-
         <th lay-data="{field: 'createtime',sort:true}">创建时间</th>
-        <th lay-data="{field: 'author'}">创建者</th>
+        <th lay-data="{field: 'authorname'}">创建者</th>
         <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:100}">操作</th>
 
     </tr>
@@ -204,18 +203,24 @@ layui.use(['layer', 'table','transfer'], function () {
         $("#delrole").click(function () {
             var checkStatus = table.checkStatus("table-role");
             data = checkStatus.data;
+            // alert(JSON.stringify(data))
             ids = []
             if (data.length < 1) {
                 layer.alert('你有选择角色么', {icon: 3, time: 1500})
                 return
             } else {
                 for (var index = 0; index < data.length; index++) {
+                    console.log(data[index]['id'])
                     ids.splice(0, 0, data[index]['id'])
 
                 }
+
             }
 
+            //alert('准备删除角色:'+ids)
+
             layer.confirm('确认删除么?', function (index) {
+                //alert(111)
 
                 success = function (e) {
                   

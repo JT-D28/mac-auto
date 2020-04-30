@@ -44,6 +44,9 @@ class Role(Model):
 	createtime = DateTimeField(auto_now_add=True, null=True)
 	updatetime = DateTimeField(auto_now=True, null=True)
 
+	def __str__(self):
+		return '%s'%(self.name)
+
 
 
 class UIControl(Model):

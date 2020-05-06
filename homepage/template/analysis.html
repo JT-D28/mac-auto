@@ -146,7 +146,7 @@
                                                 <el-progress :text-inside="true" :stroke-width="24"
                                                              :percentage="scope.row.case_success_rate"
                                                              status="success"
-                                                             :style="{display:(scope.row.type=='business' || scope.row.state==='omit'?'none':'block')}"></el-progress>
+                                                             :style="{display:(scope.row.type=='business' || scope.row.state==='omit'|| scope.row.state==='zerocount'?'none':'block')}"></el-progress>
                                             </div>
                                         </el-popover>
 

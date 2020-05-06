@@ -704,7 +704,8 @@ def getcasemap(caseid, data, taskid):
 		if map['kind'] == 'case_step':
 			step = Step.objects.get(id=map['follow_id'])
 			if step.count not in [0, '0', None]:
-				bnum = Order.objects.filter(main_id=map['follow_id'], kind__contains='step_business').count()
+				bnum = ResultDetail.objects.filter(taskid=taskid,step_id=step.id).exclude(result='omit').count()
+				# bnum = Order.objects.filter(main_id=map['follow_id'], kind__contains='step_business').count()
 				getsuccess = '''SELECT count(DISTINCT businessdata_id) FROM `manager_resultdetail` where taskid=%s and result='success'  and step_id=%s '''
 				with connection.cursor() as cursor:
 					cursor.execute(getsuccess, [taskid, map['follow_id']])
@@ -749,7 +750,7 @@ def get_business_info(stepid,data,taskid):
 				pass
 		else:
 			data['step_' + str(stepid)].append(
-				{'id': businessdata.id, 'name': businessdata.businessname,'icon': 'el-icon-info', 'state': '不执行'})
+				{'id': businessdata.id, 'name': businessdata.businessname+'(不执行)','icon': 'fa icon-fa-leaf', 'state': 'zerocount'})
 
 def get_business_num(id, taskid='', num=0, successnum=0,countnum=0):
 	orders = Order.objects.filter(main_id=id, kind__contains='case_')
@@ -758,7 +759,7 @@ def get_business_num(id, taskid='', num=0, successnum=0,countnum=0):
 		if kind == 'case_step':
 			os = Order.objects.filter(main_id=o.follow_id, kind__contains='step_business')
 			getsuccess = '''SELECT count(DISTINCT businessdata_id) FROM `manager_resultdetail` where taskid=%s and result='success'  and businessdata_id=%s '''
-			getcount = '''SELECT count(DISTINCT businessdata_id) FROM `manager_resultdetail` where taskid=%s  and businessdata_id=%s '''
+			getcount = '''SELECT count(DISTINCT businessdata_id) FROM `manager_resultdetail` where taskid=%s  and businessdata_id=%s and result!='omit' '''
 			for o in os:
 				with connection.cursor() as cursor:
 					cursor.execute(getsuccess, [taskid, o.follow_id])

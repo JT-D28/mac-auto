@@ -62,3 +62,10 @@ def query_third_call(request):
 	debug_url = '%s/manager/third_party_call/?v=%s&is_verify=%s&planid=%s&scheme=%s' % (
 		settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 0, planid, dbscheme)
 	return JsonResponse({'is_verify_url': is_verify_url, 'debug_url': debug_url})
+
+
+@csrf_exempt
+def gettaskidplan(request):
+	lasttask = ResultDetail.objects.values('taskid', 'createtime').filter(plan_id=request.POST.get('planid')).order_by(
+		'-createtime')[0:10]
+	return JsonResponse({'code':0,'taskid':lasttask[0]['taskid']})

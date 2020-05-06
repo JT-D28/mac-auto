@@ -6,5 +6,6 @@ from .debug import plandebug,querybuglog,doDebugInfo
 from .Jenkins import jenkinsJobRun
 from .logs import downloadlog,process
 from .Report import sendreport,downloadReport
-from .Taskid import querytaskid,query_third_call
+from .Taskid import querytaskid,query_third_call,gettaskidplan
 from .others import globalsetting,restart
+from .statisticalAnalysis import *

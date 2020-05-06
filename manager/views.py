@@ -1848,7 +1848,7 @@ def queryonebusiness(request):
 			cursor.execute(sql, [request.POST.get('vid').split('_')[1]])
 			desc = cursor.description
 			row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-			row[0]['timeout'] = 10 if row[0]['timeout'] is None else row[0]['timeout']
+			row[0]['timeout'] = 60 if row[0]['timeout'] is None else row[0]['timeout']
 		return JsonResponse({'code': 0, 'data': row})
 	# return JsonResponse(jsonstr, safe=False)
 	except:

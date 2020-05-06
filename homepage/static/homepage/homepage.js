@@ -1112,6 +1112,28 @@ var app = new Vue({
             actproduct[1].resize();
             actproduct[1].setOption(option1);
         },
+        statisticalAnalysis() {
+            var that = this;
+            planid = that.form.plan.substr(5)
+            if (planid == '') {
+                this.$message({
+                    message: '请选择项目和计划',
+                    type: 'error', center: true
+                });
+            } else {
+                var analysisurl = '/homepage/statisticalAnalysis/?plan='+planid
+                // window.open(analysisurl)
+                layer.open({
+                    type: 2,
+                    title: false,
+                    shade: [0],
+                    area: ['90%', '90%'],
+                    anim: 2,
+                    shadeClose: true,
+                    content: [analysisurl, 'yes'], //iframe的url，no代表不显示滚动条
+                });
+            }
+        }
     },
     created: function () {
         apphight = document.documentElement.clientHeight;

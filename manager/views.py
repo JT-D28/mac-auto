@@ -29,12 +29,17 @@ from manager.context import Me2Log as logger
 @csrf_exempt
 def index(request):
 	if request.session.get('is_login', None):
-		UI_MENU_YHGL=Grant.is_ui_display('UI_MENU_YHGL', request.session.get('username'))
+		username=request.session.get('username')
+		UI_MENU_YHGL=Grant.is_ui_display('UI_MENU_YHGL', username)
+		UI_MENU_QXGL=Grant.is_ui_display('UI_MENU_QXGL', username)
+		UI_MENU_JSGL=Grant.is_ui_display('UI_MENU_JSGL', username)
+		UI_MENU_BWMB=Grant.is_ui_display('UI_MENU_BWMB', username)
+		UI_CONFIG_GLOBAL_SET=Grant.is_ui_display('UI_CONFIG_GLOBAL_SET', username)
+		# logger.info('组件显示结果:',locals())
 		return render(request, 'manager/start.html', locals())
 	
 	else:
 		return redirect("/account/login/")
-
 
 def help(request):
 	me2url=request.get_raw_uri().replace(request.path,'')
@@ -2011,12 +2016,12 @@ def querytreelist(request):
 	
 	if id_:
 		datanode = _get_pid_data(id_, type_, datanode)
-		logger.info('cur d=>', datanode)
+		#logger.info('cur d=>', datanode)
 	elif searchvalue:
 		datanode = get_search_match(searchvalue)
 	
 	else:
-		logger.info('query id is None')
+		#logger.info('query id is None')
 		
 		datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True})
 		productlist = list(Product.objects.all())
@@ -2031,7 +2036,7 @@ def querytreelist(request):
 	
 	##
 	
-	logger.info('query tree result=>%s' % datanode)
+	#logger.info('query tree result=>%s' % datanode)
 	return JsonResponse(simplejson(code=0, data=datanode), safe=False)
 
 
@@ -2556,7 +2561,7 @@ def authcontrol(request):
 
 @csrf_exempt
 def queryuicontrol(request):
-	res = Grant.query_ui_grant_table(request.GET.get('searchvalue'))
+	res = Grant.query_ui_grant_table(**get_params(request))
 	logger.info('获得UI权限表:',res)
 	return JsonResponse(res, safe=False)
 
@@ -2588,19 +2593,8 @@ def updateuicontrolstatus(request):
 
 @csrf_exempt
 def queryrole(request):
-	searchvalue = request.GET.get('searchvalue')
-	logger.info("searchvalue=>", searchvalue)
-	res = []
-	if searchvalue:
-		res = list(Role.objects.filter(Q(name__icontains=searchvalue.strip())))
-	else:
-		res = list(Role.objects.all())
-	
-	limit = request.GET.get('limit')
-	page = request.GET.get('page')
-	res, total = getpagedata(res, page, limit)
-	jsonstr = json.dumps(res, cls=RoleEncoder, total=total)
-	return JsonResponse(jsonstr, safe=False)
+	res=RoleData.queryroletable(**get_params(request))
+	return JsonResponse(res, safe=False)
 
 @csrf_exempt
 def query_transfer_data(request):

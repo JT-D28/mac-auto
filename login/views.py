@@ -12,6 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse
 from manager.core import *
 from django.db.models import Q
+from manager.ar import Grant
 
 
 # Create your views here
@@ -296,9 +297,117 @@ def mocktimeout(request):
 	time.sleep(20)
 	return JsonResponse(True,safe=False)
 	
-# '''
-# 测试特殊返回字符串
-# '''
-# @csrf_exempt
-# def testqipa(request):
-# 	return JsonResponse({'qibastr':'10,203.30'},safe=False)
+
+@csrf_exempt
+def updateroledata(request):
+	#添加system角色和system用户
+	if not User.objects.filter(name='system').exists():
+		u=User()
+		u.name='system'
+		u.password='54b53072540eeeb8f8e9343e71f28176'#system
+		u.description=''
+		u.save()
+
+	if not Role.objects.filter(name='系统管理员').exists():
+		r=Role()
+		r.author=User.objects.get(name='system')
+		r.name='系统管理员'
+		r.description='系统管理员'
+		r.save()
+		r.users.add(User.objects.get(name='system'))
+
+	##添加超级管理员
+	if not Role.objects.filter(name='超级管理员').exists():
+		r=Role()
+		r.author=User.objects.get(name='system')
+		r.name='超级管理员'
+		r.description='超级管理员'
+		r.save()	
+		r.users.add(User.objects.get(name='admin'))	
+
+	###
+	###添加一般用户角色
+	if not Role.objects.filter(name='一般用户').exists():
+		r=Role()
+		r.author=User.objects.get(name='system')
+		r.name='一般用户'
+		r.description='一般用户'
+		r.save()
+	r=Role.objects.get(name='一般用户')
+	all_user=User.objects.all()
+	for user in all_user:
+		if user.name in('admin','system'):
+			continue;
+		if user not in r.users.all():
+			r.users.add(user)
+
+	##添加不可见菜单
+	ui_data={
+		'UI_MENU_YHGL':'用户管理菜单',
+		'UI_MENU_JSGL':'角色管理菜单',
+		'UI_MENU_QXGL':'权限管理菜单',
+		'UI_CONFIG_GLOBAL_SET':'全局配置',
+		'UI_MENU_YHGL_BUTTON_SCYH':'用户管理菜单删除用户按钮'
+	}
+
+	for code,description in ui_data.items():
+		uc=UIControl()
+		uc.author=User.objects.get(name='system')
+		uc.code=code
+		uc.description=description
+		if Grant.isconfig(uc.code):
+			#uc.is_open=1
+			pass
+		uc.save()
+	#添加组件默认权限
+	uuc=User_UIControl()
+	uuc.kind='ROLE'
+	uuc.user_id=Role.objects.get(name='一般用户').id
+	uuc.uc_id=UIControl.objects.get(code='UI_MENU_YHGL').id
+	uuc.save()
+
+	uuc=User_UIControl()
+	uuc.kind='ROLE'
+	uuc.user_id=Role.objects.get(name='一般用户').id
+	uuc.uc_id=UIControl.objects.get(code='UI_CONFIG_GLOBAL_SET').id
+	uuc.save()
+
+	uuc=User_UIControl()
+	uuc.kind='ROLE'
+	uuc.user_id=Role.objects.get(name='一般用户').id
+	uuc.uc_id=UIControl.objects.get(code='UI_MENU_YHGL_BUTTON_SCYH').id
+	uuc.save()
+
+	uuc=User_UIControl()
+	uuc.kind='ROLE'
+	uuc.user_id=Role.objects.get(name='超级管理员').id
+	uuc.uc_id=UIControl.objects.get(code='UI_MENU_YHGL_BUTTON_SCYH').id
+	uuc.save()
+
+	uuc=User_UIControl()
+	uuc.kind='ROLE'
+	uuc.user_id=Role.objects.get(name='一般用户').id
+	uuc.uc_id=UIControl.objects.get(code='UI_MENU_JSGL').id
+	uuc.save()
+
+	uuc=User_UIControl()
+	uuc.kind='ROLE'
+	uuc.user_id=Role.objects.get(name='超级管理员').id
+	uuc.uc_id=UIControl.objects.get(code='UI_MENU_JSGL').id
+	uuc.save()
+
+	uuc=User_UIControl()
+	uuc.kind='ROLE'
+	uuc.user_id=Role.objects.get(name='一般用户').id
+	uuc.uc_id=UIControl.objects.get(code='UI_MENU_QXGL').id
+	uuc.save()
+
+	uuc=User_UIControl()
+	uuc.kind='ROLE'
+	uuc.user_id=Role.objects.get(name='超级管理员').id
+	uuc.uc_id=UIControl.objects.get(code='UI_MENU_QXGL').id
+	uuc.save()
+
+
+	########
+	return JsonResponse({'code':0,'msg':'update finish..'},safe=False)

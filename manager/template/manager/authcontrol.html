@@ -281,9 +281,9 @@ $('#delbtn_ui').click(function(){
 //editui
   table.on("tool(target)", function (e) {
       id = e.data['id']
-      alert(e.event)
+      // alert(e.event)
       if (e.event == 'edit_ui') {
-          layer.msg('editui')
+          // layer.msg('editui')
           success = function (data) {
               // data=JSON.parse(data)
               if (data.code == 0) {
@@ -352,8 +352,8 @@ $('#delbtn_ui').click(function(){
 
       }
       else if (e.event=='bck'){
-        alert(1)
-        layer.msg('openui')
+        // alert(1)
+        // layer.msg('openui')
 
       }
   });

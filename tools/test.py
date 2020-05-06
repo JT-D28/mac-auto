@@ -1,5 +1,4 @@
-a=set()
-a.add(1)
-bb=set()
-bb.add(2)
-print(a|bb)
+import re
+m='[uid]'
+key=re.findall('\[(.*?)\]', m)
+print(key)

@@ -627,8 +627,13 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 		setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
 		
 		# 处理日志
-		asyncio.run(dealDeBuginfo(taskid))
-		asyncio.run(dealruninfo(planid,taskid))
+		new_loop = asyncio.new_event_loop()
+		asyncio.set_event_loop(new_loop)
+		loop = asyncio.get_event_loop()
+		loop.run_until_complete(dealDeBuginfo(taskid))
+		loop.run_until_complete(dealruninfo(planid,taskid))
+		# asyncio.run(dealDeBuginfo(taskid))
+		# asyncio.run(dealruninfo(planid,taskid))
 		
 		# threading.Thread(target=dealDeBuginfo, args=(taskid,)).start()
 		# threading.Thread(target=dealruninfo, args=(planid,taskid,)).start()

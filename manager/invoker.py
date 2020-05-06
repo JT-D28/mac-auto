@@ -627,8 +627,12 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 		setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
 		
 		# 处理日志
-		threading.Thread(target=dealDeBuginfo, args=(taskid,)).start()
+		asyncio.run(dealDeBuginfo(taskid))
+		asyncio.run(dealruninfo(planid,taskid))
+		
+		# threading.Thread(target=dealDeBuginfo, args=(taskid,)).start()
 		# threading.Thread(target=dealruninfo, args=(planid,taskid,)).start()
+		
 		# 清除请求session
 		clear_task_session('%s_%s' % (taskid, callername))
 		# 产生内置属性
@@ -661,7 +665,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 
 
 
-def dealruninfo(planid,taskid):
+async def dealruninfo(planid,taskid):
 	from .cm import getchild
 	res={}
 	casesdata=[]
@@ -676,11 +680,11 @@ def dealruninfo(planid,taskid):
 			data['root'].append({'id': case.id, 'name': case.description, 'hasChildren': 'true',
 				 'case_success_rate': rate,
 				 'success': successnum,
-				 'total': num, 'type': 'case', 'icon': 'el-icon-s-release'})
+				 'total': num, 'type': 'case', 'icon': 'fa icon-fa-folder'})
 			getcasemap(order.follow_id,data,taskid)
 		else:
 			data['root'].append({'id': case.id, 'name': case.description+'(不执行)',
-			                     'type': 'case', 'icon': 'el-icon-s-release','state':'omit'})
+			                     'type': 'case', 'icon': 'fa icon-fa-folder','state':'omit'})
 	dealogname = BASE_DIR + "/logs/taskinfo/" + taskid + ".log"
 	with open(dealogname, 'a', encoding='UTF-8') as f:
 		f.write(json.dumps(data))
@@ -702,13 +706,13 @@ def getcasemap(caseid, data, taskid):
 					successnum = cursor.fetchone()[0]
 				case_success_rate = round(successnum * 100 / bnum, 2) if bnum != 0 else 0
 				data['case_' + str(map['main_id'])].append({'id': map['follow_id'], 'type':'step','name': Step.objects.get(id=map['follow_id']).description, 'total': bnum,
-					 'success': successnum,'case_success_rate':case_success_rate,'hasChildren': True, 'icon': 'el-icon-s-release'})
+					 'success': successnum,'case_success_rate':case_success_rate,'hasChildren': True, 'icon': 'fa icon-fa-file-o'})
 			
 				get_business_info(step.id,data,taskid)
 			else:
 				data['case_' + str(map['main_id'])].append(
 					{'id': map['follow_id'], 'type': 'step', 'name': Step.objects.get(id=map['follow_id']).description+"(不执行)",
-					 'icon': 'el-icon-s-release','state':'omit'})
+					 'icon': 'fa icon-fa-file-o','state':'omit'})
 		
 		elif map['kind'] == 'case_case':
 			if Case.objects.get(id=map['main_id']).count not in [0, '0', None]:
@@ -716,13 +720,12 @@ def getcasemap(caseid, data, taskid):
 				rate = round(successnum*100/total,2) if total!=0 else 0
 				data['case_' + str(map['main_id'])].append(
 					{'id': map['follow_id'], 'type':'case','name': Case.objects.get(id=map['follow_id']).description, 'total': total,
-					 'success': successnum,'case_success_rate':rate,'hasChildren': True, 'icon': 'el-icon-s-release'})
+					 'success': successnum,'case_success_rate':rate,'hasChildren': True, 'icon': 'fa icon-fa-folder'})
 				getcasemap(map['follow_id'], data, taskid)
 			else:
 				data['case_' + str(map['main_id'])].append(
 					{'id': map['follow_id'], 'type': 'case', 'name': Case.objects.get(id=map['follow_id']).description+"(不执行)",
-					 'icon': 'el-icon-s-release','state':'omit'})
-
+					 'icon': 'fa icon-fa-folder','state':'omit'})
 
 def get_business_info(stepid,data,taskid):
 	orders = Order.objects.filter(main_id=stepid, kind__contains='step_business').extra(
@@ -735,16 +738,13 @@ def get_business_info(stepid,data,taskid):
 				state = ResultDetail.objects.filter(taskid=taskid, businessdata_id=order.follow_id)[0].result
 				data['step_' + str(stepid)].append(
 					{'id': businessdata.id, 'name': businessdata.businessname, 'hasChildren': False, 'type': 'business',
-					 'icon': 'el-icon-info', 'state': state})
+					 'icon': 'fa icon-fa-leaf', 'state': state})
 			except:
 				print(traceback.format_exc())
 				pass
 		else:
 			data['step_' + str(stepid)].append(
 				{'id': businessdata.id, 'name': businessdata.businessname,'icon': 'el-icon-info', 'state': '不执行'})
-
-
-
 
 def get_business_num(id, taskid='', num=0, successnum=0,countnum=0):
 	orders = Order.objects.filter(main_id=id, kind__contains='case_')
@@ -764,17 +764,7 @@ def get_business_num(id, taskid='', num=0, successnum=0,countnum=0):
 			num, successnum = get_business_num(o.follow_id, taskid, num, successnum,countnum)
 	return num, successnum
 
-
-
-
-
-
-
-
-
-
-
-def dealDeBuginfo(taskid):
+async def dealDeBuginfo(taskid):
 	logname = BASE_DIR + "/logs/" + taskid + ".log"
 	dealogname = BASE_DIR + "/logs/deal/" + taskid + ".log"
 	if os.path.exists(logname):

@@ -16,37 +16,39 @@ def querytaskid(request):  # 查询验证任务最新id
 	is_running = ''
 	username = request.session.get("username")
 	action = request.POST.get('action')
+
 	if action == 'plan':
 		planid = request.POST.get('planid')
 		taskid = getRunningInfo(username, planid, 'verify_taskid')
-		is_running = '0' if getRunningInfo(username, planid, 'isrunning') == '0' else '1'
+		is_running= getRunningInfo(username, planid, 'isrunning')
 	elif action == 'lastest':
 		taskid = getRunningInfo(username, '', 'lastest_taskid')
 		print("控制台获取的最新taskid", taskid)
 	
-	if taskid is None:
-		print('内存中查找不到taskid，从数据库中找')
-		try:
-			if action == 'lastest':
-				sql = '''SELECT taskid FROM `manager_resultdetail` order by createtime desc LIMIT 1'''
-				with connection.cursor() as cursor:
-					cursor.execute(sql)
-					row = cursor.fetchone()
-					taskid = row[0]
-			elif action == 'plan':
-				planid = request.POST.get('planid')
-				plan = Plan.objects.get(id=planid)
-				is_running = plan.is_running
-				taskids = list(
-					ResultDetail.objects.values('taskid').filter(plan=plan, is_verify=1).order_by('-createtime'))
-				if taskids:
-					taskid = taskids[0]["taskid"]
-				else:
-					code = 1
-					msg = "任务还没有运行过！"
-		except:
-			code = 1
-			msg = "出错了！"
+	# if taskid is None:
+	# 	print('内存中查找不到taskid，从数据库中找')
+	# 	try:
+	# 		if action == 'lastest':
+	# 			sql = '''SELECT taskid FROM `manager_resultdetail` order by createtime desc LIMIT 1'''
+	# 			with connection.cursor() as cursor:
+	# 				cursor.execute(sql)
+	# 				row = cursor.fetchone()
+	# 				taskid = row[0]
+	# 		elif action == 'plan':
+	# 			planid = request.POST.get('planid')
+	# 			plan = Plan.objects.get(id=planid)
+	# 			is_running = plan.is_running
+	# 			print('3333333',is_running)
+	# 			taskids = list(
+	# 				ResultDetail.objects.values('taskid').filter(plan=plan, is_verify=1).order_by('-createtime'))
+	# 			if taskids:
+	# 				taskid = taskids[0]["taskid"]
+	# 			else:
+	# 				code = 1
+	# 				msg = "任务还没有运行过！"
+	# 	except:
+	# 		code = 1
+	# 		msg = "出错了！"
 	return JsonResponse(simplejson(code=code, msg=msg, data=taskid, is_running=is_running), safe=False)
 
 

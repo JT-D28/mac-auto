@@ -278,7 +278,7 @@ function _set_form_not_editable() {
     });
 
 
-    $('form select').each(function(){
+    $('form select').each(function () {
         $(this).attr('disabled', '')
     })
 
@@ -340,24 +340,23 @@ function _get(url, data, success, headers = {}) {
 };
 
 
+function _post(url, data, success) {
+    console.log("【POST】" + url)
+    console.log("【data】" + JSON.stringify(data))
+    // console.log(getCookie("csrftoken"));
+    var loadIndex = ''
+    var ajaxobj = $.ajax({
+        type: 'POST',
+        // timeout:6000,
+        url: http_base + url,
+        data: data,
+        // headers:{ "X-CSRFtoken":"jjjjfjavvv"},
+        success: success,
+        complete: function (XMLHttpRequest, status) {
 
-function _post(url,data,success){
-    console.log("【POST】"+url)
-    console.log("【data】"+JSON.stringify(data))
-  // console.log(getCookie("csrftoken"));
-  var loadIndex=''
-    var ajaxobj=$.ajax({
-      type: 'POST',
-      // timeout:6000,
-      url: http_base+url,
-      data: data,
-      // headers:{ "X-CSRFtoken":"jjjjfjavvv"},
-      success: success,
-      complete:function(XMLHttpRequest,status){
-    
-        layui.use(['layer'], function(){
-            layer.close(loadIndex);
-        })
+            layui.use(['layer'], function () {
+                layer.close(loadIndex);
+            })
 
 
         },
@@ -390,5 +389,24 @@ function _post_nl(url, data, success) {
 };
 
 
-
+//有加载转圈的
+function _post_ll(url, data, success) {
+    layui.use(['layer'], function () {
+        var ajaxobj = $.ajax({
+            type: 'POST',
+            url: http_base + url,
+            data: data,
+            success: success,
+            dataType: 'json',
+            beforeSend: () => {
+                loadIndex = layer.load(1, {
+                    shade: [0.5, '#393D49']
+                });
+            },
+            complete: () => {
+                layer.close(loadIndex);
+            },
+        });
+    });
+};
 

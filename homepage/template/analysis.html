@@ -9,16 +9,9 @@
 <link rel="stylesheet" href="{% static 'homepage/eleui/theme-chalk/index.css' %}">
 
 <link rel="stylesheet" href="{% static 'homepage/layui/css/layui.css' %}" media="all">
-<script src="{% static 'homepage/eleui/index.js' %}"></script>
-<script src="{% static 'manager/js/utils.js' %}" charset="utf-8"></script>
-<script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
-<script src="{% static 'manager/js/jquery.min.js' %}"></script>
-<script src="{% static 'homepage/echarts.common.min.js' %}" charset="utf-8"></script>
-<script src="{% static 'homepage/echartsTheme.js' %}" charset="utf-8"></script>
 <link rel="stylesheet" type="text/css" href="{% static 'manager/icomoon/style.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
-<link href="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.css' %}" media="all"
-      rel="stylesheet" type="text/css"/>
+
 
 <style>
     .el-tabs__content {
@@ -99,28 +92,31 @@
         <el-tabs :tab-position="tabPosition" style="height: 100%;">
             <el-tab-pane>
                 <span slot="label"><i class="el-icon-date"></i> 用例</span>
-                <!--
-								<el-row :gutter="20">
-									<el-col :span="12">
-										<el-row :gutter="20">
-											<el-col :span="12">
-												<div class="grid-content bg-purple">
-													最新一次任务状态<br>时间${reportdata.reporttime}<br>运行环境
-												</div>
-											</el-col>
-											<el-col :span="12">
-												<div class="grid-content bg-purple">
-													<div id="planlaststate" style="width: 100%;height: 100%;max-height:200px"></div>
-												</div>
-											</el-col>
-										</el-row>
-									</el-col>
-									<el-col :span="12">
-										<div class="grid-content bg-purple">趋势</div>
-									</el-col>
-								</el-row>-->
                 <el-row :gutter="20">
-                    <el-col :span="24">
+                    <el-col :span="6">
+                        <el-select v-model="taskid" placeholder="请选择" style="width: 100%">
+                            <el-option
+                                    v-for="item in taskids"
+                                    :key="item.taskid"
+                                    :label="item.time"
+                                    :value="item.taskid">
+                            </el-option>
+                        </el-select>
+                        <div class="el-timeline-item__content" style="margin-top: 25px;width: 100%">
+                            <div class="el-card is-always-shadow"><!---->
+                                <div class="el-card__body">
+                                    <h4>计划名称：<a style="float: right">${ taskinfo.planname }</a></h4>
+                                    <h4>数据库方案：<a style="float: right">${ taskinfo.dbscheme }</a></h4>
+                                    <h4>测试点数：<a style="float: right">${ taskinfo.total }</a></h4>
+                                    <h4>成功数：<a style="float: right">${ taskinfo.successnum }</a></h4>
+                                    <h4>成功率：<a style="float: right">${ taskinfo.rate }</a></h4>
+                                    <h4>执行人: <a style="float: right">${ taskinfo.user}</a></h4>
+                                </div>
+
+                            </div>
+                        </div>
+                    </el-col>
+                    <el-col :span="18">
                         <div class="grid-content bg-purple">
                             <el-table
                                     lazy
@@ -180,13 +176,19 @@
 
 </body>
 
-
+<script src="{% static 'homepage/eleui/index.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}" charset="utf-8"></script>
+<script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script>
     var app = new Vue({
         el: '#analysis',
         delimiters: ['${', '}'],
         data() {
             return {
+                taskinfo: {},
+                taskids: [],
+                taskid: '',
                 drawer: false,
                 direction: 'rtl',
                 planid: '',
@@ -222,7 +224,6 @@
                         }
                     ]
                 },
-                taskid: ''
             };
         },
         methods: {
@@ -260,24 +261,51 @@
                         resolve(data.data)
                     });
                 }
+            },
+            gettaskdata(taskid) {
+                _post_nl('/homepage/gettaskdata/', {
+                    'planid': app.planid, 'taskid': taskid
+                }, function (data) {
+                    if (data.code === 0) {
+                        app.taskinfo = data.taskinfo;
+                        app.casesdata = data.casesdata
+                    } else {
+                        setTimeout(()=>{
+                            app.gettaskdata(taskid);
+                        },100)
+                    }
+                })
             }
         },
         created: function () {
-            planid = window.location.search.split("?plan=")[1];
-            this.planid = planid
+            var planid = getQueryVariable('plan');
+            this.planid = planid;
+            var debug = getQueryVariable('debug');
             _post_nl('/homepage/gettaskidplan/', {planid: planid}, function (data) {
-                app.taskid = data.taskid
-                _post_nl('/homepage/getplandata/', {taskid: data.taskid, planid: planid}, function (res) {
-                    app.casesdata = res.casesdata
-                })
+                if (data.code === 0) {
+                    app.taskids = data.taskids;
+                    app.taskid = data.taskids[0]['taskid']
+                }
             })
 
         },
-
+        watch: {
+            'taskid': function (taskid) {
+                this.gettaskdata(taskid)
+            }
+        }
     });
-    planlaststate = echarts.init(document.getElementById('planlaststate'), 'me2');
-    planlaststate.setOption(app.jacocoRepConfig)
 
-
+    function getQueryVariable(variable) {
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split("=");
+            if (pair[0] === variable) {
+                return pair[1];
+            }
+        }
+        return false;
+    }
 </script>
 </html>

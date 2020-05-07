@@ -25,7 +25,7 @@ urlpatterns = [
 	path('jenkinsJobRun/', views.jenkinsJobRun),
 	path('queryProductAndPlan/', views.queryProductAndPlan),
 	path('statisticalAnalysis/',views.statisticalAnalysis),
-	path('getplandata/',views.getplandata),
+	path('gettaskdata/',views.get_task_data),
 	path('getnodes/',views.getnodes),
 	path('gettaskidplan/',views.gettaskidplan),
 	path('geterrorinfo/',views.geterrorinfo)

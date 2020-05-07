@@ -631,7 +631,8 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 		asyncio.set_event_loop(new_loop)
 		loop = asyncio.get_event_loop()
 		loop.run_until_complete(dealDeBuginfo(taskid))
-		loop.run_until_complete(dealruninfo(planid,taskid))
+		loop.run_until_complete(dealruninfo(planid,taskid,{'dbscheme':dbscheme,
+		                                                   'planname':plan.description,'user':username}))
 		# asyncio.run(dealDeBuginfo(taskid))
 		# asyncio.run(dealruninfo(planid,taskid))
 		
@@ -670,13 +671,17 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 
 
 
-async def dealruninfo(planid,taskid):
-	from .cm import getchild
-	res={}
+async def dealruninfo(planid,taskid,info=None):
 	casesdata=[]
 	orders = Order.objects.filter(kind='plan_case', main_id=planid).extra(
 		select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
-	data = {'root':[]}
+	with connection.cursor() as cursor:
+		cursor.execute('''SELECT CONCAT(success) AS success,CONCAT(total) AS total,
+		ROUND(CONCAT(success*100/total),1) AS rate FROM (SELECT sum(CASE WHEN result="success"
+		THEN 1 ELSE 0 END) AS success,sum(CASE WHEN result !="OMIT" THEN 1 ELSE 0 END) AS total
+		FROM manager_resultdetail WHERE taskid=%s) AS x''',[taskid])
+		info['successnum'],info['total'],info['rate'] = cursor.fetchone()
+	data = {'root':[],'info':info}
 	for order in orders:
 		case = Case.objects.get(id=order.follow_id)
 		if case.count not in [0,'0',None]:
@@ -895,7 +900,7 @@ def _step_process_check(callername, taskid, order, kind):
 				#   viewcache(taskid,username,kind,'数据校验没配置 跳过校验')
 				
 				if itf_check:
-					if step.content_type in ('json', 'urlencode'):
+					if step.content_type in ('json', 'urlencode','formdata'):
 						res, error = _compute(taskid, user, itf_check, type='itf_check', target=text, kind=kind,
 						                      parse_type='json', rps_header=headers)
 					else:
@@ -1203,7 +1208,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		
 		if content_type == 'formdata':
 			try:
-				viewcache(taskid, user.name, kind, '跑formdata分支')
+				viewcache(taskid, user.name, kind, '---formdata请求---')
 				rps = session.post(url, files=body, headers={**default, **headers}, timeout=timeout)
 			except:
 				err = traceback.format_exc()

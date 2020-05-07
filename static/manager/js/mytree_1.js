@@ -452,7 +452,7 @@ var tree = {
                             //         $("#log_text").html('');
                             //     }
                             // });
-                            var analysisurl = '/homepage/statisticalAnalysis/?plan='+treeNode.id.substr(5)
+                            var analysisurl = '/homepage/statisticalAnalysis/?plan='+treeNode.id.substr(5)+'&debug=1'
                             layer.open({
                                 type: 2,
                                 title: false,

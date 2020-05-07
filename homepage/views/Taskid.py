@@ -66,6 +66,11 @@ def query_third_call(request):
 
 @csrf_exempt
 def gettaskidplan(request):
-	lasttask = ResultDetail.objects.values('taskid', 'createtime').filter(plan_id=request.POST.get('planid')).order_by(
-		'-createtime')[0:10]
-	return JsonResponse({'code':0,'taskid':lasttask[0]['taskid']})
+	planid= request.POST.get('planid')
+	print(planid)
+	with connection.cursor() as cursor:
+		cursor.execute('''SELECT max(DATE_FORMAT(r.createtime,'%%m-%%d %%H:%%i')) AS time,taskid
+		FROM manager_resultdetail r where plan_id=%s GROUP BY taskid ORDER BY time DESC LIMIT 10''',[planid])
+		desc = cursor.description
+		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+	return JsonResponse({'code':0,'taskids':rows})

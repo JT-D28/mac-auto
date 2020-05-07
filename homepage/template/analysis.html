@@ -115,6 +115,9 @@
 
                             </div>
                         </div>
+                        <div style="text-align: right;font-size: 12px">
+                            <el-button type="primary" size="mini" style="margin-top: 30px" @click="opennewtab">新窗口打开</el-button>
+                        </div>
                     </el-col>
                     <el-col :span="18">
                         <div class="grid-content bg-purple">
@@ -227,6 +230,9 @@
             };
         },
         methods: {
+            opennewtab() {
+                window.open(window.location.href)
+            },
             clickTable(row, index, e) {
                 if (row.type == 'business' && row.state != 'skip') {
                     _post_nl('/homepage/geterrorinfo/', {
@@ -270,9 +276,9 @@
                         app.taskinfo = data.taskinfo;
                         app.casesdata = data.casesdata
                     } else {
-                        setTimeout(()=>{
+                        setTimeout(() => {
                             app.gettaskdata(taskid);
-                        },100)
+                        }, 200)
                     }
                 })
             }

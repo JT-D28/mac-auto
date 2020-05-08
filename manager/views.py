@@ -29,12 +29,14 @@ from manager.context import Me2Log as logger
 @csrf_exempt
 def index(request):
 	if request.session.get('is_login', None):
+		userid=userid=User.objects.get(name=request.session.get('username')).id
 		username=request.session.get('username')
 		UI_MENU_YHGL=Grant.is_ui_display('UI_MENU_YHGL', username)
 		UI_MENU_QXGL=Grant.is_ui_display('UI_MENU_QXGL', username)
 		UI_MENU_JSGL=Grant.is_ui_display('UI_MENU_JSGL', username)
 		UI_MENU_BWMB=Grant.is_ui_display('UI_MENU_BWMB', username)
 		UI_CONFIG_GLOBAL_SET=Grant.is_ui_display('UI_CONFIG_GLOBAL_SET', username)
+		user_news_status='layui-badge-dot' if News.has_no_read_msg(userid) else ''
 		# logger.info('组件显示结果:',locals())
 		return render(request, 'manager/start.html', locals())
 	
@@ -1681,6 +1683,31 @@ def record(request):
 	# response["Access-Control-Max-Age"] = "1000"
 	# response["Access-Control-Allow-Headers"] = "*"
 	return response
+
+
+@csrf_exempt
+def getusernews(request):
+	userid=User.objects.get(name=request.session.get('username')).id
+	return JsonResponse(News.get_user_news(userid),safe=False)
+
+@csrf_exempt
+def getusernewsflagstatus(request):
+	userid=User.objects.get(name=request.session.get('username')).id
+	return JsonResponse(News.has_no_read_msg(userid),safe=False)
+
+@csrf_exempt
+def hasread(request):
+	uid=request.POST.get('uid')
+	try:
+		n=News.objects.get(id=uid)
+		n.is_read=1
+		n.save()
+		logger.error('标位已读 消息ID:',uid)
+		return JsonResponse(pkg(code=0,msg=''),safe=False)
+
+	except:
+		logger.error('标位已读异常:',traceback.format_exc())
+		return JsonResponse(pkg(code=4,msg=''),safe=False)
 
 
 # @csrf_exempt

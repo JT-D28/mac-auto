@@ -557,18 +557,37 @@ class monitor(object):
 
         self.username='某人'
         self.description=kws0.get('description','')
-
+        self.authorname=kws0.get('authorname','')
 
         self.action=kws0['action']
+
+    def _get_authorname(self,authorname,callername,params):
+
+        if authorname:
+            if authorname.startswith('$'):
+                authorname=authorname.replace('$','')
+                ms=re.findall('\[.*?\]', authorname)
+                for m in ms:
+                    key=re.findall('\[(.*?)\]', m)[0]
+                    authorname=authorname.replace(m,params[key])
+                try:
+                    Me2Log.info('authorname1:',str(eval(authorname)))
+                    return str(eval(authorname))
+                except:
+                    Me2Log.error('authorname表达式计算异常:',traceback.format_exc())
+                    return callername
+            else:
+                return authorname
+        else:
+            return None
 
     def _get_description(self,description,params):
         '''
         '''
-        print('recv description:',description)
         if description:
             if description.startswith('$'):
                 try:
-                    description=self.description.replace('$', '')
+                    description=description.replace('$', '')
                     ms=re.findall('\[.*?\]', description)
                     for m in ms:
                         key=re.findall('\[(.*?)\]', m)[0]
@@ -595,8 +614,9 @@ class monitor(object):
 
 
     def __call__(self,*args1,**kws1):
-
         def _wrap(*args2,**kws2):
+
+            from manager.models import OperateLog,News
 
             result=args1[0](*args2,**kws2)
             params=dict()
@@ -610,15 +630,31 @@ class monitor(object):
             self.username=params['user']
             msg='用户%s%s '%(self.username,self.action)
             description=self._get_description(self.description, params)
+            authorname=self._get_authorname(self.authorname, self.username,params)
 
             msg=msg+'[%s]'%description if description else msg
             Me2Log.info(msg)
+
             og=OperateLog()
             og.opcode=''
             og.opname=self.action
             og.description=msg
             og.author=User.objects.get(name=self.username)
             og.save()
+
+            Me2Log.info('authorname:',authorname)
+
+            if authorname and  authorname!=self.username:
+                news=News()
+                news.title='系统提示信息'
+                news.description=msg
+                news.sender=User.objects.get(name='admin')
+                news.is_read=0
+                news.recv=User.objects.get(name=authorname).id
+                news.recv_kind="USER"
+
+                news.save()
+                Me2Log.info('向用户[%s]发送一条信息[%s]'%(authorname,news.description))
             return result
 
         return _wrap

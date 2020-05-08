@@ -147,5 +147,9 @@ urlpatterns = [
 	#
 	path('changemode/', views.changemode),
 
+	path('getusernews/', views.getusernews),
+	path('getusernewsflag/',views.getusernewsflagstatus),
+	path('hasread/', views.hasread),
+
 	path('getParamfromFetchData/',views.getParamfromFetchData)
 ]

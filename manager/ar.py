@@ -94,7 +94,7 @@ class RoleData():
             }
 
     @classmethod
-    @monitor(action='更新角色',description='$Role.objects.get(id=[uid])')
+    @monitor(action='更新角色',description='$Role.objects.get(id=[uid])',authorname='$Role.objects.get(id=[uid]).author.name')
     def updaterole(cls,**kws):
         try:
             role_id=kws['uid']
@@ -151,7 +151,19 @@ class RoleData():
                 'code':4,
                 'msg':'查询角色明细异常[%s]'%traceback.format_exc()
             }
+
+
+
+    @classmethod
+    def queryuserrole(cls,userid):
+        '''查询用户角色ID
+        '''
+        for r in Role.objects.all():
+            u=User.objects.get(id=userid)
+            if u in r.users.all():
+                return r.id
             
+
 class Grant(object):
     '''
     权限操作

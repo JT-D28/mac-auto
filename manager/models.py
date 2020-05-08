@@ -1,7 +1,8 @@
 import time, traceback, re, json
 from django.db.models import *
 from login.models import *
-
+from manager.ar import RoleData
+from manager.context import Me2Log as logger
 
 # Create your models here.
 
@@ -341,3 +342,62 @@ class OperateLog(Model):
 	
 	def __str__(self):
 		return '[%s]%s' % (self.opcode, self.opname)
+
+class News(Model):
+	'''
+	消息
+	'''
+	title=TextField()
+	description=TextField()
+	sender=ForeignKey(User, on_delete=CASCADE)
+	createtime=DateTimeField(auto_now_add=True)
+	recv=IntegerField()
+	recv_kind=CharField(default='USER',max_length=5) #ROLE|USER
+	is_read=IntegerField(default=0) #0|1
+
+	@classmethod
+	def get_user_news(cls,userid):
+		data=[]
+		nws=list(News.objects.filter(recv=userid,recv_kind='USER').order_by('-createtime'))
+		sender=User.objects.get(name='admin') or User.objects.get(name='system')
+		for x in nws:
+			data.append({
+				'id':x.id,
+				'title':x.title,
+				'description':x.description,
+				'sendername':sender.name,
+				'is_read':x.is_read,
+				'createtime':str(x.createtime)[:-7],
+				})
+
+		roleid=RoleData.queryuserrole(userid)
+		nwsr=list(News.objects.filter(recv=roleid,recv_kind='ROLE').order_by('-createtime'))
+		for x in nwsr:
+			data.append({
+				'id':x.id,
+				'title':x.title,
+				'description':x.description,
+				'sendername':sender.name,
+				'is_read':x.is_read,
+				'createtime':str(x.createtime)[:-7],
+				})
+
+
+		logger.info('用户[userid=]获得消息数据：',data)
+
+		return data
+	@classmethod
+	def has_no_read_msg(cls,userid):
+		nws=News.objects.filter(recv=userid,recv_kind='USER',is_read=0).order_by('-createtime')
+		sender=User.objects.get(name='admin') or User.objects.get(name='system')
+		return True if nws.exists() else False
+
+
+
+
+
+
+
+
+
+		

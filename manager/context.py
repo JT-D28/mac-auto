@@ -504,21 +504,21 @@ def getRunningInfo(username='', planid='', type='lastest_taskid'):
     # print('getinfo:', username, planid, type)
     if type == 'lastest_taskid':
         latest_taskids = _runninginfo.get('lastest_taskid', {})
-        latest_taskid = latest_taskids.get(username, None)
+        latest_taskid = latest_taskids.get(username, '')
         return latest_taskid
     elif type == 'debug_taskid':
         planinfo = _runninginfo.get(str(planid), {})
         debug = planinfo.get('debug', {})
-        debug_taskid = debug.get('taskid', None)
+        debug_taskid = debug.get('taskid', '')
         return debug_taskid
     elif type == 'verify_taskid':
         planinfo = _runninginfo.get(str(planid), {})
         verify = planinfo.get('verify', {})
-        verify_taskid = verify.get('taskid', None)
+        verify_taskid = verify.get('taskid', '')
         return verify_taskid
     elif type == 'isrunning':
         planinfo = _runninginfo.get(str(planid), {})
-        isrunning = planinfo.get('isrunning', 0)
+        isrunning = planinfo.get('isrunning', '0')
         return str(isrunning)
     elif type == 'dbscheme':
         planinfo = _runninginfo.get(str(planid), {})

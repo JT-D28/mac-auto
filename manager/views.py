@@ -1048,11 +1048,7 @@ def runtask(request):
 		state_running =getRunningInfo(callername,planid, 'isrunning')
 		if state_running != '0':
 			msg = '验证' if state_running == 'verify' else '调试'
-			return {
-				'status': 'fail',
-				'msg': '计划正在运行[%s]任务，稍后再试！'%msg
-			}
-		# logger.info('runidd:',runid)
+			return JsonResponse(simplejson(code=1,msg='计划正在运行[%s]任务，稍后再试！'%msg), safe=False)
 		t=threading.Thread(target=runplan,args=(callername, taskid, planid, is_verify,None,'plan_%s'%runid))
 		t.start()
 	return JsonResponse(simplejson(code=0, msg="你的任务开始运行", taskid=taskid), safe=False)
@@ -1880,7 +1876,7 @@ def queryonebusiness(request):
 			cursor.execute(sql, [request.POST.get('vid').split('_')[1]])
 			desc = cursor.description
 			row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-			row[0]['timeout'] = 10 if row[0]['timeout'] is None else row[0]['timeout']
+			row[0]['timeout'] = 60 if row[0]['timeout'] is None else row[0]['timeout']
 		return JsonResponse({'code': 0, 'data': row})
 	# return JsonResponse(jsonstr, safe=False)
 	except:

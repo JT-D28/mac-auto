@@ -1,0 +1,317 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+<head>
+    <meta charset="UTF-8">
+    <title>项目统计分析</title>
+</head>
+<script src="{% static 'homepage/vue.js' %}"></script>
+<link rel="stylesheet" href="{% static 'homepage/eleui/theme-chalk/index.css' %}">
+
+<link rel="stylesheet" href="{% static 'homepage/layui/css/layui.css' %}" media="all">
+<link rel="stylesheet" type="text/css" href="{% static 'manager/icomoon/style.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+
+
+<style>
+    .el-tabs__content {
+        height: 100%;
+        padding: 20px;
+    }
+
+    .el-row {
+        margin-bottom: 20px;
+
+    &
+    :last-child {
+        margin-bottom: 0;
+    }
+
+    }
+    .el-col {
+        border-radius: 4px;
+    }
+
+    .bg-purple-dark {
+        background: #99a9bf;
+    }
+
+    .bg-purple {
+        background: #d3dce6;
+    }
+
+    .bg-purple-light {
+        background: #e5e9f2;
+    }
+
+    .grid-content {
+        border-radius: 4px;
+        min-height: 36px;
+    }
+
+    .row-bg {
+        padding: 10px 0;
+        background-color: #f9fafc;
+    }
+
+    .el-tab-pane {
+        height: 100%;
+    }
+
+    .el-table {
+        cursor: pointer;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+    }
+
+    .el-tag.el-tag--success {
+        background-color: #ff7b7b;
+        color: #0b0202;
+    }
+
+    .el-drawer__header {
+        display: none;
+    }
+
+    .el-drawer {
+        overflow: auto;
+        font-size: 14px;
+        font-family: PingFang-SC-Regular, PingFang-SC;
+        font-weight: 400;
+        color: rgba(51, 51, 51, 1);
+        line-height: 20px;
+    }
+</style>
+
+<body>
+
+<div id="analysis" style="height: 100%">
+    <template>
+
+        <el-tabs :tab-position="tabPosition" style="height: 100%;">
+            <el-tab-pane>
+                <span slot="label"><i class="el-icon-date"></i> 用例</span>
+                <el-row :gutter="20">
+                    <el-col :span="6">
+                        <el-select v-model="taskid" placeholder="请选择" style="width: 100%">
+                            <el-option
+                                    v-for="item in taskids"
+                                    :key="item.taskid"
+                                    :label="item.time"
+                                    :value="item.taskid">
+                            </el-option>
+                        </el-select>
+                        <div class="el-timeline-item__content" style="margin-top: 25px;width: 100%">
+                            <div class="el-card is-always-shadow"><!---->
+                                <div class="el-card__body">
+                                    <h4>计划名称：<a style="float: right">${ taskinfo.planname }</a></h4>
+                                    <h4>数据库方案：<a style="float: right">${ taskinfo.dbscheme }</a></h4>
+                                    <h4>测试点数：<a style="float: right">${ taskinfo.total }</a></h4>
+                                    <h4>成功数：<a style="float: right">${ taskinfo.successnum }</a></h4>
+                                    <h4>成功率：<a style="float: right">${ taskinfo.rate }</a></h4>
+                                    <h4>执行人: <a style="float: right">${ taskinfo.user}</a></h4>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div style="text-align: right;font-size: 12px">
+                            <el-button type="primary" size="mini" style="margin-top: 30px" @click="opennewtab">新窗口打开</el-button>
+                        </div>
+                    </el-col>
+                    <el-col :span="18">
+                        <div class="grid-content bg-purple">
+                            <el-table
+                                    lazy
+                                    @row-click="clickTable"
+                                    ref="refTable"
+                                    :load="load"
+                                    row-key="id"
+                                    :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
+                                    :data="casesdata"
+                                    style="width: 100%">
+                                <el-table-column label="用例">
+                                    <template slot-scope="scope">
+                                        <i :class=scope.row.icon></i>
+                                        <span style="margin-left: 10px">${ scope.row.name }</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column label="成功率">
+                                    <template slot-scope="scope">
+                                        <el-popover trigger="hover" placement="top">
+                                            <p>成功: ${ scope.row.success }</p>
+                                            <p>总数: ${ scope.row.total }</p>
+                                            <div slot="reference" class="name-wrapper">
+                                                <el-progress :text-inside="true" :stroke-width="24"
+                                                             :percentage="scope.row.case_success_rate"
+                                                             status="success"
+                                                             :style="{display:(scope.row.type=='business' || scope.row.state==='omit'|| scope.row.state==='zerocount'?'none':'block')}"></el-progress>
+                                            </div>
+                                        </el-popover>
+
+                                        <div slot="reference" class="name-wrapper">
+                                            <el-tag :style="{display:(scope.row.type=='business'?'inline-block':'none')}">
+                                                ${ scope.row.state }
+                                            </el-tag>
+                                        </div>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </div>
+                    </el-col>
+
+                </el-row>
+            </el-tab-pane>
+            <el-tab-pane label="接口">接口</el-tab-pane>
+        </el-tabs>
+
+
+        <el-drawer
+                :visible.sync="drawer"
+                direction="rtl"
+                size="70%">
+            <div style="padding: 10px" v-html="bussinfo"></div>
+        </el-drawer>
+
+
+    </template>
+</div>
+
+</body>
+
+<script src="{% static 'homepage/eleui/index.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}" charset="utf-8"></script>
+<script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
+<script>
+    var app = new Vue({
+        el: '#analysis',
+        delimiters: ['${', '}'],
+        data() {
+            return {
+                taskinfo: {},
+                taskids: [],
+                taskid: '',
+                drawer: false,
+                direction: 'rtl',
+                planid: '',
+                casesdata: [],
+                reportdata: '',
+                activeName: 'first',
+                tabPosition: 'left',
+                bussinfo: '',
+                jacocoRepConfig: {
+                    series: [
+                        {
+                            color: ['rgba(77,201,122,1)', 'rgba(242,242,242,1)'],
+                            type: 'pie',
+                            radius: ['85%', '95%'],
+                            center: ["32%", "50%"],
+                            hoverAnimation: false,
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'center',
+                                    textStyle: {
+                                        fontSize: '16',
+                                        fontFamily: 'PingFang-SC-Medium,PingFang-SC',
+                                        fontWeight: '500',
+                                        color: 'rgba(51,51,51,1)'
+                                    },
+                                },
+                            },
+                            data: [
+                                {value: 1, name: '%'},
+                                {value: 100 - 1}
+                            ]
+                        }
+                    ]
+                },
+            };
+        },
+        methods: {
+            opennewtab() {
+                window.open(window.location.href)
+            },
+            clickTable(row, index, e) {
+                if (row.type == 'business' && row.state != 'skip') {
+                    _post_nl('/homepage/geterrorinfo/', {
+                        id: row.id,
+                        'taskid': app.taskid,
+                        'state': row.state,
+                        'name': row.name
+                    }, function (data) {
+                        app.bussinfo = data.data
+                    })
+                    this.drawer = true
+                } else {
+                    this.$refs.refTable.store.loadOrToggle(row)
+                }
+            },
+            load(tree, treeNode, resolve) {
+                console.log(tree.type);
+                if (tree.type == 'case') {
+                    _post_nl('/homepage/getnodes/', {
+                        nodeid: tree.id,
+                        kind: tree.type,
+                        taskid: app.taskid
+                    }, function (data) {
+                        resolve(data.data)
+                    });
+                } else if (tree.type == 'step') {
+                    _post_nl('/homepage/getnodes/', {
+                        nodeid: tree.id,
+                        kind: tree.type,
+                        taskid: app.taskid
+                    }, function (data) {
+                        resolve(data.data)
+                    });
+                }
+            },
+            gettaskdata(taskid) {
+                _post_nl('/homepage/gettaskdata/', {
+                    'planid': app.planid, 'taskid': taskid
+                }, function (data) {
+                    if (data.code === 0) {
+                        app.taskinfo = data.taskinfo;
+                        app.casesdata = data.casesdata
+                    } else {
+                        setTimeout(() => {
+                            app.gettaskdata(taskid);
+                        }, 200)
+                    }
+                })
+            }
+        },
+        created: function () {
+            var planid = getQueryVariable('plan');
+            this.planid = planid;
+            var debug = getQueryVariable('debug');
+            _post_nl('/homepage/gettaskidplan/', {planid: planid}, function (data) {
+                if (data.code === 0) {
+                    app.taskids = data.taskids;
+                    app.taskid = data.taskids[0]['taskid']
+                }
+            })
+
+        },
+        watch: {
+            'taskid': function (taskid) {
+                this.gettaskdata(taskid)
+            }
+        }
+    });
+
+    function getQueryVariable(variable) {
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split("=");
+            if (pair[0] === variable) {
+                return pair[1];
+            }
+        }
+        return false;
+    }
+</script>
+</html>

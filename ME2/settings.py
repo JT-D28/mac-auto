@@ -29,6 +29,15 @@ env_id = ''
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+Deal_dir=os.path.join(BASE_DIR,'logs','deal')
+Taskinfo_dir=os.path.join(BASE_DIR,'logs','taskinfo')
+if not os.path.exists(Deal_dir):
+    os.makedirs(Deal_dir)
+if not os.path.exists(Taskinfo_dir):
+    os.makedirs(Taskinfo_dir)
+
+
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'd6yqlb(u%mxu!t$4evtz@3#5zqo@zy8db09cj1pi2r38^6fi*y'
 # SECURITY WARNING: don't run with debug turned on in production!

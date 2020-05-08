@@ -186,16 +186,6 @@ var app = new Vue({
                                 layer.close(index)
                             }
                         });
-                        /**setTimeout(function () {
-                            _post_nl('/homepage/queryPlanState/', {
-                                id: that.form.plan,
-                                refresh: 1
-                            }, function (data) {
-                                if (data.data == 1) {
-                                    that.getReportChart()
-                                }
-                            })
-                        }, 2000)**/
                     } else layer.msg(data.msg)
                 })
             } else {
@@ -388,7 +378,7 @@ var app = new Vue({
                                     e = JSON.parse(e.data);
                                     setTimeout(() => {
                                         const total = e.count;
-                                        const once = is_running === 1 ? 200 : 5000;
+                                        const once = is_running !== '0' ? 200 : 5000;
                                         const loopCount = total / once;
                                         let countOfRender = 0;
                                         let ul = document.getElementById("log_text");
@@ -410,7 +400,7 @@ var app = new Vue({
                                             countOfRender += 1;
                                             loop();
                                             var exits = document.getElementById('log-process');
-                                            if (is_running === '1' && exits != null) {
+                                            if (is_running !== '0' && exits != null) {
                                                 exits.scrollTop = exits.scrollHeight;
                                             }
                                         }
@@ -1112,6 +1102,28 @@ var app = new Vue({
             actproduct[1].resize();
             actproduct[1].setOption(option1);
         },
+        statisticalAnalysis() {
+            var that = this;
+            planid = that.form.plan.substr(5)
+            if (planid == '') {
+                this.$message({
+                    message: '请选择项目和计划',
+                    type: 'error', center: true
+                });
+            } else {
+                var analysisurl = '/homepage/statisticalAnalysis/?plan='+planid
+                // window.open(analysisurl)
+                layer.open({
+                    type: 2,
+                    title: false,
+                    shade: [0],
+                    area: ['90%', '90%'],
+                    anim: 2,
+                    shadeClose: true,
+                    content: [analysisurl, 'yes'], //iframe的url，no代表不显示滚动条
+                });
+            }
+        }
     },
     created: function () {
         apphight = document.documentElement.clientHeight;

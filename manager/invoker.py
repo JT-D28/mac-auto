@@ -4,10 +4,12 @@
 # @Author  : Blackstone
 # @to      :
 import ast, threading
+import asyncio
 from itertools import chain
 from urllib import parse
 
 from django.conf import settings
+from django.db import connection
 from django.db.models import Q
 from django.http import JsonResponse
 
@@ -18,6 +20,7 @@ from ME2.settings import logme, BASE_DIR
 
 from login.models import *
 from manager.models import *
+
 from .core import ordered, Fu, getbuiltin, EncryptUtils, genorder, simplejson
 from .db import Mysqloper
 from .context import set_top_common_config, viewcache, get_task_session, \
@@ -452,7 +455,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
 	subflag=True if set(case_run_nodes).issubset(L) else False
 
 	logger.info('节点[%s]下有测试点ID：%s'%(case0.description,case_run_nodes))
-	logger.info('传入的最终执行测试点ID：%s'%L)
+	# logger.info('传入的最终执行测试点ID：%s'%L)
 	if subflag:
 		viewcache(taskid, username, kind, "开始执行用例[<span style='color:#FF3399'>%s</span>]" % case0.description)
 	steporderlist = ordered(list(Order.objects.filter(Q(kind='case_step') | Q(kind='case_case'), main_id=case0.id)))
@@ -624,7 +627,18 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 		setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
 		
 		# 处理日志
-		threading.Thread(target=dealDeBuginfo, args=(taskid,)).start()
+		new_loop = asyncio.new_event_loop()
+		asyncio.set_event_loop(new_loop)
+		loop = asyncio.get_event_loop()
+		loop.run_until_complete(dealDeBuginfo(taskid))
+		loop.run_until_complete(dealruninfo(planid,taskid,{'dbscheme':dbscheme,
+		                                                   'planname':plan.description,'user':username}))
+		# asyncio.run(dealDeBuginfo(taskid))
+		# asyncio.run(dealruninfo(planid,taskid))
+		
+		# threading.Thread(target=dealDeBuginfo, args=(taskid,)).start()
+		# threading.Thread(target=dealruninfo, args=(planid,taskid,)).start()
+		
 		# 清除请求session
 		clear_task_session('%s_%s' % (taskid, callername))
 		# 产生内置属性
@@ -647,13 +661,121 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 	except Exception as e:
 		logger.error('执行计划未知异常：', traceback.format_exc())
 		viewcache(taskid, username, kind, '执行计划未知异常[%s]' % traceback.format_exc())
-	
-	
+
+
 	finally:
 		clear_data(callername, _tempinfo)
 
 
-def dealDeBuginfo(taskid):
+
+
+
+
+async def dealruninfo(planid,taskid,info=None):
+	casesdata=[]
+	orders = Order.objects.filter(kind='plan_case', main_id=planid).extra(
+		select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
+	with connection.cursor() as cursor:
+		cursor.execute('''SELECT CONCAT(success) AS success,CONCAT(total) AS total,
+		ROUND(CONCAT(success*100/total),1) AS rate FROM (SELECT sum(CASE WHEN result="success"
+		THEN 1 ELSE 0 END) AS success,sum(CASE WHEN result !="OMIT" THEN 1 ELSE 0 END) AS total
+		FROM manager_resultdetail WHERE taskid=%s) AS x''',[taskid])
+		info['successnum'],info['total'],info['rate'] = cursor.fetchone()
+	data = {'root':[],'info':info}
+	for order in orders:
+		case = Case.objects.get(id=order.follow_id)
+		if case.count not in [0,'0',None]:
+			num, successnum = get_business_num(order.follow_id, taskid=taskid)
+			rate = round(successnum * 100 / num, 2) if num != 0 else 0
+			data['root'].append({'id': case.id, 'name': case.description, 'hasChildren': 'true',
+				 'case_success_rate': rate,
+				 'success': successnum,
+				 'total': num, 'type': 'case', 'icon': 'fa icon-fa-folder'})
+			getcasemap(order.follow_id,data,taskid)
+		else:
+			data['root'].append({'id': case.id, 'name': case.description+'(不执行)',
+			                     'type': 'case', 'icon': 'fa icon-fa-folder','state':'omit'})
+	dealogname = BASE_DIR + "/logs/taskinfo/" + taskid + ".log"
+	with open(dealogname, 'a', encoding='UTF-8') as f:
+		f.write(json.dumps(data))
+
+def getcasemap(caseid, data, taskid):
+	maps = Order.objects.values('main_id', 'kind', 'follow_id').filter(main_id=caseid, kind__contains='case_').extra(
+		select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
+	for map in maps:
+		temp = data.get('case_' + str(map['main_id']), [])
+		if temp == []:
+			data['case_' + str(map['main_id'])] = []
+		if map['kind'] == 'case_step':
+			step = Step.objects.get(id=map['follow_id'])
+			if step.count not in [0, '0', None]:
+				bnum = ResultDetail.objects.filter(taskid=taskid,step_id=step.id).exclude(result='omit').count()
+				# bnum = Order.objects.filter(main_id=map['follow_id'], kind__contains='step_business').count()
+				getsuccess = '''SELECT count(DISTINCT businessdata_id) FROM `manager_resultdetail` where taskid=%s and result='success'  and step_id=%s '''
+				with connection.cursor() as cursor:
+					cursor.execute(getsuccess, [taskid, map['follow_id']])
+					successnum = cursor.fetchone()[0]
+				case_success_rate = round(successnum * 100 / bnum, 2) if bnum != 0 else 0
+				data['case_' + str(map['main_id'])].append({'id': map['follow_id'], 'type':'step','name': Step.objects.get(id=map['follow_id']).description, 'total': bnum,
+					 'success': successnum,'case_success_rate':case_success_rate,'hasChildren': True, 'icon': 'fa icon-fa-file-o'})
+			
+				get_business_info(step.id,data,taskid)
+			else:
+				data['case_' + str(map['main_id'])].append(
+					{'id': map['follow_id'], 'type': 'step', 'name': Step.objects.get(id=map['follow_id']).description+"(不执行)",
+					 'icon': 'fa icon-fa-file-o','state':'omit'})
+		
+		elif map['kind'] == 'case_case':
+			if Case.objects.get(id=map['main_id']).count not in [0, '0', None]:
+				total, successnum = get_business_num(map['follow_id'], taskid)
+				rate = round(successnum*100/total,2) if total!=0 else 0
+				data['case_' + str(map['main_id'])].append(
+					{'id': map['follow_id'], 'type':'case','name': Case.objects.get(id=map['follow_id']).description, 'total': total,
+					 'success': successnum,'case_success_rate':rate,'hasChildren': True, 'icon': 'fa icon-fa-folder'})
+				getcasemap(map['follow_id'], data, taskid)
+			else:
+				data['case_' + str(map['main_id'])].append(
+					{'id': map['follow_id'], 'type': 'case', 'name': Case.objects.get(id=map['follow_id']).description+"(不执行)",
+					 'icon': 'fa icon-fa-folder','state':'omit'})
+
+def get_business_info(stepid,data,taskid):
+	orders = Order.objects.filter(main_id=stepid, kind__contains='step_business').extra(
+		select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
+	data['step_'+str(stepid)]=[]
+	for order in orders:
+		businessdata = BusinessData.objects.get(id=order.follow_id)
+		if businessdata.count not in [0, '0', None]:
+			try:
+				state = ResultDetail.objects.filter(taskid=taskid, businessdata_id=order.follow_id)[0].result
+				data['step_' + str(stepid)].append(
+					{'id': businessdata.id, 'name': businessdata.businessname, 'hasChildren': False, 'type': 'business',
+					 'icon': 'fa icon-fa-leaf', 'state': state})
+			except:
+				print(traceback.format_exc())
+				pass
+		else:
+			data['step_' + str(stepid)].append(
+				{'id': businessdata.id, 'name': businessdata.businessname+'(不执行)','icon': 'fa icon-fa-leaf', 'state': 'zerocount'})
+
+def get_business_num(id, taskid='', num=0, successnum=0,countnum=0):
+	orders = Order.objects.filter(main_id=id, kind__contains='case_')
+	for o in orders:
+		kind = o.kind
+		if kind == 'case_step':
+			os = Order.objects.filter(main_id=o.follow_id, kind__contains='step_business')
+			getsuccess = '''SELECT count(DISTINCT businessdata_id) FROM `manager_resultdetail` where taskid=%s and result='success'  and businessdata_id=%s '''
+			getcount = '''SELECT count(DISTINCT businessdata_id) FROM `manager_resultdetail` where taskid=%s  and businessdata_id=%s and result!='omit' '''
+			for o in os:
+				with connection.cursor() as cursor:
+					cursor.execute(getsuccess, [taskid, o.follow_id])
+					successnum += cursor.fetchone()[0]
+					cursor.execute(getcount, [taskid, o.follow_id])
+					num += cursor.fetchone()[0]
+		elif kind == 'case_case':
+			num, successnum = get_business_num(o.follow_id, taskid, num, successnum,countnum)
+	return num, successnum
+
+async def dealDeBuginfo(taskid):
 	logname = BASE_DIR + "/logs/" + taskid + ".log"
 	dealogname = BASE_DIR + "/logs/deal/" + taskid + ".log"
 	if os.path.exists(logname):
@@ -695,7 +817,7 @@ def _step_process_check(callername, taskid, order, kind):
 	try:
 		user = User.objects.get(name=callername)
 		businessdata = BusinessData.objects.get(id=order.follow_id)
-		timeout = 10 if not businessdata.timeout else businessdata.timeout
+		timeout = 60 if not businessdata.timeout else businessdata.timeout
 		
 		if businessdata.count == 0:
 			return ('omit', "测试点[%s]执行次数=0 略过." % businessdata.businessname)
@@ -778,7 +900,7 @@ def _step_process_check(callername, taskid, order, kind):
 				#   viewcache(taskid,username,kind,'数据校验没配置 跳过校验')
 				
 				if itf_check:
-					if step.content_type in ('json', 'urlencode'):
+					if step.content_type in ('json', 'urlencode','formdata'):
 						res, error = _compute(taskid, user, itf_check, type='itf_check', target=text, kind=kind,
 						                      parse_type='json', rps_header=headers)
 					else:
@@ -956,7 +1078,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	
 	url_rf = ''
 	if len(url_rv[1].split('?')) > 1:
-		logger.info('$' * 1000)
+		# logger.info('$' * 1000)
 		url_params = url_rv[1].split('?')[1]
 		logger.info('url_params=>', url_params)
 		sep = _replace_function(user, url_params, taskid=taskid)
@@ -1086,7 +1208,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		
 		if content_type == 'formdata':
 			try:
-				viewcache(taskid, user.name, kind, '跑formdata分支')
+				viewcache(taskid, user.name, kind, '---formdata请求---')
 				rps = session.post(url, files=body, headers={**default, **headers}, timeout=timeout)
 			except:
 				err = traceback.format_exc()

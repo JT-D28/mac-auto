@@ -11,12 +11,14 @@
 /logs/*.log
 /logs/monitor.log
 /logs/deal/*.log
+/logs/taskinfo/*.log
 /login/__pycache__/
 /login/migrations/__pycache__/
 /logs/local_reports/*.html
 /ME2/configs.py
 /manager/storage/private/Function/*/__pycache__/
 /manager/storage/private/__pycache__/*
-/manager/storage/private/Function
+/manager/storage/private/Function/*
+/manager/storage/private/File/*
 /homepage/views/__pycache__/
 /ME2/config.ini

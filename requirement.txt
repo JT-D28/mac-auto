@@ -61,3 +61,4 @@ pyecharts
 python-jenkins==1.6.0
 easycython
 pyinstaller
+django-debug-toolbar

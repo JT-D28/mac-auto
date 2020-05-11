@@ -281,7 +281,8 @@ def run(request):
 		t.start()
 	return {
 		'status': 'success',
-		'msg': str(taskid)
+		'msg': str(taskid),
+		'data':planid
 	}
 
 @monitor(action='导出计划')

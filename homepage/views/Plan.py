@@ -76,14 +76,13 @@ def queryplan(request):
 	
 @csrf_exempt
 def queryPlanState(request):
-	planid = request.POST.get('id')[5:]
-	# if request.POST.get('refresh'):
-	# 	while 1:
-	# 		is_running = getRudnningInfo('',planid,'isrunning')
-	# 		print('3333312313333333333333333')
-	# 		if is_running in (0, '0'):
-	# 			return JsonResponse({'data': 1})
-	# 		time.sleep(1)
+	planid = request.POST.get('id')
+	if planid.startswith('plan_'):
+		planid = request.POST.get('id')[5:]
+	type = request.POST.get('type')
+	if type:
+		fl = 1 if getRunningInfo('', planid, 'isrunning') =='debug' else 0
+		return JsonResponse({'data': fl})
 	is_running = '0' if getRunningInfo('',planid,'isrunning') =='0' else '1'
 	return JsonResponse({'data': is_running})
 

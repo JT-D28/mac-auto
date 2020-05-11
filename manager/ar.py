@@ -75,13 +75,14 @@ class RoleData():
 
 
     @classmethod
-    @monitor(action='删除角色')
+    @monitor(action='删除角色',authorname='$Role.objects.filter(id__in=[ids]).author.name')
     def delrole(cls,**kws):
         try:
             role_ids=kws['ids']
             for roleid in role_ids.split(','):
                 if roleid:
                     Role.objects.get(id=roleid).delete()
+                    
             return{
                 'code':0,
                 'msg':'删除角色成功'

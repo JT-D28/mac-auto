@@ -45,7 +45,7 @@
             font-weight: 500;
             color: rgba(0, 151, 136, 1);
             line-height: 17px;
-            margin-left:2px;
+            margin-left:4px;
         }
 
         #msgview {
@@ -111,7 +111,7 @@
             background-color: #eee;
             
             width:300px;
-            height:100%;
+            height:calc(100% - 100px);
             z-index:99999;
             position:fixed;
             right:0;
@@ -223,11 +223,11 @@
                     </li>
 
 
-                 <!--   <li class="layui-nav-item UI_MENU_QXGL">
+                    <li class="layui-nav-item UI_MENU_QXGL">
                         <a href="javascript:;" data-url="/manager/authcontrol/"><img i="icon"
                                                                                      src="{% static 'manager/icon/template.svg' %}"
                                                                                      class="sideicon"><cite>权限控制</cite></a>
-                    </li>-->
+                    </li>
                 <li class="layui-nav-item">
                     <a id='tree' href="javascript:;" data-url="/manager/tree/"><img i="icon"
                                                                                     src="{% static 'manager/icon/app.svg' %}"
@@ -279,7 +279,7 @@
             <ul class="layui-tab-title top_tab" id="top_tabs" hidden>
                 <li class="layui-this" lay-id=""><i class="layui-icon">&#xe68e;</i> <cite>首页</cite></li>
             </ul>
-            <div class="layui-tab-content clildFrame" style="top:0">
+            <div class="layui-tab-content clildFrame" style="">
                 <div class="layui-tab-item layui-show">
                     <iframe id='iframe' src="/homepage/"></iframe>
                 </div>
@@ -465,7 +465,7 @@
             tmp='<li class="layui-timeline-item" id="#id#" full="#full#">'+
                     '<div class="layui-timeline-content layui-text">'+
                     '<h3 class="layui-timeline-title" >#title#</h3><p>#msg#'+
-                    '<span>已读</span><span>详情</span></p></div> </li>'
+                    '<span>标为已读</span><span>详情</span><span>删除</span></p></div> </li>'
                       
             _post_nl('/manager/getusernews/',{},function(data){
 
@@ -481,12 +481,21 @@
                     if(data[i]['is_read']==0){
                         
                         $('#wd').append(tmp1)
+                        $('#wd span').each(function(){
+                            if($(this).html()=='删除')
+                                $(this).hide()
+                            else
+                                $(this).show()
+                        });
 
                     }else{
                         $('#yd').append(tmp1)
                         $('#yd span').each(function(){
-                            $(this).hide();
-                        })
+                            if($(this).html()=='标为已读' || $(this).html()=='详情')
+                                $(this).hide()
+                            else
+                                $(this).show()
+                        });
                     }
 
                     //
@@ -497,17 +506,19 @@
                     var el=$(this)
                     delbtn=$(this).find('span').eq(0)
                     delbtn.click(function(){
-                        layer.msg('ok..')
+                       
                         var this_=this
                         _post_nl('/manager/hasread/',{uid:el.attr('id')},function(e){
                             if(e.code==0){
 
                                 el.remove()
-                                layer.msg('标为已读')
+                               
                                 $('#yd').prepend(el.html())
-                                //
                                 $('#yd span').each(function(){
-                                    $(this).hide();
+                                    if($(this).html()=='标为已读' || $(this).html()=='详情')
+                                        $(this).hide()
+                                    else
+                                        $(this).show()
                                 });
                             }
                         })
@@ -524,12 +535,15 @@
                                 _post_nl('/manager/hasread/',{'uid':el.attr('id')},function(e){
                                         if(e.code==0){
                                             el.remove()
-                                            layer.msg('标为已读')
+                                       
                                             $('#yd').prepend(el.html())
                                             //
                                             $('#yd span').each(function(){
-                                                $(this).hide();
-                                     });
+                                                if($(this).html()=='标为已读' || $(this).html()=='详情')
+                                                    $(this).hide()
+                                                else
+                                                    $(this).show()
+                                            });
                             }
 
 

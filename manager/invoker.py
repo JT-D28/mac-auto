@@ -433,7 +433,7 @@ def get_node_upper_case(nodeid):
 		return Order.objects.get(kind='case_step', follow_id=id).main_id
 	elif kind == 'business':
 		stepid = Order.objects.get(kind='step_business', follow_id=id).main_id
-		return get_run_node_plan_id('step_%s' % stepid)
+		return get_node_upper_case('step_%s' % stepid)
 
 
 def runplans(username, taskid, planids, is_verify, kind=None, startnodeid=None):

@@ -425,6 +425,17 @@ def get_run_node_plan_id(startnodeid):
 		return get_run_node_plan_id('step_%s' % stepid)
 
 
+def get_node_upper_case(nodeid):
+	kind,id = nodeid.split("_")
+	if kind == 'case':
+		return id
+	elif kind == 'step':
+		return Order.objects.get(kind='case_step', follow_id=id).main_id
+	elif kind == 'business':
+		stepid = Order.objects.get(kind='step_business', follow_id=id).main_id
+		return get_run_node_plan_id('step_%s' % stepid)
+
+
 def runplans(username, taskid, planids, is_verify, kind=None, startnodeid=None):
 	"""
     任务运行
@@ -579,7 +590,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 	logger.info('startnodeid:', startnodeid)
 	L = _get_final_run_node_id(startnodeid)
 	logger.info('准备传入的L:', L)
-	
+
 	groupskip = []
 	username = callername
 	kindmsg = ''
@@ -595,26 +606,28 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 			logger.info('plan dbid=>', dbid)
 			desp = DBCon.objects.get(id=int(dbid)).description
 			set_top_common_config(taskid, desp, src='plan')
-		
-		caseslist = []
+
 		if startnodeid.split('_')[0] == 'plan':
+			caseslist = []
 			beforeCases, before_des = beforePlanCases(planid)
 			caseslist.extend(ordered(list(beforeCases)))
 			viewcache(taskid, callername, kind, "加入前置计划/用例[<span style='color:#FF3399'>%s</span>]" % (before_des))
-		
-		caseslist.extend(ordered(list(Order.objects.filter(main_id=planid, kind='plan_case'))))
-		
-		cases = [Case.objects.get(id=x.follow_id) for x in caseslist]
+			caseslist.extend(ordered(list(Order.objects.filter(main_id=planid, kind='plan_case'))))
+			cases = [Case.objects.get(id=x.follow_id) for x in caseslist]
+		else:
+			caseid = get_node_upper_case(startnodeid)
+			cases = [Case.objects.get(id=caseid)]
+
 		logger.info('cases=>', cases)
 		planresult = []
-		
+
 		for case in cases:
 			if case.count == 0 or case.count == '0':
 				continue
 			else:
 				logger.info('runcount:', case.count)
 				_runcase(username, taskid, case, plan, planresult, is_verify, kind=None, startnodeid=startnodeid, L=L)
-		
+
 		planre = (len([x for x in planresult]) == len([x for x in planresult if x == True]))
 		if planre:
 			plan.last, color = 'success', 'green'
@@ -625,25 +638,25 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 		          "结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-%s'>%s</span>" % (
 			          plan.description, color, plan.last))
 		setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
-		
+
 		# 处理日志
 		new_loop = asyncio.new_event_loop()
 		asyncio.set_event_loop(new_loop)
 		loop = asyncio.get_event_loop()
 		loop.run_until_complete(dealDeBuginfo(taskid))
 		loop.run_until_complete(dealruninfo(planid,taskid,{'dbscheme':dbscheme,
-		                                                   'planname':plan.description,'user':username}))
+		                                                   'planname':plan.description,'user':username},startnodeid))
 		# asyncio.run(dealDeBuginfo(taskid))
 		# asyncio.run(dealruninfo(planid,taskid))
-		
+
 		# threading.Thread(target=dealDeBuginfo, args=(taskid,)).start()
 		# threading.Thread(target=dealruninfo, args=(planid,taskid,)).start()
-		
+
 		# 清除请求session
 		clear_task_session('%s_%s' % (taskid, callername))
 		# 产生内置属性
 		_save_builtin_property(taskid, callername)
-		
+
 		# 生成本地报告
 		MainSender.gen_report(taskid, MainSender.gethtmlcontent(taskid, ''))
 		# 发送报告
@@ -657,7 +670,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 			viewcache(taskid, callername, kind, mail_res)
 			logger.info("发送钉钉通知 结果[%s]" % dingding_res)
 			viewcache(taskid, callername, kind, dingding_res)
-	
+
 	except Exception as e:
 		logger.error('执行计划未知异常：', traceback.format_exc())
 		viewcache(taskid, username, kind, '执行计划未知异常[%s]' % traceback.format_exc())
@@ -671,10 +684,15 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 
 
 
-async def dealruninfo(planid,taskid,info=None):
+async def dealruninfo(planid,taskid,info=None,startnodeid=''):
 	casesdata=[]
-	orders = Order.objects.filter(kind='plan_case', main_id=planid).extra(
-		select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
+	kind,nodeid = startnodeid.split("_")
+	if kind=='plan':
+		orders = Order.objects.filter(kind='plan_case', main_id=planid).extra(
+			select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
+		caselist = [order.follow_id for order in orders]
+	else:
+		caselist = [get_node_upper_case(startnodeid)]
 	with connection.cursor() as cursor:
 		cursor.execute('''SELECT CONCAT(success) AS success,CONCAT(total) AS total,
 		ROUND(CONCAT(success*100/total),1) AS rate FROM (SELECT sum(CASE WHEN result="success"
@@ -682,16 +700,17 @@ async def dealruninfo(planid,taskid,info=None):
 		FROM manager_resultdetail WHERE taskid=%s) AS x''',[taskid])
 		info['successnum'],info['total'],info['rate'] = cursor.fetchone()
 	data = {'root':[],'info':info}
-	for order in orders:
-		case = Case.objects.get(id=order.follow_id)
+
+	for caseid in caselist:
+		case = Case.objects.get(id=caseid)
 		if case.count not in [0,'0',None]:
-			num, successnum = get_business_num(order.follow_id, taskid=taskid)
+			num, successnum = get_business_num(caseid, taskid=taskid)
 			rate = round(successnum * 100 / num, 2) if num != 0 else 0
 			data['root'].append({'id': case.id, 'name': case.description, 'hasChildren': 'true',
 				 'case_success_rate': rate,
 				 'success': successnum,
 				 'total': num, 'type': 'case', 'icon': 'fa icon-fa-folder'})
-			getcasemap(order.follow_id,data,taskid)
+			getcasemap(caseid,data,taskid)
 		else:
 			data['root'].append({'id': case.id, 'name': case.description+'(不执行)',
 			                     'type': 'case', 'icon': 'fa icon-fa-folder','state':'omit'})
@@ -751,7 +770,7 @@ def get_business_info(stepid,data,taskid):
 					{'id': businessdata.id, 'name': businessdata.businessname, 'hasChildren': False, 'type': 'business',
 					 'icon': 'fa icon-fa-leaf', 'state': state})
 			except:
-				print(traceback.format_exc())
+				# print(traceback.format_exc())
 				pass
 		else:
 			data['step_' + str(stepid)].append(
@@ -798,14 +817,18 @@ async def dealDeBuginfo(taskid):
 			temp2 = re.sub(
 				r'\[(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])\s+(20|21|22|23|[0-1]\d):[0-5]\d:[0-5]\d\]', '',
 				tmep1)
-			case_matchs = re.findall(r"开始执行用例.*?结束用例.*?结果.*?<br>", temp2)
+			# case_matchs = re.findall(r"开始执行用例.*?结束用例.*?结果.*?<br>", temp2)
 			logger.info("开始处理日志------")
-			for case in case_matchs:
-				step_matchs = re.findall(r"开始执行步骤.*?步骤执行.*?结果.*?<br>", case)
-				for step in step_matchs:
-					print('step:',step)
-					with open(dealogname, 'a', encoding='UTF-8') as f:
-						f.write(step.replace("        ", '\n') + '\n========\n')
+			bmatchs=re.findall(r"开始执行步骤.*?步骤执行.*?结果.*?<br>", temp2)
+			with open(dealogname, 'a', encoding='UTF-8') as f:
+				for b in bmatchs:
+					f.write(b.replace("        ", '\n') + '\n========\n')
+			# for case in case_matchs:
+			# 	step_matchs = re.findall(r"开始执行步骤.*?步骤执行.*?结果.*?<br>", case)
+			# 	for step in step_matchs:
+			# 		print('step:',step)
+			# 		with open(dealogname, 'a', encoding='UTF-8') as f:
+			# 			f.write(step.replace("        ", '\n') + '\n========\n')
 			logger.info('处理日志完成------')
 
 
@@ -839,8 +862,8 @@ def _step_process_check(callername, taskid, order, kind):
 		
 		viewcache(taskid, username, kind, "--" * 100)
 		viewcache(taskid, username, kind,
-		          "开始执行步骤[<span style='color:#FF3399'>%s</span>] 测试点[<span style='color:#FF3399'>%s</span>]" % (
-			          step.description, businessdata.businessname))
+		          "开始执行步骤[<span style='color:#FF3399'>%s</span>] 测试点[<span style='color:#FF3399' id=%s>%s</span>]" % (
+			          step.description,businessdata.id, businessdata.businessname))
 		
 		dbid = getDbUse(taskid, step.db_id)
 

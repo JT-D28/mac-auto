@@ -189,6 +189,7 @@
         delimiters: ['${', '}'],
         data() {
             return {
+                node :'',
                 taskinfo: {},
                 taskids: [],
                 taskid: '',
@@ -268,16 +269,16 @@
                     });
                 }
             },
-            gettaskdata(taskid) {
+            gettaskdata(taskid,node) {
                 _post_nl('/homepage/gettaskdata/', {
-                    'planid': app.planid, 'taskid': taskid
+                    'planid': app.planid, 'taskid': taskid,'node':node
                 }, function (data) {
                     if (data.code === 0) {
                         app.taskinfo = data.taskinfo;
                         app.casesdata = data.casesdata
                     } else {
                         setTimeout(() => {
-                            app.gettaskdata(taskid);
+                            app.gettaskdata(taskid,node);
                         }, 200)
                     }
                 })
@@ -287,6 +288,10 @@
             var planid = getQueryVariable('plan');
             this.planid = planid;
             var debug = getQueryVariable('debug');
+            var node = getQueryVariable('node');
+            if (node !== false){
+                this.node = node
+            }
             _post_nl('/homepage/gettaskidplan/', {planid: planid}, function (data) {
                 if (data.code === 0) {
                     app.taskids = data.taskids;
@@ -297,7 +302,7 @@
         },
         watch: {
             'taskid': function (taskid) {
-                this.gettaskdata(taskid)
+                this.gettaskdata(taskid,this.node)
             }
         }
     });

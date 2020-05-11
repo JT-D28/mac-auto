@@ -522,7 +522,7 @@ def getRunningInfo(username='', planid='', type='lastest_taskid'):
         return str(isrunning)
     elif type == 'dbscheme':
         planinfo = _runninginfo.get(str(planid), {})
-        nofind = Plan.objects.get(id=planid).schemename
+        nofind = models.Plan.objects.get(id=planid).schemename
         dbscheme = planinfo.get('dbscheme', nofind)
         return dbscheme
 

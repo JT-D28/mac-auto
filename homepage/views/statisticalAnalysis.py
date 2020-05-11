@@ -25,11 +25,28 @@ def statisticalAnalysis(request):
 def get_task_data(request):
 	planid = request.POST.get('planid')
 	taskid = request.POST.get('taskid')
+	node = request.POST.get('node')
 	logname = BASE_DIR + "/logs/taskinfo/" + taskid + ".log"
 	if os.path.exists(logname):
 		with open(logname, 'r', encoding='utf-8') as f:
 			x = json.load(f)
-		return JsonResponse({'code': 0, 'taskinfo':x['info'],'casesdata': x['root']})
+		if node:
+			type,id=node.split("_")
+			if type == 'plan':
+				casesdata = x['root']
+			elif type == 'business':
+				stepid = Order.objects.get(follow_id=id,kind='step_business').main_id
+				tps = x['step_'+str(stepid)]
+				for tp in tps:
+					tpid = tp['id']
+					if str(tpid)==str(id):
+						casesdata=[tp]
+						break
+			else:
+				casesdata = x[node]
+		else:
+			casesdata = x['root']
+		return JsonResponse({'code': 0, 'taskinfo':x['info'],'casesdata':  casesdata})
 	else:
 		return JsonResponse({'code': 1, 'casesdata': ''})
 
@@ -59,7 +76,7 @@ def geterrorinfo(request):
 		with open(logname, 'r', encoding='utf-8') as f:
 			res = f.read()
 		ress = res.split("========")
-		pattern = re.compile('开始执行步骤.*?' + stepname + '.*?测试点\[.*?' + bname + '.*?<br>')
+		pattern = re.compile('开始执行步骤.*?' + stepname + '.*?测试点\[.*?id='+id+'.*?'+ bname + '.*?<br>')
 		pattern1 = re.compile('步骤执行结果.*?{}'.format(state))
 		res = '未匹配到日志记录，你可以试试下载并且查看完整日志！' if state != 'skip' else '该测试点被跳过'
 		for i in ress:

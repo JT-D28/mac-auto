@@ -698,8 +698,7 @@ async def dealruninfo(planid,taskid,info=None,startnodeid=''):
 		ROUND(CONCAT(success*100/total),1) AS rate FROM (SELECT sum(CASE WHEN result="success"
 		THEN 1 ELSE 0 END) AS success,sum(CASE WHEN result !="OMIT" THEN 1 ELSE 0 END) AS total
 		FROM manager_resultdetail WHERE taskid=%s) AS x''',[taskid])
-		if cursor.fetchone():
-			info['successnum'],info['total'],info['rate'] = cursor.fetchone()
+		info['successnum'],info['total'],info['rate'] = cursor.fetchone()
 
 			
 	data = {'root':[],'info':info}

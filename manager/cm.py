@@ -266,7 +266,10 @@ def run(request):
 		logger.info('获取待运行节点计划ID:',planid)
 		plan = mm.Plan.objects.get(id=planid)
 		taskid = gettaskid(plan.__str__())
-		state_running =getRunningInfo(callername,planid, 'isrunning')
+		logger.info('callername:',callername)
+		state_running =getRunningInfo(username=callername,planid=planid,type='isrunning')
+		logger.info('flag4')
+		
 		if state_running != '0':
 			msg = '验证' if state_running == 'verify' else '调试'
 			return {

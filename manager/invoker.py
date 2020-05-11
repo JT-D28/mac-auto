@@ -698,7 +698,10 @@ async def dealruninfo(planid,taskid,info=None,startnodeid=''):
 		ROUND(CONCAT(success*100/total),1) AS rate FROM (SELECT sum(CASE WHEN result="success"
 		THEN 1 ELSE 0 END) AS success,sum(CASE WHEN result !="OMIT" THEN 1 ELSE 0 END) AS total
 		FROM manager_resultdetail WHERE taskid=%s) AS x''',[taskid])
-		info['successnum'],info['total'],info['rate'] = cursor.fetchone()
+		if cursor.fetchone():
+			info['successnum'],info['total'],info['rate'] = cursor.fetchone()
+
+			
 	data = {'root':[],'info':info}
 
 	for caseid in caselist:
@@ -2327,24 +2330,21 @@ def _find_and_save_property(user, dict_str, reponsetext):
 	# logger.info(type(dict_str),len(dict_str))
 	try:
 		if dict_str is None or len(dict_str.strip()) == 0:
-			# logger.info('NOOOO'*100)
 			return ('success', '')
 		
 		d = eval(dict_str)
-		# logger.info(reponsetext)
-		# logger.info("d=>",d)
+
 		for k, v in d.items():
 			cur = k
 			p = JSONParser(reponsetext)
 			logger.info('================_find_and_save_property==========')
-			# logger.info(p)
-			# logger.info(k,v)
+
 			v1 = p.getValue(v)
 			
 			if not v1:
 				# return ('fail','通过[%s]获取属性值失败,请检查'%v)
 				v1 = v
-			
+
 			save_data(user.name, _tempinfo, k, v1)
 		return ('success', '')
 	
@@ -2394,16 +2394,6 @@ class Struct(object):
 		raise NotImplementedError("")
 
 
-# class XMLParser(Struct):
-#   def __init__(self,data):
-#       pass
-
-#   def getValue(self,xpath):
-#       pass
-
-#   def translate(self,chainstr):
-#       pass
-
 class XMLParser(Struct):
 	def __init__(self, data):
 		logger.info('==xml解析传入data=：\n', data)
@@ -2447,8 +2437,6 @@ class XMLParser(Struct):
 				route_path += '[1]'
 			
 			if propname:
-				# logger.info('search=>','.'+route_path)
-				# logger.info('res=>',self.root.find('.'+route_path).attrib)
 				return self.root.find('.' + route_path).attrib.get(propname, 'None')
 		try:
 			# logger.info('search=>','.'+route_path)
@@ -2524,13 +2512,6 @@ class JSONParser(Struct):
 		else:
 			logger.info(errms)
 			return chainstr
-
-
-# def check(self,chainstr,expected):
-
-#   #logger.info(type(self.getValue(chainstr)),type(expected))
-
-#   return str(self.getValue(chainstr))==str(expected)
 
 
 class MainSender:
@@ -3686,9 +3667,6 @@ class Transformer(object):
 	def add_case_step_relation(self, case_id, step_id):
 		from .cm import getnextvalue
 		# logger.info('【关联用例和业务数据】')
-		# step=Step.objects.get(id=step_id)
-		# case=Case.objects.get(id=case_id)
-		# case.businessdatainfo.add(business)
 		
 		length = len(list(Order.objects.filter(kind='case_step', main_id=case_id, follow_id=step_id)))
 		if length == 0:

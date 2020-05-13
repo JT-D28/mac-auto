@@ -855,12 +855,6 @@ def copyVar(request):
 用例管理
 
 """
-
-
-def case(request):
-	return render(request, 'manager/case.html')
-
-
 @csrf_exempt
 def queryonecase(request):
 	code = 0

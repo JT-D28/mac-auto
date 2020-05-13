@@ -41,10 +41,8 @@ urlpatterns = [
 	path('editmultivar/',views.editmultivar),
 	path('copyvar/', views.copyVar),
 	
-	path('step/', views.step),
 	path('queryonestep/', views.queryonestep),
 	
-	path('case/', views.case),
 	path('queryonecase/', views.queryonecase),
 	
 	path('transform/', views.transform),
@@ -84,17 +82,12 @@ urlpatterns = [
 	path('queryDbSchemebyVar/',views.queryDbSchemebyVar),
 	path('varSqltest/',views.varSqltest),
 	
-	
-	path('mailconfig/', views.mailconfig),
-	path('querymailconfig/', views.querymailconfig),
 	path('editmailconfig/', views.editmailconfig),
 	path('queryonemailconfig/', views.queryonemailconfig),
 	
 	path('querytaskdetail/', views.querytaskdetail),
 	#
-	# path('querybusinessdata/', views.querybusinessdata),
 	path('queryonebusiness/', views.queryonebusiness),
-	# path('queryonebusinessdata/', views.queryonebusinessdata),
 	path('querybusinessdatalist/', views.querybusinessdatalist),
 	path('queryUser/', views.queryUser),
 	path('queryrole/', views.queryrole),
@@ -104,7 +97,7 @@ urlpatterns = [
 	path('updaterole/',views.updaterole),
 	path('queryroleusers/', views.query_transfer_data),
 
-	#
+	# #
 	path('tag/', views.tag),
 	path('querytaglist/', views.querytaglist),
 	path('querytags/', views.querytags),
@@ -112,7 +105,7 @@ urlpatterns = [
 	path('deltag/', views.deltag),
 	path('querytag/', views.querytag),
 	path('varBatchEdit/', views.varBatchEdit),
-	#
+	# #
 	path('template/', views.template),
 	path('querytemplatecommon/', views.querytemplatecommon),
 	path('addtemplate/', views.addtemplate),
@@ -137,14 +130,14 @@ urlpatterns = [
 	path('updateuicontrol/', views.updateuicontrol),
 	path('queryalluicontrolusers/', views.queryalluicontrolusers),
 	path('updateuicontrolstatus/', views.updateuicontrolstatus),
-	#
+	# #
 	path('queryoneproduct/', views.queryoneproduct),
 	path('tree/', views.treetest),
 	path('querytreelist/', views.querytreelist),
 	path('treecontrol/', views.treecontrol),
 	path('getfulltree/', views.getfulltree),
 
-	#
+	# #
 	path('changemode/', views.changemode),
 
 	path('getusernews/', views.getusernews),

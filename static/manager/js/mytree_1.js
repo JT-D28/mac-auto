@@ -43,7 +43,7 @@ var tree = {
                     onCollapse: this._onCollapse,
                     onRightClick: this._onRightClick,
                     // beforeEditName: this._beforeEditName,
-                    //   	beforeRemove: this._beforeRemove,
+                    //      beforeRemove: this._beforeRemove,
                     // beforeRename: this._beforeRename,
                     // onRemove: this._onRemove,
                     // onRename: this._onRename,
@@ -156,7 +156,7 @@ var tree = {
             'del': "<span class='fa icon-fa-trash' id='del_#tid#' title='删除' onfocus='this.blur();'></span>",
             'logs': "<span class='fa icon-fa-bug' id='logs_#tid#' title='调试日志' onfocus='this.blur();'></span>",
             'config': "<span class='fa icon-fa-cog' id='config_#tid#' title='高级配置' onfocus='this.blur();'></span>",
-            'replace': "<span class='fa fa-arrows-h' id='replace_#tid#' title='文本替换' onfocus='this.blur();'></span>",
+            'replace': "<span class='fa fa-cube' id='replace_#tid#' title='文本替换' onfocus='this.blur();'></span>",
             
         }
 
@@ -406,10 +406,13 @@ var tree = {
                     title: '文本替换',
                     type: 1,
                     content: $('#rform'),
-                    btn: ['关闭'],
-                    area: ["750px", "450px"],
+                    btn: ['替换','取消'],
+
+                    yes:function(index,layero){
+
+                    }
                 });
-                console.log($('#rform').length)
+                
             })
 
             function opendebug(planid, nodeid) {

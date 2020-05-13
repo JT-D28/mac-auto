@@ -14,9 +14,10 @@ from ME2.settings import logme
 
 from login import models as lm
 from .context import *
-from .invoker import runplan, DataMove, runplans,get_run_node_plan_id
+from .invoker import runplan, runplans,get_run_node_plan_id
 from .core import gettaskid,get_params
 from manager.context import Me2Log as logger
+from .operate.dataMove import DataMove
 
 
 # addproduct

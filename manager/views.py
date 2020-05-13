@@ -18,6 +18,8 @@ from . import cm
 import json, xlrd, base64, traceback
 
 from .invoker import _is_function_call
+from .operate.dataMove import DataMove
+from .operate.transformer import Transformer
 from .pa import MessageParser
 from .ar import Grant,RoleData
 
@@ -1054,11 +1056,6 @@ def runtask(request):
 	return JsonResponse(simplejson(code=0, msg="你的任务开始运行", taskid=taskid), safe=False)
 
 
-@csrf_exempt
-def callfromthreeparty(request):
-	str_ = '' % ()
-	key = Fu._md5(obj)
-
 
 @csrf_exempt
 def changetocrontab(request):
@@ -1361,9 +1358,6 @@ def queryfunclist(request):
 """
 
 
-def step(request):
-	return render(request, 'manager/step.html')
-
 
 @csrf_exempt
 def queryonestep(request):
@@ -1385,70 +1379,9 @@ def queryonestep(request):
 		return JsonResponse(simplejson(code=3, msg='查询异常'), safe=False)
 
 
-@csrf_exempt
-def querystep(request):
-	limit = request.GET.get('limit')
-	page = request.GET.get('page')
-	searchvalue = request.GET.get('searchvalue')
-	main_id = request.POST.get("mainid")
-	logger.info("searchvalue=>", searchvalue)
-	logger.info("mainid=>", main_id)
-	
-	res = []
-	# 1.有searchvalue 无mainid的查询
-	
-	# 2.有mainid 无searchvalue的子步骤查询
-	
-	# 3.searchvalue&mianid都没 返回all step
-	
-	# if searchvalue&len(searchvalue.strip())==0:
-	# 	searchvalue=None
-	
-	if searchvalue and main_id is None:
-		logger.info("querystep 查询情况1")
-		# tags=list(Tag.objects.filter(Q(name__contains=searchvalue)))
-		# for tag in tags:
-		# 	tagid=tag.id
-		# 	r=list(Step.objects.filter(Q(tag_id=tagid)))
-		# 	res=res+r
-		res = res + list(
-			Step.objects.filter(Q(description__icontains=searchvalue) | Q(step_type__icontains=searchvalue)))
-	
-	elif main_id and searchvalue is None:
-		'''@delete
-		'''
-		logger.info("querystep 查询情况2")
-		res = list(Case.objects.get(id=main_id).steps.all())
-	
-	
-	
-	elif main_id is None and not searchvalue:
-		logger.info("querystep 查询情况3")
-		res = list(Step.objects.all())
-	# res=list(BusinessData.objects.all())
-	# res,total=getpagedata(res, page, limit)
-	# jsonstr=json.dumps(res,cls=BusinessDataEncoder,total=total)
-	# return JsonResponse(jsonstr,safe=False)
-	else:
-		# warnings.warn("querystep不支持这种情况..")
-		pass
-	
-	logger.info("查询结果：", res)
-	# res=getpagedata(res, request)
-	
-	res, total = getpagedata(res, page, limit)
-	
-	jsonstr = json.dumps(res, cls=StepEncoder, total=total)
-	return JsonResponse(jsonstr, safe=False)
-
 
 """邮件配置相关
 """
-
-
-@csrf_exempt
-def mailconfig(request):
-	return render(request, 'manager/mailconfig.html')
 
 
 @csrf_exempt
@@ -1516,94 +1449,6 @@ def editmailconfig(request):
 		msg = '操作异常[%s]' % traceback.format_exc()
 	
 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
-
-
-@csrf_exempt
-def querymailconfig(request):
-	searchvalue = request.GET.get('searchvalue')
-	# logger.info("searchvalue=>",searchvalue)
-	res = None
-	if searchvalue:
-		logger.info("变量查询条件=>")
-		res = list(MailConfig.objects.filter(
-			Q(description__icontains=searchvalue) | Q(rich_text__icontains=searchvalue) | Q(
-				to_receive__icontains=searchvalue) | Q(cc_receive__icontains=searchvalue)))
-	else:
-		res = list(MailConfig.objects.all())
-	
-	limit = request.GET.get('limit')
-	page = request.GET.get('page')
-	res, total = getpagedata(res, page, limit)
-	
-	jsonstr = json.dumps(res, cls=MailConfigEncoder, total=total)
-	return JsonResponse(jsonstr, safe=False)
-
-
-"""执行顺序相关
-"""
-
-
-@csrf_exempt
-def addorder(request):
-	code = 0
-	msg = ''
-	main_id = request.POST.get("main_id")
-	follow_id = request.POST.get("follow_id")
-	username = request.session.get('username', None)
-	kind = request.POST.get("kind")
-	
-	try:
-		
-		#
-		if kind == 'case':
-			case = Case.objects.get(id=main_id)
-			step = Step.objects.get(id=follow_id)
-			case.steps.add(step)
-			case.save()
-		
-		elif kind == 'plan':
-			plan = Plan.objects.get(id=main_id)
-			case = Case.objects.get(id=follow_id)
-			plan.cases.add(case)
-			plan.save()
-		else:
-			pass
-		#
-		LIST = list(Order.objects.filter(main_id=main_id, kind=kind, follow_id=follow_id))
-		if len(LIST) > 0:
-			for item in LIST:
-				item.delete()
-		
-		order = Order()
-		order.main_id = main_id
-		order.follow_id = follow_id
-		order.author = User.objects.get(name=username)
-		order.kind = kind
-		order.save()
-	
-	except Exception as e:
-		logger.info(e)
-		traceback.logger.info_exc(e)
-		code = 1
-	
-	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
-
-
-@csrf_exempt
-def addordervalue(request):
-	code = 0
-	msg = ""
-	try:
-		main_id = request.POST.get("main_id")
-		follow_id = request.POST.get("follow_id")
-		type_ = request.POST.get("kind")
-		
-		genorder(type_=kind, parentid=main_id, childid=follow_id)
-	except:
-		code = 1
-		msg = ""
-	
-	return JsonResponse(simplejson(code=code, msg=""))
 
 
 

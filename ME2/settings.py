@@ -14,7 +14,7 @@ import os
 import json
 from ME2 import configs
 
-DEBUG = False
+DEBUG = True
 DEBUG_TOOLS_ON = False
 
 BASE_URL = 'http://' + configs.ME2_URL
@@ -186,7 +186,7 @@ LOGGING = {
 	},
 	'handlers': {
 		'console': {
-			'level': 'INFO',
+			'level': 'DEBUG',
 			'class': 'logging.StreamHandler',
 			'formatter': 'verbose'
 		},

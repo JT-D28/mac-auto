@@ -135,11 +135,11 @@ var tree = {
         }
     },
     _addHoverDom: function (treeId, treeNode) {
-        //console.log(treeNode)
+
         _m1 = {
             'root': ['add'],
             'product': ['add', 'edit', 'del', 'mimport'],
-            'plan': ['add', 'edit', 'del', 'run', 'mexport', 'logs', 'config'],
+            'plan': ['add', 'edit', 'del', 'run', 'mexport', 'logs', 'config','replace'],
             'case': ['add', 'edit', 'del', 'run'],
             'step': ['add', 'edit', 'del', 'run'],
             'business': ['edit', 'del', 'run']
@@ -156,6 +156,8 @@ var tree = {
             'del': "<span class='fa icon-fa-trash' id='del_#tid#' title='删除' onfocus='this.blur();'></span>",
             'logs': "<span class='fa icon-fa-bug' id='logs_#tid#' title='调试日志' onfocus='this.blur();'></span>",
             'config': "<span class='fa icon-fa-cog' id='config_#tid#' title='高级配置' onfocus='this.blur();'></span>",
+            'replace': "<span class='fa fa-arrows-h' id='replace_#tid#' title='文本替换' onfocus='this.blur();'></span>",
+            
         }
 
         var type = treeNode.type
@@ -195,6 +197,7 @@ var tree = {
         if ($("#mexport_" + treeNode.tId).length > 0) return
         if ($("#logs_" + treeNode.tId).length > 0) return
         if ($("#config_" + treeNode.tId).length > 0) return
+        if ($("#replace_" + treeNode.tId).length > 0) return
 
         sObj.after(btnstr);
 
@@ -395,6 +398,20 @@ var tree = {
                 return false;
             });
 
+            //文本替换
+
+            var add_btn = $("#replace_" + treeNode.tId);
+            if (add_btn) add_btn.bind("click", function () {
+                layer.open({
+                    title: '文本替换',
+                    type: 1,
+                    content: $('#rform'),
+                    btn: ['关闭'],
+                    area: ["750px", "450px"],
+                });
+                console.log($('#rform').length)
+            })
+
             function opendebug(planid, nodeid) {
                 _post_nl('/homepage/queryPlanState/', {id: planid, 'type': 'debug'}, function (data) {
                     if (data.data === 0) {
@@ -552,6 +569,7 @@ var tree = {
         $("#run_" + treeNode.tId).unbind().remove();
         $("#logs_" + treeNode.tId).unbind().remove();
         $("#config_" + treeNode.tId).unbind().remove();
+        $("#replace_" + treeNode.tId).unbind().remove();
     },
 
     _onBeforeExpand: function (e, treeId, treeNode) {

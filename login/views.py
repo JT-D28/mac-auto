@@ -170,7 +170,9 @@ def logout(request):
 
 @csrf_exempt
 def account(request):
-	return render(request, 'login/account.html')
+
+	UI_MENU_YHGL_BUTTON_SCYH=Grant.is_ui_display('UI_MENU_YHGL_BUTTON_SCYH', request.session.get('username'))
+	return render(request, 'login/account.html',locals())
 
 @csrf_exempt
 def role(request):

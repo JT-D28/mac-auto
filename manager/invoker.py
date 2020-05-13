@@ -1339,16 +1339,18 @@ def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
 			continue
 			
 		viewcache(taskid, user, None, "执行%s:%s" % (kind, s))
-		status, call_str = _replace_variable(user, s, 1, taskid)
+		status, s = _replace_variable(user, s, 1, taskid)
+		logger.info('变量处理后的callstr:',s)
 		if status is not 'success':
-			return (status, call_str)
+			return (status, s)
 		
 		methodname = ''
 		try:
 			methodname = re.findall('(.*?)\(', s)[0]
-			argstr = re.findall('\((.*?)\)', s)[0]
+			argstr = re.findall('\((.*)\)', s)[0]
 			if argstr.strip():
 				argstr = argstr + ','
+			logger.info('拼sql:',argstr)
 			argstr = argstr + "callername='%s',taskid='%s'" % (user.name, taskid)
 			call_str = '%s(%s)' % (methodname, argstr)
 		
@@ -1373,6 +1375,7 @@ def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
 				f = al[0]
 				viewcache(taskid, user.name, None, "<span style='color:#FF3333;'>函数库中发现多个匹配函数 这里使用第一个匹配项</span>")
 		
+		logger.info('invoker.py 传入的sql：',call_str)
 		status, res = Fu.call(f, call_str, builtin=isbuiltin)
 		viewcache(taskid, user.name, None, "执行[<span style='color:#009999;'>%s</span>]%s" % (kind, s))
 		if status is not 'success':
@@ -1851,6 +1854,7 @@ def _replace_function(user, str_, taskid=None):
 		f = None
 		try:
 			f = Function.objects.get(name=fname)
+			logger.info('通过函数名[%s]获取函数对象'%fname)
 		except:
 			pass
 		

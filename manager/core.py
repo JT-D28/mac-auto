@@ -1034,7 +1034,8 @@ class Fu:
 						return ('error', "非法表达式[%s]" % call_str)
 			
 			else:
-				print('fucobj=>', funcobj)
+				##外部调用
+				logger.info('funcobj:',funcobj)
 				user = funcobj.author
 				flag = funcobj.flag
 				f = __import__('manager.storage.private.Function.%s.func_%s' % (user, flag), fromlist=True)

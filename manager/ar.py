@@ -186,12 +186,15 @@ class Grant(object):
         '''
         UI组件显示控制
         '''
+
+        logger.info('-'*50,'==开始[%s]用户权限过滤..'%code)
         uc=UIControl.objects.filter(code=code)
         isopen=0
         if uc.exists():
             isopen=uc[0].is_open
+            logger.info('组件ID:',uc[0].id)
         else:
-            #logger.info('组件[%s]没配置 放行'%code)
+            logger.info('组件[%s]没配置 放行'%code)
             return '!important'
 
         user=User.objects.get(name=username)
@@ -202,17 +205,18 @@ class Grant(object):
             if user in r.users.all():
                 user_role_ids.append(r.id)
 
-        # logger.info('用户[%s]ID[%s]'%(username,User.objects.get(name=username).id))
-        # logger.info('用户[%s]角色ID:%s'%(username,user_role_ids))
-        f1=User_UIControl.objects.filter(user_id=user_id,kind='USER')
+        logger.info('用户[%s]ID[%s]'%(username,User.objects.get(name=username).id))
+        logger.info('用户[%s]角色ID:%s'%(username,user_role_ids))
+        f1=User_UIControl.objects.filter(user_id=user_id,kind='USER',uc_id=uc[0].id)
         if f1.exists() and isopen:
-            #logger.info('用户[%s]看不到UI组件[%s]'%(username,uc[0].description))
+            logger.info('用户[%s]看不到UI组件[%s]'%(username,uc[0].description))
             return 'none!important'
 
         for idx in user_role_ids:
-            f2=User_UIControl.objects.filter(user_id=idx,kind='ROLE')
+            f2=User_UIControl.objects.filter(user_id=idx,kind='ROLE',uc_id=uc[0].id)
+
             if f2.exists() and isopen:
-                #logger.info('角色[%s]看不到UI组件[%s]'%(Role.objects.get(id=idx).name,uc[0].description))
+                logger.info('角色%s[%s]看不到UI组件%s[%s]'%(Role.objects.get(id=idx).name,idx,uc[0].description,uc[0].id))
                 return 'none!important'
         #logger.info('用户[%s]能看到UI组件[%s]'%(username,uc[0].description))
         return '!important'
@@ -256,7 +260,7 @@ class Grant(object):
             raise RuntimeError('更新视图控制用户信息异常')
     
     @classmethod
-    @monitor(action='查询权限详情')
+    #@monitor(action='查询权限详情')
     def query_one_ui_control(cls,uid):
         try:
             u=UIControl.objects.get(id=uid)
@@ -428,7 +432,7 @@ class Grant(object):
         }
 
     @classmethod
-    @monitor(action='开关权限')
+    #@monitor(action='开关权限')
     def updateuicontrolstatus(cls,**kws):
         try:
             u=UIControl.objects.get(id=kws['uid'])

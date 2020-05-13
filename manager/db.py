@@ -163,6 +163,8 @@ class Mysqloper:
 			dbnamecache = get_top_common_config(taskid)
 			scheme = getRunningInfo(planid=base64.b64decode(taskid).decode().split('_')[0], type='dbscheme')
 			logger.info('使用数据连接方案',scheme)
+			logger.info('获的已设置的dbname：',dbnamecache)
+			logger.info('获得conname:',conname)
 			if dbnamecache == conname:
 				print('使用数据库缓存配置')
 				conname = dbnamecache
@@ -191,6 +193,7 @@ class Mysqloper:
 						sqlresult = str(data[0][0])
 					# 多字段 or 多组数据
 					else:
+						logger.error('查询[%s]重复字段:',data)
 						return ('error', "sql[%s]查询结果为%s存在多组数据或多个字段 不支持" % (sql,data))
 				elif sqlresult == None:
 					viewcache(taskid, callername, None, "sql <span style='color:#009999;'>%s</span> 查询无结果"%(sql))

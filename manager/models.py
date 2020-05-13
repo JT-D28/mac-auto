@@ -392,6 +392,19 @@ class News(Model):
 		sender=User.objects.get(name='admin') or User.objects.get(name='system')
 		return True if nws.exists() else False
 
+class Recover(Model):
+	'''
+	树节点文本替换凭据
+	'''
+	nodeid=IntegerField()
+	filed=CharField(max_length=6)
+	old=CharField(max_length=60)
+	exp=CharField(max_length=60)
+	createtime=DateTimeField(auto_now_add=True)
+	creater = ForeignKey(User, on_delete=CASCADE)
+
+
+
 
 
 

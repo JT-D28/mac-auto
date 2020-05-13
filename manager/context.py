@@ -282,7 +282,7 @@ def getRunningInfo(username='', planid='', type='lastest_taskid'):
     elif type == 'dbscheme':
         planinfo = _runninginfo.get(str(planid), {})
 
-        nofind = models.Plan.objects.get(id=planid).schemename
+        nofind = Plan.objects.get(id=planid).schemename
         dbscheme = planinfo.get('dbscheme', nofind)
 
         return dbscheme
@@ -304,6 +304,9 @@ def get_temp_dir():
     dirs.append(os.path.join(os.path.dirname(os.path.dirname(__file__)),'login','template','login'))
 
     return dirs
+
+def get_project_dir():
+    return os.path.dirname(os.path.dirname(__file__))
 
 class monitor(object):
     '''
@@ -428,6 +431,8 @@ class monitor(object):
 
             else:
                 params=kws2
+
+            Me2Log.info('params:',params)
 
             self.username=params['user']
             msg='用户%s%s '%(self.username,self.action)

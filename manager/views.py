@@ -37,7 +37,7 @@ def index(request):
 		UI_MENU_BWMB=Grant.is_ui_display('UI_MENU_BWMB', username)
 		UI_CONFIG_GLOBAL_SET=Grant.is_ui_display('UI_CONFIG_GLOBAL_SET', username)
 		user_news_status='layui-badge-dot' if News.has_no_read_msg(userid) else ''
-		# logger.info('组件显示结果:',locals())
+		logger.info('组件显示结果:',locals())
 		return render(request, 'manager/start.html', locals())
 	
 	else:

@@ -150,8 +150,22 @@
           ifr.style.height = height + 'px'
       }**/
 </script>
-
-
+<form id='rform' hidden style="padding:10px;">
+    <div class="layui-form-item">
+        <label class="layui-form-label">待替换文本</label>
+        <div class="layui-input-block">
+            <input type="text" name="me2url" placeholder="待替换文本" autocomplete="off"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">替换为</label>
+        <div class="layui-input-block">
+            <input type="text" name="me2url" placeholder="" autocomplete="off"
+                   class="layui-input">
+        </div>
+    </div>
+</form>
 <div id='treelist' class="layui-col-md5 " style="max-height:100%;overflow-y:auto;padding: 20px;height: 100%">
     <div class="layui-inline">
         <input type="input" name="" placeholder="search"
@@ -225,6 +239,8 @@
 
 
 <script type="text/javascript">
+
+    console.log($('#rform'))
     tree.init();
 
     $('#searchbtn').click(function (argument) {

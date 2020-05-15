@@ -140,9 +140,9 @@ var tree = {
             'root': ['add'],
             'product': ['add', 'edit', 'del', 'mimport'],
             'plan': ['add', 'edit', 'del', 'run', 'mexport', 'logs', 'config','replace'],
-            'case': ['add', 'edit', 'del', 'run'],
-            'step': ['add', 'edit', 'del', 'run'],
-            'business': ['edit', 'del', 'run']
+            'case': ['add', 'edit', 'del', 'run','replace'],
+            'step': ['add', 'edit', 'del', 'run','replace'],
+            'business': ['edit', 'del', 'run','replace']
         }
         _opinfo = {
 
@@ -402,20 +402,39 @@ var tree = {
 
             var add_btn = $("#replace_" + treeNode.tId);
             if (add_btn) add_btn.bind("click", function () {
+                $('#rform')[0].reset()
 
                 layer.open({
                     title: '文本替换['+treeNode.name+']',
                     type: 1,
                     content: $('#rform'),
                     btn: ['应用','回退','取消'],
-                    area:['550px','400px'],
+                    area:['550px','250px'],
                     yes:function(index,layero){
 
                         _post('/manager/treecontrol/',{'uid':treeNode.id,'old':$('#old').val(),'new':$('#new').val(),'action':'replacetext'},function(e){
 
                             layer.close(index)
-                            if(e.code==0)
+                            if(e.code==0){
+                                
+                                //
+                                console.log('重新加载子节点')
+                                params = {'id': treeNode.id, 'type': treeNode.type}
+                                success = function (e) {
+                                    console.log('重加载子节点数据 =>', params)
+                                    data = JSON.parse(e)
+                                    var treeObj = $.fn.zTree.getZTreeObj(treeId);
+                                    treeObj.removeChildNodes(treeNode)
+                                    treeObj.addNodes(treeNode, data.data);
+                                    console.log('reload data;'+data.data)
+                                    treeObj.expandNode(treeNode, true)
+                                }
+                                _post('/manager/querytreelist/', params, success)
+
                                 layer.alert(e.msg,{icon:1})
+
+
+                            }
                             else
                                 layer.alert(e.msg,{icon:2})
                         })

@@ -415,8 +415,28 @@ var tree = {
                         _post('/manager/treecontrol/',{'uid':treeNode.id,'old':$('#old').val(),'new':$('#new').val(),'action':'replacetext'},function(e){
 
                             layer.close(index)
-                            if(e.code==0)
+                            if(e.code==0){
+                                
+                                //
+                                console.log('重新加载子节点')
+                                parentnode=treeNode.getParentNode()
+                                params = {'id': parentnode.id, 'type': parentnode.type}
+                                success = function (e) {
+                                    console.log('重加载子节点数据 =>', params)
+                                    data = JSON.parse(e)
+                                    var treeObj = $.fn.zTree.getZTreeObj(treeId);
+                                    treeObj.removeChildNodes(parentnode)
+                                    treeObj.addNodes(parentnode, data.data);
+                                    treeObj.expandNode(parentnode,true)
+                                  
+                                  
+                                }
+                                _post('/manager/querytreelist/', params, success)
+
                                 layer.alert(e.msg,{icon:1})
+
+
+                            }
                             else
                                 layer.alert(e.msg,{icon:2})
                         })

@@ -156,7 +156,7 @@ var tree = {
             'del': "<span class='fa icon-fa-trash' id='del_#tid#' title='删除' onfocus='this.blur();'></span>",
             'logs': "<span class='fa icon-fa-bug' id='logs_#tid#' title='调试日志' onfocus='this.blur();'></span>",
             'config': "<span class='fa icon-fa-cog' id='config_#tid#' title='高级配置' onfocus='this.blur();'></span>",
-            'replace': "<span class='fa fa-cube' id='replace_#tid#' title='文本替换' onfocus='this.blur();'></span>",
+            'replace': "<span class='fa fa-facebook' id='replace_#tid#' title='文本替换' onfocus='this.blur();'></span>",
             
         }
 
@@ -382,7 +382,7 @@ var tree = {
             if (config_btn) config_btn.bind('click', function () {
 
 
-                alert('高级配置！')
+                //alert('高级配置！')
             })
 
             //日志
@@ -402,15 +402,37 @@ var tree = {
 
             var add_btn = $("#replace_" + treeNode.tId);
             if (add_btn) add_btn.bind("click", function () {
+
                 layer.open({
-                    title: '文本替换',
+                    title: '文本替换['+treeNode.name+']',
                     type: 1,
                     content: $('#rform'),
-                    btn: ['替换','取消'],
-
+                    btn: ['应用','回退','取消'],
+                    area:['550px','400px'],
                     yes:function(index,layero){
 
+                        _post('/manager/treecontrol/',{'uid':treeNode.id,'old':$('#old').val(),'new':$('#new').val(),'action':'replacetext'},function(e){
+
+                            layer.close(index)
+                            if(e.code==0)
+                                layer.alert(e.msg,{icon:1})
+                            else
+                                layer.alert(e.msg,{icon:2})
+                        })
+
+                    },
+                    btn2:function(index,layero){
+                        _post('/manager/treecontrol/',{'uid':treeNode.id,'action':'replacerecover'},function(e){
+                            layer.close(index)
+                            if(e.code==0)
+                                layer.alert(e.msg,{icon:1})
+                            else
+                                layer.alert(e.msg,{icon:2})
+
+
+                        })
                     }
+
                 });
                 
             })

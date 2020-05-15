@@ -131,40 +131,25 @@
     window.onresize = function () {
         changeFrameHeight();
     }
-    /**
-     function calcPageHeight(doc) {
-          var cHeight = Math.max(doc.body.clientHeight, doc.documentElement.clientHeight)
-          var sHeight = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight)
-          var height  = Math.max(cHeight, sHeight)
-          return height
-      }
-     var ifr = document.getElementById('tree-content')
-     ifr.onload = function() {
-      	  //解决打开高度太高的页面后再打开高度较小页面滚动条不收缩
-      	  ifr.style.height='0px';
-          var iDoc = ifr.contentDocument || ifr.document
-          var height = calcPageHeight(iDoc)
-          if(height < 490){
-          	height = 490;
-          }
-          ifr.style.height = height + 'px'
-      }**/
+
 </script>
 <form id='rform' hidden style="padding:10px;">
     <div class="layui-form-item">
-        <label class="layui-form-label">待替换文本</label>
+        <label class="layui-form-label">待替换</label>
         <div class="layui-input-block">
-            <input type="text" name="me2url" placeholder="待替换文本" autocomplete="off"
-                   class="layui-input">
+            <input type="text" name="me2url" placeholder="字符串&正则表达式 正则无法回退" autocomplete="off"
+                   class="layui-input" id='old'>
         </div>
     </div>
     <div class="layui-form-item">
         <label class="layui-form-label">替换为</label>
         <div class="layui-input-block">
-            <input type="text" name="me2url" placeholder="" autocomplete="off"
-                   class="layui-input">
+            <input type="text" name="me2url" placeholder="替换会影响子节点相关数据" autocomplete="off"
+                   class="layui-input" id='new'>
         </div>
     </div>
+
+
 </form>
 <div id='treelist' class="layui-col-md5 " style="max-height:100%;overflow-y:auto;padding: 20px;height: 100%">
     <div class="layui-inline">
@@ -250,6 +235,10 @@
     window.onload = function () {
         document.documentElement.style.overflow = 'hidden';
     };
+
+    layui.use('element',function(){
+        var element = layui.element;
+    })
 
 
     /**    layui.use(['util'], function () {

@@ -1376,8 +1376,6 @@ def queryonestep(request):
 
 """邮件配置相关
 """
-
-
 @csrf_exempt
 def queryonemailconfig(request):
 	try:
@@ -2648,3 +2646,4 @@ def simple_compute(gain, plan, scheme):
 			return state, '',gain
 		op = Mysqloper()
 		return op.db_exec_test(gain, scheme)
+

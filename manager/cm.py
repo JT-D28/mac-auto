@@ -18,6 +18,7 @@ from .invoker import runplan, runplans,get_run_node_plan_id
 from .core import gettaskid,get_params
 from manager.context import Me2Log as logger
 from .operate.dataMove import DataMove
+from tools.R import R
 
 
 # addproduct
@@ -1781,3 +1782,31 @@ def _del_step_force(step_id):
 	
 	except:
 		logger.info('删除步骤异常=>', traceback.format_exc())
+
+
+def replacetext(request):
+	'''
+	文本替换
+	'''
+	node_id=request.POST.get('uid')
+	old=request.POST.get('old')
+	expected=request.POST.get('new')
+	callername=request.session.get('username')
+	r=R(callername,startnode_id=node_id, old=old, expected=expected )
+
+	res= r.replace()
+	logger.info('文本替换结果:',res)
+	return res
+
+def replacerecover(request):
+	'''
+	文本替换回复
+	'''
+	uid=request.POST.get('uid')
+	logger.info('开始节点文本恢复 uid=',uid)
+	return R(request.session.get('username')).recover(uid)
+
+
+
+
+

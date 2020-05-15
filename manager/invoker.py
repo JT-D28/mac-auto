@@ -683,12 +683,6 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 
 
 
-
-
-
-
-
-
 def _step_process_check(callername, taskid, order, kind):
 	"""
     return (resultflag,msg)

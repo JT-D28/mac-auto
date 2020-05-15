@@ -21,13 +21,8 @@
 
     .el-row {
         margin-bottom: 20px;
-
-    &
-    :last-child {
-        margin-bottom: 0;
     }
 
-    }
     .el-col {
         border-radius: 4px;
     }
@@ -106,6 +101,8 @@
                             <div class="el-card is-always-shadow"><!---->
                                 <div class="el-card__body">
                                     <h4>计划名称：<a style="float: right">${ taskinfo.planname }</a></h4>
+                                    <h4>任务类型：<a style="float: right" v-if="taskinfo.verify==1">验证</a>
+                                        <a style="float: right" v-if="taskinfo.verify==0">调试</a></h4>
                                     <h4>数据库方案：<a style="float: right">${ taskinfo.dbscheme }</a></h4>
                                     <h4>测试点数：<a style="float: right">${ taskinfo.total }</a></h4>
                                     <h4>成功数：<a style="float: right">${ taskinfo.successnum }</a></h4>
@@ -116,7 +113,10 @@
                             </div>
                         </div>
                         <div style="text-align: right;font-size: 12px">
-                            <el-button type="primary" size="mini" style="margin-top: 30px" @click="opennewtab">新窗口打开</el-button>
+                            <el-button type="primary" size="mini" style="margin-top: 30px" @click="changeview">${ viewkindstr }
+                            </el-button>
+                            <el-button type="primary" size="mini" style="margin-top: 30px" @click="opennewtab">新窗口打开
+                            </el-button>
                         </div>
                     </el-col>
                     <el-col :span="18">
@@ -189,7 +189,9 @@
         delimiters: ['${', '}'],
         data() {
             return {
-                node :'',
+                viewkind:'fail',
+                viewkindstr:'查看全部',
+                node: '',
                 taskinfo: {},
                 taskids: [],
                 taskid: '',
@@ -231,6 +233,12 @@
             };
         },
         methods: {
+            changeview(){
+                this.viewkind = this.viewkind === 'all'?'fail':'all'
+                this.viewkindstr = this.viewkindstr ==='查看全部'?'只看失败':'查看全部'
+                this.casesdata=[]
+                this.gettaskdata(this.taskid,this.node)
+            },
             opennewtab() {
                 window.open(window.location.href)
             },
@@ -250,12 +258,12 @@
                 }
             },
             load(tree, treeNode, resolve) {
-                console.log(tree.type);
                 if (tree.type == 'case') {
                     _post_nl('/homepage/getnodes/', {
                         nodeid: tree.id,
                         kind: tree.type,
-                        taskid: app.taskid
+                        taskid: app.taskid,
+                        viewkind:this.viewkind
                     }, function (data) {
                         resolve(data.data)
                     });
@@ -263,22 +271,24 @@
                     _post_nl('/homepage/getnodes/', {
                         nodeid: tree.id,
                         kind: tree.type,
-                        taskid: app.taskid
+                        taskid: app.taskid,
+                        viewkind:this.viewkind
                     }, function (data) {
                         resolve(data.data)
                     });
                 }
             },
-            gettaskdata(taskid,node) {
+            gettaskdata(taskid, node) {
+                var viewkind = this.viewkind
                 _post_nl('/homepage/gettaskdata/', {
-                    'planid': app.planid, 'taskid': taskid,'node':node
+                    'planid': app.planid, 'taskid': taskid, 'node': node,'viewkind':viewkind
                 }, function (data) {
                     if (data.code === 0) {
                         app.taskinfo = data.taskinfo;
                         app.casesdata = data.casesdata
                     } else {
                         setTimeout(() => {
-                            app.gettaskdata(taskid,node);
+                            app.gettaskdata(taskid, node);
                         }, 200)
                     }
                 })
@@ -289,7 +299,7 @@
             this.planid = planid;
             var debug = getQueryVariable('debug');
             var node = getQueryVariable('node');
-            if (node !== false){
+            if (node !== false) {
                 this.node = node
             }
             _post_nl('/homepage/gettaskidplan/', {planid: planid}, function (data) {
@@ -302,7 +312,7 @@
         },
         watch: {
             'taskid': function (taskid) {
-                this.gettaskdata(taskid,this.node)
+                this.gettaskdata(taskid, this.node)
             }
         }
     });

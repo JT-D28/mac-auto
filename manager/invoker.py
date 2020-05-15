@@ -646,8 +646,8 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 		asyncio.set_event_loop(new_loop)
 		loop = asyncio.get_event_loop()
 		loop.run_until_complete(dealDeBuginfo(taskid))
-		loop.run_until_complete(dealruninfo(planid,taskid,{'dbscheme':dbscheme,
-		                                                   'planname':plan.description,'user':username},startnodeid))
+		loop.run_until_complete(dealruninfo(planid,taskid,{'dbscheme':dbscheme,'planname':plan.description,
+														   'user':username,'verify':is_verify},startnodeid))
 		# asyncio.run(dealDeBuginfo(taskid))
 		# asyncio.run(dealruninfo(planid,taskid))
 

@@ -1014,7 +1014,7 @@ class Fu:
 						call_str = ''
 						if argstr.strip():
 							if methodname.startswith('db'):
-								call_str = '%s(\'\'\'%s\'\'\',taskid=%s,callername=%s)' % (methodname, s1, s2, s3)
+								call_str = '%s("""%s""",taskid=%s,callername=%s)' % (methodname, s1, s2, s3)
 							# print('参数加双引号后表达式=>', call_str)
 							else:
 								call_str = '%s(%s,taskid=%s,callername=%s)' % (methodname, s1, s2, s3)

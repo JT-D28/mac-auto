@@ -266,10 +266,25 @@ function _fill_form(data, fieldids) {
 
 }
 
+
+ function _isInArray(arr,value){
+     for(var i = 0; i < arr.length; i++){
+         if(value === arr[i]){
+              return true;
+         }
+     }
+     return false;
+ }
 function _set_form_not_editable() {
     /***设置表单不可编辑***/
     console.log('view状态 表单不可编辑')
+
     $('form input').each(function () {
+        if($(this).attr('name')=='before_plan'){
+
+            return;
+
+        }
         $(this).attr('disabled', '')
     });
 

@@ -1815,8 +1815,17 @@ def replacetext(request):
 	expected=request.POST.get('new')
 	callername=request.session.get('username')
 	r=R(callername,startnode_id=node_id, old=old, expected=expected )
-
-	res= r.replace()
+	scope={
+		'check_plan':request.POST.get('check_plan'),
+		'check_case':request.POST.get('check_case'),
+		'check_step':request.POST.get('check_step'),
+		'check_business':request.POST.get('check_business'),
+		'check_url':request.POST.get('check_url'),
+		'check_header':request.POST.get('check_header'),
+		'check_property':request.POST.get('check_property'),
+		}
+	logger.info('scope:',scope)
+	res= r.replace(scope)
 	logger.info('文本替换结果:',res)
 	return res
 

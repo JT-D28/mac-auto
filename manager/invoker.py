@@ -628,7 +628,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 				continue
 			else:
 				logger.info('runcount:', case.count)
-				_runcase(username, taskid, case, plan, planresult, is_verify, kind=None, startnodeid=startnodeid, L=L)
+				_runcase(username, taskid, case, plan, planresult, is_verify, kind=kind, startnodeid=startnodeid, L=L)
 
 		planre = (len([x for x in planresult]) == len([x for x in planresult if x == True]))
 		if planre:

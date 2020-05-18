@@ -13,6 +13,7 @@ from django.conf import settings
 from login.models import *
 from .cm import addrelation
 from .core import *
+from .cron import Cron
 from .invoker import *
 from . import cm
 import json, xlrd, base64, traceback
@@ -973,17 +974,20 @@ def mailcontrol(request):
 
 @csrf_exempt
 def queryoneplan(request):
-	code = 0
-	msg = ''
-	res = None
+	code, res, cron, msg = 0, None, None, ''
+	planid = request.POST.get('id').split('_')[1]
 	try:
-		res = Plan.objects.get(id=request.POST.get('id').split('_')[1])
-		pass
+		res = Plan.objects.get(id=planid)
+		# print(res)
+		cron = Crontab.objects.values('status','value').get(plan_id=planid)
+		# for i in Cron.querytask():
+		# 	print(i)
 	except:
 		code = 1
 		msg = '查询异常[%s]' % traceback.format_exc()
 	finally:
 		jsonstr = json.dumps(res, cls=PlanEncoder)
+		jsonstr['cron']=cron
 		return JsonResponse(jsonstr, safe=False)
 
 

@@ -284,11 +284,9 @@ class DBCon(Model):
 
 
 class Crontab(Model):
-	taskid = CharField(max_length=32)
 	plan = ForeignKey(Plan, on_delete=CASCADE)
 	###2019 12 23 12 23 45#######
 	value = CharField(max_length=32)
-	ext = CharField(max_length=32, blank=True, null=True)
 	status = CharField(choices=(('close', '关闭'), ('open', '开启')), max_length=12, default='close')
 	
 	author = ForeignKey(User, on_delete=CASCADE)

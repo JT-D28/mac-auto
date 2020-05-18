@@ -21,6 +21,12 @@ class User(Model):
 	
 	@classmethod
 	def create_superuser(cls, password):
+		if not User.objects.filter(name='定时任务').exists():
+			print('创建一个跑定时任务的账户')
+			user = User()
+			user.name = '定时任务'
+			user.password = 'cron'
+			user.save()
 		if not User.objects.filter(name='admin').exists():
 			print('创建管理员账户')
 			user = User()

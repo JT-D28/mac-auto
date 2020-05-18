@@ -221,6 +221,11 @@ class Mysqloper:
 			print(traceback.format_exc())
 			return ('error', "数据库[%s]执行sql[%s]发生异常:\n[%s]" % (conname, sql, traceback.format_exc()))
 		
+		finally:
+			try:
+				self.conn.close()
+			except:
+				pass
 	def db_exec_test(self,sql,scheme):
 		logger.info('传入sql:{},数据连接方案:{}'.format(sql, scheme))
 		try:

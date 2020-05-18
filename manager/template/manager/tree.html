@@ -20,6 +20,19 @@
 
 
     <style type="text/css">
+        .layui-input {
+            padding: 0 14px;
+            background-color: rgb(252, 252, 252);
+        }
+
+        .layui-form-item .layui-form-checkbox[lay-skin="primary"] {
+            margin-right: 9px;
+        }
+
+        .layui-form-selectup dl {
+            top: 42px;
+            bottom: unset;
+        }
 
         span {
             font-size: 14px;
@@ -133,11 +146,23 @@
     }
 
 </script>
-<form id='rform' hidden style="padding:10px;">
+<form id='rform' hidden style="padding:10px;" class="layui-form">
+  <div class="layui-form-item">
+    <label class="layui-form-label">作用于</label>
+    <div class="layui-input-block">
+      <input type="checkbox" name="planname" title="计划名" lay-skin="primary" checked>
+      <input type="checkbox" name="casename" title="用例名" lay-skin="primary" checked>
+      <input type="checkbox" name="stepname" title="步骤名" lay-skin="primary" checked>
+      <input type="checkbox" name="stepurl" title="步骤url" lay-skin="primary" checked>
+      <input type="checkbox" name="header" title="请求头" lay-skin="primary" checked>
+      <input type="checkbox" name="property" title="属性" lay-skin="primary" checked>
+      <input type="checkbox" name="businessname" title="测试点名" lay-skin="primary" checked>
+    </div>
+  </div>
     <div class="layui-form-item">
         <label class="layui-form-label">待替换</label>
         <div class="layui-input-block">
-            <input type="text" name="me2url" placeholder="字符串&正则表达式 正则无法回退" autocomplete="off"
+            <input type="text" name="me2url" placeholder="字符串&正则表达式(正则无法回退) " autocomplete="off"
                    class="layui-input" id='old'>
         </div>
     </div>

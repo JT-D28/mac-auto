@@ -94,9 +94,39 @@
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
+<script src="{% static 'manager/js/mytree_1.js' %}"></script>
 
 
 <script type="text/javascript">
+
+        $(document).ready(function(){
+            $("[name='before_plan']").bind("mouseover",function(e){
+                console.log('curNode:'+localStorage.getItem('curNode'))
+                t=JSON.parse(localStorage.getItem('curNode'))
+
+                // console.log(t.name)
+                if(t.type=='plan'||t.type=='case'){
+
+                    v=t.name + '@' + t.id.split('_')[0] + '@' + btoa(t.id.split('_')[1]);
+                    $(this).val(v)
+
+                }
+            
+
+            });
+            // $("[name='before_plan']").bind("mouseout", tree.bindMouseOut);
+            // $(this).bind('mouseup',function(e){
+            //    alert('mouseup')
+            //     // console.log(e.target)
+            //     target=$(e.target)
+            //     if(target.attr('name')=='before_plan'){
+            //         console.log('up')
+            //         console.log(window.curNode)
+            //     }
+            // })
+            
+        });
+
     _post_nl('/manager/queryDbScheme/', {action: 1}, function (data) {
         if (data.code === 0) {
             d = data.data;

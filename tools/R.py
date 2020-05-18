@@ -52,6 +52,9 @@ class R(object):
                         s=Step.objects.get(id=node_tid)
                         s.url=s.url.replace(bb.exp,bb.old)
                         s.description=s.description.replace(bb.exp,bb.old)
+                        s.temp=s.temp.replace(bb.exp,bb.old)
+                        s.headers=s.headers.replace(bb.exp,bb.old)
+                        
                         s.save()
                     elif 'case'==node_type:
                         c=Case.objects.get(id=node_tid)
@@ -82,41 +85,47 @@ class R(object):
     def replace_zz(cls,exp,new,s):
         return re.sub(exp,new,s)
 
-        
+    def _replace_case(self,node,scope):
 
-    def _replace_case(self,node):
         cid=node.split('_')[1]
         ccd=Case.objects.get(id=cid)
-        ccd.description=self.replace_zz(self.old,self.expected,ccd.description)
-        ccd.save()
-        self.record(node, 'description', self.old, self.expected)
+        if scope.get('check_case')=='true':
+            ccd.description=self.replace_zz(self.old,self.expected,ccd.description)
+            self.record(node, 'description', self.old, self.expected)
 
+        ccd.save()
+        
         oc=Order.objects.filter(kind='case_case',main_id=cid)
         for c in oc:
             cc=Case.objects.get(id=c.follow_id)
-            cc.description=self.replace_zz(self.old,self.expected,cc.description)
+            if scope.get('check_case')=='true':
+                cc.description=self.replace_zz(self.old,self.expected,cc.description)
+                self.record(nodeid, 'description', self.old, self.expected)
             cc.save()
             nodeid='case_%s'%c.follow_id
-            self.record(nodeid, 'description', self.old, self.expected)
-            self._replace_case(nodeid)
+            
+            self._replace_case(nodeid,scope)
 
         os=Order.objects.filter(kind='case_step',main_id=cid)
         for s in os:
             cs=Step.objects.get(id=s.follow_id)
-            cs.url=self.replace_zz(self.old,self.expected,cs.url)
-            cs.description=self.replace_zz(self.old,self.expected,cs.description)
+            if scope.get('check_url')=='true':
+                cs.url=self.replace_zz(self.old,self.expected,cs.url)
+                self.record('step_%s'%cs.id,'url', self.old, self.expected)
+            if scope.get('check_step')=='true':
+                cs.description=self.replace_zz(self.old,self.expected,cs.description)
+                self.record('step_%s'%cs.id,'description', self.old, self.expected)
             cs.save()
-            self.record('step_%s'%cs.id, ['description','url'], self.old, self.expected)
-
+            
             cod=Order.objects.filter(kind='step_business',main_id=cs.id)
             for co in cod:
                 b=BusinessData.objects.get(id=co.follow_id)
-                b.businessname=self.replace_zz(self.old,self.expected,b.businessnam)
+                if scope.get('check_business')=='true':
+                    b.businessname=self.replace_zz(self.old,self.expected,b.businessname)
+                    self.record('business_%s'%b.id, 'businessname', self.old, self.expected)
                 b.save()
-                self.record('business_%s'%b.id, 'description', self.old, self.expected)
-
-
-    def replace(self):
+                
+    def replace(self,scope=None):
 
         try:
        
@@ -131,25 +140,44 @@ class R(object):
                 cid=node.split('_')[1]
                 if 'business'==ctype:
                     b=BusinessData.objects.get(id=cid)
-                    b.businessname=self.replace_zz(self.old,self.expected,b.businessname)
+                    if scope.get('check_business',False):
+                        b.businessname=self.replace_zz(self.old,self.expected,b.businessname)
+                        self.record(node, 'businessname', self.old, self.expected)
                     b.save()
 
-                    self.record(node, 'businessname', self.old, self.expected)
+                    
                 elif 'step'==ctype:
+                    logger.warn('步骤名称:',scope.get('check_step'))
                     s=Step.objects.get(id=cid)
-                    s.url=self.replace_zz(self.old,self.expected,s.url)
-                    s.description=self.replace_zz(self.old,self.expected,s.description)
+ 
+                    if scope.get('check_step')=='true':
+                        s.description=self.replace_zz(self.old,self.expected,s.description)
+                        self.record(node,'description', self.old, self.expected)
+                    if scope.get('check_url')=='true':
+                        s.url=self.replace_zz(self.old,self.expected, s.url)
+                        self.record(node, 'url', self.old, self.expected)
+                    if scope.get('check_property')=='true':
+                        s.temp=self.replace_zz(self.old,self.expected, s.temp)
+                        self.record(node, 'property', self.old, self.expected)
+                    if scope.get('check_header')=='true':
+                        s.headers=self.replace_zz(self.old, self.expected, s.headers)
+                        self.record(node, 'header', self.old, self.expected)
+
                     s.save()
-                    self.record(node, ['url','description'], self.old, self.expected)
+                    
 
                 elif 'case'==ctype:
+                    
                     self._replace_case(node)
+
 
                 elif 'plan'==ctype:
                     p=Plan.objects.get(id=cid)
-                    p.description=self.replace_zz(self.old,self.expected,p.description)
+                    if scope.get('check_plan')=='true':
+                        p.description=self.replace_zz(self.old,self.expected,p.description)
+                        self.record(node, 'description', self.old, self.expected)
                     p.save()
-                    self.record(node, 'description', self.old, self.expected)
+                    
 
             return {
                 'status':'success',
@@ -163,7 +191,6 @@ class R(object):
             'msg':'文本[%s]替换为[%s]异常'%(self.old,self.expected)
         }
 
-        
 
     def _handle_case_node(self,node_uid,chain):
         case_os=Order.objects.filter(kind='case_step',main_id=node_uid)
@@ -193,7 +220,7 @@ class R(object):
             pass
         elif 'step'==node_type:
             os=Order.objects.filter(kind='step_business',main_id=node_uid)
-            [chain.append('business_%s'%x.follow_id) for x.follow_id in os]
+            [chain.append('business_%s'%x.follow_id) for x in os]
         elif 'case'==node_type:
             self._handle_case_node(node_uid, chain)
         elif 'plan'==node_type:

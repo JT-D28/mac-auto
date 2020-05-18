@@ -1,6 +1,7 @@
 var tree = {
     // _newCount:1,
     className: 'dark',
+    curNode:null,
     _getsetting: function () {
         var setting =
             {
@@ -41,7 +42,9 @@ var tree = {
                     onDrop: this._onDrop,
                     onExpand: this._onExpand,
                     onCollapse: this._onCollapse,
-                    onRightClick: this._onRightClick,
+                    // onRightClick: this._onRightClick,
+                    onDragMove:this._onDragMove,
+                    onMouseUp:this._onMouseUp,
                     // beforeEditName: this._beforeEditName,
                     //      beforeRemove: this._beforeRemove,
                     // beforeRename: this._beforeRename,
@@ -405,14 +408,28 @@ var tree = {
                 $('#rform')[0].reset()
 
                 layer.open({
-                    title: '文本替换['+treeNode.name+']',
+                    title: '替换节点文本['+treeNode.name+']',
                     type: 1,
                     content: $('#rform'),
                     btn: ['应用','回退','取消'],
-                    area:['550px','250px'],
+                    area:['550px','450px'],
                     yes:function(index,layero){
 
-                        _post('/manager/treecontrol/',{'uid':treeNode.id,'old':$('#old').val(),'new':$('#new').val(),'action':'replacetext'},function(e){
+                        // alert($("[name='planname']").is(':checked'))
+
+                        _post('/manager/treecontrol/',{
+                            'uid':treeNode.id,
+                            'old':$('#old').val(),
+                            'new':$('#new').val(),
+                            'action':'replacetext',
+                            'check_plan':$("[name='planname']").is(':checked'),
+                            'check_case':$("[name='casename']").is(':checked'),
+                            'check_step':$("[name='stepname']").is(':checked'),
+                            'check_business':$("[name='businessname']").is(':checked'), 
+                            'check_header': $("[name='header']").is(':checked'), 
+                            'check_property':$("[name='property']").is(':checked'), 
+                            'check_url':$("[name='stepurl']").is(':checked'), 
+                        },function(e){
 
                             layer.close(index)
                             if(e.code==0){
@@ -867,6 +884,7 @@ var tree = {
             if ($(this)[0].id === 'get_node_info') {
                 let oInput = document.createElement('input');
                 oInput.value = treeNode.name + '@' + treeNode.id.split('_')[0] + '@' + btoa(treeNode.id.split('_')[1]);
+                
                 document.body.appendChild(oInput);
                 oInput.select(); // 选择对象;
                 document.execCommand("Copy");
@@ -898,10 +916,57 @@ var tree = {
                 layer.msg('暂不支持')
             }
         });
+    },
+
+    _onDragMove:function(e, treeId, treeNodes){
+        console.log('==ondragmove==')
+        console.log(treeNodes)
+        if(treeNodes.length>0){
+            localStorage.setItem("curNode",JSON.stringify(treeNodes[0]))
+            console.log('设置curnode')
+        }
+
+
+
+
+    },
+    _onMouseUp:function(e, treeId, treeNode){
+        console.log('===onMouseUp==')
+
+    },
+
+
+    bindMouseOver:function(e) {
+        console.log('==bindMouseOver=')
+        var target = e.target;
+
+        console.log('当前curnode:'+tree.curNode)
+     
+        if (target!=null) {
+            var doc = $(document)
+            var target = $(target)
+            if(tree.curNode){
+                console.log(target)
+                target.attr('value',tree.curNode.name)
+            }
+        }
+        if(e.preventDefault) {
+            e.preventDefault();
+        }
+    },
+    bindMouseOut:function(e){
+        console.log('==bindMouseOut==')
+
+
+
+
+
     }
 
 
 }
+
+
 
 
 function getRightMenu(event, treeNode) {
@@ -932,6 +997,7 @@ function createMenu(menuData) {
         var ul = document.getElementById('contextmenu');
         var li = document.createElement("li");
         li.innerHTML = "<a href='#'>" + item.des + "</a>";
+        // alert(item.des)
         li.setAttribute("id", item.id);
         ul.appendChild(li);
     });

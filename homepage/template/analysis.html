@@ -162,7 +162,6 @@
 
                 </el-row>
             </el-tab-pane>
-            <el-tab-pane label="接口">接口</el-tab-pane>
         </el-tabs>
 
 
@@ -189,6 +188,7 @@
         delimiters: ['${', '}'],
         data() {
             return {
+                getdatafailtime:0,
                 viewkind:'fail',
                 viewkindstr:'查看全部',
                 node: '',
@@ -285,11 +285,15 @@
                 }, function (data) {
                     if (data.code === 0) {
                         app.taskinfo = data.taskinfo;
-                        app.casesdata = data.casesdata
+                        app.casesdata = data.casesdata;
+                        app.getdatafailtime=0
                     } else {
-                        setTimeout(() => {
-                            app.gettaskdata(taskid, node);
-                        }, 200)
+                        app.getdatafailtime = app.getdatafailtime + 1
+                        if (app.getdatafailtime < 10) {
+                            setTimeout(() => {
+                                app.gettaskdata(taskid, node);
+                            }, 500)
+                        }
                     }
                 })
             }
@@ -312,7 +316,8 @@
         },
         watch: {
             'taskid': function (taskid) {
-                this.gettaskdata(taskid, this.node)
+                this.getdatafailtime=0
+                this.gettaskdata(taskid, this.node);
             }
         }
     });

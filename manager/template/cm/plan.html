@@ -83,7 +83,7 @@
     <div class="layui-form-item">
         <label class="layui-form-label">运行前执行</label>
         <div class="layui-input-block">
-            <input type="text" name="before_plan" autocomplete="off" class="layui-input">
+            <input type="text" name="before_plan" autocomplete="off" class="layui-input" placeholder="可以拖动依赖的计划和用例到此处后释放">
         </div>
     </div>
     <div class="layui-form-item">
@@ -101,29 +101,33 @@
 
         $(document).ready(function(){
             $("[name='before_plan']").bind("mouseover",function(e){
-                console.log('curNode:'+localStorage.getItem('curNode'))
-                t=JSON.parse(localStorage.getItem('curNode'))
 
-                // console.log(t.name)
-                if(t.type=='plan'||t.type=='case'){
+                try{
+                    console.log('curNode:'+localStorage.getItem('curNode'))
+                    t=JSON.parse(localStorage.getItem('curNode'))
 
-                    v=t.name + '@' + t.id.split('_')[0] + '@' + btoa(t.id.split('_')[1]);
-                    $(this).val(v)
+                    // console.log(t.name)
+                    if(t.type=='plan'||t.type=='case'){
+                        kind=t.id.split('_')[0]=='plan'?'[计划]':'[用例]'
 
-                }
+
+                        // v=t.name + '@' + t.id.split('_')[0] + '@' + btoa(t.id.split('_')[1]);
+                        v1=kind+t.name + '@'+ btoa(t.id.split('_')[1]);
+                        $(this).val(v1)
+
+                        localStorage.removeItem("curNode")
+
+                    }
             
 
+                }catch(err){
+                    console.warn(err)
+
+                }
+
+
             });
-            // $("[name='before_plan']").bind("mouseout", tree.bindMouseOut);
-            // $(this).bind('mouseup',function(e){
-            //    alert('mouseup')
-            //     // console.log(e.target)
-            //     target=$(e.target)
-            //     if(target.attr('name')=='before_plan'){
-            //         console.log('up')
-            //         console.log(window.curNode)
-            //     }
-            // })
+
             
         });
 
@@ -171,7 +175,17 @@
                 run_type = data['run_type'];
                 description = data['description'];
                 var before_plan = data['before_plan'] === 'None' ? '' : data['before_plan'];
-                $("[name='before_plan']").val(before_plan);
+                var v=''
+                if(before_plan!=''){
+                    a=before_plan.split('@')[0]
+                    b=before_plan.split('@')[1]
+                    c=before_plan.split('@')[2]
+                    kind=a=='plan'?'[计划]':'[用例]'
+                    v=kind+a+'@'+c
+                }
+
+
+                $("[name='before_plan']").val(v);
                 form.val("addplan", {
                     "mail": data['is_send_mail'] === "open",
                     "dingding": data['is_send_dingding'] === "open"
@@ -195,16 +209,34 @@
         //save
         btn = $('#save')
         if (btn) btn.bind('click', function () {
+
             description = $("[name='description_1']").val();
             if (description.indexOf('__') !== -1) {
                 alert("计划名中不能有‘__’");
                 return false
             }
-            before_plan = $("[name='before_plan']").val()
+       
+            before_plan_old = $("[name='before_plan']").val()
+            console.log(before_plan_old)
+            before_plan=''
+            if(before_plan_old!=''){
+                node_type=before_plan_old.split('[')[1].split(']')[0]
+                node_class=node_type=='计划'?'plan':'case'
+                before_plan_name=before_plan_old.split(']')[1].split('@')[0]
+                before_plan_uid=before_plan_old.split(']')[1].split('@')[1]
+                before_plan=before_plan_name+'@'+node_class+'@'+before_plan_uid
+            }
+
+            //alert(before_plan)
+
+            // return;
+
             if (before_plan !== '' && before_plan.search('@') === -1) {
                 layer.msg('任务可能错误')
                 return false
             }
+
+      
 
             _post('/manager/treecontrol/', {
                 'uid': uid,
@@ -218,6 +250,7 @@
                 'is_send_mail': $("[name='mail']").is(':checked'),
                 'scheme': $("[name='scheme']").val(),
                 'before_plan': before_plan
+
             }, function (e) {
                 if (e.code === 0) {
                     // console.log(window)

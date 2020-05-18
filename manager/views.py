@@ -1466,6 +1466,7 @@ def treecontrol(request):
 	'''
 	'''
 	action = request.GET.get('action') or request.POST.get('action', '')
+	logger.info('action:',action)
 	if action in ('loadpage', 'view'):
 		page = request.GET.get('page') or request.POST.get('page')
 		# logger.info('loadpage')

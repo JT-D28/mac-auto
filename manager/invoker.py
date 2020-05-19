@@ -639,7 +639,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 		viewcache(taskid, callername, kind,
 		          "结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-%s'>%s</span>" % (
 			          plan.description, color, plan.last))
-		setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
+		# setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
 
 		# 处理日志
 		new_loop = asyncio.new_event_loop()
@@ -680,6 +680,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 
 	finally:
 		clear_data(callername, _tempinfo)
+		setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
 
 
 

@@ -19,6 +19,7 @@ async def dealruninfo(planid, taskid, info=None, startnodeid=''):
     else:
         caselist = [get_node_case(startnodeid)]
 
+
     success = ResultDetail.objects.filter(result='success', taskid=taskid).count()
     total = ResultDetail.objects.filter(taskid=taskid).exclude(result='omit').count()
     info['successnum'] = success
@@ -31,7 +32,6 @@ async def dealruninfo(planid, taskid, info=None, startnodeid=''):
     # 	THEN 1 ELSE 0 END) AS success,sum(CASE WHEN result !="OMIT" THEN 1 ELSE 0 END) AS total
     # 	FROM manager_resultdetail WHERE taskid=%s) AS x''', [taskid])
     #     info['successnum'],info['total'],info['rate'] = cursor.fetchone()
-
     data = {'root': [], 'info': info}
 
     for caseid in caselist:

@@ -1470,157 +1470,6 @@ def hasread(request):
 		return JsonResponse(pkg(code=4,msg=''),safe=False)
 
 
-# @csrf_exempt
-# def changepos(requests):
-# 	res0 = {
-# 		"code": 0,
-# 		"msg": '',
-# 		"data": None
-# 	}
-# 	try:
-
-# 		# logger.info('KK'*100)
-
-# 		move_kind = requests.POST.get('move_kind')
-# 		main_id = requests.POST.get("main_id")
-# 		follow_id = requests.POST.get("follow_id")
-# 		kind = requests.POST.get("kind")
-# 		username = requests.session.get('username', None)
-# 		move = requests.POST.get("move")
-# 		aid = requests.POST.get('aid')
-# 		bid = requests.POST.get('bid')
-
-# 		if 'swap' == move_kind:
-# 			res = swap(kind, main_id, aid, bid)
-# 			# logger.info('swap结果=>',res)
-# 			if res[0] is not 'success':
-# 				raise RuntimeError(res[1])
-# 		else:
-# 			changepostion(kind, main_id, follow_id, move)
-
-# 		_main_order = ordered(list(Order.objects.filter(main_id=main_id, kind=kind)))
-# 		# logger.info(_main_order)
-# 		res = []
-# 		for item in _main_order:
-# 			# desp=BusinessData.objects.get(id=item.follow_id).businessname if kind=="step" else Case.objects.get(id=item.follow_id).description
-# 			desp = None
-
-# 			if kind == 'step':
-# 				business = BusinessData.objects.get(id=item.follow_id)
-# 				status, stepinst = gettestdatastep(business.id)
-# 				if status is not 'success':
-# 					return JsonResponse(simplejson(code=3, msg=stepinst), safe=False)
-
-# 				desp = "%s_%s" % (stepinst.description, business.businessname)
-# 			else:
-# 				desp = Case.objects.get(id=item.follow_id).description
-
-# 			obj = {
-# 				"id": item.follow_id,
-# 				"description": desp,
-# 				"order": Order.objects.get(main_id=main_id, follow_id=item.follow_id, kind=kind).value
-# 			}
-# 			res.append(obj)
-
-# 		res0["data"] = res
-# 		res0['msg'] = '操作成功'
-
-# 		return JsonResponse(json.dumps(res0), safe=False)
-# 	except:
-# 		error = traceback.format_exc()
-# 		return JsonResponse(simplejson(code=4, msg='交换异常[%s]' % error), safe=False)
-
-
-# @csrf_exempt
-# def aftergroup(request):
-# 	res0 = {
-# 		"code": 0,
-# 		"msg": '',
-# 		"data": None
-# 	}
-
-# 	main_id = request.POST.get("main_id")
-# 	follow_id = request.POST.get("follow_id")
-# 	kind = request.POST.get("kind")
-
-# 	genorder(kind, main_id, follow_id)
-
-# 	_main_order = ordered(list(Order.objects.filter(main_id=main_id, kind=kind)))
-# 	# logger.info(_main_order)
-# 	res = []
-# 	for item in _main_order:
-# 		# desp=BusinessData.objects.get(id=item.follow_id).businessdata if kind=="step" else Case.objects.get(id=item.follow_id).description
-# 		desp = None
-
-# 		if kind == 'step':
-# 			business = BusinessData.objects.get(id=item.follow_id)
-# 			status, stepinst = gettestdatastep(business.id)
-# 			if status is not 'success':
-# 				return JsonResponse(simplejson(code=3, msg=stepinst), safe=False)
-# 			desp = "%s_%s" % (stepinst.description, business.businessname)
-# 		else:
-# 			desp = Case.objects.get(id=item.follow_id).description
-
-# 		obj = {
-# 			"id": item.follow_id,
-# 			"description": desp,
-# 			"order": Order.objects.get(main_id=main_id, follow_id=item.follow_id, kind=kind).value
-# 		}
-# 		res.append(obj)
-
-# 	res0["data"] = res
-
-# 	return JsonResponse(json.dumps(res0), safe=False)
-
-
-'''
-业务数据相关
-'''
-
-
-# @csrf_exempt
-# def querybusinessdata(request):
-# 	code, msg = 0, ''
-# 	res = []
-# 	try:
-
-# 		callername = request.session.get('username')
-# 		stepid = request.POST.get('stepid')
-# 		flag = request.POST.get('flag')
-# 		vids_ = request.POST.get('vids')
-# 		vid = request.POST.get('vid')
-# 		vids = []
-# 		if vids_:
-# 			vids = vids_.split(',')
-
-# 		extdata = {
-# 			'id': request.POST.get('id'),
-# 			'businessname': request.POST.get('businessname'),
-# 			'itf_check': request.POST.get('itf_check'),
-# 			'db_check': request.POST.get('db_check'),
-# 			'params': request.POST.get('params')
-# 		}
-
-# 		if flag == '0':
-# 			res = querytestdata(callername, stepid)
-# 		elif flag == '1':
-# 			res = qa(callername, stepid, extdata)
-# 		elif flag == '2':
-# 			res = qe(callername, stepid, extdata)
-# 		elif flag == '3':
-# 			res = qd(callername, stepid, vids)
-# 		elif flag == '4':
-# 			res = qc(callername, stepid, vid)
-
-# 		jsonstr = json.dumps(res, cls=BusinessDataEncoder)
-# 		return JsonResponse(jsonstr, safe=False)
-# 	except:
-# 		error = traceback.format_exc()
-# 		logger.info(error)
-# 		code = 4
-# 		msg = '操作异常[%s]' % error
-# 		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
-
 
 @csrf_exempt
 def queryonebusiness(request):
@@ -2297,8 +2146,11 @@ def queryuserfile(request):
 		})
 	
 	mfiles.sort(key=lambda e: e.get('createtime'), reverse=True)
+	page=request.GET.get('page')
+	limit=request.GET.get('limit')
+	res, total = getpagedata(mfiles, page, limit)
 	
-	return JsonResponse({'code': 0, 'data': mfiles}, safe=False)
+	return JsonResponse({'code': 0, 'data':res,'count':total}, safe=False)
 
 
 @csrf_exempt

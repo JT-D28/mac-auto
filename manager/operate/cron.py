@@ -41,14 +41,15 @@ class Cron(object):
                 times[1] = '1'
                 times[2] = '0'
                 times[3] = '0'
+            return {
+                'month': times[0],
+                'day': times[1],
+                'hour': times[2],
+                'minute': times[3]
+            }
         except:
-            pass
-        return {
-            'month': times[0],
-            'day': times[1],
-            'hour': times[2],
-            'minute': times[3]
-        }
+            return value
+
 
     @classmethod
     def addcrontab(cls,planid):
@@ -96,7 +97,10 @@ class Cron(object):
             planid = task.plan_id
             cronid = Plan.objects.get(id=planid).__str__()
             cfg = cls.getcron(task.value)
-            cls._addcrontab(cronRun, args=[planid], id=cronid, **cfg)
+            try:
+                cls._addcrontab(cronRun, args=[planid], id=cronid, **cfg)
+            except:
+                pass
         print("定时任务重新装载完成...")
         for i in cls.querytask():
             print(i)

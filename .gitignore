@@ -20,5 +20,6 @@
 /manager/storage/private/__pycache__/*
 /manager/storage/private/Function/*
 /manager/storage/private/File/*
-/homepage/views/__pycache__/
+/homepage/views/__pycache__/*
 /ME2/config.ini
+/manager\operate\__pycache__/*

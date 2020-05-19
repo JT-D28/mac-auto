@@ -127,6 +127,7 @@
                                     ref="refTable"
                                     :load="load"
                                     row-key="id"
+                                    :empty-text="emptytext"
                                     :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
                                     :data="casesdata"
                                     style="width: 100%">
@@ -188,6 +189,7 @@
         delimiters: ['${', '}'],
         data() {
             return {
+                emptytext:'结果还在生成中',
                 getdatafailtime:0,
                 viewkind:'fail',
                 viewkindstr:'查看全部',
@@ -287,12 +289,16 @@
                         app.taskinfo = data.taskinfo;
                         app.casesdata = data.casesdata;
                         app.getdatafailtime=0
+                        app.emptytext='没有失败的用例'
                     } else {
                         app.getdatafailtime = app.getdatafailtime + 1
                         if (app.getdatafailtime < 10) {
                             setTimeout(() => {
                                 app.gettaskdata(taskid, node);
-                            }, 500)
+                                app.emptytext='结果还在生成中'
+                            }, 800)
+                        }else{
+                            app.emptytext='暂时没有日志'
                         }
                     }
                 })
@@ -317,6 +323,7 @@
         watch: {
             'taskid': function (taskid) {
                 this.getdatafailtime=0
+                this.casesdata=[]
                 this.gettaskdata(taskid, this.node);
             }
         }

@@ -5,6 +5,8 @@
 # @to      :用例管理
 import json
 import threading
+
+from manager.operate.cron import Cron
 from .models import Tag
 import traceback, datetime
 from django.db.models import Q
@@ -121,20 +123,20 @@ def addplan(request):
 		               run_type=run_type, mail_config_id=mail_config.id,before_plan=before_plan)
 		plan.save()
 		addrelation('product_plan', author, pid, plan.id)
-		
+		extmsg=''
 		if run_type == '定时运行':
 			config = request.POST.get('config')
 			crontab = mm.Crontab()
-			crontab.taskid = gettaskid(plan.__str__())
 			crontab.value = config
-			# crontab.status='close'
 			crontab.author = plan.author
 			crontab.plan = plan
+			crontab.status = 'close'
 			crontab.save()
-		
+			extmsg = Cron.addcrontab(plan.id)
+
 		return {
 			'status': 'success',
-			'msg': '新增[%s]成功' % description,
+			'msg': '新增[%s]成功%s' % (description,extmsg),
 			'data': {
 				'id': 'plan_%s' % plan.id,
 				'pId': 'product_%s' % pid,
@@ -165,7 +167,7 @@ def delplan(request):
 					'status': 'fail',
 					'msg': '删除失败,[%s]含子数据' % plan.description
 				}
-			
+			Cron.delcrontab(i)
 			# plan.delete()
 			##消除上层依赖
 			_regen_weight(request.session.get('username'), plan, trigger='del')
@@ -200,6 +202,8 @@ def handlebindplans(olddescription, newdescription, id_):
 @monitor(action='编辑计划')
 def editplan(request):
 	id_ = request.POST.get('uid').split('_')[1]
+	config = request.POST.get('config')
+	run_type = request.POST.get("run_type")
 	newdescription = request.POST.get('description')
 	msg = ''
 	try:
@@ -214,6 +218,23 @@ def editplan(request):
 		logger.info('description=>', plan.description)
 		plan.run_type = request.POST.get('run_type')
 		plan.save()
+		extmsg=''
+		if run_type == '定时运行':
+			try:
+				cron = mm.Crontab.objects.get(plan_id=id_)
+				cron.value = config
+				cron.save()
+			except:
+				crontab = mm.Crontab()
+				crontab.value = config
+				crontab.author = plan.author
+				crontab.plan = plan
+				crontab.status = 'close'
+				crontab.save()
+			extmsg = Cron.addcrontab(plan.id)
+		else:
+			Cron.delcrontab(plan.id)
+
 		if plan.mail_config_id == '' or plan.mail_config_id is None:  # 针对老任务，没有邮箱配置
 			mail_config = mm.MailConfig()
 			if is_send_mail == 'true':
@@ -245,7 +266,7 @@ def editplan(request):
 		
 		return {
 			'status': 'success',
-			'msg': '编辑[%s]成功' % plan.description,
+			'msg': '编辑[%s]成功%s' % (plan.description,extmsg),
 			'data': {
 				'name': plan.description
 			}
@@ -1663,6 +1684,7 @@ def del_node_force(request):
 			_del_product_force(idx)
 		
 		elif node_type == 'plan':
+			Cron.delcrontab(idx)
 			_del_plan_force(idx)
 		elif node_type == 'case':
 			up = _get_case_parent_info(idx)[0]

@@ -4,6 +4,4 @@
 # @Author  : Blackstone
 # @to      :
 
-from manager.cron import Cron
 
-# Cron.recovertask()

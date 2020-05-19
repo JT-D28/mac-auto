@@ -7,6 +7,7 @@
 from .models import Crontab, Plan
 from .invoker import runplans
 from .core import gettaskid
+from manager.context import Me2Log as logger
 import threading
 
 
@@ -95,7 +96,7 @@ class Cron(object):
 			username = task.author.name
 			cls._addcrontab(runplans, args=[username, crontaskid, [planid], '1', '定时'], taskid=crontaskid, **cfg)
 		
-		print("定时任务重新装载完成...")
+		logger.info("定时任务重新装载完成...")
 	
 	"""
 	私有API
@@ -112,7 +113,7 @@ class Cron(object):
 			if cls.__cronmanager is None:
 				cls.__cronmanager = BackgroundScheduler()
 				cls.__cronmanager.start()
-				print("新建任务调度器并开启..")
+				logger.info("新建任务调度器并开启..")
 		
 		cls.__lock.release()
 		
@@ -151,23 +152,23 @@ class Cron(object):
 				id=taskid
 			)
 		
-		# print('添加定时任务[id=%s fun=%s]'%(id_,func.__name__))
+		# logger.info('添加定时任务[id=%s fun=%s]'%(id_,func.__name__))
 		except:
-			# print("添加定时任务[id=%s]失败"%id_)
+			# logger.info("添加定时任务[id=%s]失败"%id_)
 			pass
 	
 	@classmethod
 	def _removecrontab(cls, crontaskid):
 		try:
 			cls._getcronmanager().remove_job(crontaskid)
-			print("移除定时任务[%s]" % crontaskid)
+			logger.info("移除定时任务[%s]" % crontaskid)
 		except:
-			print("移除定时任务[%s]失败！" % crontaskid)
+			logger.info("移除定时任务[%s]失败！" % crontaskid)
 	
 	@classmethod
 	def _stopcronmanager(cls, wait=False):
 		try:
 			cls._getcronmanager().shutdown(wait=wait)
-			print("关闭定时调度器")
+			logger.info("关闭定时调度器")
 		except:
 			raise RuntimeError("关闭定时任务调度器error")

@@ -100,7 +100,7 @@ class R(object):
             cc=Case.objects.get(id=c.follow_id)
             if scope.get('check_case')=='true':
                 cc.description=self.replace_zz(self.old,self.expected,cc.description)
-                self.record(nodeid, 'description', self.old, self.expected)
+                self.record('case_%s'%cc.id, 'description', self.old, self.expected)
             cc.save()
             nodeid='case_%s'%c.follow_id
             
@@ -145,7 +145,6 @@ class R(object):
                         self.record(node, 'businessname', self.old, self.expected)
                     b.save()
 
-                    
                 elif 'step'==ctype:
                     logger.warn('步骤名称:',scope.get('check_step'))
                     s=Step.objects.get(id=cid)
@@ -168,7 +167,7 @@ class R(object):
 
                 elif 'case'==ctype:
                     
-                    self._replace_case(node)
+                    self._replace_case(node,scope)
 
 
                 elif 'plan'==ctype:

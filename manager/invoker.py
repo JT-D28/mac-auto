@@ -600,7 +600,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 		kindmsg = kind
 	verifymsg = '调试' if is_verify in ('0', None, '', 0) else '验证'
 	viewcache(taskid, username, kind,
-	          "=======计划【%s】开始执行%s%s任务【<span style='color:#FF3399'>%s</span>】,使用数据连接配置【%s】====" % (
+	          "=======计划【%s】开始执行%s[%s任务]【<span style='color:#FF3399'>%s</span>】,使用数据连接配置【%s】====" % (
 		          plan.description, kindmsg, verifymsg, taskid, dbscheme))
 	try:
 		dbid = getDbUse(taskid, plan.db_id)

@@ -132,7 +132,7 @@ def addplan(request):
 			crontab.plan = plan
 			crontab.status = 'close'
 			crontab.save()
-			extmsg = '<br>下次运行时间：%s'%str(Cron.addcrontab(plan.id)).split('+')[0]
+			extmsg = Cron.addcrontab(plan.id)
 
 		return {
 			'status': 'success',
@@ -231,7 +231,7 @@ def editplan(request):
 				crontab.plan = plan
 				crontab.status = 'close'
 				crontab.save()
-			extmsg = '<br>下次运行时间：%s'%str(Cron.addcrontab(plan.id)).split('+')[0]
+			extmsg = Cron.addcrontab(plan.id)
 		else:
 			Cron.delcrontab(plan.id)
 

@@ -31,15 +31,18 @@ class Cron(object):
     @classmethod
     def getcron(self, value):
         times = value.split(' ')
-        if times[2] != '*' and times[3] == '*':
-            times[3] = '0'
-        if times[1] != '*' and times[2] == '*':
-            times[2] = '0'
-            times[3] = '0'
-        if times[0] != '*' and times[1] == '*':
-            times[1] = '0'
-            times[2] = '0'
-            times[3] = '0'
+        try:
+            if times[2] != '*' and times[3] == '*':
+                times[3] = '0'
+            if times[1] != '*' and times[2] == '*':
+                times[2] = '0'
+                times[3] = '0'
+            if times[0] != '*' and times[1] == '*':
+                times[1] = '1'
+                times[2] = '0'
+                times[3] = '0'
+        except:
+            pass
         return {
             'month': times[0],
             'day': times[1],
@@ -56,10 +59,16 @@ class Cron(object):
             if cronid == job.id:
                 cls._removecrontab(cronid)
                 break
-        cls._addcrontab(cronRun, args=[planid], id=cronid, **cls.getcron(cron.value))
-        cron.status='open'
-        cron.save()
-        return cls._getcronmanager().get_job(cronid).next_run_time
+        msg = cls._addcrontab(cronRun, args=[planid], id=cronid, **cls.getcron(cron.value))
+        if msg !='':
+            return "<br>定时时间异常%s" % msg
+        else:
+            cron.status = 'open'
+            cron.save()
+            return "<br>下次运行时间:"+str(cls._getcronmanager().get_job(cronid).next_run_time).split('+')[0]
+
+
+
 
 
 
@@ -121,9 +130,12 @@ class Cron(object):
                 minute=kw.get('minute', '*'),
                 coalesce=True
             )
+            msg=''
         except:
-            print("添加定时任务[id=%s]失败" % traceback.format_exc())
-            pass
+            msg = traceback.format_exc()
+            print("添加定时任务失败%s" % traceback.format_exc())
+        return msg
+
 
     @classmethod
     def _removecrontab(cls, cronid):

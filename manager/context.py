@@ -192,29 +192,18 @@ def _getvid():
 redis key格式=>console.msg::username::taskid
 """
 def viewcache(taskid, username, kind=None, *msg):
-    taskmsg = ""
-    if kind is not None:
-        ##定时任务不加入redis队列
-        return
     try:
         logname = BASE_DIR + "/logs/" + taskid + ".log"
         what = "".join((msg))
-        # print(username)
         what = "%s        %s" % (time.strftime("[%m-%d %H:%M:%S]", time.localtime()), what)
-        # print("console:",what)
-        # print('redis=>', what)
-        # f = open(logname, "a")
-        # f.write(what + "<br>\n")
-        # f.close
         with open(logname, 'a', encoding='UTF-8') as f:
             f.write(what + '<br>\n')
-        
-        # print(what)
+
+        # 定时任务不加入redis队列
+        if kind is not None or username=='定时任务':
+            return
         con = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
         key = "console.msg::%s::%s" % (username, taskid)
-        # data={}
-        # data['msg']=what
-        # data['time']
         con.lpush(key, what)
         con.close()
     except Exception as e:

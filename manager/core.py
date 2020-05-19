@@ -1030,7 +1030,7 @@ class Fu:
 							return res
 					
 					except:
-						print('3333333333333333333333333333',traceback.format_exc())
+						print(traceback.format_exc())
 						return ('error', "非法表达式[%s]" % call_str)
 			
 			else:

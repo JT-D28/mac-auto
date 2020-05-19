@@ -48,7 +48,7 @@ def get_task_data(request):
             casesdata = x['root']
         if request.POST.get('viewkind') == 'fail':
             for i in range(len(casesdata) - 1, -1, -1):
-                if casesdata[i]['case_success_rate'] == 100.0:
+                if casesdata[i].get('case_success_rate',0) == 100.0 or casesdata[i].get('state','')=='omit':
                     casesdata.pop(i)
 
         return JsonResponse({'code': 0, 'taskinfo': x['info'], 'casesdata': casesdata})

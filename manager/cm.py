@@ -6,7 +6,7 @@
 import json
 import threading
 
-from .cron import Cron
+from manager.operate.cron import Cron
 from .models import Tag
 import traceback, datetime
 from django.db.models import Q
@@ -123,7 +123,7 @@ def addplan(request):
 		               run_type=run_type, mail_config_id=mail_config.id,before_plan=before_plan)
 		plan.save()
 		addrelation('product_plan', author, pid, plan.id)
-		
+		extmsg=''
 		if run_type == '定时运行':
 			config = request.POST.get('config')
 			crontab = mm.Crontab()
@@ -132,11 +132,11 @@ def addplan(request):
 			crontab.plan = plan
 			crontab.status = 'close'
 			crontab.save()
-			Cron.addcrontab(plan.id)
+			extmsg = '<br>下次运行时间：%s'%str(Cron.addcrontab(plan.id)).split('+')[0]
 
 		return {
 			'status': 'success',
-			'msg': '新增[%s]成功' % description,
+			'msg': '新增[%s]成功%s' % (description,extmsg),
 			'data': {
 				'id': 'plan_%s' % plan.id,
 				'pId': 'product_%s' % pid,
@@ -218,7 +218,7 @@ def editplan(request):
 		logger.info('description=>', plan.description)
 		plan.run_type = request.POST.get('run_type')
 		plan.save()
-
+		extmsg=''
 		if run_type == '定时运行':
 			try:
 				cron = mm.Crontab.objects.get(plan_id=id_)
@@ -231,7 +231,7 @@ def editplan(request):
 				crontab.plan = plan
 				crontab.status = 'close'
 				crontab.save()
-			Cron.addcrontab(plan.id)
+			extmsg = '<br>下次运行时间：%s'%str(Cron.addcrontab(plan.id)).split('+')[0]
 		else:
 			Cron.delcrontab(plan.id)
 
@@ -266,7 +266,7 @@ def editplan(request):
 		
 		return {
 			'status': 'success',
-			'msg': '编辑[%s]成功' % plan.description,
+			'msg': '编辑[%s]成功%s' % (plan.description,extmsg),
 			'data': {
 				'name': plan.description
 			}

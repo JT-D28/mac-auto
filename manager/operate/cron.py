@@ -5,9 +5,9 @@
 # @to      :定时任务调度
 import traceback
 
-from .models import Crontab, Plan
-from .invoker import runplan
-from .core import gettaskid
+from manager.models import Crontab, Plan
+from manager.invoker import runplan
+from manager.core import gettaskid
 import threading
 
 
@@ -59,8 +59,8 @@ class Cron(object):
         cls._addcrontab(cronRun, args=[planid], id=cronid, **cls.getcron(cron.value))
         cron.status='open'
         cron.save()
-        for i in cls.querytask():
-            print(i)
+        return cls._getcronmanager().get_job(cronid).next_run_time
+
 
 
     @classmethod

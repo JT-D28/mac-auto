@@ -13,7 +13,7 @@ from django.conf import settings
 from login.models import *
 from .cm import addrelation
 from .core import *
-from .cron import Cron
+from manager.operate.cron import Cron
 from .invoker import *
 from . import cm
 import json, xlrd, base64, traceback
@@ -978,10 +978,8 @@ def queryoneplan(request):
 	planid = request.POST.get('id').split('_')[1]
 	try:
 		res = Plan.objects.get(id=planid)
-		# print(res)
 		cron = Crontab.objects.values('status','value').get(plan_id=planid)
-		# for i in Cron.querytask():
-		# 	print(i)
+
 	except:
 		code = 1
 		msg = '查询异常[%s]' % traceback.format_exc()
@@ -1054,82 +1052,6 @@ def runtask(request):
 	return JsonResponse(simplejson(code=0, msg="你的任务开始运行", taskid=taskid), safe=False)
 
 
-
-@csrf_exempt
-def changetocrontab(request):
-	code = 0
-	msg = ""
-	try:
-		planid = request.POST.get("planid")
-		author = User.get(name=request.session.get('username', None))
-		plan = Plan.objects.get(id=planid)
-		taskid = gettaskid(plan.__str__())
-		config = Crontab()
-		config.plan = plan
-		config.taskid = taskid
-		config.value = ''
-		config.author = author
-		
-		config.save()
-		plan.run_type = '定时运行'
-		plan.save()
-	
-	except:
-		code = 1
-		msg = '操作失败'
-	finally:
-		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
-
-
-@csrf_exempt
-def changetonormal(request):
-	code = 0
-	msg = ""
-	try:
-		planid = request.POST.get('planid')
-		plan = Plan.objects.get(id=planid)
-		taskid = gettaskid(plan.__str__())
-		config = Crontab.get(plan=plan)
-		config.delete()
-		
-		plan.run_type = '手动运行'
-		plan.save()
-	
-	except:
-		code = 1
-		msg = '操作失败'
-	finally:
-		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
-
-
-@csrf_exempt
-def opencrontab(request):
-	code = 0
-	msg = ''
-	username = 'tester'
-	planid = 1
-	res = Cron.opencrontab(username, planid)
-	if res == True:
-		msg = "开启计划[%s]的定时任务成功"
-	else:
-		code = 1
-		msg = "开启计划[%s]的定时任务失败"
-	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
-
-
-@csrf_exempt
-def closecrontab(request):
-	code = 0
-	msg = ''
-	username = 'tester'
-	planid = 1
-	res = Cron.closecrontab(username, planid)
-	if res == True:
-		msg = "关闭计划[%s]的定时任务成功"
-	else:
-		code = 1
-		msg = "关闭计划[%s]的定时任务失败"
-	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 @csrf_exempt
 def resultdetail(request):
@@ -2135,17 +2057,6 @@ def getfulltree(request):
 	
 	return JsonResponse(pkg(data=data))
 
-
-def testaddtask(request):
-	from .cron import Cron
-	
-	# scheduler.add_job(test, 'interval', seconds=3)
-	username = request.session.get('username', None)
-	Cron._addcrontab(runplans, 'interval', seconds=15, args=['tester', gettaskid(), ['1'], '定时'], id='')
-	Cron._addcrontab(runplans, args=[username, crontaskid, [plan.id], '定时'], taskid=crontaskid, **cfg)
-	# scheduler.add_job(runplans, 'interval', seconds=15,args=['tester',gettaskid(),['1'],'定时'],id='')
-	
-	return JsonResponse(simplejson(code=0, msg="fda", yy='dd'), safe=False)
 
 
 

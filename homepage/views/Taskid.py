@@ -71,7 +71,7 @@ def gettaskidplan(request):
 	planid= request.POST.get('planid')
 	print(planid)
 	with connection.cursor() as cursor:
-		cursor.execute('''SELECT max(DATE_FORMAT(r.createtime,'%%m-%%d %%H:%%i')) AS time,taskid
+		cursor.execute('''SELECT min(DATE_FORMAT(r.createtime,'%%m-%%d %%H:%%i')) AS time,taskid
 		FROM manager_resultdetail r where plan_id=%s GROUP BY taskid ORDER BY time DESC LIMIT 10''',[planid])
 		desc = cursor.description
 		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]

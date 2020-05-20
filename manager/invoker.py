@@ -753,8 +753,10 @@ def _step_process_check(callername, taskid, order, kind):
 				headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), step.method,
 				                                                    step.headers, step.content_type, step.temp, kind,
 				                                                    timeout)
-			
-			viewcache(taskid, username, kind,
+			if text.lstrip().startswith('<!DOCTYPE html>'):
+				viewcache(taskid, username, kind,"<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>内容为HTML，不显示</xmp></span>")
+			else:
+				viewcache(taskid, username, kind,
 			          "<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>" % text)
 			
 			if len(str(statuscode)) == 0:

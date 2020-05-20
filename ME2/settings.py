@@ -19,6 +19,10 @@ DEBUG_TOOLS_ON = False
 
 BASE_URL = 'http://' + configs.ME2_URL
 
+
+FILE_UPLOAD_MAX_MEMORY_SIZE = 26214400  #上传文件大小，改成25M
+DATA_UPLOAD_MAX_MEMORY_SIZE = 26214400  #上传数据大小，也改成了25M
+
 ##Redis配置
 REDIS_HOST = configs.REDIS_HOST
 REDIS_PORT = configs.REDIS_PORT

@@ -107,6 +107,8 @@
             $("[name='before_plan']").bind("mouseover",function(e){
 
                 try{
+                    console.log('mouseover.....')
+                    
                     console.log('curNode:'+localStorage.getItem('curNode'))
                     t=JSON.parse(localStorage.getItem('curNode'))
 
@@ -117,8 +119,8 @@
 
                         // v=t.name + '@' + t.id.split('_')[0] + '@' + btoa(t.id.split('_')[1]);
                         v1=kind+t.name + '@'+ btoa(t.id.split('_')[1]);
+                        
                         $(this).val(v1)
-
                         localStorage.removeItem("curNode")
 
                     }
@@ -129,8 +131,10 @@
 
                 }
 
-
             });
+
+
+
 
             
         });

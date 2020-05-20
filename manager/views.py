@@ -120,10 +120,14 @@ def upload(request):
 			return JsonResponse(simplejson(code=2, msg='excel数据迁移失败[%s] 迁移ID=%s' % (res[1], taskid)), safe=False)
 	
 	elif kind == 'dataimport':
-		d = DataMove()
 		productid = request.POST.get('productid').split('_')[1]
+		d = DataMove()
+		for f in filemap:
+			if f.endswith('.ME2'):
+				res = d.import_plan(productid, filemap.values(), request.session.get('username'))
+			elif f.endswith('.har'):
+				res =d.har_import(productid,filemap.values(), request.session.get('username'))
 		
-		res = d.import_plan(productid, filemap.values(), request.session.get('username'))
 		if res[0] == 'success':
 			return JsonResponse(simplejson(code=0, msg='数据导入完成'), safe=False)
 		else:

@@ -281,9 +281,7 @@ function _set_form_not_editable() {
 
     $('form input').each(function () {
         if($(this).attr('name')=='before_plan'){
-
             return;
-
         }
         $(this).attr('disabled', '')
     });

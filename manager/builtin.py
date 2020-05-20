@@ -190,12 +190,14 @@ def createTransNo(**kws):
 	return name + nowtime + ''.join(random.choice("0123456789") for i in range(n))
 
 
-def createReqSeqID(name,**kws):
+def createReqSeqID(**kws):
 	'''
 	createReqSeqID：随机生成批次号
 	参数：name为字符串，此处表示英文名
 	返回：name+当前时间（年月日时分秒，若name过长则省略年）+数字    共30位
 	'''
+	name=kws.get('name','')
+
 	n = 30 - len(name)
 	if n >= 14:
 		nowtime = time.strftime("%Y%m%d%H%M%S")

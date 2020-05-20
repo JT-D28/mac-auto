@@ -45,11 +45,7 @@ var tree = {
                     // onRightClick: this._onRightClick,
                     onDragMove:this._onDragMove,
                     onMouseUp:this._onMouseUp,
-                    // beforeEditName: this._beforeEditName,
-                    //      beforeRemove: this._beforeRemove,
-                    // beforeRename: this._beforeRename,
-                    // onRemove: this._onRemove,
-                    // onRename: this._onRename,
+
                 }
             }
 
@@ -426,6 +422,7 @@ var tree = {
                             'check_case':$("[name='casename']").is(':checked'),
                             'check_step':$("[name='stepname']").is(':checked'),
                             'check_business':$("[name='businessname']").is(':checked'), 
+                            'check_params':$("[name='params']").is(':checked'),
                             'check_header': $("[name='header']").is(':checked'), 
                             'check_property':$("[name='property']").is(':checked'), 
                             'check_url':$("[name='stepurl']").is(':checked'), 

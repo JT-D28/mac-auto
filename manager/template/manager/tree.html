@@ -157,20 +157,23 @@
       <input type="checkbox" name="header" title="请求头" lay-skin="primary" checked>
       <input type="checkbox" name="property" title="属性" lay-skin="primary" checked>
       <input type="checkbox" name="businessname" title="测试点名" lay-skin="primary" checked>
+    <input type="checkbox" name="params" title="测试参数" lay-skin="primary" checked>
     </div>
   </div>
     <div class="layui-form-item">
         <label class="layui-form-label">待替换</label>
         <div class="layui-input-block">
-            <input type="text" name="me2url" placeholder="字符串&正则表达式(正则无法回退) " autocomplete="off"
-                   class="layui-input" id='old'>
+            <textarea name="old" id='old' placeholder="字符串&正则表达式,正则无法回退"
+                      autocomplete="off" class="layui-textarea" lay-verify="required"
+                      style="min-height:38px!important;height: 38px;line-height: 1.6;background:rgb(252, 252, 252)"></textarea>
         </div>
     </div>
     <div class="layui-form-item">
         <label class="layui-form-label">替换为</label>
         <div class="layui-input-block">
-            <input type="text" name="me2url" placeholder="替换会影响子节点相关数据" autocomplete="off"
-                   class="layui-input" id='new'>
+            <textarea name="new" id='new' placeholder="影响相关子节点数据"
+                      autocomplete="off" class="layui-textarea" lay-verify="required"
+                      style="min-height:38px!important;height: 38px;line-height: 1.6;background:rgb(252, 252, 252)"></textarea>
         </div>
     </div>
 

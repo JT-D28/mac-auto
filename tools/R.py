@@ -47,6 +47,7 @@ class R(object):
                     if 'business'==node_type:
                         b=BusinessData.objects.get(id=node_tid)
                         b.businessname=b.businessname.replace(bb.exp,bb.old)
+                        b.params=b.params.replace(bb.exp,bb.old)
                         b.save()
                     elif 'step'==node_type:
                         s=Step.objects.get(id=node_tid)
@@ -123,6 +124,9 @@ class R(object):
                 if scope.get('check_business')=='true':
                     b.businessname=self.replace_zz(self.old,self.expected,b.businessname)
                     self.record('business_%s'%b.id, 'businessname', self.old, self.expected)
+                if scope.get('check_params')=='true':
+                    b.params=self.replace_zz(self.old,self.expected,b.params)
+                    self.record('business_%s'%b.id, 'params', self.old, self.expected)
                 b.save()
                 
     def replace(self,scope=None):
@@ -143,6 +147,15 @@ class R(object):
                     if scope.get('check_business',False):
                         b.businessname=self.replace_zz(self.old,self.expected,b.businessname)
                         self.record(node, 'businessname', self.old, self.expected)
+                    if scope.get('check_params',False):
+                        logger.info('替换前参数：',b.params)
+                        logger.info('待替换:',self.old)
+                        logger.info('替换为:',self.expected)
+                        b.params=self.replace_zz(self.old, self.expected, b.params)
+
+                        logger.info('替换后参数:',b.params)
+                        self.record(node, 'params', self.old, self.expected)
+
                     b.save()
 
                 elif 'step'==ctype:
@@ -166,9 +179,7 @@ class R(object):
                     
 
                 elif 'case'==ctype:
-                    
                     self._replace_case(node,scope)
-
 
                 elif 'plan'==ctype:
                     p=Plan.objects.get(id=cid)

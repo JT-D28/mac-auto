@@ -1,4 +1,4 @@
-import datetime
+import datetime,json,time
 
 from django.http import JsonResponse
 
@@ -6,6 +6,7 @@ from login.models import User
 from manager.context import Me2Log as logger
 from manager.core import simplejson, EncryptUtils, getbuiltin, Fu
 from manager.models import *
+
 
 
 class DataMove:
@@ -492,14 +493,149 @@ class DataMove:
         else:
             return ('success', oldvalue)
 
+
+
+    def har_import(self, product_id,content_byte_list,callername):
+        '''har格式导入
+        '''
+        from manager.cm import getnextvalue
+        logger.info('bytes:',content_byte_list)
+        try:
+            author=User.objects.get(name=callername)
+            hardata=list()
+            content = b''
+            for byte in content_byte_list:
+                content = content + byte
+
+            if content.startswith(b'\xef\xbb\xbf'):
+                content=content.replace(b'\xef\xbb\xbf', b'')
+                entries=json.loads(content)['log']['entries']
+                for e in entries:
+                    mimetype=e['request']['postData']['mimeType']
+                    if not mimetype:
+                        continue;
+
+                    url=e['request']['url']
+                    method=e['request']['method']
+                    headers=dict()
+                    for h in e['request']['headers']:
+                        headers[h['name']]=h['value']
+
+                    params=dict()
+                    for p in e['request']['postData'].get('params',[]):
+                        params[p['name']]=p['value']
+
+                    logger.info('url：',url)
+                    logger.info('mimeType:',mimetype)
+                    logger.info('method:',method),
+                    logger.info('headers:',headers),
+                    logger.info('mineType:',mimetype)
+                    logger.info('params:',params)
+                    logger.info('\n')
+
+                    hardict=dict()
+                    hardict['url']=url
+                    name=url.split('/')[-1]
+                    if not name.strip():
+                        name=url.split('/')[-2]
+                    if name.__contains__('?'):
+                        name=name.split('?')[0]
+
+                    hardict['name']=name
+                    hardict['method']=method
+                    hardict['headers']=headers
+                    hardict['mimeType']=mimetype
+                    hardict['params']=params
+                    hardata.append(hardict)
+            ##
+            #开始创建实例类
+
+            plan=Plan()
+            plan.description='har导入%s'%str(time.time())
+            plan.author=author
+            plan.save()
+
+            p_p_order=Order()
+            p_p_order.main_id=product_id
+            p_p_order.follow_id=plan.id
+            p_p_order.kind='product_plan'
+            p_p_order.value=getnextvalue('product_plan', product_id)
+            p_p_order.author=author
+            p_p_order.save()
+            
+            case=Case()
+            case.author=author
+            case.description='har数据'
+            case.save()
+
+            p_c_order=Order()
+            p_c_order.kind='plan_case'
+            p_c_order.main_id=plan.id
+            p_c_order.follow_id=case.id
+            p_c_order.author=author
+            p_c_order.value=getnextvalue('plan_case', plan.id)
+            p_c_order.save()
+
+            for data in hardata:
+                step=Step()
+                step.step_type='interface'
+                step.body=''
+                step.description=data['name']
+                step.url=data['url']
+                step.headers=str(data['headers'])
+                step.content_type=data['mimeType']
+                step.temp=''
+                step.count=1
+                step.author=author
+                step.save()
+
+                b=BusinessData()
+                b.businessname='数据'
+                b.params=data['params']
+                b.itf_check=''
+                b.db_check=''
+                b.author=author
+                b.save()
+
+                c_s_order=Order()
+                c_s_order.kind='case_step'
+                c_s_order.main_id=case.id
+                c_s_order.follow_id=step.id
+                c_s_order.author=author
+                c_s_order.value=getnextvalue('case_step',case.id)
+                c_s_order.save()
+
+                s_b_order=Order()
+                s_b_order.kind='step_business'
+                s_b_order.main_id=step.id
+                s_b_order.follow_id=b.id
+                s_b_order.author=author
+                s_b_order.value=getnextvalue('step_business',step.id)
+                s_b_order.save()
+
+            logger.info('har格式导入成功..')
+            return ('success','har导入成功..')
+        except:
+            logger.info('har格式导入异常:'+traceback.format_exc())
+            return ('error','har格式导入异常:'+traceback.format_exc())
+
+
     def import_plan(self, product_id, content_byte_list, callername):
+
         _cache = {}
         _msg = []
+        bs=''
         b = b''
+        bl=None
         for byte in content_byte_list:
             b = b + byte
-        bs = b.decode()
-        bl = eval(bs)
+        try:
+            bs = b.decode()
+        
+            bl = eval(bs)
+        except:
+            return ('error','导入异常 内容可能不对')
+
         logger.info('【开始导入数据】 ')
         # 导入实体类
         scheme = bl['entity']['schemename']

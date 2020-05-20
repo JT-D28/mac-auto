@@ -1823,6 +1823,7 @@ def replacetext(request):
 		'check_url':request.POST.get('check_url'),
 		'check_header':request.POST.get('check_header'),
 		'check_property':request.POST.get('check_property'),
+		'check_params':request.POST.get('check_params'),
 		}
 	logger.info('scope:',scope)
 	res= r.replace(scope)

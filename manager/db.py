@@ -128,8 +128,8 @@ class Mysqloper:
 		print('db_execute2执行：'+sql)
 		print('##' * 100)
 		try:
-			sqls = sql.split("@")[0].split(";")
-			conname = sql.split('@')[1]
+			sqls = sql.rsplit("@",1)[0].split(";")
+			conname = sql.rsplit("@",1)[1]
 			for sql in sqls:
 				# print(type(sql),sql)
 				# print(type(conname),conname)
@@ -156,10 +156,10 @@ class Mysqloper:
 		conname = None
 		# 判断当前连接是否正常
 		try:
-			ql = sql.split("@")
-			sql = ql[0]
+			ql = sql.rsplit("@",1)
+			sql = ql[0].replace('$#$','@')
 			conname = ql[1]
-			
+
 			dbnamecache = get_top_common_config(taskid)
 			scheme = getRunningInfo(planid=base64.b64decode(taskid).decode().split('_')[0], type='dbscheme')
 			logger.info('使用数据连接方案',scheme)

@@ -41,6 +41,7 @@ def dbexecute(sql, **kws):
 	if taskid is None:
 		return 'error', 'taskid为空'
 	op = Mysqloper()
+	sql = sql.replace('@@', '$#$')
 	if re.search('@', sql) is None:
 		sql = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")[0]
 		dbnamecache = get_top_common_config(taskid)
@@ -66,6 +67,7 @@ def dbexecute2(sql, **kws):
 	print('调用内置函数=>dbexecute2', taskid)
 	d = []
 	try:
+		sql = sql.replace('@@','$#$')
 		if re.search('@.*(;.*@)?', sql) is not None:
 			sqls1 = re.split("@", sql)
 			for i in range(len(sqls1)):

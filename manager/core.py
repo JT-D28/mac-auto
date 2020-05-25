@@ -6,7 +6,7 @@
 
 # from manager import models
 
-import requests, re, warnings, copy, os, traceback, base64, time, json, datetime, smtplib, base64
+import requests, re, warnings, copy, os, traceback, base64, time, json, datetime, smtplib, base64,sys
 from collections import namedtuple
 from login.models import User
 from django.http import HttpResponse, JsonResponse
@@ -1046,7 +1046,7 @@ class Fu:
 				print('\n' in callstr)
 				res = eval(callstr)
 				print("调用用户定义表达式:%s 结果为:%s" % (callstr, res))
-			
+				del sys.modules['manager.storage.private.Function.%s.func_%s' % (user, flag)]
 			return ('success', res)
 		
 		except Exception as e:

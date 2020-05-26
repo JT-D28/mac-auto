@@ -16,6 +16,8 @@ from manager.ar import Grant
 
 
 # Create your views here
+from manager.operate.redisUtils import RedisUtils
+
 
 def global_setting(request):
 	content = {
@@ -116,13 +118,13 @@ def initDataupdate():
 	print('旧数据更新结束')
 
 def clearRedisforUser(username):
-	pool = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0, decode_responses=True)
-	con = redis.Redis(connection_pool=pool)
+	con = RedisUtils()
 	try:
 		keys = con.keys("console.msg::%s::*" % (username))
 		print('清理用户【{}】redis缓存'.format(username))
 		for elem in con.keys():
 			con.delete(elem)
+			con.close()
 	except:
 		print('redis没有正常连接')
 

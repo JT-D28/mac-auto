@@ -660,8 +660,9 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 		_save_builtin_property(taskid, callername)
 
 		# 生成本地报告
-		MainSender.gen_report(taskid, MainSender.gethtmlcontent(taskid, ''))
+		# MainSender.gen_report(taskid, MainSender.gethtmlcontent(taskid, ''))
 		# 发送报告
+
 		config_id = plan.mail_config_id
 		if config_id:
 			mail_config = MailConfig.objects.get(id=config_id)
@@ -680,6 +681,9 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 
 	finally:
 		clear_data(callername, _tempinfo)
+		from manager.context import cons
+		del cons[taskid]
+		del cons[callername]
 		setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
 
 

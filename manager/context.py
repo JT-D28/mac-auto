@@ -10,7 +10,7 @@ from ME2.settings import logme, BASE_DIR
 from manager.models import *
 from manager.models import Case as Case0
 from login.models import *
-
+from manager.operate.redisUtils import RedisUtils
 
 '''
 日志打印
@@ -84,12 +84,12 @@ def get_operate_name(interfacename):
         if _ in interfacename:
             a = _OPERATION['symbol'][_]
             break;
-    
+
     for _ in _OPERATION['entity']:
         if _ in interfacename:
             b = _OPERATION['entity'][_]
             break;
-    
+
     # print('a=>',a)
     # print('b=>',b)
     return ''.join([a, b])
@@ -191,7 +191,13 @@ def _getvid():
 控制台输出
 redis key格式=>console.msg::username::taskid
 """
+
+cons={}
+
 def viewcache(taskid, username, kind=None, *msg):
+    if cons.get(taskid,None) is None:
+        cons[taskid]=RedisUtils()
+    con = cons.get(taskid)
     try:
         logname = BASE_DIR + "/logs/" + taskid + ".log"
         what = "".join((msg))
@@ -202,10 +208,10 @@ def viewcache(taskid, username, kind=None, *msg):
         # 定时任务不加入redis队列
         if kind is not None or username=='定时任务':
             return
-        con = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
+
         key = "console.msg::%s::%s" % (username, taskid)
         con.lpush(key, what)
-        con.close()
+
     except Exception as e:
         Me2Log.error("viewcache异常")
         Me2Log.error(traceback.format_exc())
@@ -347,7 +353,7 @@ class monitor(object):
                     n.is_read=0
                     n.save()
 
-            
+
 
     def _get_authorname(self,authorname,callername,params):
 
@@ -357,7 +363,7 @@ class monitor(object):
                 ms=re.findall('\[.*?\]', authorname)
                 for m in ms:
                     key=re.findall('\[(.*?)\]', m)[0]
-                   
+
                     if '__in' in authorname:
                         authorname=authorname.replace(m,str(params[key].split(',')))
                     else:
@@ -399,7 +405,7 @@ class monitor(object):
                 if 'name' in k:
                     description=str(v)
                     break;
-                    
+
                 elif 'description' in k:
                     description=str(v)
                     break;

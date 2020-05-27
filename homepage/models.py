@@ -9,6 +9,7 @@ class Jacoco_report(Model):
 	authname = CharField(max_length=24, blank=True, null=True)
 	authpwd = CharField(max_length=24, blank=True, null=True)
 	createtime = DateTimeField(auto_now_add=True)
+	clearjob = CharField(max_length=128, blank=True, null=True)
 
 
 class Jacoco_data(Model):

@@ -54,7 +54,7 @@ def queryProductSet(request):
 	productid = request.POST.get('productid')
 	try:
 		jacocoset = list(
-			Jacoco_report.objects.values('jenkinsurl', 'jobname', 'authname', 'authpwd').filter(productid=productid))
+			Jacoco_report.objects.values('jenkinsurl', 'jobname', 'authname', 'authpwd','clearjob').filter(productid=productid))
 		res = jacocoset[0] if jacocoset else ''
 		return JsonResponse({'code': '0', 'msg': 'success', 'data': res})
 	except:
@@ -66,13 +66,14 @@ def editProductSet(request):
 	productid = request.POST.get('productid')
 	msg = ''
 	try:
-		if not Jacoco_report.objects.filter(productid=request.POST.get('productid')).exists():
+		if not Jacoco_report.objects.filter(productid=productid).exists():
 			jacocoset = Jacoco_report()
 			jacocoset.jenkinsurl = request.POST.get('jenkinsurl')
 			jacocoset.authname = request.POST.get('authname')
 			jacocoset.authpwd = request.POST.get('authpwd')
 			jacocoset.jobname = request.POST.get('jobname')
 			jacocoset.productid = request.POST.get('productid')
+			jacocoset.clearjob = request.POST.get('jacocoClearJob')
 			jacocoset.save()
 			msg = '保存成功'
 		else:
@@ -81,6 +82,7 @@ def editProductSet(request):
 			jacocoset.authname = request.POST.get('authname')
 			jacocoset.authpwd = request.POST.get('authpwd')
 			jacocoset.jobname = request.POST.get('jobname')
+			jacocoset.clearjob = request.POST.get('jacocoClearJob')
 			jacocoset.save()
 		msg = '编辑成功'
 		return JsonResponse({'code': '0', 'msg': '保存成功'})

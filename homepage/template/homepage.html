@@ -107,10 +107,12 @@
 
     #noticeSet > .el-dialog,
     #productSet > .el-dialog {
-        height: 80%;
+        height: 85%;
     }
-    #productSet .el-tab-pane{
+
+    #productSet .el-tab-pane {
         height: 100%;
+        overflow-y: auto;
     }
 
 
@@ -227,15 +229,17 @@
         color: rgba(53, 59, 75, 1);
         line-height: 20px;
     }
-    #planHistory .el-dialog__body{
+
+    #planHistory .el-dialog__body {
         padding: 20px;
     }
-    .el-date-editor .el-range-separator{
+
+    .el-date-editor .el-range-separator {
         line-height: 23px;
     }
 
-    .layui-table, .layui-table-view{
-        margin:20px 0 0 0
+    .layui-table, .layui-table-view {
+        margin: 20px 0 0 0
     }
 
     #productSet .el-dialog__body {
@@ -288,7 +292,8 @@
         bottom: 0;
         right: 0;
     }
-    #servicename div,#servicename .el-textarea__inner{
+
+    #servicename div, #servicename .el-textarea__inner {
         height: 100%;
     }
 
@@ -508,7 +513,8 @@
                    style="height: 100%">
             <el-tabs :tab-position="topposition">
                 <el-tab-pane label="jacoco配置">
-                    <el-form :label-position="rightposition" label-width="18%" :model="form" style="padding-top: 24px;height: calc(100% - 40px)">
+                    <el-form :label-position="rightposition" label-width="18%" :model="form"
+                             style="padding-top: 24px;height: calc(100% - 40px)">
                         <el-form-item label="jenkins地址">
                             <el-input v-model="form.productset.jenkinsurl"></el-input>
                         </el-form-item>
@@ -518,7 +524,10 @@
                         <el-form-item label="密码">
                             <el-input v-model="form.productset.authpwd"></el-input>
                         </el-form-item>
-                        <el-form-item id="servicename" label="服务名/任务名" style="height: calc(100% - 180px);">
+                        <el-form-item label="清理任务名">
+                            <el-input v-model="form.productset.jacocoClearJob"></el-input>
+                        </el-form-item>
+                        <el-form-item id="servicename" label="服务名/任务名" style="height: calc(100% - 230px);">
                             <el-input type="textarea" v-model="form.productset.jobname" placeholder='填入内容为描述/服务名称和jenkins中对应的任务名，格式示例：
 settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></el-input>
                         </el-form-item>
@@ -665,6 +674,16 @@ settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></e
                     <div id="log_text"></div>
                 </div>
             </div>
+        </div>
+        <div id="jacocoRunSelect" style="display:none">
+            <el-tree
+                    ref="tree"
+                    :props="props"
+                    show-checkbox
+                    :data="plans"
+                    :check-on-click-node="true"
+                   >
+            </el-tree>
         </div>
     </template>
 </div>

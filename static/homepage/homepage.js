@@ -54,7 +54,6 @@ var app = new Vue({
                 }
             },
             historytime: '',
-            jacocoRunstate: '运行',
             timeDefaultShow: '',
             pickerOptions: {
                 shortcuts: [{
@@ -210,14 +209,19 @@ var app = new Vue({
                 });
             } else {
                 _post_nl('/homepage/queryProductSet/', {productid: productid}, function (data) {
-                    if (data.code == 0) {
+                    if (data.code == 0 && data.data != '') {
                         that.form.productset.jenkinsurl = data.data.jenkinsurl;
                         that.form.productset.authname = data.data.authname
                         that.form.productset.authpwd = data.data.authpwd
                         that.form.productset.jobname = data.data.jobname
                         that.form.productset.jacocoClearJob = data.data.clearjob
                         that.productSetVisible = true;
-                    } else {
+                        if (data.data.buildplans.length !=0) {
+                            setTimeout(() => {
+                                app.$refs.tree.setCheckedNodes(data.data.buildplans)
+                            }, 100)
+                        }
+                    } else if (data.code == 1) {
                         layer.msg(data.msg)
                     }
                 })
@@ -236,9 +240,16 @@ var app = new Vue({
             var jobname = that.form.productset.jobname;
             var jacocoClearJob = that.form.productset.jacocoClearJob;
             var productid = that.form.product;
+            var plansrun = []
+            console.log(app.$refs.tree)
+            checknodes = app.$refs.tree.getCheckedNodes()
+            for (j = 0, len = checknodes.length; j < len; j++) {
+                plansrun.push(checknodes[j].id)
+            }
+            var buildplans = plansrun.join(',')
             _post_nl('/homepage/editProductSet/', {
-                productid: productid, jenkinsurl: jenkinsurl,
-                authname: authname, authpwd: authpwd, jobname: jobname, jacocoClearJob: jacocoClearJob
+                'productid': productid, 'jenkinsurl': jenkinsurl, 'buildplans': buildplans,
+                'authname': authname, 'authpwd': authpwd, 'jobname': jobname, 'jacocoClearJob': jacocoClearJob
             }, function (data) {
                 if (data.code == 0) {
                     layer.msg(data.msg);
@@ -939,28 +950,11 @@ var app = new Vue({
         },
         jacocoRun() {
             var that = this;
-            layer.confirm('选择项目下需执行的计划：', {
-                type: 1,
-                content: $('#jacocoRunSelect'),
-                title: false,
-                btn: ['开始', '取消'],
-                btnAlign: 'c'
-            }, function (index) {
-                that.jacocoRunstate = '请等待';
-                var plansrun = []
-                x = app.$refs.tree.getCheckedNodes()
-                for (j = 0, len = x.length; j < len; j++) {
-                    plansrun.push(x[j].id)
-                }
-                _post_nl('/homepage/runforJacoco/', {
+             _post_nl('/homepage/runforJacoco/', {
                     'productid': that.form.product,
-                    'pianids': plansrun.join(',')
-                }, function () {
-                    layer.close(index)
-                    layer.msg(data.msg)
-
+                }, function (data) {
+                    layer.msg(data.data)
                 })
-            })
         },
         getproductReport(rate, total) {
             var that = this;

@@ -74,12 +74,11 @@ def jenkinsJobRun(request):
 
 @csrf_exempt
 def runforJacoco(request):
-    planids = request.POST.get('pianids')
     productid = request.POST.get('productid')
     callername = request.session.get('username')
     try:
         jacocoConfig = Jacoco_report.objects.get(productid=productid)
-        threading.Thread(target=manyRun, args=(productid, planids, callername, jacocoConfig)).start()
+        threading.Thread(target=manyRun, args=(jacocoConfig, callername)).start()
     except:
         print(traceback.format_exc())
         return JsonResponse({'code': 1, 'data': '该项目没有进行jaococo相关配置'})
@@ -87,23 +86,25 @@ def runforJacoco(request):
     return JsonResponse({'code': 0, 'data': '提交成功'})
 
 
-def manyRun(productid, planids, callername, jacocoConfig):
+def manyRun(jacocoConfig, callername):
     url = jacocoConfig.jenkinsurl
     name = jacocoConfig.authname
     pwd = jacocoConfig.authpwd
     clearjob = jacocoConfig.clearjob
+    buildplans = jacocoConfig.buildplans
     # 1.执行清理
     jenkinsBuild(url, name, pwd, clearjob)
     # 2.运行me2自动化计划
     time.sleep(3)
     from manager.invoker import runplan
-    for i in planids.split(','):
-        planid = i.split('_')[1]
+    for i in buildplans.split(','):
+        planid = i[5:]
         plan = Plan.objects.get(id=planid)
         taskid = gettaskid(plan.__str__())
-        print('开始执行计划【%s】'%plan.description)
+        print('开始执行计划【%s】' % plan.description)
         runplan(callername, taskid, planid, 1, kind=None, startnodeid=i)
     jenkinsBuild(url, name, pwd, ';'.join(dealJacocoJobName(jacocoConfig.jobname, '0')))
+    time.sleep(10 * 60)
 
 
 def jenkinsBuild(jenkinsurl, name, pwd, jobs):

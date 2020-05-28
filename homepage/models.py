@@ -10,7 +10,7 @@ class Jacoco_report(Model):
 	authpwd = CharField(max_length=24, blank=True, null=True)
 	createtime = DateTimeField(auto_now_add=True)
 	clearjob = CharField(max_length=128, blank=True, null=True)
-
+	buildplans=TextField(blank=True)
 
 class Jacoco_data(Model):
 	jobname = CharField(max_length=128)

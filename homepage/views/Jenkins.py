@@ -99,10 +99,13 @@ def manyRun(jacocoConfig, callername):
     from manager.invoker import runplan
     for i in buildplans.split(','):
         planid = i[5:]
-        plan = Plan.objects.get(id=planid)
-        taskid = gettaskid(plan.__str__())
-        print('开始执行计划【%s】' % plan.description)
-        runplan(callername, taskid, planid, 1, kind=None, startnodeid=i)
+        try:
+            plan = Plan.objects.get(id=planid)
+            taskid = gettaskid(plan.__str__())
+            print('开始执行计划【%s】' % plan.description)
+            runplan(callername, taskid, planid, 1, kind=None, startnodeid=i)
+        except:
+            pass
     jenkinsBuild(url, name, pwd, ';'.join(dealJacocoJobName(jacocoConfig.jobname, '0')))
     time.sleep(10 * 60)
 

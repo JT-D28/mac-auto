@@ -57,13 +57,23 @@ def queryProductSet(request):
                                          'buildplans').filter(productid=productid))
         if jacocoset:
             res = jacocoset[0]
-            buildplans = res.get('buildplans')
-            plans = []
-            for i in buildplans.split(','):
+            plans = res.get('buildplans').split(',')
+            rmplans=[]
+            finplans=[]
+            for i in plans:
                 if i !='':
-                    name = Plan.objects.get(id=i[5:]).description
-                    plans.append({'id':i,'name':name})
-                    res['buildplans']=plans
+                    try:
+                        name = Plan.objects.get(id=i[5:]).description
+                        finplans.append({'id':i,'name':name})
+                    except:
+                        rmplans.append(i)
+            if rmplans:
+                for j in rmplans:
+                    plans.remove(j)
+                jacoco = Jacoco_report.objects.get(productid=productid)
+                jacoco.buildplans=','.join(plans)
+                jacoco.save()
+            res['buildplans']=finplans
         else:
             res = ''
         return JsonResponse({'code': '0', 'msg': 'success', 'data': res})

@@ -209,19 +209,23 @@ var app = new Vue({
                 });
             } else {
                 _post_nl('/homepage/queryProductSet/', {productid: productid}, function (data) {
-                    if (data.code == 0 && data.data != '') {
-                        that.form.productset.jenkinsurl = data.data.jenkinsurl;
-                        that.form.productset.authname = data.data.authname
-                        that.form.productset.authpwd = data.data.authpwd
-                        that.form.productset.jobname = data.data.jobname
-                        that.form.productset.jacocoClearJob = data.data.clearjob
-                        that.productSetVisible = true;
-                        if (data.data.buildplans.length !=0) {
-                            setTimeout(() => {
-                                app.$refs.tree.setCheckedNodes(data.data.buildplans)
-                            }, 100)
+                    if (data.code == 0) {
+                        if (data.data != '') {
+                            that.form.productset.jenkinsurl = data.data.jenkinsurl;
+                            that.form.productset.authname = data.data.authname
+                            that.form.productset.authpwd = data.data.authpwd
+                            that.form.productset.jobname = data.data.jobname
+                            that.form.productset.jacocoClearJob = data.data.clearjob
+                            that.productSetVisible = true;
+                            if (data.data.buildplans.length != 0) {
+                                setTimeout(() => {
+                                    app.$refs.tree.setCheckedNodes(data.data.buildplans)
+                                }, 100)
+                            }
+                        } else {
+                            that.productSetVisible = true;
                         }
-                    } else if (data.code == 1) {
+                    } else {
                         layer.msg(data.msg)
                     }
                 })
@@ -241,7 +245,6 @@ var app = new Vue({
             var jacocoClearJob = that.form.productset.jacocoClearJob;
             var productid = that.form.product;
             var plansrun = []
-            console.log(app.$refs.tree)
             checknodes = app.$refs.tree.getCheckedNodes()
             for (j = 0, len = checknodes.length; j < len; j++) {
                 plansrun.push(checknodes[j].id)
@@ -950,11 +953,11 @@ var app = new Vue({
         },
         jacocoRun() {
             var that = this;
-             _post_nl('/homepage/runforJacoco/', {
-                    'productid': that.form.product,
-                }, function (data) {
-                    layer.msg(data.data)
-                })
+            _post_nl('/homepage/runforJacoco/', {
+                'productid': that.form.product,
+            }, function (data) {
+                layer.msg(data.data)
+            })
         },
         getproductReport(rate, total) {
             var that = this;

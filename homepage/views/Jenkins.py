@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from homepage.models import Jacoco_report
 from homepage.views.charts import dealJacocoJobName
+from manager.context import getRunningInfo
 from manager.core import gettaskid
 from manager.models import Plan
 
@@ -78,10 +79,19 @@ def runforJacoco(request):
     callername = request.session.get('username')
     try:
         jacocoConfig = Jacoco_report.objects.get(productid=productid)
+        runningPlans=[]
+        for i in jacocoConfig.buildplans.split(','):
+            planid= i[5:]
+            if getRunningInfo(callername, planid, 'isrunning')!='0':
+                planname = Plan.objects.get(id=planid).description
+                runningPlans.append('【%s】'%planname)
+        if runningPlans:
+            msg = '计划'+'，'.join(runningPlans)+'当前正在运行，稍后再试'
+            return JsonResponse({'code': 1, 'data': msg})
         threading.Thread(target=manyRun, args=(jacocoConfig, callername)).start()
     except:
         print(traceback.format_exc())
-        return JsonResponse({'code': 1, 'data': '该项目没有进行jaococo相关配置'})
+        return JsonResponse({'code': 1, 'data': '提交失败'})
 
     return JsonResponse({'code': 0, 'data': '提交成功'})
 

@@ -956,7 +956,7 @@ var app = new Vue({
             _post_nl('/homepage/runforJacoco/', {
                 'productid': that.form.product,
             }, function (data) {
-                layer.msg(data.data)
+                layer.msg(data.data,{time: 20*1000})
             })
         },
         getproductReport(rate, total) {

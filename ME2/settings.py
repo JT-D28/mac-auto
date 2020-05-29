@@ -141,7 +141,6 @@ else:
             'PASSWORD': configs.DATABASES_PWD,  # 数据库登录密码
             'HOST': configs.DATABASES_HOST,  # 数据库所在服务器ip地址
             'PORT': configs.DATABASES_PORT,  # 监听端口 默认3306即可
-            'CONN_MAX_AGE':3*60
         }
     }
 

@@ -1996,7 +1996,7 @@ def getParamfromFetchData(request):
 			if 'urlencoded' in contenttype:
 				contenttype = 'urlencode'
 				parsed_result = {}
-				pairs = parse.parse_qsl(v.get('body'))
+				pairs = parse.parse_qsl(v.get('body'),True)
 				for name, value in pairs:
 					parsed_result[name] = value
 				print('body', parsed_result)

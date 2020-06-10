@@ -718,7 +718,7 @@ class TemplateEncoder(XJsonEncoder):
 class TemplateFieldEncoder(XJsonEncoder):
 	def __init__(self, **args):
 		super(TemplateFieldEncoder, self).__init__(
-			['id', 'fieldcode', 'description', 'start', 'end', 'index', 'template'], **args)
+			['id', 'fieldcode', 'description', 'start', 'end', 'index', 'template','length'], **args)
 
 
 def simplejson(code=0, msg='', **kw):

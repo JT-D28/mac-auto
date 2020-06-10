@@ -1867,14 +1867,9 @@ def templatefield(request):
 	is_sort_display = ''
 	is_start_display = ''
 	kind = Template.objects.get(id=tid).kind
-	if kind == 'length':
-		is_sort_display = 'none'
-	
-	else:
-		is_start_display = 'none'
-	
-	logger.info('sort', is_sort_display)
-	logger.info('start', is_start_display)
+
+	show_index = 'false' if kind != 'length' else 'true'
+
 	
 	return render(request, 'manager/templatefield.html', locals())
 

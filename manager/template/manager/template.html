@@ -1,4 +1,4 @@
-{%load static%}
+{% load static %}
 <!DOCTYPE html >
 <html lang="en" style="height: 100%">
 <head>
@@ -7,90 +7,95 @@
     <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
     <title>报文模板管理</title>
     <style type="text/css">
-      .layui-icon:hover{
-        cursor: pointer;
-      }
-      .btn {
-          height: 34px;
-          line-height: 34px;
-      }
+        .layui-icon:hover {
+            cursor: pointer;
+        }
 
-      .layui-table-view {
-          margin: 20px 0;
-      }
-      .edit{
-          width:24px;
-          height:17px;
-          font-size:12px;
-          font-family:PingFang-SC-Medium,PingFang-SC;
-          font-weight:500;
-          color:rgba(0,151,136,1);
-          line-height:17px;
-      }
+        .btn {
+            height: 34px;
+            line-height: 34px;
+        }
+
+        .layui-table-view {
+            margin: 20px 0;
+        }
+
+        .edit {
+            width: 24px;
+            height: 17px;
+            font-size: 12px;
+            font-family: PingFang-SC-Medium, PingFang-SC;
+            font-weight: 500;
+            color: rgba(0, 151, 136, 1);
+            line-height: 17px;
+        }
 
     </style>
 </head>
 <body style="height:calc(100% - 40px);padding: 20px">
-<div class="layui-inline"> 
-  <button class="layui-btn btn" id='addbtn'>新增</button>
-  <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
+<div class="layui-inline">
+    <button class="layui-btn btn" id='addbtn'>新增</button>
+    <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
 </div>
 <div class="layui-inline" style="float:right;">
-  <div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="模板名称|创建者" class="layui-input"></div>
-  <button class="layui-btn btn" id='querybtn'>查询</button>
+    <div class="layui-input-inline"><input id='search-value' type="text" name="" placeholder="模板名称|创建者"
+                                           class="layui-input"></div>
+    <button class="layui-btn btn" id='querybtn'>查询</button>
 </div>
 
-<table id='table-template' class="layui-table" lay-data="{height: 'full-80',cellMinWidth:'180',page: true, limit:10, url:'/manager/querytemplate/'}" lay-filter='target'>
-  <thead>
+<table id='table-template' class="layui-table"
+       lay-data="{height: 'full-80',cellMinWidth:'180',page: true, limit:10, url:'/manager/querytemplate/'}"
+       lay-filter='target'>
+    <thead>
     <tr>
-      <th lay-data="{type:'checkbox'}"></th>
-      <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
-      <th lay-data="{field: 'name', sort: true}">模板名</th>
-   <!--    <th lay-data="{field: 'description',width:'30%', sort: true}">描述</th> -->
-      
-      <th lay-data="{field: 'kind', sort: true,templet:'#titleTpl',width:180}">解析方式</th>
+        <th lay-data="{type:'checkbox'}"></th>
+        <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
+        <th lay-data="{field: 'name', sort: true}">模板名</th>
+        <!--    <th lay-data="{field: 'description',width:'30%', sort: true}">描述</th> -->
 
-      <th lay-data="{field: 'author', sort: true,width:100}">创建者</th>
-<!--       <th lay-data="{field: 'createtime', width:160,sort:true}">创建时间</th>
-      <th lay-data="{field: 'updatetime', width:160}">更改时间</th> -->
-      <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:160}">操作</th>
- 
+        <th lay-data="{field: 'kind', sort: true,templet:'#titleTpl',width:180}">解析方式</th>
+
+        <th lay-data="{field: 'author', sort: true,width:100}">创建者</th>
+        <!--       <th lay-data="{field: 'createtime', width:160,sort:true}">创建时间</th>
+              <th lay-data="{field: 'updatetime', width:160}">更改时间</th> -->
+        <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:160}">操作</th>
+
     </tr>
-  </thead>
+    </thead>
 </table>
 
 <form id='addhtml' hidden=true class="layui-form" style="padding: 10px;" lay-filter='addhtml'>
 
-<!--   <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
-    <ul class="layui-tab-title">
-      <li class="layui-this">通用</li>
-      <li>字段配置</li>
+    <!--   <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+        <ul class="layui-tab-title">
+          <li class="layui-this">通用</li>
+          <li>字段配置</li>
 
-    </ul>
-    <div class="layui-tab-content"></div>
-  </div>  -->
+        </ul>
+        <div class="layui-tab-content"></div>
+      </div>  -->
 
 
-  <div class="layui-form-item">
-    <label class="layui-form-label">模板名称</label>
-    <div class="layui-input-block">
-      <input type="text" name="name" placeholder="请输入" autocomplete="off" class="layui-input">
-    </div>
-  </div>
-  <div class="layui-form-item">
-    <label class="layui-form-label">描述</label>
-    <div class="layui-input-block">
-      <input type="textarea" name="description" placeholder="" autocomplete="off" class="layui-textarea" multiple>
-    </div>
-  </div>
-
-  <div class="layui-form-item">
-   <label class="layui-form-label">分隔类型</label>
+    <div class="layui-form-item">
+        <label class="layui-form-label">模板名称</label>
         <div class="layui-input-block">
-             <input name="kind" value="length" type="radio" title="长度" >
-             <input name="kind" value="sepator" type="radio" title="分隔符">
-         </div>
-  </div>
+            <input type="text" name="name" placeholder="请输入" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">描述</label>
+        <div class="layui-input-block">
+            <input type="textarea" name="description" placeholder="" autocomplete="off" class="layui-textarea" multiple>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">分隔类型</label>
+        <div class="layui-input-block">
+            <input name="kind" value="length" type="radio" title="长度">
+            <input name="kind" value="sepator" type="radio" title="分隔符">
+        </div>
+    </div>
 
 
 </form>
@@ -102,256 +107,247 @@
 
 <script type="text/javascript">
 
-layui.use(['table','layer'], function(){
-  var table = layui.table;
-  var $=layui.jquery
-  var layer=layui.layer;
-  var form=layui.form;
+    layui.use(['table', 'layer'], function () {
+        var table = layui.table;
+        var $ = layui.jquery
+        var layer = layui.layer;
+        var form = layui.form;
 //
 //查询功能
-  $("#querybtn").click(function(e){
+        $("#querybtn").click(function (e) {
 
-    console.log('query var');
+            console.log('query var');
 
-    //layer.open({'title':'','type':2,'content':'http://www.baidu.com'});
-    table.reload('table-template',{
-      page:{
-        curr:1
-      },
-      where:{
-        searchvalue:$("#search-value").val()
+            //layer.open({'title':'','type':2,'content':'http://www.baidu.com'});
+            table.reload('table-template', {
+                page: {
+                    curr: 1
+                },
+                where: {
+                    searchvalue: $("#search-value").val()
 
-      }
+                }
 
-    });
+            });
 
-    
-  });
+
+        });
 
 //删除功能
-  $("#delbtn").click(function(e){
+        $("#delbtn").click(function (e) {
 
 
-    var checkStatus = table.checkStatus("table-template");
-    data = checkStatus.data; //获取选中的数据
+            var checkStatus = table.checkStatus("table-template");
+            data = checkStatus.data; //获取选中的数据
 
-    if(data.length==0){
-      layer.alert('你有选择要删除的模板么?',{icon:3,time:1500})
+            if (data.length == 0) {
+                layer.alert('你有选择要删除的模板么?', {icon: 3, time: 1500})
 
-      return
+                return
 
-    }
-
-    layer.confirm('确认删除么?',{
-      btn1:function(index,layero){
-        layer.close(index)
-        success=function(e){
-          if(e.code==0){
-            table.reload('table-template',{
-                page:{
-                  curr:1
-                },
-                where:{
-                  searchvalue:$("#search-value").val()
-
-                }
-
-              });
-            layer.alert(e.msg,{icon:1,time:1500})
-          }
-          else
-            layer.alert(e.msg,{icon:2})
-
-        }
-
-        ids=[]
-        for(var index=0;index<data.length;index++){
-          ids.splice(0,0,data[index]['id'])
-
-        }
-
-        //alert(ids)
-    
-        _post('/manager/deltemplate/',{'ids':ids.join()},success)
-
-
-      },
-  
-    })
-
-  });
-
-//新增功能
-
-  $("#addbtn").click(function(){
-    // alert(1)
-    $("[name='kind'][value='length']").attr('checked','')
-    form.render()
-
-    var o=layer.open(
-      {
-        title:'配置模板',
-        type:1,
-        // area:["350px","350px"],
-        content:$('#addhtml'),
-        btn:['提交','取消'],
-
-        yes: function(index, layero){
-          //按钮【按钮一】的回调
-          success=function(e){
-            
-            layer.close(index)
-           
-            if(e.code==0){
-
-            // $('#addhtml')[0].reset()
-            // layui.form.render()
-              layer.alert(e.msg,{icon:1})
-              table.reload('table-template',{
-                page:{
-                  curr:1
-                },
-                where:{
-                  searchvalue:$("#search-value").val()
-
-                }
-
-              });
             }
-            else
-              layer.alert(e.msg,{icon:2})   
-            }        
 
-          
-          data={
-            'kind':$("[name='kind']:checked").val(),
-            'description':$("[name='description']").val(),
-            'name':$("[name='name']").val(),
-            //'content_url':$("[name='parser_url']").val()
-          }
+            layer.confirm('确认删除么?', {
+                btn1: function (index, layero) {
+                    layer.close(index)
+                    success = function (e) {
+                        if (e.code == 0) {
+                            table.reload('table-template', {
+                                page: {
+                                    curr: 1
+                                },
+                                where: {
+                                    searchvalue: $("#search-value").val()
 
-          _post("/manager/addtemplate/",data,success)
+                                }
 
-        },
-        btn2: function(index, layero){
-          //按钮【按钮二】的回调
-          //return false 开启该代码可禁止点击该按钮关闭
-          console.log('no')
-        },
-
-
-    });
-
-    // layer.full(o);
-
-  });
-
-//tool事件
-  table.on("tool(target)",function(e){
-    console.log(e.event);
-    // var checkStatus = table.checkStatus("table-template");
-    // data = checkStatus.data; //获取选中的数据
-    id=e.data['id']
-    
-    if(e.event=='common_edit'){
-
-      $("[name='kind']").each(function(){
-        $(this).removeAttr('checked')
-      });
-
-      success=function(data){
-        console.log(data)
-        //设置addhtml
-        $("[name='description']").val(data.data['description'])
-        $("[name='name']").val(data.data['name'])
-        //$("[name='parser_url']").val(data.data['content_url'])
-        $("[name='kind'][value='"+data.data['kind']+"']").attr('checked','')
-        form.render()
-        //打开表
-
-        var o=layer.open({
-          type:1,
-          title:'编辑通用',
-          content:$('#addhtml'),
-          btn:['提交','取消'],
-          yes:function(index,layero){
-
-            layer.close(index)
-            success=function(e){
-             // alert(e)
-              $('#addhtml')[0].reset()
-              layui.form.render()
-              //e=JSON.parse(e)
-              if(e.code==0){
-                layer.alert(e.msg,{icon:1,time:1500})
-                table.reload('table-template',{
-                    page:{
-                      curr:1
-                    },
-                    where:{
-                      searchvalue:$("#search-value").val()
+                            });
+                            layer.alert(e.msg, {icon: 1, time: 1500})
+                        } else
+                            layer.alert(e.msg, {icon: 2})
 
                     }
 
-                  });
-              }
-              else
-                layer.alert(e.msg,{icon:2})
+                    ids = []
+                    for (var index = 0; index < data.length; index++) {
+                        ids.splice(0, 0, data[index]['id'])
+
+                    }
+
+                    //alert(ids)
+
+                    _post('/manager/deltemplate/', {'ids': ids.join()}, success)
+
+
+                },
+
+            })
+
+        });
+
+//新增功能
+
+        $("#addbtn").click(function () {
+            // alert(1)
+            $("[name='kind'][value='length']").attr('checked', '')
+            form.render()
+
+            var o = layer.open(
+                {
+                    title: '配置模板',
+                    type: 1,
+                    // area:["350px","350px"],
+                    content: $('#addhtml'),
+                    btn: ['提交', '取消'],
+
+                    yes: function (index, layero) {
+                        //按钮【按钮一】的回调
+                        success = function (e) {
+
+                            layer.close(index)
+
+                            if (e.code == 0) {
+
+                                // $('#addhtml')[0].reset()
+                                // layui.form.render()
+                                layer.alert(e.msg, {icon: 1})
+                                table.reload('table-template', {
+                                    page: {
+                                        curr: 1
+                                    },
+                                    where: {
+                                        searchvalue: $("#search-value").val()
+
+                                    }
+
+                                });
+                            } else
+                                layer.alert(e.msg, {icon: 2})
+                        }
+
+
+                        data = {
+                            'kind': $("[name='kind']:checked").val(),
+                            'description': $("[name='description']").val(),
+                            'name': $("[name='name']").val(),
+                            //'content_url':$("[name='parser_url']").val()
+                        }
+
+                        _post("/manager/addtemplate/", data, success)
+
+                    },
+                    btn2: function (index, layero) {
+                        //按钮【按钮二】的回调
+                        //return false 开启该代码可禁止点击该按钮关闭
+                        console.log('no')
+                    },
+
+
+                });
+
+            // layer.full(o);
+
+        });
+
+//tool事件
+        table.on("tool(target)", function (e) {
+            console.log(e.event);
+            // var checkStatus = table.checkStatus("table-template");
+            // data = checkStatus.data; //获取选中的数据
+            id = e.data['id']
+
+            if (e.event == 'common_edit') {
+
+                $("[name='kind']").each(function () {
+                    $(this).removeAttr('checked')
+                });
+
+                success = function (data) {
+                    console.log(data)
+                    //设置addhtml
+                    $("[name='description']").val(data.data['description'])
+                    $("[name='name']").val(data.data['name'])
+                    //$("[name='parser_url']").val(data.data['content_url'])
+                    $("[name='kind'][value='" + data.data['kind'] + "']").attr('checked', '')
+                    form.render()
+                    //打开表
+
+                    var o = layer.open({
+                        type: 1,
+                        title: '编辑通用',
+                        content: $('#addhtml'),
+                        btn: ['提交', '取消'],
+                        yes: function (index, layero) {
+
+                            layer.close(index)
+                            success = function (e) {
+                                // alert(e)
+                                $('#addhtml')[0].reset()
+                                layui.form.render()
+                                //e=JSON.parse(e)
+                                if (e.code == 0) {
+                                    layer.alert(e.msg, {icon: 1, time: 1500})
+                                    table.reload('table-template', {
+                                        page: {
+                                            curr: 1
+                                        },
+                                        where: {
+                                            searchvalue: $("#search-value").val()
+
+                                        }
+
+                                    });
+                                } else
+                                    layer.alert(e.msg, {icon: 2})
+                            }
+                            _post('/manager/edittemplate/', {
+                                'tid': id,
+                                'name': $("[name='name']").val(),
+                                'description': $("[name='description']").val(),
+                                'kind': $("[name='kind']:checked").val(),
+                                //'content_url':$("[name='parser_url']").val()
+
+                            }, success)
+
+                        }
+
+                    });
+                    // layer.full(o);
+                }
+                _post('/manager/querytemplatecommon/', {tid: id}, success)
+            } else if (e.event == 'field_edit') {
+
+                field_url = '/manager/templatefield/?tid=' + id + '&kind=' + e.data['kind']
+                console.log('加载编辑字段页面=>', field_url)
+
+                layer.open({
+                    type: 2,
+                    title: '编辑字段',
+                    content: field_url,
+                    area: ['100%', '100%']
+                });
             }
-            _post('/manager/edittemplate/',{
-              'tid':id,
-              'name':$("[name='name']").val(),
-              'description':$("[name='description']").val(),
-              'kind':$("[name='kind']:checked").val(),
-              //'content_url':$("[name='parser_url']").val()
-          
-            },success)
-
-          }
-
-        });
-        // layer.full(o);
-      }
-      _post('/manager/querytemplatecommon/',{tid:id},success)
-    }else if(e.event=='field_edit'){
-
-        host=window.location.host
-        // port=window.location.port
-        field_url='http://'+host+'/manager/templatefield/?tid='+id+'&kind='+e.data['kind']
-        console.log('加载编辑字段页面=>',field_url)
-
-        var o=layer.open({
-          type:2,
-          title:'编辑字段',
-          content:field_url,
-          btn:[]
 
         });
 
-        layer.full(o);
-
-    }
-
-  });
-
-});
+    });
 
 </script>
 
 <script type="text/html" id="toolbar">
-  <i class="layui-icon edit" lay-event="common_edit">编辑</i>
-  <i class="layui-icon edit" lay-event="field_edit">字段</i>
+    <i class="layui-icon edit" lay-event="common_edit">编辑</i>
+    <i class="layui-icon edit" lay-event="field_edit">字段</i>
 </script>
 
 <script type="text/html" id="titleTpl">
 
-  {% verbatim %}
+    {% verbatim %}
     {{# if(d.kind == 'length'){  }}
-        长度
+    长度
     {{# }else{             }}
-         分隔符||
+    分隔符||
     {{#      }      }}
-  {% endverbatim %}
+    {% endverbatim %}
 </script>
 
 </html>

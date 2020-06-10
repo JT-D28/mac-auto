@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 # @Date    : 2020-03-10 14:31:32
 # @Author  : Blackstone
-# @to 
+# @to
+from django.db import connection
 
 from manager.models import Template, TemplateField
 from login.models import User
@@ -252,15 +253,27 @@ class MessageParser(object):
 			page = kws.get('page')
 			limit = kws.get('limit')
 			t = Template.objects.get(id=tid)
-			fieldlist = list(t.fieldinfo.all())
-			s = kws.get('searchvalue', None)
-			if s:
-				fieldlist = [x for x in fieldlist if x.fieldcode.__contains__(s)]
-			
-			res, total = getpagedata(fieldlist, page, limit)
-			
+			with connection.cursor() as cursor:
+				if t.kind == 'length':
+					cursor.execute('''SELECT id,fieldcode,description,(END-START+1) AS length FROM `manager_templatefield` t 
+					WHERE id IN (SELECT templatefield_id FROM manager_template_fieldinfo WHERE template_id=%s)''', [tid])
+					desc = cursor.description
+					res = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+					for i,j in enumerate(res):
+						j['index']=i+1
+				elif t.kind == 'sepator':
+					cursor.execute('''SELECT id,fieldcode,description, `index` FROM `manager_templatefield` t 
+					WHERE id IN (SELECT templatefield_id FROM manager_template_fieldinfo WHERE template_id=%s)''', [tid])
+					desc = cursor.description
+					res = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+
+			# fieldlist = list(t.fieldinfo.all())
+			# s = kws.get('searchvalue', None)
+			# if s:
+			# 	fieldlist = [x for x in fieldlist if x.fieldcode.__contains__(s)]
+			#
+			res, total = getpagedata(res, page, limit)
 			jsonstr = json.dumps(res, cls=TemplateFieldEncoder, total=total)
-			
 			return jsonstr
 		
 		

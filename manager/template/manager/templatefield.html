@@ -112,8 +112,9 @@
         if ({{ show_index }} == false){
             table.render({
                 elem: '#table-template' //指定原始表格元素选择器（推荐id选择器）
-                , height: 'full - 100' //容器高度
+                ,  height: 'full-100' //容器高度
                 , url: '/manager/querytemplatefield/?tid={{ tid }}'
+                ,page: true
                 , cols: [[
                     {type: 'checkbox'}
                     , {field: 'id', width: 80, hide: true}
@@ -127,8 +128,9 @@
         }else{
             table.render({
                 elem: '#table-template' //指定原始表格元素选择器（推荐id选择器）
-                , height: 'full - 100' //容器高度
+                ,  height: 'full-100' //容器高度
                 , url: '/manager/querytemplatefield/?tid={{ tid }}'
+                ,page: true
                 , cols: [[
                     {type: 'checkbox'}
                     , {field: 'id', width: 80, hide: true}

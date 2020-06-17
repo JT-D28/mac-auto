@@ -1198,7 +1198,10 @@ def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
 		logger.info('变量处理后的callstr:',s)
 		if status is not 'success':
 			return (status, s)
-		
+		status, s = _replace_property(user, s, taskid)
+		logger.info('属性处理后的callstr:', s)
+		if status is not 'success':
+			return (status, s)
 		methodname = ''
 		try:
 			methodname = re.findall('(.*?)\(', s)[0]

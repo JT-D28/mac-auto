@@ -859,8 +859,12 @@ def movenode(request):
 		# 	elementclass='businessData'
 		# elementclass=_first_word_up(elementclass)
 		# element=eval("%s.objects.get(id=%s)"%(elementclass,elementid))
-		_build_all(srcid, targetid, movetype, user, is_copy, user.name)
-		
+		# _build_all(srcid, targetid, movetype, user, is_copy, user.name)
+		if is_copy == 'false':
+			movenode_reorder(srcid, targetid, movetype,user.name)
+		elif is_copy == 'true':
+			_build_all(srcid, targetid, movetype, user, is_copy, user.name)
+
 		return {
 			'status': 'success',
 			'msg': '操作成功'}
@@ -870,6 +874,41 @@ def movenode(request):
 			'status': 'error',
 			'msg': '移动异常'
 		}
+
+def movenode_reorder(srcid, targetid, movetype,name):
+	src_uid = srcid.split('_')[1]
+	target_uid = targetid.split('_')[1]
+	src_type = srcid.split('_')[0]
+	target_type = targetid.split('_')[0]
+	if movetype == 'inner':
+		o = mm.Order.objects.get(follow_id=src_uid, kind__contains='_%s' % src_type)
+		o.main_id = target_uid
+		maxv = list(mm.Order.objects.values_list('value', flat=True).filter(main_id=target_uid))
+		li = [int(i.split(".")[1]) for i in maxv] if maxv else [0]
+		o.value = '1.' + str(max(li) + 1)
+		o.kind = '%s_%s'%(target_type,src_type)
+		o.save()
+		return
+	else:
+		o = mm.Order.objects.get(follow_id=src_uid, kind__contains='_%s' % src_type)
+		pkind , pid = _get_node_parent_info(target_type,target_uid)
+		o.main_id = pid
+		to = mm.Order.objects.get(Q(kind__contains='_%s' % target_type) & Q(follow_id=target_uid))
+		ogroup = to.value.split('.')[0]
+		oindex = int(to.value.split('.')[1])
+		o.value = '%s.%s' % (ogroup, oindex)
+		o.kind = '%s_%s'%(pkind,src_type)
+		o.save()
+		src_type_upper = src_type.capitalize()
+		if src_type_upper == 'Businessdata' or src_type_upper == 'Business':
+			src_type_upper = 'BusinessData'
+		el = eval("mm.%s.objects.get(id=%s)" % (src_type_upper, src_uid))
+		_regen_weight(name,el,movetype,target_uid)
+
+
+
+
+
 
 def movemulitnodes(request):
 	try:

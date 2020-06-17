@@ -1586,37 +1586,51 @@ def querytreelist(request):
 				})
 			return data
 		# return get_pid_data(case.id,'case',data)
-		
 		elif type == 'case':  ###这里会有个乱序的问题
-			case = Case.objects.get(id=idx)
-			
-			steps = cm.getchild('case_step', idx)
-			
-			for step in steps:
-				stepname = step.description
-				if step.count in (0, '0'):
-					stepname = '<s>%s</s>' % stepname
+			orders = Order.objects.filter(kind__contains='case_', main_id=idx).extra(
+				select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
+			for order in orders:
+				nodekind = order.kind.split('_')[1]
+				nodeid = order.follow_id
+				name = eval("%s.objects.values('description').get(id=%s)"%(nodekind.capitalize(),nodeid))
+				textIcon = 'fa icon-fa-file-o' if nodekind =='step' else 'fa icon-fa-folder'
 				data.append({
-					'id': 'step_%s' % step.id,
-					'pId': 'case_%s' % case.id,
-					'name': stepname,
-					'type': 'step',
-					'textIcon': 'fa icon-fa-file-o',
-					# 'open':True
-				})
-			
-			cases = cm.getchild('case_case', idx)
-			for case0 in cases:
-				casename = case0.description
-				if case0.count in (0, '0'):
-					casename = '<s>%s</s>' % casename
-				data.append({
-					'id': 'case_%s' % case0.id,
+					'id': '%s_%s' % (nodekind,nodeid),
 					'pId': 'case_%s' % idx,
-					'name': casename,
-					'type': 'case',
-					'textIcon': 'fa icon-fa-folder',
+					'name': name['description'],
+					'type': nodekind,
+					'textIcon': textIcon,
 				})
+
+			# case = Case.objects.get(id=idx)
+			#
+			# steps = cm.getchild('case_step', idx)
+			#
+			# for step in steps:
+			# 	stepname = step.description
+			# 	if step.count in (0, '0'):
+			# 		stepname = '<s>%s</s>' % stepname
+			# 	data.append({
+			# 		'id': 'step_%s' % step.id,
+			# 		'pId': 'case_%s' % case.id,
+			# 		'name': stepname,
+			# 		'type': 'step',
+			# 		'textIcon': 'fa icon-fa-file-o',
+			# 		# 'open':True
+			# 	})
+			#
+			# cases = cm.getchild('case_case', idx)
+			# for case0 in cases:
+			# 	casename = case0.description
+			# 	if case0.count in (0, '0'):
+			# 		casename = '<s>%s</s>' % casename
+			# 	data.append({
+			# 		'id': 'case_%s' % case0.id,
+			# 		'pId': 'case_%s' % idx,
+			# 		'name': casename,
+			# 		'type': 'case',
+			# 		'textIcon': 'fa icon-fa-folder',
+			# 	})
 			
 			return data
 		

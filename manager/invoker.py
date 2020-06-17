@@ -1026,6 +1026,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 	if content_type == 'json':
 		
 		default["Content-Type"] = 'application/json;charset=UTF-8'
+		body=body.replace("'null'",'null').replace('"null"','null')
 		body = body.encode('utf-8')
 	# body = json.dumps(eval(body))
 	
@@ -1036,7 +1037,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
 		default["Content-Type"] = 'application/x-www-form-urlencoded;charset=UTF-8'
 		try:
 			if body.startswith("{") and not body.startswith("{{"):
-				body = body.replace('\r', '').replace('\n', '').replace('\t', '')
+				body = body.replace('\r', '').replace('\n', '').replace('\t', '').replace("'null'",'null').replace('"null"','null')
 				body = parse.urlencode(ast.literal_eval(body))
 			
 			body = body.encode('UTF-8')
@@ -1321,6 +1322,7 @@ def _compute(taskid, user, checkexpression, type=None, target=None, kind=None, p
 
 def _separate_expression(expectedexpression):
 	# _op=('==','>=','<=','!=')
+	logger.info('wait separator str:',expectedexpression)
 	for op in _op:
 		if op in expectedexpression:
 			k = expectedexpression.split(op)[0].strip()
@@ -1370,6 +1372,12 @@ def _replace(expressionsep):
 		
 		elif len(list_3) == 1:
 			expressionsep = expressionsep.replace("=", "==")
+		elif len(list_3) >1:
+			ms=re.findall('\$\[(.*)\]=(.*)', expressionsep)
+			if ms:
+				left='$[{}]'.format(ms[0][0])
+				expressionsep='=='.join([left,ms[0][1]])
+
 	# else:
 	#   msg="不能合法化的表达式!=>%s"%expressionsep
 	#   #viewcache(msg)
@@ -1409,7 +1417,7 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
 	exp = None
 	try:
 		
-		# logger.info("ourexpression=>",ourexpression)
+		logger.info("ourexpression=>",ourexpression)
 		exp_rp = _replace_property(user, ourexpression)
 		# logger.info('qqqqq=>',exp_rp)
 		

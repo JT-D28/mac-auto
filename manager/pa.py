@@ -253,7 +253,6 @@ class MessageParser(object):
 			page = kws.get('page')
 			limit = kws.get('limit')
 			searchvalue = kws.get('searchvalue', '')
-			print(searchvalue)
 			t = Template.objects.get(id=tid)
 			with connection.cursor() as cursor:
 				if t.kind == 'length':

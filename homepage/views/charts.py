@@ -79,82 +79,93 @@ def badresult(request):
 @csrf_exempt
 def jacocoreport(request):
 	code, msg = 0, ''
+	jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
 	jobs = request.POST.getlist('jobname[]')
+	jobmap = {}
+	if jobs!=['0']:
+		jobnum = len(jobs)
+		for i in jobs:
+			jobname,servicename = i.split(":::")
+			if not jobmap.get(jobname,[]):
+				jobmap[jobname]=[]
+			jobmap[jobname].append(servicename)
+	else:
+		jobs = jacocoset.jobname
+		jobnum = len(jobs.split(";"))
+		for job in jobs.split(";"):
+			if job:
+				jobname = job.split(":")[0]
+				jobmap[jobname] = ['all']
 	jobnames = []
 	res = {}
-	coveragelist = ['branchCoverage', 'classCoverage', 'complexityScore', 'instructionCoverage', 'lineCoverage',
-	                'methodCoverage']
-	items = ['covered', 'missed', 'percentage', 'percentageFloat', 'total']
+
+	coveragelist = ['classes', 'method', 'line', 'branch', 'instruction',
+	                'complexity']
+	items = ['covered', 'missed', 'percentage', 'percentagefloat', 'total']
 	for i in coveragelist:
-		res[i] = {'covered': 0, 'missed': 0, 'percentage': 0, 'percentageFloat': 0, 'total': 0}
+		res[i] = {'covered': 0, 'missed': 0, 'percentage': 0, 'percentagefloat': 0, 'total': 0}
 	
 	try:
-		jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
 		authname, authpwd, jenkinsurl = jacocoset.authname, jacocoset.authname, jacocoset.jenkinsurl
-		jobnames = dealJacocoJobName(jacocoset.jobname, jobs)
-		jobnum = len(jobnames)
+		jobnames = jacocoset.jobname.split(";")
 		if request.POST.get('s') == 'get':
 			print('库中获取覆盖率')
 			with connection.cursor() as cursor:
-				cursor.execute('''SELECT branchCoverage,classCoverage,complexityScore,instructionCoverage,
-				lineCoverage,methodCoverage from (SELECT max(jobnum) AS num,jobname FROM `homepage_jacoco_data` a
+				cursor.execute('''SELECT a.jobname,coverydata from (SELECT max(jobnum) AS num,jobname FROM `homepage_jacoco_data` a
 				GROUP BY jobname ) a , homepage_jacoco_data b where a.num = b.jobnum and a.jobname=b.jobname
 				and a.jobname in %s
-				''', [jobnames])
+				''', [list(jobmap.keys())])
 				desc = cursor.description
 				rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-				print(rows)
-			for jsond in rows:
-				for i in coveragelist:
-					jsond[i] = json.loads(jsond[i].replace("'", '"'))
-					for k in items:
-						if k in ['percentage', 'percentageFloat']:
-							jsond[i][k] = round(res[i][k] + jsond[i][k] / jobnum, 2)
-						else:
-							jsond[i][k] = res[i][k] + jsond[i][k]
-				res = jsond.copy()
+			for i in rows:
+				print(i)
+				data = json.loads(i['coverydata'].replace("'", '"'))
+				for j in jobmap[i['jobname']]:
+					jsond = data[j]
+					for m in coveragelist:
+						for k in items:
+							if k in ['percentage', 'percentagefloat']:
+								jsond[m][k] = round(res[m][k] + jsond[m][k] / jobnum, 2)
+							else:
+								jsond[m][k] = res[m][k] + jsond[m][k]
+					res = jsond.copy()
 		elif request.POST.get('s') == 'update':
+			print(jobmap)
 			if len(authname) & len(authpwd) != 0:
 				# 先判断下任务有没有在运行
 				num = {}
 				server = jenkins.Jenkins(jacocoset.jenkinsurl, username=jacocoset.authname, password=jacocoset.authpwd)
-				for i, job in enumerate(jobnames):
-					num[job] = server.get_job_info(job)['lastBuild']['number']
-					buildinfo = server.get_build_info(job, num[job])
+				for jobname in jobmap.keys():
+					num[jobname] = server.get_job_info(jobname)['lastBuild']['number']
+					buildinfo = server.get_build_info(jobname, num[jobname])
 					if buildinfo['building']:
-						msg += '%s:正在运行<br>' % (job)
+						msg += '%s:正在运行<br>' % (jobname)
 					elif buildinfo['result'] != 'SUCCESS':
-						msg += '%s:上次构建失败<br>' % (job)
+						msg += '%s:上次构建失败<br>' % (jobname)
 				if msg != '':
 					return JsonResponse(simplejson(code=1, msg=msg), safe=False)
 				s = requests.session()
 				s.auth = (authname, authpwd)
-				for index, jobname in enumerate(jobnames):
+				for jobname,servicenames in jobmap.items():
 					try:
-						url = jenkinsurl + "/job/" + jobname + "/lastBuild/jacoco/api/python?pretty=true"
-						jsond = json.loads(s.get(url).text)
-						del jsond['_class']
-						del jsond['previousResult']
+						url = jenkinsurl + "/job/" + jobname + "/jacoco/json?all"
+						jsonres = json.loads(s.get(url).text)
 						if not Jacoco_data.objects.filter(jobnum=num[jobname], jobname=jobname).exists():
 							data = Jacoco_data()
 							data.jobnum = num[jobname]
 							data.jobname = jobname
-							data.branchCoverage = jsond['branchCoverage']
-							data.classCoverage = jsond['classCoverage']
-							data.complexityScore = jsond['complexityScore']
-							data.instructionCoverage = jsond['instructionCoverage']
-							data.lineCoverage = jsond['lineCoverage']
-							data.methodCoverage = jsond['methodCoverage']
+							data.coverydata = jsonres
 							data.save()
 							print('%s第%s次构建的覆盖率数据保存成功' % (jobname, num[jobname]))
-						# threading.Thread(target=dealJacocoData, args=(jsond.copy(), jobname, num[jobname])).start()
-						for i in coveragelist:
-							for k in items:
-								if k in ['percentage', 'percentageFloat']:
-									jsond[i][k] = round(res[i][k] + jsond[i][k] / jobnum, 2)
-								else:
-									jsond[i][k] = res[i][k] + jsond[i][k]
-						res = jsond.copy()
+						for l in servicenames:
+							jsond = jsonres[l]
+							for i in coveragelist:
+								for k in items:
+									if k in ['percentage', 'percentagefloat']:
+										jsond[i][k] = round(res[i][k] + jsond[i][k] / jobnum, 2)
+									else:
+										jsond[i][k] = res[i][k] + jsond[i][k]
+							res = jsond.copy()
 					except:
 						print(traceback.format_exc())
 						code = 1
@@ -174,6 +185,8 @@ def dealJacocoJobName(jacocojobname, jobs):
 	else:
 		jobnames = [x for x in jobs]
 	return jobnames
+
+
 
 
 @csrf_exempt

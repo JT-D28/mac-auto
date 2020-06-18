@@ -648,11 +648,6 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 		loop.run_until_complete(dealDeBuginfo(taskid))
 		loop.run_until_complete(dealruninfo(planid,taskid,{'dbscheme':dbscheme,'planname':plan.description,
 														   'user':username,'verify':is_verify},startnodeid))
-		# asyncio.run(dealDeBuginfo(taskid))
-		# asyncio.run(dealruninfo(planid,taskid))
-
-		# threading.Thread(target=dealDeBuginfo, args=(taskid,)).start()
-		# threading.Thread(target=dealruninfo, args=(planid,taskid,)).start()
 
 		# 清除请求session
 		clear_task_session('%s_%s' % (taskid, callername))

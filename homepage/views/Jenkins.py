@@ -103,7 +103,7 @@ def manyRun(jacocoConfig, callername):
     clearjob = jacocoConfig.clearjob
     buildplans = jacocoConfig.buildplans
     # 1.执行清理
-    jenkinsBuild(url, name, pwd, clearjob)
+    jenkinsBuild(url, name, pwd, [clearjob])
     # 2.运行me2自动化计划
     time.sleep(3)
     from manager.invoker import runplan
@@ -116,12 +116,18 @@ def manyRun(jacocoConfig, callername):
             runplan(callername, taskid, planid, 1, kind=None, startnodeid=i)
         except:
             pass
-    jenkinsBuild(url, name, pwd, ';'.join(dealJacocoJobName(jacocoConfig.jobname, '0')))
-    time.sleep(10 * 60)
+    jobs=[]
+    for job in jacocoConfig.jobname.split(";"):
+        jobs.append(job.split(":")[0])
+    jenkinsBuild(url, name, pwd, jobs,{'all':'on'})
+    time.sleep(3 * 60)
 
 
-def jenkinsBuild(jenkinsurl, name, pwd, jobs):
+def jenkinsBuild(jenkinsurl, name, pwd, jobs,parameters=None):
     server = jenkins.Jenkins(jenkinsurl, username=name, password=pwd)
-    for job in jobs.split(";"):
+    for job in jobs:
         if job != '':
-            server.build_job(job)
+            if parameters:
+                server.build_job(job,parameters)
+            else:
+                server.build_job(job)

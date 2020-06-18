@@ -1,3 +1,4 @@
+import json
 import traceback
 
 from django.db import connection
@@ -50,11 +51,11 @@ def queryplan(request):
 			jobnames = jacocoset[0]['jobname']
 			jobs = jobnames.split(";") if not jobnames.endswith(';') else jobnames.split(";")[:-1]
 			for job in jobs:
-				service.append({
-					'id': job.split(":")[1],
-					'name': job.split(":")[0]
-				})
+				servicenames = job.split(":[")[1][:-1]
+				for i,v in enumerate(servicenames.split(",")):
+					service.append({'id': job.split(":[")[0]+':::'+str(v),'name': v})
 		except:
+			print(traceback.format_exc())
 			pass
 	datanode = []
 	try:

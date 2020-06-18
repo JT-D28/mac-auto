@@ -890,7 +890,7 @@ var app = new Vue({
                     data = JSON.parse(data);
                     if (data.code == 0) {
                         coverlist.forEach(function (item, index) {
-                            rate = data.data[item]['percentageFloat'] != '' ? (data.data[item]['percentageFloat']).toFixed(2) : 0
+                            rate = data.data[item]['percentagefloat'] != '' ? (data.data[item]['percentagefloat']).toFixed(2) : 0
                             covered = data.data[item]['covered']
                             missed = data.data[item]['missed']
                             total = data.data[item]['total']
@@ -1151,7 +1151,7 @@ var app = new Vue({
     },
 });
 echartsRecords = echarts.init(document.getElementById('echarts-records'), 'me2');
-coverlist = ['branchCoverage', 'classCoverage', 'instructionCoverage', 'complexityScore', 'lineCoverage', 'methodCoverage']
+coverlist = ['branch', 'classes', 'instruction', 'complexity', 'line', 'method']
 actjacoco = [];
 coverlist.forEach(function (item, index) {
     actjacoco[index] = echarts.init(document.getElementById(item), 'me2');

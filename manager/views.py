@@ -1926,7 +1926,7 @@ def getfulltree(request):
 @csrf_exempt
 def queryUser(request):
 	name = request.session.get('username')
-	user = list(User.objects.values('id', 'name').exclude(name=name))
+	user = list(User.objects.values('id', 'name').exclude(name__in=[name,"定时任务","system"]))
 	return JsonResponse({'data': user})
 
 

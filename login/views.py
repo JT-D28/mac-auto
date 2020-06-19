@@ -185,9 +185,9 @@ def queryaccount(request):
 	res = None
 	if searchvalue:
 		print("变量查询条件=>"+searchvalue)
-		res = list(User.objects.filter(Q(name__icontains=searchvalue) & ~Q(name='定时任务')))
+		res = list(User.objects.filter(Q(name__icontains=searchvalue) & ~Q(name__in=['定时任务','system'])))
 	else:
-		res = list(User.objects.filter(~Q(name='定时任务')))
+		res = list(User.objects.filter(~Q(name__in=['定时任务','system'])))
 	
 	limit = request.GET.get('limit')
 	page = request.GET.get('page')

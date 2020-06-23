@@ -129,6 +129,14 @@
             color: #FFCC66;
         }
 
+        #start-record:hover{
+            cursor: pointer;
+
+        }
+        #end-record:hover{
+            cursor: pointer;
+        }
+
 
     </style>
 </head>
@@ -146,6 +154,10 @@
     }
 
 </script>
+
+
+
+
 <form id='rform' hidden style="padding:10px;" class="layui-form">
   <div class="layui-form-item">
     <label class="layui-form-label">作用于</label>
@@ -185,8 +197,17 @@
                style='padding:0 14px;width:280px;height:34px;background:rgba(255,255,255,1);border-radius:2px;border:1px solid rgba(220,222,224,1);'
                id='search' autocomplete="off"><button id='searchbtn' class="layui-btn" style="vertical-align:revert;height: 34px;line-height: 34px">
         <span class='btn-text'>查询</span></button>
+
+        <br/>
+        {% if request.session.username == 'hujj' %}
+        <i id="start-record">开始录制</i><i id="end-record">结束录制</i>
+        {% endif %}
+
+
     </div>
     <ul class="contextmenu" id="contextmenu"></ul>
+    
+    
     <ul id="case-manager" class="ztree" style="margin-bottom: 20px;padding:10px 0 0 15px "></ul>
 
 </div>
@@ -239,10 +260,12 @@
 </div>
 
 
+<div id='grabview'>a.fdafdafda</div>
+
+
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
-
 <script src="{% static 'manager/ztree/jquery.ztree.all.min.js' %}"></script>
 <!-- <script src="{% static 'manager/ztree/jquery.ztree.core.min.js' %}"></script> -->
 <script src="{% static 'manager/ztree/jquery.ztree.core.js' %}"></script>
@@ -264,23 +287,29 @@
         document.documentElement.style.overflow = 'hidden';
     };
 
-    layui.use('element',function(){
+    layui.use(['element','layer'],function(){
         var element = layui.element;
+        $('#start-record').click(function(e){
+
+            layer.msg('开始录制..')
+            record_page='http://'+host+'/manager/grab/'
+            window.open(record_page,'_blank')
+
+
+
+        });
+
     })
 
 
-    /**    layui.use(['util'], function () {
-        var util = layui.util;
-        util.fixbar({
-            bar1: "↻"
-            , css: {right: 10, bottom: '10%'}
-            , bgcolor: '#009788'
-            , click: function () {
-                document.getElementById('tree-content').contentWindow.location.reload();
-            }
-        });
-    });
-     **/
+
+
+
+</script>
+<script type="text/html" id="toolbar">
+    <input type="checkbox" name="status" lay-skin="switch" lay-text="ON|OFF" checked>
+
+
 </script>
 </body>
 </html>

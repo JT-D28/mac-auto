@@ -7,11 +7,13 @@
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from django.urls import path, re_path
-from manager.consumer import ChatConsumer, ConsoleConsumer, logConsumer
+from manager.consumer import ChatConsumer, ConsoleConsumer, logConsumer,PkgSaveConsumer,PkgReadConsumer
 
 websocket_urlpatterns = [
 	path(r"ws/intercept/", ChatConsumer),
 	path(r"ws/consolemsg/", ConsoleConsumer),
+    path(r'ws/pkgsave/', PkgSaveConsumer),
+    path(r'ws/pkgread/', PkgReadConsumer),
 	path(r"ws/runlog/", logConsumer)
 ]
 

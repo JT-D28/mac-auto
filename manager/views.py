@@ -25,6 +25,8 @@ from .pa import MessageParser
 from .ar import Grant,RoleData
 
 from manager.context import Me2Log as logger
+from tools.mock import TestMind
+from manager.cm import getchild
 
 
 # # Create your views here.
@@ -1038,6 +1040,7 @@ def querytaskdetail(request):
 
 @csrf_exempt
 def runtask(request):
+	from .context import m_pool
 	callername = request.session.get('username')
 	runids = [x for x in request.POST.get('ids').split(',')]
 	is_verify = request.POST.get('is_verify')
@@ -1053,6 +1056,9 @@ def runtask(request):
 			return JsonResponse(simplejson(code=1,msg='计划正在运行[%s]任务，稍后再试！'%msg), safe=False)
 		t=threading.Thread(target=runplan,args=(callername, taskid, planid, is_verify,None,'plan_%s'%runid))
 		t.start()
+		# logger.info('m_pool:',m_pool)
+		# m_pool.apply_async(runplan,(callername, taskid, planid, is_verify,None,'plan_%s'%runid))
+
 	return JsonResponse(simplejson(code=0, msg="你的任务开始运行", taskid=taskid), safe=False)
 
 
@@ -1447,6 +1453,10 @@ def record(request):
 	# response["Access-Control-Max-Age"] = "1000"
 	# response["Access-Control-Allow-Headers"] = "*"
 	return response
+
+
+def stoprecord(request):
+	return JsonResponse({},safe=False)
 
 
 @csrf_exempt
@@ -2279,6 +2289,67 @@ def queryonerole(request):
 	logger.info('角色明细结果:',res)
 	return JsonResponse(res,safe=False)
 
+'''
+MOCK替换测试
+'''
+@csrf_exempt
+def simpletest(request):
+	nodeid=request.GET.get('nodeid')
+	is_mock_open=Step.objects.get(id=nodeid.split('_')[1]).is_mock_open
+	if is_mock_open is None:
+		is_mock_open=0
+	return render(request, 'manager/simpletest.html',locals())
+
+
+@csrf_exempt
+def querysimpletest(request):
+	node_id=request.GET.get('nodeid')
+	return JsonResponse(TestMind().query_simple_test(node_id),safe=False)
+
+@csrf_exempt
+def updatesimpletest(request):
+	return JsonResponse(TestMind().update_simple_test(**get_params(request)),safe=False)
+
+@csrf_exempt
+def opensimpletest(request):
+	return JsonResponse(TestMind().open_simple_test(request.POST.get('tid'),request.POST.get('checked')),safe=False)
+
+
+@csrf_exempt
+def openstepmock(request):
+	return JsonResponse(TestMind().open_step_mock(request.POST.get('tid'),request.POST.get('checked')),safe=False)
+@csrf_exempt
+def querysteptype(request):
+	code,msg=0,''
+	kind=Step.objects.get(id=request.GET.get('sid').split('_')[1]).step_type
+	content_type=Step.objects.get(id=request.GET.get('sid').split('_')[1]).content_type
+
+	logger.info('kind:',kind)
+	if kind =='function':
+		return JsonResponse({'code':1,'msg':'函数暂不支持'},safe=False)
+	elif content_type=='xml':
+		return JsonResponse({'code':1,'msg':'xml暂不支持'},safe=False)		
+	else:
+		childs=getchild('step_business', request.GET.get('sid').split('_')[1])
+		if len(childs)==0:
+			return JsonResponse({'code':1,'msg':'此功能需要至少挂一个带参数的测试点'},safe=False)
+		else:
+			params=''
+			for c in childs:
+				params=params+c.params
+			params=params.replace('{', '').replace('}','').replace('\s+','')
+			if not params.strip():
+				return JsonResponse({'code':1,'msg':'此功能需要至少挂一个带参数的测试点'},safe=False)			
+
+	return JsonResponse({
+		'code':code,
+		'msg':msg},safe=False)
+
+	
+@csrf_exempt
+def regentest(request):
+	TestMind().gen_simple_test_cases(request.POST.get('uid'))
+	return JsonResponse(pkg(code=0,msg=''),safe=False)
 
 
 '''

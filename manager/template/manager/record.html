@@ -1,0 +1,246 @@
+{% load static %}
+<!DOCTYPE html>
+<html style="height: 100%">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+     <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+    <title>ME2录制功能</title>
+    <style type="text/css">
+        ::-webkit-scrollbar {
+          display: none; /* Chrome Safari */
+        }
+        .index{
+            width:10px;
+
+        }
+        .GET{
+            color:#009688;
+        }
+        .POST{
+            color:#CC33CC;
+        }
+        .http{
+            color:#3399CC;
+        }
+        .https{
+            color:#3399CC;
+        }
+        #control{
+            
+            margin-left:10px;
+        }
+        .fa-icon{
+            margin-left: 10px;
+        }
+        .fa-icon:hover{
+            cursor: pointer;
+            color: red;
+        }
+        .layui-icon:hover {
+            cursor: pointer;
+        }
+
+        .edit {
+            width: 24px;
+            height: 17px;
+            font-size: 12px;
+            font-family: PingFang-SC-Medium, PingFang-SC;
+            font-weight: 500;
+            color: rgba(0, 151, 136, 1);
+            line-height: 17px;
+        }
+
+        .btn {
+            height: 34px;
+            line-height: 34px;
+        }
+
+
+
+        .hide{
+            display: none;
+        }
+        #close:hover{
+            cursor: pointer;
+        }
+
+
+    </style>
+</head>
+<body style="height: calc(100% - 20px);">
+
+<input type="text" name="key" placeholder="回车跳转到指定地址" autocomplete="off" class="" style="height:30px;width:350px;" id='address'>
+
+<i class='fa fa-video-camera' id='record'></i>
+<a href='myapp://start:username:{{request.session.username}}' id='start'>开始录制</a>
+<a href='myapp://stop' id='stop'>停止录制</a>
+
+<a href='#' id='action'  s1='myapp://start:domain:gitlab.fingard.cn;username:{{request.session.username}}' s2='myapp://stop'>开始</a>
+
+<iframe src='http://ats.fingard.com:6065' style="height:calc(100% - 45px);width: 100%;border: 0px dashed red;z-index:888;right: 0" id='record-content'></iframe>
+
+<div id='grab-view' class="box" style="width:300px;left:0;top:35px;border:0px solid #393D49;position:fixed;z-index:999;border-radius:5px;opacity: 1;">
+       <div style="color:#fff;height:25px;margin-top:5px;background-color: #009688;" id='axios'>
+            <div id='control' style="padding:2px;">
+                <span style="margin-left:10px;" id='close'>展开</span>
+                <input type="checkbox" name="xhr" style="margin-left:10px;">XHR
+                <i class='fa fa-edit fa-icon'>修改</i>
+                <i class='fa fa-save fa-icon'>提交</i>
+            </div>
+       </div>
+       <div id="grab-msg" style="max-height:350px;overflow-y:scroll;display: none">
+        <!--     <div class="layui-form"> -->
+              <table class="layui-table" style="margin:0!important">
+<!--                 <colgroup>
+                  <col width="150">
+                  <col width="150">
+                  <col width="200">
+                  <col>
+                </colgroup> -->
+<!--                 <thead>
+                  <tr>
+                    <th>序号</th>
+                    <th>组别</th>
+                    <th>method</th>
+                    <th>url</th>
+                  </tr> 
+                </thead> -->
+                <tbody>
+
+                </tbody>
+              </table>
+          <!--   </div> -->
+       </div>
+
+</div>
+
+</body>
+
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+<script type="text/javascript">
+
+let consoleSocket=null
+$('.layui-header').hide()
+
+$('#start').click(function(){
+    var username ='{{request.session.username }}'
+
+    consoleSocket = new WebSocket("ws://" + host + "/ws/pkgread/");
+    index=0
+    group=-1
+    consoleSocket.onerror=function (e) {
+        // alert(e)
+        // body...
+    }
+    consoleSocket.onopen = function (e) {
+        // var username=$("#username").text()
+        console.log("["+username+"]开始显示抓取到的接口信息" )
+        consoleSocket.send('pkg::read::' + username)
+    };
+    consoleSocket.onmessage = function (e) {
+        console.log(e.data);
+        //console.log('xhr:'+$("[name='xhr']").val())
+        is_xhr=$("[name='xhr']").is(':checked')
+        xhr_allow=['application/json']
+        u=JSON.parse(e.data)
+        index=index+1
+        if(group!=u['group']){
+
+            group=u['group']
+            
+            tmp="<tr ><td class='index'>#index#</td><td>#group#</td><td class='#http#'>#http#</td><td class='#method#'>#method#</td><td>#url#</td><td>#params#</td></tr>"
+            tmp=tmp.replace('#index#',index)
+            ishttps=u['ishttps']==false?'http':'https'
+            tmp=tmp.replace('#http#',ishttps).replace('#http#',ishttps)
+            tmp=tmp.replace('#group#',u['group'])
+            tmp=tmp.replace('#method#',u['method']).replace('#method#',u['method'])
+            tmp=tmp.replace('#url#',u['url'])
+            tmp=tmp.replace('#params#',u['body'])
+            if(u['method']!='CONNECT'){
+
+                $("#grab-msg tbody").append(tmp)
+                console.log('group='+u['group'])
+            }
+
+        }
+
+    }
+    consoleSocket.onclose = function () {
+        console.log("结束显示抓取数据..")
+    }
+
+
+});
+
+
+$('#address').blur(function(e){
+
+    console.log('录制跳转到:'+$(this).val())
+    console.log( $('#record-content'))
+    $('#record-content').attr('src',$(this).val())
+})
+//
+
+$('#action').click(function(argument) {
+    // body...
+
+    _get('myapp://start:domain:gitlab.fingard.cn;username:')
+});
+
+//drag
+var box = document.getElementsByClassName("box")[0]; //获取元素
+var x, y; //鼠标相对与div左边，上边的偏移
+var isDrop = false; //移动状态的判断鼠标按下才能移动
+box.onmousedown = function(e) {
+    var e = e || window.event; //要用event这个对象来获取鼠标的位置
+    x = e.clientX - box.offsetLeft;
+    y = e.clientY - box.offsetTop;
+    isDrop = true; //设为true表示可以移动
+}
+
+document.onmousemove = function(e) {
+    //是否为可移动状态 
+    console.log('mouse move.')              　　　　　　　　　　　 　　　　　　　
+    if(isDrop) {　　　　
+        var e = e || window.event;                    　　
+        var moveX = e.clientX - x; //得到距离左边移动距离                    　　
+        var moveY = e.clientY - y; //得到距离上边移动距离
+        //可移动最大距离
+        var maxX = document.documentElement.clientWidth - box.offsetWidth;
+        var maxY = document.documentElement.clientHeight - box.offsetHeight;
+
+        box.style.left = moveX + "px";　　
+        box.style.top = moveY + "px";　　　　　　　　　　
+    } else {
+        return;　　　　　　　　　　
+    }
+
+}
+
+document.onmouseup = function() {
+    isDrop = false; //设置为false不可移动
+}
+
+$('#close').click(function(e) {
+    // body...
+    this_=$(this)
+    text=this_.text()
+
+    if($('#grab-msg').css('display')=='none'){
+        this_.text('隐藏')
+        $('#grab-msg').css('display','block')
+         $('#grab-view').css('width','100%')
+    }
+    else{
+        this_.text('展开')
+        $('#grab-msg').css('display','none')
+        $('#grab-view').css('width','300px')
+    }
+})
+
+</script>
+
+</html>

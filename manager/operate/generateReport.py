@@ -24,7 +24,10 @@ async def dealruninfo(planid, taskid, info=None, startnodeid=''):
     total = ResultDetail.objects.filter(taskid=taskid).exclude(result='omit').count()
     info['successnum'] = success
     info['total'] = total
-    info['rate'] = round(success * 100 / total, 2)
+    try:
+        info['rate'] = round(success * 100 / total, 2)
+    except:
+        return
 
     # with connection.cursor() as cursor:
     #     cursor.execute('''SELECT CONCAT(success) AS success,CONCAT(total) AS total,

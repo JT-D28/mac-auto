@@ -160,6 +160,7 @@ class Step(Model):
 	businessdatainfo = ManyToManyField(BusinessData, blank=True)
 	# businesstitle=CharField(max_length=1000,blank=True)
 	db_id = CharField(max_length=64, blank=True, null=True)
+	is_mock_open=IntegerField(default=0)
 
 
 	createtime = DateTimeField(auto_now_add=True)
@@ -401,6 +402,21 @@ class Recover(Model):
 	exp=CharField(max_length=60)
 	createtime=DateTimeField(auto_now_add=True)
 	creater = ForeignKey(User, on_delete=CASCADE)
+
+
+class SimpleTest(Model):
+	'''
+	专值测试配置
+	'''
+	step_id=IntegerField()
+	paramname=CharField(max_length=10)
+	tempname=CharField(max_length=20)
+	is_repeat=IntegerField()
+	is_open=IntegerField()
+	simplename=CharField(max_length=50)
+	value=CharField(max_length=10)
+	db_check=TextField()
+	itf_check=TextField()
 
 
 

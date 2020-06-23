@@ -28,5 +28,6 @@ urlpatterns = [
 	path('gettaskdata/',views.get_task_data),
 	path('getnodes/',views.getnodes),
 	path('gettaskidplan/',views.gettaskidplan),
-	path('geterrorinfo/',views.geterrorinfo)
+	path('geterrorinfo/',views.geterrorinfo),
+	path('runforJacoco/',views.runforJacoco)
 ]

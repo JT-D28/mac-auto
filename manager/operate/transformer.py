@@ -924,7 +924,7 @@ class Transformer(object):
         from manager.cm import getnextvalue
         # logger.info('【关联用例和业务数据】')
 
-        length = len(list(Order.objects.filter(kind='case_step', main_id=case_id, follow_id=step_id)))
+        length = len(list(Order.objects.filter(kind='case_step', main_id=case_id, follow_id=step_id,isdelete=0)))
         if length == 0:
             order = Order()
             order.kind = 'case_step'
@@ -985,7 +985,7 @@ class Transformer(object):
 
             case.businessdatainfo.add(business)
 
-            length = len(list(Order.objects.filter(kind='step', main_id=case_id, follow_id=business.id)))
+            length = len(list(Order.objects.filter(kind='step', main_id=case_id, follow_id=business.id,isdelete=0)))
             if length == 0:
                 order = Order()
                 order.kind = 'step'
@@ -1208,14 +1208,14 @@ class Transformer(object):
         except:
             pass
 
-        L1 = list(Order.objects.filter(kind='case_case', main_id=caseid))
-        L2 = list(Order.objects.filter(kind='case_step', main_id=caseid))
+        L1 = list(Order.objects.filter(kind='case_case', main_id=caseid,isdelete=0))
+        L2 = list(Order.objects.filter(kind='case_step', main_id=caseid,isdelete=0))
         for o1 in L1:
             self._delcaserelation(o1.follow_id)
             o1.delete()
 
         for o2 in L2:
-            businesslist = list(Order.objects.filter(kind='step_business', main_id=o2.follow_id))
+            businesslist = list(Order.objects.filter(kind='step_business', main_id=o2.follow_id,isdelete=0))
             for business in businesslist:
                 business.delete()
                 try:
@@ -1238,7 +1238,7 @@ class Transformer(object):
         plan = Plan.objects.get(description='迁移计划_%s' % self.transform_id)
         planid = plan.id
 
-        L1 = list(Order.objects.filter(kind='plan_case', main_id=planid))
+        L1 = list(Order.objects.filter(kind='plan_case', main_id=planid,isdelete=0))
         for o1 in L1:
             self._delcaserelation(o1.follow_id)
 

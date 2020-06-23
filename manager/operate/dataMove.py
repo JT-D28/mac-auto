@@ -178,7 +178,7 @@ class DataMove:
             self._data['entity']['steps'].append(stepd)
 
             c = self._data['relation']['case_step'].get(str(case.id), [])
-            ordervalue = Order.objects.get(kind='case_step', main_id=case.id, follow_id=step.id).value
+            ordervalue = Order.objects.get(kind='case_step', main_id=case.id, follow_id=step.id,isdelete=0).value
             c.append((str(step.id), ordervalue))
             self._data['relation']['case_step'][str(case.id)] = list(set(c))
 
@@ -209,7 +209,7 @@ class DataMove:
                 if businessd['businessname'] not in busnamelist:
                     self._data['entity']['businessdatas'].append(businessd)
                     b = self._data['relation']['step_business'].get(str(step.id), [])
-                    ordervalue = Order.objects.get(kind='step_business', main_id=step.id, follow_id=business.id).value
+                    ordervalue = Order.objects.get(kind='step_business',isdelete=0, main_id=step.id, follow_id=business.id).value
                     b.append((str(business.id), ordervalue))
                     self._data['relation']['step_business'][str(step.id)] = list(set(b))
                     headers = step.headers if step.headers is not None else ''
@@ -268,7 +268,7 @@ class DataMove:
                     pass
             self._data['entity']['cases'].append(cased)
             d = self._data['relation']['case_case'].get(str(case.id), [])
-            ordervalue = Order.objects.get(kind='case_case', main_id=case.id, follow_id=case0.id).value
+            ordervalue = Order.objects.get(kind='case_case',isdelete=0, main_id=case.id, follow_id=case0.id).value
             d.append((str(case0.id), ordervalue))
             self._data['relation']['case_case'][str(case.id)] = list(set(d))
             self._add_case_relation_data(case0)
@@ -314,7 +314,7 @@ class DataMove:
                     except:
                         pass
                 a = self._data['relation']['plan_case'].get(str(planid), [])
-                ordervalue = Order.objects.get(kind='plan_case', main_id=plan.id, follow_id=case.id).value
+                ordervalue = Order.objects.get(kind='plan_case',isdelete=0, main_id=plan.id, follow_id=case.id).value
                 a.append((str(case.id), ordervalue))
                 self._data['relation']['plan_case'][str(planid)] = list(set(a))
                 self._add_case_relation_data(case)
@@ -360,7 +360,7 @@ class DataMove:
                 self._data['entity']['cases'].append(cased)
 
                 a = self._data['relation']['plan_case'].get(str(planid), [])
-                ordervalue = Order.objects.get(kind='case', main_id=plan.id, follow_id=case.id).value
+                ordervalue = Order.objects.get(kind='case', main_id=plan.id, follow_id=case.id,isdelete=0).value
 
                 a.append((str(case.id), ordervalue))
                 self._data['relation']['plan_case'][str(planid)] = list(set(a))
@@ -386,7 +386,7 @@ class DataMove:
                         self._data['entity']['businessdatas'].append(businessd)
 
                         b = self._data['relation']['case_business'].get(str(case.id), [])
-                        ordervalue = Order.objects.get(kind='step', main_id=case.id, follow_id=step.id).value
+                        ordervalue = Order.objects.get(kind='step', main_id=case.id, follow_id=step.id,isdelete=0).value
                         b.append((str(bid), ordervalue))  ###?????
                         self._data['relation']['case_business'][str(case.id)] = list(set(b))
 

@@ -78,7 +78,7 @@ class BusinessData(Model):
 	parser_id = CharField(max_length=32, null=True)  # 解析器id
 	parser_check = TextField(null=True)  # 解析器校验
 	timeout=IntegerField(default=60)
-	
+	isdelete = IntegerField(default=0)
 	
 	def __str__(self):
 		return '[%s]%s' % (self.id, self.businessname)
@@ -128,7 +128,7 @@ class BusinessData(Model):
 			# steps=models.Step.objects.all()
 			# step=[step for step in steps if businessdatainst in list(step.businessdatainfo.all())][0]
 			# return ('success',step)
-			stepid = Order.objects.get(follow_id=businessdata_id, kind='step_business').main_id
+			stepid = Order.objects.get(follow_id=businessdata_id, kind='step_business',isdelete=0).main_id
 			step = Step.objects.get(id=stepid)
 			return ('success', step)
 		
@@ -161,6 +161,8 @@ class Step(Model):
 	# businesstitle=CharField(max_length=1000,blank=True)
 	db_id = CharField(max_length=64, blank=True, null=True)
 	is_mock_open=IntegerField(default=0)
+	isdelete = IntegerField(default=0)
+
 
 
 	createtime = DateTimeField(auto_now_add=True)
@@ -181,7 +183,8 @@ class Case(Model):
 	db_id = CharField(max_length=64, blank=True, null=True)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
-	
+	isdelete = IntegerField(default=0)
+
 	def __str__(self):
 		# return '[%s]%s'%(self.id,self.description)
 		return '[%s]%s' % (self.id,self.description)
@@ -203,7 +206,8 @@ class Plan(Model):
 	is_running = CharField(max_length=4, default=0, null=True)
 	# is_send_mail=CharField(max_length=6,default='close')
 	mail_config_id = CharField(max_length=125, blank=True, null=True)
-	
+	isdelete = IntegerField(default=0)
+
 	def __str__(self):
 		return '[%s]%s' % (self.id, self.description)
 
@@ -254,7 +258,7 @@ class Order(Model):
 	follow_id = IntegerField()
 	kind = CharField(choices=(('plan', '计划'), ('case', '用例')), max_length=32)
 	value = CharField(max_length=64, blank=True)
-	
+	isdelete = IntegerField(default=0)
 	author = ForeignKey(User, on_delete=CASCADE)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
@@ -325,7 +329,8 @@ class Product(Model):
 	author = ForeignKey(User, on_delete=CASCADE)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
-	
+	isdelete = IntegerField(default=0)
+
 	def __str__(self):
 		return '[%s]%s' % (self.id, self.description)
 

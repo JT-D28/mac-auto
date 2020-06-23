@@ -4,6 +4,10 @@ var app = new Vue({
     data() {
         var vue = this;
         return {
+            props: {
+                label: 'name',
+                id: 'id'
+            },
             showReport: false,
             productCountnum: '',
             productRatenum: '',
@@ -50,7 +54,6 @@ var app = new Vue({
                 }
             },
             historytime: '',
-            jacocoRunstate: '运行',
             timeDefaultShow: '',
             pickerOptions: {
                 shortcuts: [{
@@ -113,7 +116,7 @@ var app = new Vue({
             runVisible: false,
             productSetVisible: false,
             topposition: 'top',
-            rightposition:'right',
+            rightposition: 'right',
             planHistoryVisible: false,
             form: {
                 debug_url: '',
@@ -132,6 +135,7 @@ var app = new Vue({
                     authpwd: '',
                     jobname: '',
                     order: '',
+                    jacocoClearJob: ''
                 },
                 reportNoticeSet: {
                     color: '',
@@ -206,11 +210,21 @@ var app = new Vue({
             } else {
                 _post_nl('/homepage/queryProductSet/', {productid: productid}, function (data) {
                     if (data.code == 0) {
-                        that.form.productset.jenkinsurl = data.data.jenkinsurl;
-                        that.form.productset.authname = data.data.authname
-                        that.form.productset.authpwd = data.data.authpwd
-                        that.form.productset.jobname = data.data.jobname
-                        that.productSetVisible = true;
+                        if (data.data != '') {
+                            that.form.productset.jenkinsurl = data.data.jenkinsurl;
+                            that.form.productset.authname = data.data.authname
+                            that.form.productset.authpwd = data.data.authpwd
+                            that.form.productset.jobname = data.data.jobname
+                            that.form.productset.jacocoClearJob = data.data.clearjob
+                            that.productSetVisible = true;
+                            if (data.data.buildplans.length != 0) {
+                                setTimeout(() => {
+                                    app.$refs.tree.setCheckedNodes(data.data.buildplans)
+                                }, 100)
+                            }
+                        } else {
+                            that.productSetVisible = true;
+                        }
                     } else {
                         layer.msg(data.msg)
                     }
@@ -228,15 +242,22 @@ var app = new Vue({
             var authname = that.form.productset.authname;
             var authpwd = that.form.productset.authpwd;
             var jobname = that.form.productset.jobname;
+            var jacocoClearJob = that.form.productset.jacocoClearJob;
             var productid = that.form.product;
+            var plansrun = []
+            checknodes = app.$refs.tree.getCheckedNodes()
+            for (j = 0, len = checknodes.length; j < len; j++) {
+                plansrun.push(checknodes[j].id)
+            }
+            var buildplans = plansrun.join(',')
             _post_nl('/homepage/editProductSet/', {
-                productid: productid, jenkinsurl: jenkinsurl,
-                authname: authname, authpwd: authpwd, jobname: jobname
+                'productid': productid, 'jenkinsurl': jenkinsurl, 'buildplans': buildplans,
+                'authname': authname, 'authpwd': authpwd, 'jobname': jobname, 'jacocoClearJob': jacocoClearJob
             }, function (data) {
                 if (data.code == 0) {
                     layer.msg(data.msg);
                     that.productSetVisible = false;
-                } else lay.msg(data.msg)
+                } else layer.msg(data.msg)
             })
         },
         planHistory() {
@@ -723,10 +744,10 @@ var app = new Vue({
                                 show: true,
                                 position: 'center',
                                 textStyle: {
-                                    fontSize:'16',
-                                    fontFamily:'PingFang-SC-Medium,PingFang-SC',
-                                    fontWeight:'500',
-                                    color:'rgba(51,51,51,1)'
+                                    fontSize: '16',
+                                    fontFamily: 'PingFang-SC-Medium,PingFang-SC',
+                                    fontWeight: '500',
+                                    color: 'rgba(51,51,51,1)'
                                 },
                             },
                         },
@@ -869,7 +890,7 @@ var app = new Vue({
                     data = JSON.parse(data);
                     if (data.code == 0) {
                         coverlist.forEach(function (item, index) {
-                            rate = data.data[item]['percentageFloat'] != '' ? (data.data[item]['percentageFloat']).toFixed(2) : 0
+                            rate = data.data[item]['percentagefloat'] != '' ? (data.data[item]['percentagefloat']).toFixed(2) : 0
                             covered = data.data[item]['covered']
                             missed = data.data[item]['missed']
                             total = data.data[item]['total']
@@ -932,47 +953,11 @@ var app = new Vue({
         },
         jacocoRun() {
             var that = this;
-            layer.confirm('选择任务执行方案', {
-                title: false,
-                btn: ['顺序执行', '批量执行'],
-                btnAlign: 'c'
-            }, function () {
-                that.jacocoRunstate = '请等待';
-                _post_nl('/homepage/jenkinsJobRun/', {
-                    productid: that.form.product, jobnames: that.form.service, action: 'jacocoOne'
-                }, function (data) {
-                    that.$notify({
-                        title: '运行结果',
-                        dangerouslyUseHTMLString: true,
-                        message: data.data,
-                        duration: 2000,
-                        type: 'success',
-                        position: 'bottom-left'
-                    });
-                    that.jacocoRunstate = '运行';
-                })
-                layer.msg('运行等待中', {
-                    time: 1000
-                });
-            }, function () {
-                that.jacocoRunstate = '请等待';
-                _post_nl('/homepage/jenkinsJobRun/', {
-                    productid: that.form.product, jobnames: that.form.service, action: 'jacocoMany'
-                }, function (data) {
-                    that.$notify({
-                        title: '运行结果',
-                        dangerouslyUseHTMLString: true,
-                        message: data.data,
-                        duration: 2000,
-                        type: 'success',
-                        position: 'bottom-left'
-                    });
-                    that.jacocoRunstate = '运行';
-                })
-                layer.msg('运行等待中', {
-                    time: 1000
-                });
-            });
+            _post_nl('/homepage/runforJacoco/', {
+                'productid': that.form.product,
+            }, function (data) {
+                layer.msg(data.data,{time: 20*1000})
+            })
         },
         getproductReport(rate, total) {
             var that = this;
@@ -1111,7 +1096,7 @@ var app = new Vue({
                     type: 'error', center: true
                 });
             } else {
-                var analysisurl = '/homepage/statisticalAnalysis/?plan='+planid
+                var analysisurl = '/homepage/statisticalAnalysis/?plan=' + planid
                 // window.open(analysisurl)
                 layer.open({
                     type: 2,
@@ -1166,7 +1151,7 @@ var app = new Vue({
     },
 });
 echartsRecords = echarts.init(document.getElementById('echarts-records'), 'me2');
-coverlist = ['branchCoverage', 'classCoverage', 'instructionCoverage', 'complexityScore', 'lineCoverage', 'methodCoverage']
+coverlist = ['branch', 'classes', 'instruction', 'complexity', 'line', 'method']
 actjacoco = [];
 coverlist.forEach(function (item, index) {
     actjacoco[index] = echarts.init(document.getElementById(item), 'me2');

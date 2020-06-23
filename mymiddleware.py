@@ -28,7 +28,7 @@ class Interceptor(MiddlewareMixin):
 		"""
 		
 		_meta = {
-			'Function': 'name',
+			'Function': 'description',
 			'Interface': 'name',
 			'Tag': 'name',
 			# 'Variable': 'key',

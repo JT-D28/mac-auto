@@ -1,3 +1,4 @@
+import json
 import traceback
 
 from django.db import connection
@@ -16,7 +17,7 @@ from manager.models import Plan
 def queryallplan(request):
 	if configs.dbtype == 'mysql':
 		sql = '''SELECT plan.id,CONCAT(pro.description,'-',plan.description) as planname
-		FROM `manager_plan` plan,manager_product pro,manager_order o WHERE pro.id=o.main_id AND plan.id=o.follow_id and kind='product_plan'  order by pro.id'''
+		FROM `manager_plan` plan,manager_product pro,manager_order o WHERE pro.id=o.main_id AND plan.id=o.follow_id and kind='product_plan' and plan.isdelete=0  order by pro.id'''
 	else:
 		sql = '''SELECT plan.id, pro.description||'-'||plan.description as planname  FROM `manager_plan` plan,manager_product pro,manager_order o WHERE pro.id=o.main_id AND plan.id=o.follow_id order by pro.id   '''
 	
@@ -50,11 +51,11 @@ def queryplan(request):
 			jobnames = jacocoset[0]['jobname']
 			jobs = jobnames.split(";") if not jobnames.endswith(';') else jobnames.split(";")[:-1]
 			for job in jobs:
-				service.append({
-					'id': job.split(":")[1],
-					'name': job.split(":")[0]
-				})
+				servicenames = job.split(":[")[1][:-1]
+				for i,v in enumerate(servicenames.split(",")):
+					service.append({'id': job.split(":[")[0]+':::'+str(v),'name': v})
 		except:
+			print(traceback.format_exc())
 			pass
 	datanode = []
 	try:

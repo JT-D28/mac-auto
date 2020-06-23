@@ -16,6 +16,8 @@ from manager.ar import Grant
 
 
 # Create your views here
+from manager.operate.redisUtils import RedisUtils
+
 
 def global_setting(request):
 	content = {
@@ -116,13 +118,13 @@ def initDataupdate():
 	print('旧数据更新结束')
 
 def clearRedisforUser(username):
-	pool = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0, decode_responses=True)
-	con = redis.Redis(connection_pool=pool)
+	con = RedisUtils()
 	try:
 		keys = con.keys("console.msg::%s::*" % (username))
 		print('清理用户【{}】redis缓存'.format(username))
 		for elem in con.keys():
 			con.delete(elem)
+			con.close()
 	except:
 		print('redis没有正常连接')
 
@@ -183,9 +185,9 @@ def queryaccount(request):
 	res = None
 	if searchvalue:
 		print("变量查询条件=>"+searchvalue)
-		res = list(User.objects.filter(Q(name__icontains=searchvalue) & ~Q(name='定时任务')))
+		res = list(User.objects.filter(Q(name__icontains=searchvalue) & ~Q(name__in=['定时任务','system'])))
 	else:
-		res = list(User.objects.filter(~Q(name='定时任务')))
+		res = list(User.objects.filter(~Q(name__in=['定时任务','system'])))
 	
 	limit = request.GET.get('limit')
 	page = request.GET.get('page')

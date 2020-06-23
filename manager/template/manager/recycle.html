@@ -1,0 +1,246 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+<head>
+    <meta charset="UTF-8">
+    <title>回收站</title>
+</head>
+<script src="{% static 'homepage/vue.js' %}"></script>
+<link rel="stylesheet" href="{% static 'homepage/eleui/theme-chalk/index.css' %}">
+
+<link rel="stylesheet" href="{% static 'homepage/layui/css/layui.css' %}" media="all">
+<link rel="stylesheet" type="text/css" href="{% static 'manager/icomoon/style.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+
+
+<style>
+    .el-tabs__content {
+        height: 100%;
+        padding: 20px;
+    }
+
+    .el-row {
+        margin-bottom: 20px;
+    }
+
+    .el-col {
+        border-radius: 4px;
+    }
+
+    .bg-purple-dark {
+        background: #99a9bf;
+    }
+
+    .bg-purple {
+        background: #d3dce6;
+    }
+
+    .bg-purple-light {
+        background: #e5e9f2;
+    }
+
+    .grid-content {
+        border-radius: 4px;
+        min-height: 36px;
+    }
+
+    .row-bg {
+        padding: 10px 0;
+        background-color: #f9fafc;
+    }
+
+    .el-tab-pane {
+        height: 100%;
+    }
+
+    .el-table {
+        cursor: pointer;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+    }
+
+    .el-tag.el-tag--success {
+        background-color: #ff7b7b;
+        color: #0b0202;
+    }
+
+    .el-drawer__header {
+        display: none;
+    }
+
+    .el-drawer {
+        overflow: auto;
+        font-size: 14px;
+        font-family: PingFang-SC-Regular, PingFang-SC;
+        font-weight: 400;
+        color: rgba(51, 51, 51, 1);
+        line-height: 20px;
+    }
+
+    .current-row > td {
+        background: rgba(0, 158, 250, 0.219) !important;
+    }
+</style>
+
+<body>
+
+<div id="analysis" style="height: 100%">
+    <template>
+        <div style="overflow-y: hidden">
+            <div id="tree1" class="grid-content bg-purple" style="width: 30%;float: left;display: inline-block">
+                <el-table
+                        lazy
+                        @row-click="clickTable"
+                        ref="refTable"
+                        :highlight-current-row=true
+                        :load="load"
+                        :height="tableHeight"
+                        :indent=25
+                        row-key="id"
+                        :show-overflow-tooltip=true
+                        :empty-text="emptytext"
+                        :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
+                        :data="casesdata"
+                        style="width: 100%">
+                    <el-table-column label="当前">
+                        <template slot-scope="scope">
+                            <i :class=scope.row.icon></i>
+                            <span style="margin-left: 10px">${ scope.row.name }</span>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+            <div id="tree" class="grid-content bg-purple" style="width: 30%;display: inline-block">
+                <el-table
+                        :cell-style="cellStyle"
+                        lazy
+                        ref="refTableold"
+                        :load="loadold"
+                        row-key="id"
+                        :height="tableHeight"
+                        :empty-text="emptytext"
+                        :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
+                        :data="casesdataold"
+                        style="width: 100%">
+                    <el-table-column label="历史" min-width="8">
+                        <template slot-scope="scope">
+                            <i :class=scope.row.icon></i>
+                            <span style="margin-left: 10px">${ scope.row.name }</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column align="right" min-width="2">
+                        <template slot-scope="scope">
+                            <el-button
+                                    v-if="scope.row.isdelete==1"
+                                    size="mini"
+                                    type="danger"
+                                    @click="handleRecycle(scope.$index, scope.row)">还原
+                            </el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+
+        </div>
+
+    </template>
+</div>
+
+</body>
+
+<script src="{% static 'homepage/eleui/index.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}" charset="utf-8"></script>
+<script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
+<script>
+    var app = new Vue({
+        el: '#analysis',
+        delimiters: ['${', '}'],
+        data() {
+            return {
+                emptytext: '',
+                node: '',
+                casesdata: [],
+                casesdataold: [],
+                tableHeight: 100
+            };
+        },
+        methods: {
+            handleRecycle(index, row) {
+                var that = this;
+                _post_ll('/manager/recyclenode/', {'type': row.type, 'id': row.nid}, function (data) {
+                    if (data.code == 1) {
+                        layer.msg(data.data)
+                    } else {
+                        app.casesdata = []
+                        that.queryrecyclelist('root', '0', 'current', function (data) {
+                            if (data.code === 0) {
+                                app.casesdata = data.data;
+                            }
+                        })
+                        that.queryrecyclelist(data.pkind, data.pid, 'old', function (data) {
+                            if (data.code === 0) {
+                                app.casesdataold = data.data;
+                            }
+                        })
+                    }
+                })
+            },
+            cellStyle(row, column, rowIndex, columnIndex) {
+                if (row.row.isdelete === 1) {
+                    return 'background-color:red'
+                }
+            },
+            clickTable(row, index, e) {
+
+                this.$refs.refTable.store.loadOrToggle(row)
+                if (row.type != 'businessdata') {
+                    this.queryrecyclelist(row.type, row.nid, 'old', function (data) {
+                        if (data.code === 0) {
+                            app.casesdataold = data.data;
+                        }
+                    })
+                }
+            },
+            load(tree, treeNode, resolve) {
+                if (['product', 'plan', 'case', 'step'].indexOf(tree.type) >= 0) {
+                    this.queryrecyclelist(tree.type, tree.nid, 'current', function (data) {
+                        resolve(data.data)
+                    })
+                }
+            },
+
+            loadold(tree, treeNode, resolve) {
+                if (['product', 'plan', 'case', 'step'].indexOf(tree.type) >= 0) {
+                    this.queryrecyclelist(tree.type, tree.nid, 'old', function (data) {
+                        resolve(data.data)
+                    })
+                }
+            },
+            changetreeHeight() {
+                this.tableHeight = window.innerHeight - 10
+            },
+            queryrecyclelist(type, id, kind, func) {
+                _post_nl('/manager/queryrecyclelist/', {
+                    'type': type,
+                    'nid': id,
+                    'kind': kind
+                }, func)
+            }
+
+        },
+        created: function () {
+            this.changetreeHeight()
+            this.queryrecyclelist('root', '0', 'current', function (data) {
+                if (data.code === 0) {
+                    app.casesdata = data.data;
+                }
+            })
+        },
+    });
+    window.onresize = function () {
+        app.changetreeHeight();
+    }
+</script>
+</html>

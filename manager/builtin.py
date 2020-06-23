@@ -30,91 +30,95 @@ def cout(*msg, **kws):
     viewcache(taskid, callername, None, msg)
 
 def dbexecute(sql, **kws):
-    """
-    执行单条sql
-    单字段查询语句返回查询结果,不支持多字段
-    非查询语句返回执行后影响条数
 
-    """
-    taskid=kws['taskid']
-    callername=kws['callername']
+	"""
+	执行单条sql
+	单字段查询语句返回查询结果,不支持多字段
+	非查询语句返回执行后影响条数
 
-    if taskid is None:
-        return 'error', 'taskid为空'
-    op = Mysqloper()
-    if re.search('@', sql) is None:
-        sql = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")[0]
-        dbnamecache = get_top_common_config(taskid)
-        print("调用内置函数=>dbexecute \nsql=>", sql)
-        return op.db_execute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
-    else:
-        print("调用内置函数=>dbexecute \nsql=>", sql)
-        return op.db_execute(sql, taskid=taskid, callername=callername)
+	"""
+	taskid=kws['taskid']
+	callername=kws['callername']
+
+	if taskid is None:
+		return 'error', 'taskid为空'
+	op = Mysqloper()
+	sql = sql.replace('@@', '$#$')
+	if re.search('@', sql) is None:
+		sql = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")[0]
+		dbnamecache = get_top_common_config(taskid)
+		print("调用内置函数=>dbexecute \nsql=>", sql)
+		return op.db_execute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
+	else:
+		print("调用内置函数=>dbexecute \nsql=>", sql)
+		return op.db_execute(sql, taskid=taskid, callername=callername)
 
 
 def dbexecute2(sql, **kws):
-    """
-    执行多条sql
-    某条执行失败返回失败信息
-    否则返回'success'
-    """
-    taskid=kws['taskid']
-    callername=kws['callername']
+	"""
+	执行多条sql
+	某条执行失败返回失败信息
+	否则返回'success'
+	"""
+	taskid=kws['taskid']
+	callername=kws['callername']
 
-    if taskid is None:
-        return 'error', 'taskid为空'
-    
-    print('调用内置函数=>dbexecute2', taskid)
-    d = []
-    try:
-        if re.search('@.*(;.*@)?', sql) is not None:
-            sqls1 = re.split("@", sql)
-            for i in range(len(sqls1)):
-                if i == 0:
-                    continue
-                else:
-                    # print(sqls1[i].split(";")[0])
-                    sqls1[i - 1] += "@" + sqls1[i].split(";")[0]
-                    sqls1[i] = sqls1[i].split(";", 1)[-1]
-            if sqls1[-2].endswith(sqls1[-1]):
-                sqls1.pop()
-            for sql in sqls1:
-                if '@' in sql:
-                    sqls = sql.split("@")[0].split(";")
-                    conname = sql.split('@')[1]
-                    for sql in sqls:
-                        if sql!='':
-                            res, msg = dbexecute("%s@%s" % (sql, conname), taskid=taskid, callername=callername)
-                            print('执行结果=>', (res, msg))
-                            if res != 'success':
-                                return res, msg
-                            d.append(str(msg))
-                elif '@' not in sql:
-                    sqls = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")
-                    dbnamecache = get_top_common_config(taskid)
-                    for sql in sqls:
-                        if sql != '':
-                            res, msg = dbexecute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
-                            print('执行结果=>', (res, msg))
-                            if res != 'success':
-                                return res, msg
-                            d.append(str(msg))
-            return 'success', '+'.join(d)
-        elif re.search('@', sql) is None:
-            sqls2 = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")
-            dbnamecache = get_top_common_config(taskid)
-            for sql in sqls2:
-                if sql != '':
-                    res, msg = dbexecute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
-                    print('执行结果=>', (res, msg))
-                    if res != 'success':
-                        return res, msg
-                    d.append(str(msg))
-            return 'success', '+'.join(d)
-    
-    except:
-        print(traceback.format_exc())
-        return 'error', '执行内置函数报错sql[%s] error[%s]' % (sql, traceback.format_exc())
+	if taskid is None:
+		return 'error', 'taskid为空'
+	
+	print('调用内置函数=>dbexecute2', taskid)
+	d = []
+	try:
+		sql = sql.replace('@@','$#$')
+		if re.search('@.*(;.*@)?', sql) is not None:
+			sqls1 = re.split("@", sql)
+			for i in range(len(sqls1)):
+				if i == 0:
+					continue
+				else:
+					# print(sqls1[i].split(";")[0])
+					sqls1[i - 1] += "@" + sqls1[i].split(";")[0]
+					sqls1[i] = sqls1[i].split(";", 1)[-1]
+			if sqls1[-2].endswith(sqls1[-1]):
+				sqls1.pop()
+			for sql in sqls1:
+				if '@' in sql:
+					sqls = sql.split("@")[0].split(";")
+					conname = sql.split('@')[1]
+					for sql in sqls:
+						if sql!='':
+							res, msg = dbexecute("%s@%s" % (sql, conname), taskid=taskid, callername=callername)
+							print('执行结果=>', (res, msg))
+							if res != 'success':
+								return res, msg
+							d.append(str(msg))
+				elif '@' not in sql:
+					sqls = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")
+					dbnamecache = get_top_common_config(taskid)
+					for sql in sqls:
+						if sql != '':
+							res, msg = dbexecute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
+							print('执行结果=>', (res, msg))
+							if res != 'success':
+								return res, msg
+							d.append(str(msg))
+			return 'success', '+'.join(d)
+		elif re.search('@', sql) is None:
+			sqls2 = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")
+			dbnamecache = get_top_common_config(taskid)
+			for sql in sqls2:
+				if sql != '':
+					res, msg = dbexecute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
+					print('执行结果=>', (res, msg))
+					if res != 'success':
+						return res, msg
+					d.append(str(msg))
+			return 'success', '+'.join(d)
+	
+	except:
+		print(traceback.format_exc())
+		return 'error', '执行内置函数报错sql[%s] error[%s]' % (sql, traceback.format_exc())
+>>>>>>> f002a4de1ebeb85515590c4b3d7fa6e6dd025195
 
 
 def getDate(**kws):

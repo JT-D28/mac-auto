@@ -3,7 +3,7 @@ from .Product import queryproduct,queryProductAndPlan,queryProductSet,editProduc
 from .Plan import queryallplan, queryplan,queryPlanState,planforceStop
 from .charts import reportchart, badresult, jacocoreport,initbugcount
 from .debug import plandebug,querybuglog,doDebugInfo
-from .Jenkins import jenkinsJobRun
+from .Jenkins import jenkinsJobRun,runforJacoco
 from .logs import downloadlog,process
 from .Report import sendreport,downloadReport
 from .Taskid import querytaskid,query_third_call,gettaskidplan

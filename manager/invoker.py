@@ -119,192 +119,194 @@ def _get_full_case_name(case_id, curent_case_name):
     '''
     对于case_case结构的tree节点 报告中用例名显示为 casename0_casename1
     '''
-    case0 = Case.objects.get(id=case_id)
-    # fullname=case0.description
-    olist = list(Order.objects.filter(follow_id=case_id, kind='case_case'))
-    if len(olist) == 0:
-        return curent_case_name
-    
-    else:
-        cname = Case.objects.get(id=olist[0].main_id).description
-        curent_case_name = "%s_%s" % (cname, curent_case_name)
-        return _get_full_case_name(olist[0].main_id, curent_case_name)
+
+	case0 = Case.objects.get(id=case_id)
+	# fullname=case0.description
+	olist = list(Order.objects.filter(follow_id=case_id, kind='case_case',isdelete=0))
+	if len(olist) == 0:
+		return curent_case_name
+	
+	else:
+		cname = Case.objects.get(id=olist[0].main_id).description
+		curent_case_name = "%s_%s" % (cname, curent_case_name)
+		return _get_full_case_name(olist[0].main_id, curent_case_name)
 
 
 def gettaskresult(taskid):
-    from .cm import getchild
-    logger.info("==gettaskresult==")
-    ##区分迭代次数
-    bset = set()
-    bmap = {}
-    ##
-    
-    detail = {}
-    spend_total = 0
-    res = ResultDetail.objects.filter(taskid=taskid).order_by('createtime')
-    
-    # logger.info(res)
-    reslist = list(res)
-    if len(reslist) == 0:
-        return detail
-    
-    plan = reslist[0].plan
-    planname = plan.description
-    planid = plan.id
-    
-    has_ = []
-    
-    caseids = []
-    
-    for r in list(res):
-        if r.case.id not in has_:
-            has_.append(r.case.id)
-            caseids.append(r.case.id)
-        
-        else:
-            pass
-    
-    ##修复set乱序
-    
-    cases = [Case.objects.get(id=caseid) for caseid in caseids]
-    
-    # logger.info('cases=>')
-    # logger.info(cases)
-    report_url = 'http://%s/manage/report_%s.html' % (configs.ME2_URL, taskid)
-    detail['local_report_address'] = report_url
-    detail['planname'] = planname
-    detail['planid'] = planid
-    detail['taskid'] = taskid
-    detail['cases'] = []
-    detail['success'] = 0
-    detail['fail'] = 0
-    detail['skip'] = 0
-    detail['error'] = 0
-    detail['min'] = 99999
-    detail['max'] = 0
-    detail['average'] = 0
-    
-    for d in cases:
-        caseobj = {}
-        case = d
-        casename = case.description
-        caseid = case.id
-        # caseobj['casename']=casename
-        caseobj['casename'] = _get_full_case_name(caseid, casename)
-        if caseobj.get("steps", None) is None:
-            caseobj['steps'] = {}
-        caseid = case.id
-        # logger.info('taskid=>%s case_id=>%s'%(taskid,case))
-        step_query = list(ResultDetail.objects.filter(taskid=taskid, case=case))
-        ##case_step
-        for x in step_query:
-            # rblist=list(ResultDetail.objects.filter(taskid=taskid,plan=plan,case=case,step=stepinst,businessdata=business))
-            # for rb in rblist:
-            businessobj = {}
-            business = x.businessdata
-            # logger.info('c=>%s'%business.id)
-            status, step = BusinessData.gettestdatastep(business.id)
-            # logger.info('a=>%s b=>%s'%(case.id,step.id))
-            if isinstance(step, (str,)): continue;
-            step_weight = Order.objects.get(main_id=case.id, follow_id=step.id, kind='case_step').value
-            
-            business_index = \
-                Order.objects.get(main_id=step.id, follow_id=business.id, kind='step_business').value.split('.')[1]
-            businessobj['num'] = '%s_%s' % (step_weight, business_index)
-            
-            stepname = business.businessname
-            result = x.result
-            if 'omit' != result:
-                if 'success' == result:
-                    detail['success'] = detail['success'] + 1
-                
-                elif 'fail' == result:
-                    detail['fail'] = detail['fail'] + 1
-                
-                elif 'skip' == result:
-                    detail['skip'] = detail['skip'] + 1
-                
-                elif 'error' == result:
-                    detail['error'] = detail['error'] + 1
-                error = x.error
-                businessobj['businessname'] = x.businessdata.businessname
-                
-                ##
-                businessobj['result'] = result
-                businessobj['error'] = error
-                # businessobj['api']=re.findall('\/(.*?)[?]',step.url)[0] or step.body
-                stepinst = None
-                error, stepinst = BusinessData.gettestdatastep(business.id)
-                if stepinst.url:
-                    
-                    # logger.info('%s=>%s,%s'%(business.id,error,stepinst))
-                    businessobj['stepname'] = stepinst.description
-                    matcher = [a for a in stepinst.url.split('/') if
-                               not a.__contains__("{{") and not a.__contains__(':')]
-                    api = '/'.join(matcher)
-                    if not api.startswith('/'):
-                        api = '/' + api
-                    businessobj['api'] = api
-                else:
-                    businessobj['stepname'] = stepinst.description
-                    businessobj['api'] = stepinst.body.strip()
-                
-                businessobj['itf_check'] = business.itf_check
-                businessobj['db_check'] = business.db_check
-                # businessobj['spend']=ResultDetail.objects.get(taskid=taskid,plan=plan,case=case,step=stepinst,businessdata=business).spend
-                businessobj['spend'] = x.spend
-                spend_total += int(businessobj['spend'])
-                if int(businessobj['spend']) <= int(detail['min']):
-                    detail['min'] = businessobj['spend']
-                
-                if int(businessobj['spend']) > int(detail['max']):
-                    detail['max'] = businessobj['spend']
-                
-                # caseobj.get('steps').append(businessobj)
-                
-                ##计算当前迭代次数
-                if x.businessdata.id in bset:
-                    bcount = bmap.get(str(x.businessdata.id), 0)
-                    bcount = bcount + 1
-                    bmap[str(x.businessdata.id)] = bcount
-                    L = caseobj.get('steps').get(str(bcount), [])
-                    L.append(businessobj)
-                    caseobj['steps'][str(bcount)] = L
-                
-                else:
-                    bset.add(x.businessdata.id)
-                    bcount = bmap.get(str(x.businessdata.id), 0)
-                    bcount = bcount + 1
-                    bmap[str(x.businessdata.id)] = bcount
-                    L = caseobj.get('steps').get(str(bcount), [])
-                    L.append(businessobj)
-                    caseobj['steps'][str(bcount)] = L
-        
-        ##case_case map
-        
-        detail.get("cases").append(caseobj)
-    
-    detail['total'] = detail['success'] + detail['fail'] + detail['skip'] + detail['error']
-    if detail['success'] == detail['total']:
-        detail['result'] = 'pass'
-    else:
-        detail['result'] = 'fail'
-    
-    try:
-        detail['average'] = int(spend_total / detail['total'])
-    except:
-        detail['average'] = '-1'
-    
-    try:
-        detail['success_rate'] = str("%.2f" % (detail['success'] / detail['total']))
-    except:
-        detail['success_rate'] = '-1'
-    detail["reporttime"] = time.strftime("%m-%d %H:%M", time.localtime())
-    
-    ##
-    logger.info('报告数据=>', detail)
-    
-    return detail
+	from .cm import getchild
+	logger.info("==gettaskresult==")
+	##区分迭代次数
+	bset = set()
+	bmap = {}
+	##
+	
+	detail = {}
+	spend_total = 0
+	res = ResultDetail.objects.filter(taskid=taskid).order_by('createtime')
+	
+	# logger.info(res)
+	reslist = list(res)
+	if len(reslist) == 0:
+		return detail
+	
+	plan = reslist[0].plan
+	planname = plan.description
+	planid = plan.id
+	
+	has_ = []
+	
+	caseids = []
+	
+	for r in list(res):
+		if r.case.id not in has_:
+			has_.append(r.case.id)
+			caseids.append(r.case.id)
+		
+		else:
+			pass
+	
+	##修复set乱序
+	
+	cases = [Case.objects.get(id=caseid) for caseid in caseids]
+	
+	# logger.info('cases=>')
+	# logger.info(cases)
+	report_url = 'http://%s/manage/report_%s.html' % (configs.ME2_URL, taskid)
+	detail['local_report_address'] = report_url
+	detail['planname'] = planname
+	detail['planid'] = planid
+	detail['taskid'] = taskid
+	detail['cases'] = []
+	detail['success'] = 0
+	detail['fail'] = 0
+	detail['skip'] = 0
+	detail['error'] = 0
+	detail['min'] = 99999
+	detail['max'] = 0
+	detail['average'] = 0
+	
+	for d in cases:
+		caseobj = {}
+		case = d
+		casename = case.description
+		caseid = case.id
+		# caseobj['casename']=casename
+		caseobj['casename'] = _get_full_case_name(caseid, casename)
+		if caseobj.get("steps", None) is None:
+			caseobj['steps'] = {}
+		caseid = case.id
+		# logger.info('taskid=>%s case_id=>%s'%(taskid,case))
+		step_query = list(ResultDetail.objects.filter(taskid=taskid, case=case))
+		##case_step
+		for x in step_query:
+			# rblist=list(ResultDetail.objects.filter(taskid=taskid,plan=plan,case=case,step=stepinst,businessdata=business))
+			# for rb in rblist:
+			businessobj = {}
+			business = x.businessdata
+			# logger.info('c=>%s'%business.id)
+			status, step = BusinessData.gettestdatastep(business.id)
+			# logger.info('a=>%s b=>%s'%(case.id,step.id))
+			if isinstance(step, (str,)): continue;
+			step_weight = Order.objects.get(main_id=case.id, follow_id=step.id, kind='case_step',isdelete=0).value
+			
+			business_index = \
+				Order.objects.get(main_id=step.id, follow_id=business.id, kind='step_business',isdelete=0).value.split('.')[1]
+			businessobj['num'] = '%s_%s' % (step_weight, business_index)
+			
+			stepname = business.businessname
+			result = x.result
+			if 'omit' != result:
+				if 'success' == result:
+					detail['success'] = detail['success'] + 1
+				
+				elif 'fail' == result:
+					detail['fail'] = detail['fail'] + 1
+				
+				elif 'skip' == result:
+					detail['skip'] = detail['skip'] + 1
+				
+				elif 'error' == result:
+					detail['error'] = detail['error'] + 1
+				error = x.error
+				businessobj['businessname'] = x.businessdata.businessname
+				
+				##
+				businessobj['result'] = result
+				businessobj['error'] = error
+				# businessobj['api']=re.findall('\/(.*?)[?]',step.url)[0] or step.body
+				stepinst = None
+				error, stepinst = BusinessData.gettestdatastep(business.id)
+				if stepinst.url:
+					
+					# logger.info('%s=>%s,%s'%(business.id,error,stepinst))
+					businessobj['stepname'] = stepinst.description
+					matcher = [a for a in stepinst.url.split('/') if
+					           not a.__contains__("{{") and not a.__contains__(':')]
+					api = '/'.join(matcher)
+					if not api.startswith('/'):
+						api = '/' + api
+					businessobj['api'] = api
+				else:
+					businessobj['stepname'] = stepinst.description
+					businessobj['api'] = stepinst.body.strip()
+				
+				businessobj['itf_check'] = business.itf_check
+				businessobj['db_check'] = business.db_check
+				# businessobj['spend']=ResultDetail.objects.get(taskid=taskid,plan=plan,case=case,step=stepinst,businessdata=business).spend
+				businessobj['spend'] = x.spend
+				spend_total += int(businessobj['spend'])
+				if int(businessobj['spend']) <= int(detail['min']):
+					detail['min'] = businessobj['spend']
+				
+				if int(businessobj['spend']) > int(detail['max']):
+					detail['max'] = businessobj['spend']
+				
+				# caseobj.get('steps').append(businessobj)
+				
+				##计算当前迭代次数
+				if x.businessdata.id in bset:
+					bcount = bmap.get(str(x.businessdata.id), 0)
+					bcount = bcount + 1
+					bmap[str(x.businessdata.id)] = bcount
+					L = caseobj.get('steps').get(str(bcount), [])
+					L.append(businessobj)
+					caseobj['steps'][str(bcount)] = L
+				
+				else:
+					bset.add(x.businessdata.id)
+					bcount = bmap.get(str(x.businessdata.id), 0)
+					bcount = bcount + 1
+					bmap[str(x.businessdata.id)] = bcount
+					L = caseobj.get('steps').get(str(bcount), [])
+					L.append(businessobj)
+					caseobj['steps'][str(bcount)] = L
+		
+		##case_case map
+		
+		detail.get("cases").append(caseobj)
+	
+	detail['total'] = detail['success'] + detail['fail'] + detail['skip'] + detail['error']
+	if detail['success'] == detail['total']:
+		detail['result'] = 'pass'
+	else:
+		detail['result'] = 'fail'
+	
+	try:
+		detail['average'] = int(spend_total / detail['total'])
+	except:
+		detail['average'] = '-1'
+	
+	try:
+		detail['success_rate'] = str("%.2f" % (detail['success'] / detail['total']))
+	except:
+		detail['success_rate'] = '-1'
+	detail["reporttime"] = time.strftime("%m-%d %H:%M", time.localtime())
+	
+	##
+	logger.info('报告数据=>', detail)
+	
+	return detail
+
 
 
 def check_user_task():
@@ -316,126 +318,128 @@ def check_user_task():
 
 
 def _get_down_case_leaf_id(caseids, cur=None,ignore=False):
-    '''
-    获取指定case节点最下游caseID
-    '''
-    if isinstance(caseids, (int,)):
-        caseids = [caseids]
-    for caseid in caseids:
-        e = Order.objects.filter(kind='case_case', main_id=caseid)
-        if e.exists() and not ignore:
-            _get_down_case_leaf_id([x.follow_id for x in e], cur)
-        else:
-            cur.add(caseid)
+  
+	'''
+	获取指定case节点最下游caseID
+	'''
+	if isinstance(caseids, (int,)):
+		caseids = [caseids]
+	for caseid in caseids:
+		e = Order.objects.filter(kind='case_case', main_id=caseid,isdelete=0)
+		if e.exists() and not ignore:
+			_get_down_case_leaf_id([x.follow_id for x in e], cur)
+		else:
+			cur.add(caseid)
 
 
 def _get_upper_case_leaf_id(caseid):
-    '''
-    获取指定case节点最上游caseID
-    '''
-    e = Order.objects.filter(kind='case_case', follow_id=caseid)
-    if not e.exists():
-        return caseid
-    else:
-        cur = e[0].main_id
-        return _get_upper_case_leaf_id(cur)
+	'''
+	获取指定case节点最上游caseID
+	'''
+	e = Order.objects.filter(kind='case_case', follow_id=caseid,isdelete=0)
+	if not e.exists():
+		return caseid
+	else:
+		cur = e[0].main_id
+		return _get_upper_case_leaf_id(cur)
 
 
 def _get_final_run_node_id(startnodeid,ignore=False):
-    '''
-    获取实际需要执行的测试点ID列表
-    '''
-    final = set()
-    try:
-        #logger.info('开始获取运行节点[%s]执行计划id ' % startnodeid)
-        
-        kind = startnodeid.split('_')[0]
-        nid = startnodeid.split('_')[1]
-        if kind == 'plan':
-            # 获取预先执行的用例
-            caseslist, des = beforePlanCases(nid)
-            # logger.info('获取运行前节点[%s]' % des)
-            
-            ol = Order.objects.filter(kind='plan_case', main_id=nid)
-            ol = chain(caseslist, ol)
-            for o in ol:
-                caseid = o.follow_id
-                down_ids = set()
-                _get_down_case_leaf_id(caseid, down_ids)
-                for cid in down_ids:
-                    stepids = [x.follow_id for x in Order.objects.filter(kind='case_step', main_id=cid)]
-                    for stepid in stepids:
-                        final = final|set([x.follow_id for x in
-                                         Order.objects.filter(kind='step_business', main_id=stepid)])
-        
-        elif kind == 'business':
-            final.add(int(nid))
-        elif kind == 'step':
-            ob = Order.objects.filter(kind='step_business', main_id=nid)
-            for o in ob:
-                final.add(o.follow_id)
-        
-        elif kind == 'case':
-            # case-step
-            ob = Order.objects.filter(kind='case_step', main_id=nid)
-            stepids = []
-            for o in ob:
-                stepid = o.follow_id
-                os = Order.objects.filter(kind='step_business', main_id=stepid)
-                for o0 in os:
-                    final.add(o0.follow_id)
-            ##case-case
-            if not ignore:
-                final_leaf_case_ids = set()
-                _get_down_case_leaf_id([nid], final_leaf_case_ids)
-                logger.info('节点[%s]获取最终case子节点待运行:'%nid, final_leaf_case_ids)
-                for caseid in final_leaf_case_ids:
-                    final=final|_get_final_run_node_id('case_%s'%caseid,ignore=True)
+	'''
+	获取实际需要执行的测试点ID列表
+	'''
+	final = set()
+	try:
+		#logger.info('开始获取运行节点[%s]执行计划id ' % startnodeid)
+		
+		kind = startnodeid.split('_')[0]
+		nid = startnodeid.split('_')[1]
+		if kind == 'plan':
+			# 获取预先执行的用例
+			caseslist, des = beforePlanCases(nid)
+			# logger.info('获取运行前节点[%s]' % des)
+			
+			ol = Order.objects.filter(kind='plan_case', main_id=nid,isdelete=0)
+			ol = chain(caseslist, ol)
+			for o in ol:
+				caseid = o.follow_id
+				down_ids = set()
+				_get_down_case_leaf_id(caseid, down_ids)
+				for cid in down_ids:
+					stepids = [x.follow_id for x in Order.objects.filter(kind='case_step', main_id=cid,isdelete=0)]
+					for stepid in stepids:
+						final = final|set([x.follow_id for x in
+						                 Order.objects.filter(kind='step_business', main_id=stepid,isdelete=0)])
+		
+		elif kind == 'business':
+			final.add(int(nid))
+		elif kind == 'step':
+			ob = Order.objects.filter(kind='step_business', main_id=nid,isdelete=0)
+			for o in ob:
+				final.add(o.follow_id)
+		
+		elif kind == 'case':
+			# case-step
+			ob = Order.objects.filter(kind='case_step', main_id=nid,isdelete=0)
+			stepids = []
+			for o in ob:
+				stepid = o.follow_id
+				os = Order.objects.filter(kind='step_business', main_id=stepid,isdelete=0)
+				for o0 in os:
+					final.add(o0.follow_id)
+			##case-case
+			if not ignore:
+				final_leaf_case_ids = set()
+				_get_down_case_leaf_id([nid], final_leaf_case_ids)
+				logger.info('节点[%s]获取最终case子节点待运行:'%nid, final_leaf_case_ids)
+				for caseid in final_leaf_case_ids:
+					final=final|_get_final_run_node_id('case_%s'%caseid,ignore=True)
 
 
-        # logger.info('获取最终执行测试点结果:', final)
-    except:
-        logger.error('获取最终执行测试点异常:', traceback.format_exc())
-    finally:
-        return final
+		# logger.info('获取最终执行测试点结果:', final)
+	except:
+		logger.error('获取最终执行测试点异常:', traceback.format_exc())
+	finally:
+		return final
 
 
 def get_run_node_plan_id(startnodeid):
-    '''
-    获取运行节点归属计划ID
-    '''
-    logger.info('startndoe ID:', startnodeid)
-    kind = startnodeid.split('_')[0]
-    nid = startnodeid.split('_')[1]
-    if kind == 'plan':
-        return nid
-    
-    elif kind == 'case':
-        caseid = _get_upper_case_leaf_id(nid)
-        planid = Order.objects.get(kind='plan_case', follow_id=caseid).main_id
-        return planid
-    
-    elif kind == 'step':
-        case_id = Order.objects.get(kind='case_step', follow_id=nid).main_id
-        logger.info('caseid:', case_id)
-        up_case_id = _get_upper_case_leaf_id(case_id)
-        logger.info('upper caseid:', up_case_id)
-        planid = Order.objects.get(kind='plan_case', follow_id=up_case_id).main_id
-        return planid
-    elif kind == 'business':
-        stepid = Order.objects.get(kind='step_business', follow_id=nid).main_id
-        return get_run_node_plan_id('step_%s' % stepid)
+	'''
+	获取运行节点归属计划ID
+	'''
+	logger.info('startndoe ID:', startnodeid)
+	kind = startnodeid.split('_')[0]
+	nid = startnodeid.split('_')[1]
+	if kind == 'plan':
+		return nid
+	
+	elif kind == 'case':
+		caseid = _get_upper_case_leaf_id(nid)
+		planid = Order.objects.get(kind='plan_case', follow_id=caseid,isdelete=0).main_id
+		return planid
+	
+	elif kind == 'step':
+		case_id = Order.objects.get(kind='case_step', follow_id=nid,isdelete=0).main_id
+		logger.info('caseid:', case_id)
+		up_case_id = _get_upper_case_leaf_id(case_id)
+		logger.info('upper caseid:', up_case_id)
+		planid = Order.objects.get(kind='plan_case', follow_id=up_case_id,isdelete=0).main_id
+		return planid
+	elif kind == 'business':
+		stepid = Order.objects.get(kind='step_business', follow_id=nid,isdelete=0).main_id
+		return get_run_node_plan_id('step_%s' % stepid)
 
 
 def get_node_upper_case(nodeid):
-    kind,id = nodeid.split("_")
-    if kind == 'case':
-        return id
-    elif kind == 'step':
-        return Order.objects.get(kind='case_step', follow_id=id).main_id
-    elif kind == 'business':
-        stepid = Order.objects.get(kind='step_business', follow_id=id).main_id
-        return get_node_upper_case('step_%s' % stepid)
+	kind,id = nodeid.split("_")
+	if kind == 'case':
+		return id
+	elif kind == 'step':
+		return Order.objects.get(kind='case_step', follow_id=id,isdelete=0).main_id
+	elif kind == 'business':
+		stepid = Order.objects.get(kind='step_business', follow_id=id,isdelete=0).main_id
+		return get_node_upper_case('step_%s' % stepid)
+
 
 
 def runplans(username, taskid, planids, is_verify, kind=None, startnodeid=None):
@@ -456,6 +460,7 @@ def runplans(username, taskid, planids, is_verify, kind=None, startnodeid=None):
 
 
 def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startnodeid=None, L=None):
+
     from tools.mock import TestMind
     groupskip = []
     caseresult = []
@@ -561,6 +566,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
         else:
             viewcache(taskid, username, kind,
                       "结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-red'>fail</span>" % case0.description)
+
 
 
 def getDbUse(taskid, dbname):
@@ -844,6 +850,7 @@ def _step_process_check(callername, taskid, order, kind):
 
 
 
+
 def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
     """
     xml报文请求
@@ -950,6 +957,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
     """
     返回(rps.text,rps.status_code,msg)
     """
+
     # url data headers过滤
     viewcache(taskid, user.name, kind, "执行接口请求=>")
     
@@ -1152,6 +1160,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
     return (rps.headers, rps.text, rps.status_code, "")
 
 
+
 def _callfunction(user, functionid, call_method_name, call_method_params, taskid=None):
     """
     内置方法 functionid=None
@@ -1253,6 +1262,7 @@ def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
     return ('success', '操作[%s]全部执行完毕' % call_strs)
 
 
+
 def _compute(taskid, user, checkexpression, type=None, target=None, kind=None, parse_type='json', rps_header=None):
     """
     计算各种校验表达式
@@ -1338,6 +1348,7 @@ def _separate_expression(expectedexpression):
     raise RuntimeError("不能分割的表达式=>%s" % expectedexpression)
 
 
+
 def _legal(ourexpression):
     res = None
     
@@ -1392,6 +1403,7 @@ def _replace(expressionsep):
     #   raise RuntimeError(msg)
     finally:
         return expressionsep
+
 
 
 def _get_hearder_key(r):
@@ -1708,7 +1720,6 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
                 logger.info('表达式计算异常.')
                 return ('error', '表达式[%s]计算异常[%s]' % (ourexpression, traceback.format_exc()))
 
-
 def _replace_function(user, str_, taskid=None):
     '''计算函数引用表达式
     '''
@@ -1870,6 +1881,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
     返回(fail,错误消息)
     src:同_gain_compute()
     """
+
     if taskid is not None:
         t = base64.b64decode(taskid).decode()
         pid = t.split('_')[0]
@@ -1977,6 +1989,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
     except Exception as e:
         logger.info(traceback.format_exc())
         return ('error', '字符串[%s]变量替换异常[%s] 请检查包含变量是否已配置' % (str_, traceback.format_exc()))
+
 
 
 def is_valid_where_sql(call_str):

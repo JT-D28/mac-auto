@@ -35,7 +35,7 @@ def get_task_data(request):
             if type == 'plan':
                 casesdata = x['root']
             elif type == 'business':
-                stepid = Order.objects.get(follow_id=id, kind='step_business').main_id
+                stepid = Order.objects.get(follow_id=id, kind='step_business',isdelete=0).main_id
                 tps = x['step_' + str(stepid)]
                 for tp in tps:
                     tpid = tp['id']
@@ -84,7 +84,7 @@ def geterrorinfo(request):
     taskid = request.POST.get('taskid')
     bname = request.POST.get('name')
     logname = BASE_DIR + "/logs/deal/" + taskid + ".log"
-    stepid = Order.objects.get(follow_id=id, kind__contains='step_business').main_id
+    stepid = Order.objects.get(follow_id=id, kind__contains='step_business',isdelete=0).main_id
     stepname = Step.objects.get(id=stepid).description
     if os.path.exists(logname):
         with open(logname, 'r', encoding='utf-8') as f:

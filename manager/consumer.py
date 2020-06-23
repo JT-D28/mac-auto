@@ -12,6 +12,8 @@ from django.conf import settings
 
 from ME2.settings import BASE_DIR
 from manager.context import Me2Log as logger
+from manager.operate.redisUtils import RedisUtils
+
 
 
 class ChatConsumer(WebsocketConsumer):
@@ -28,9 +30,9 @@ class ChatConsumer(WebsocketConsumer):
     def connect(self):
         # 连接时触发
         self.accept()
-        self.con = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
+        # self.con = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
         print('收到一个websocket连接.')
-        threading.Thread(target=self.sendmsg).start()
+        # threading.Thread(target=self.sendmsg).start()
 
     def disconnect(self, code):
         # 关闭连接时触发
@@ -172,8 +174,9 @@ class ConsoleConsumer(WebsocketConsumer):
     def connect(self):
         # 连接时触发
         self.accept()
-        pool = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0, decode_responses=True)
-        self.con = redis.Redis(connection_pool=pool)
+        # pool = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0, decode_responses=True)
+        # redis.Redis(connection_pool=pool)
+        self.con = RedisUtils()
 
     # print("connect=>",self.con)
     # print('consolemsg 连接.=>',self.con.keys("console.msg::%s*"%self.username))

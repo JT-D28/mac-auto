@@ -27,7 +27,9 @@
     #coverage > .el-card__body {
         padding: 0px !important;
     }
-
+    .el-step.is-vertical .el-step__title{
+        line-height: 40px;
+    }
     #coverage > .el-card__header {
         padding: 7px 20px 0px 0;
         height: 40px;
@@ -47,7 +49,9 @@
         font-size: 12px;
         padding-left: 5px;
     }
-
+    .el-tree-node:hover>.el-tree-node__content{
+        background-color: rgba(48, 217, 96, 0.69);
+    }
     .el-input__inner {
         height: 34px !important;
         line-height: 34px;
@@ -107,10 +111,12 @@
 
     #noticeSet > .el-dialog,
     #productSet > .el-dialog {
-        height: 80%;
+        height: 85%;
     }
-    #productSet .el-tab-pane{
+
+    #productSet .el-tab-pane {
         height: 100%;
+        overflow-y: auto;
     }
 
 
@@ -227,15 +233,17 @@
         color: rgba(53, 59, 75, 1);
         line-height: 20px;
     }
-    #planHistory .el-dialog__body{
+
+    #planHistory .el-dialog__body {
         padding: 20px;
     }
-    .el-date-editor .el-range-separator{
+
+    .el-date-editor .el-range-separator {
         line-height: 23px;
     }
 
-    .layui-table, .layui-table-view{
-        margin:20px 0 0 0
+    .layui-table, .layui-table-view {
+        margin: 20px 0 0 0
     }
 
     #productSet .el-dialog__body {
@@ -288,7 +296,8 @@
         bottom: 0;
         right: 0;
     }
-    #servicename div,#servicename .el-textarea__inner{
+
+    #servicename div, #servicename .el-textarea__inner {
         height: 100%;
     }
 
@@ -405,7 +414,7 @@
                                             style="margin-left:20px;height: 34px;padding-top: 10px;float: right;background:rgba(248,123,103,1);border-radius:2px;border-color:rgba(248,123,103,1)"
                                             type="success"
                                             @click="jacocoRun">
-                                        ${jacocoRunstate}
+                                        运行
                                     </el-button>
                                     <el-button
                                             style="margin-left:20px;height: 34px;padding-top: 10px;float: right;background:rgba(0,151,136,1);border-radius:2px;border-color:rgba(0,151,136,1)"
@@ -430,7 +439,7 @@
                                             </div>
                                             <div class="layui-card-body"
                                                  style="padding:5px 5px;height: calc(100% - 55px)">
-                                                <div id="branchCoverage" class="layui-col-md6"
+                                                <div id="branch" class="layui-col-md6"
                                                      style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
                                             </div>
                                         </div>
@@ -442,7 +451,7 @@
                                             </div>
                                             <div class="layui-card-body"
                                                  style="padding:5px 5px;height: calc(100% - 55px)">
-                                                <div id="classCoverage" class="layui-col-md6"
+                                                <div id="classes" class="layui-col-md6"
                                                      style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
                                             </div>
                                         </div>
@@ -455,7 +464,7 @@
                                             </div>
                                             <div class="layui-card-body"
                                                  style="padding:5px 5px;height: calc(100% - 55px)">
-                                                <div id="instructionCoverage" class="layui-col-md6"
+                                                <div id="instruction" class="layui-col-md6"
                                                      style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
                                             </div>
                                         </div>
@@ -467,7 +476,7 @@
                                             </div>
                                             <div class="layui-card-body"
                                                  style="padding:5px 5px;height: calc(100% - 55px)">
-                                                <div id="complexityScore" class="layui-col-md6"
+                                                <div id="complexity" class="layui-col-md6"
                                                      style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
                                             </div>
                                         </div>
@@ -480,7 +489,7 @@
                                             </div>
                                             <div class="layui-card-body"
                                                  style="padding:5px 5px;height: calc(100% - 55px)">
-                                                <div id="lineCoverage" class="layui-col-md6"
+                                                <div id="line" class="layui-col-md6"
                                                      style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
                                             </div>
                                         </div>
@@ -492,7 +501,7 @@
                                             </div>
                                             <div class="layui-card-body"
                                                  style="padding:5px 5px;height: calc(100% - 55px)">
-                                                <div id="methodCoverage" class="layui-col-md6"
+                                                <div id="method" class="layui-col-md6"
                                                      style="width: 100%;height: 100%;max-height: 200px;top:50%;transform: translateY(-50%);"></div>
                                             </div>
                                         </div>
@@ -507,8 +516,9 @@
         <el-dialog id='productSet' title='项目设置' :visible.sync="productSetVisible" width="60%" top="3vh"
                    style="height: 100%">
             <el-tabs :tab-position="topposition">
-                <el-tab-pane label="jacoco配置">
-                    <el-form :label-position="rightposition" label-width="18%" :model="form" style="padding-top: 24px;height: calc(100% - 40px)">
+                <el-tab-pane label="项目Jenkins">
+                    <el-form :label-position="rightposition" label-width="18%" :model="form"
+                             style="padding-top: 24px;height: calc(100% - 40px)">
                         <el-form-item label="jenkins地址">
                             <el-input v-model="form.productset.jenkinsurl"></el-input>
                         </el-form-item>
@@ -518,13 +528,66 @@
                         <el-form-item label="密码">
                             <el-input v-model="form.productset.authpwd"></el-input>
                         </el-form-item>
-                        <el-form-item id="servicename" label="服务名/任务名" style="height: calc(100% - 180px);">
-                            <el-input type="textarea" v-model="form.productset.jobname" placeholder='填入内容为描述/服务名称和jenkins中对应的任务名，格式示例：
+                    </el-form>
+                </el-tab-pane>
+                <el-tab-pane label="代码覆盖率">
+                    <el-form :label-position="rightposition" label-width="30%" :model="form"
+                             style="display: inline-block;float:right;padding-top: 24px;height: calc(100% - 40px);width: 100%">
+                        <el-form-item style="margin-bottom: 8px">
+                            <div slot="label">
+                                <el-steps direction="vertical" :active='0' style="width: 50%;float: left;">
+                                    <el-step title="清理"></el-step></el-steps>
+                                <span>清理任务名</span>
+                            </div>
+                            <el-input v-model="form.productset.jacocoClearJob"></el-input>
+                        </el-form-item>
+                        <el-form-item>
+                            <div slot="label">
+                                <div class="el-steps el-steps--vertical" style="width: 50%; float: left;">
+                                    <div class="el-step is-vertical is-flex">
+                                        <div class="el-step__head is-process">
+                                            <span class="el-step__icon is-text">
+                                                <span class="el-step__icon-inner">2</span>
+                                            </span>
+                                        </div>
+                                        <div class="el-step__main">
+                                            <div class="el-step__title is-process">任务</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span>执行计划</span>
+                            </div>
+                            <el-tree
+                                    node-key="id"
+                                    style="margin-top: 8px"
+                                    ref="tree"
+                                    :props="props"
+                                    show-checkbox
+                                    :data="plans"
+                                    :check-on-click-node="true"
+                            >
+                            </el-tree>
+                        </el-form-item>
+                        <el-form-item id="servicename" style="height: calc(100% - 230px);">
+                            <div slot="label">
+                                <div class="el-steps el-steps--vertical" style="width: 50%; float: left;">
+                                    <div class="el-step is-vertical is-flex">
+                                        <div class="el-step__head is-process">
+                                            <span class="el-step__icon is-text">
+                                                <span class="el-step__icon-inner">3</span>
+                                            </span>
+                                        </div>
+                                        <div class="el-step__main">
+                                            <div class="el-step__title is-process">获取</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span>描述:任务名</span>
+                            </div>
+                            <el-input type="textarea" v-model="form.productset.jobname" placeholder='填入内容为描述和jenkins中对应的任务名，格式示例：
 settlesys:tfp-cmbc-mysql-uat-settlesys;thirdsys:tfp-cmbc-mysql-uat-thirdsys'></el-input>
                         </el-form-item>
-                        <!--  <el-form-item label="顺序执行任务名">
-							  <el-input v-model="form.productset.order" placeholder='填入顺序执行时jenkins对应的任务名称'></el-input>
-						  </el-form-item>-->
+
                     </el-form>
                 </el-tab-pane>
                 <el-tab-pane label='解除运行状态'>

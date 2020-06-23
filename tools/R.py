@@ -96,7 +96,7 @@ class R(object):
 
         ccd.save()
         
-        oc=Order.objects.filter(kind='case_case',main_id=cid)
+        oc=Order.objects.filter(kind='case_case',main_id=cid,isdelete=0)
         for c in oc:
             cc=Case.objects.get(id=c.follow_id)
             if scope.get('check_case')=='true':
@@ -107,7 +107,7 @@ class R(object):
             
             self._replace_case(nodeid,scope)
 
-        os=Order.objects.filter(kind='case_step',main_id=cid)
+        os=Order.objects.filter(kind='case_step',main_id=cid,isdelete=0)
         for s in os:
             cs=Step.objects.get(id=s.follow_id)
             if scope.get('check_url')=='true':
@@ -118,7 +118,7 @@ class R(object):
                 self.record('step_%s'%cs.id,'description', self.old, self.expected)
             cs.save()
             
-            cod=Order.objects.filter(kind='step_business',main_id=cs.id)
+            cod=Order.objects.filter(kind='step_business',main_id=cs.id,isdelete=0)
             for co in cod:
                 b=BusinessData.objects.get(id=co.follow_id)
                 if scope.get('check_business')=='true':
@@ -203,15 +203,15 @@ class R(object):
 
 
     def _handle_case_node(self,node_uid,chain):
-        case_os=Order.objects.filter(kind='case_step',main_id=node_uid)
+        case_os=Order.objects.filter(kind='case_step',main_id=node_uid,isdelete=0)
         if case_os.exists():
             for cos in case_os:
                 chain.append('step_%s'%cos.follow_id)
-                step_os=Order.objects.filter(kind='step_business',main_id=cos.follow_id)
+                step_os=Order.objects.filter(kind='step_business',main_id=cos.follow_id,isdelete=0)
                 for sos in step_os:
                     chain.append('business_%s'%sos.follow_id)
         #
-        case_os_0=Order.objects.filter(kind='case_case',main_id=node_uid)
+        case_os_0=Order.objects.filter(kind='case_case',main_id=node_uid,isdelete=0)
         if case_os_0.exists():
             for cos in case_os_0:
                 self._handle_case_node(cos.follow_id, chain)
@@ -229,18 +229,18 @@ class R(object):
         if 'business'==node_type:
             pass
         elif 'step'==node_type:
-            os=Order.objects.filter(kind='step_business',main_id=node_uid)
+            os=Order.objects.filter(kind='step_business',main_id=node_uid,isdelete=0)
             [chain.append('business_%s'%x.follow_id) for x in os]
         elif 'case'==node_type:
             self._handle_case_node(node_uid, chain)
         elif 'plan'==node_type:
-            plan_os=Order.objects.filter(kind='plan_case',main_id=node_uid)
+            plan_os=Order.objects.filter(kind='plan_case',main_id=node_uid,isdelete=0)
             for pos in plan_os:
                 chain.append('case_%s'%pos.follow_id)
-                case_os=Order.objects.filter(kind='case_step',main_id=pos.follow_id)
+                case_os=Order.objects.filter(kind='case_step',main_id=pos.follow_id,isdelete=0)
                 for cos in case_os:
                     chain.append('step_%s'%cos.follow_id)
-                    step_os=Order.objects.filter(kind='step_business',main_id=cos.follow_id)
+                    step_os=Order.objects.filter(kind='step_business',main_id=cos.follow_id,isdelete=0)
                     for sos in step_os:
                         chain.append('business_%s'%sos.follow_id)
         return chain

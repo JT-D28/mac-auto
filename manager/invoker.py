@@ -121,7 +121,7 @@ def _get_full_case_name(case_id, curent_case_name):
     '''
 	case0 = Case.objects.get(id=case_id)
 	# fullname=case0.description
-	olist = list(Order.objects.filter(follow_id=case_id, kind='case_case'))
+	olist = list(Order.objects.filter(follow_id=case_id, kind='case_case',isdelete=0))
 	if len(olist) == 0:
 		return curent_case_name
 	
@@ -206,10 +206,10 @@ def gettaskresult(taskid):
 			status, step = BusinessData.gettestdatastep(business.id)
 			# logger.info('a=>%s b=>%s'%(case.id,step.id))
 			if isinstance(step, (str,)): continue;
-			step_weight = Order.objects.get(main_id=case.id, follow_id=step.id, kind='case_step').value
+			step_weight = Order.objects.get(main_id=case.id, follow_id=step.id, kind='case_step',isdelete=0).value
 			
 			business_index = \
-				Order.objects.get(main_id=step.id, follow_id=business.id, kind='step_business').value.split('.')[1]
+				Order.objects.get(main_id=step.id, follow_id=business.id, kind='step_business',isdelete=0).value.split('.')[1]
 			businessobj['num'] = '%s_%s' % (step_weight, business_index)
 			
 			stepname = business.businessname
@@ -322,7 +322,7 @@ def _get_down_case_leaf_id(caseids, cur=None,ignore=False):
 	if isinstance(caseids, (int,)):
 		caseids = [caseids]
 	for caseid in caseids:
-		e = Order.objects.filter(kind='case_case', main_id=caseid)
+		e = Order.objects.filter(kind='case_case', main_id=caseid,isdelete=0)
 		if e.exists() and not ignore:
 			_get_down_case_leaf_id([x.follow_id for x in e], cur)
 		else:
@@ -333,7 +333,7 @@ def _get_upper_case_leaf_id(caseid):
 	'''
 	获取指定case节点最上游caseID
 	'''
-	e = Order.objects.filter(kind='case_case', follow_id=caseid)
+	e = Order.objects.filter(kind='case_case', follow_id=caseid,isdelete=0)
 	if not e.exists():
 		return caseid
 	else:
@@ -356,32 +356,32 @@ def _get_final_run_node_id(startnodeid,ignore=False):
 			caseslist, des = beforePlanCases(nid)
 			# logger.info('获取运行前节点[%s]' % des)
 			
-			ol = Order.objects.filter(kind='plan_case', main_id=nid)
+			ol = Order.objects.filter(kind='plan_case', main_id=nid,isdelete=0)
 			ol = chain(caseslist, ol)
 			for o in ol:
 				caseid = o.follow_id
 				down_ids = set()
 				_get_down_case_leaf_id(caseid, down_ids)
 				for cid in down_ids:
-					stepids = [x.follow_id for x in Order.objects.filter(kind='case_step', main_id=cid)]
+					stepids = [x.follow_id for x in Order.objects.filter(kind='case_step', main_id=cid,isdelete=0)]
 					for stepid in stepids:
 						final = final|set([x.follow_id for x in
-						                 Order.objects.filter(kind='step_business', main_id=stepid)])
+						                 Order.objects.filter(kind='step_business', main_id=stepid,isdelete=0)])
 		
 		elif kind == 'business':
 			final.add(int(nid))
 		elif kind == 'step':
-			ob = Order.objects.filter(kind='step_business', main_id=nid)
+			ob = Order.objects.filter(kind='step_business', main_id=nid,isdelete=0)
 			for o in ob:
 				final.add(o.follow_id)
 		
 		elif kind == 'case':
 			# case-step
-			ob = Order.objects.filter(kind='case_step', main_id=nid)
+			ob = Order.objects.filter(kind='case_step', main_id=nid,isdelete=0)
 			stepids = []
 			for o in ob:
 				stepid = o.follow_id
-				os = Order.objects.filter(kind='step_business', main_id=stepid)
+				os = Order.objects.filter(kind='step_business', main_id=stepid,isdelete=0)
 				for o0 in os:
 					final.add(o0.follow_id)
 			##case-case
@@ -412,18 +412,18 @@ def get_run_node_plan_id(startnodeid):
 	
 	elif kind == 'case':
 		caseid = _get_upper_case_leaf_id(nid)
-		planid = Order.objects.get(kind='plan_case', follow_id=caseid).main_id
+		planid = Order.objects.get(kind='plan_case', follow_id=caseid,isdelete=0).main_id
 		return planid
 	
 	elif kind == 'step':
-		case_id = Order.objects.get(kind='case_step', follow_id=nid).main_id
+		case_id = Order.objects.get(kind='case_step', follow_id=nid,isdelete=0).main_id
 		logger.info('caseid:', case_id)
 		up_case_id = _get_upper_case_leaf_id(case_id)
 		logger.info('upper caseid:', up_case_id)
-		planid = Order.objects.get(kind='plan_case', follow_id=up_case_id).main_id
+		planid = Order.objects.get(kind='plan_case', follow_id=up_case_id,isdelete=0).main_id
 		return planid
 	elif kind == 'business':
-		stepid = Order.objects.get(kind='step_business', follow_id=nid).main_id
+		stepid = Order.objects.get(kind='step_business', follow_id=nid,isdelete=0).main_id
 		return get_run_node_plan_id('step_%s' % stepid)
 
 
@@ -432,9 +432,9 @@ def get_node_upper_case(nodeid):
 	if kind == 'case':
 		return id
 	elif kind == 'step':
-		return Order.objects.get(kind='case_step', follow_id=id).main_id
+		return Order.objects.get(kind='case_step', follow_id=id,isdelete=0).main_id
 	elif kind == 'business':
-		stepid = Order.objects.get(kind='step_business', follow_id=id).main_id
+		stepid = Order.objects.get(kind='step_business', follow_id=id,isdelete=0).main_id
 		return get_node_upper_case('step_%s' % stepid)
 
 
@@ -471,7 +471,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
 	# logger.info('传入的最终执行测试点ID：%s'%L)
 	if subflag:
 		viewcache(taskid, username, kind, "开始执行用例[<span style='color:#FF3399'>%s</span>]" % case0.description)
-	steporderlist = ordered(list(Order.objects.filter(Q(kind='case_step') | Q(kind='case_case'), main_id=case0.id)))
+	steporderlist = ordered(list(Order.objects.filter(Q(kind='case_step') | Q(kind='case_case'), main_id=case0.id,isdelete=0)))
 	
 	##case执行次数
 	casecount = int(case0.count) if case0.count is not None else 1
@@ -499,7 +499,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
 				else:
 					# 步骤执行次数>0
 					for ldx in range(0, stepcount):
-						businessorderlist = ordered(list(Order.objects.filter(kind='step_business', main_id=stepid)))
+						businessorderlist = ordered(list(Order.objects.filter(kind='step_business', main_id=stepid,isdelete=0)))
 						# logger.info('bbb=>',businessorderlist)
 						for order in businessorderlist:
 							groupid = order.value.split(".")[0]
@@ -577,9 +577,9 @@ def beforePlanCases(planid):
 		before_des, before_kind, before_id = before_plan.split("@")
 		before_id = base64.b64decode(before_id).decode('utf-8')
 		if before_kind == 'plan':
-			caseslist = Order.objects.filter(main_id=before_id, kind='plan_case')
+			caseslist = Order.objects.filter(main_id=before_id, kind='plan_case',isdelete=0)
 		elif before_kind == 'case':
-			caseslist = Order.objects.filter(follow_id=before_id, kind='plan_case')
+			caseslist = Order.objects.filter(follow_id=before_id, kind='plan_case',isdelete=0)
 	return caseslist, before_des
 
 
@@ -614,7 +614,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 			beforeCases, before_des = beforePlanCases(planid)
 			caseslist.extend(ordered(list(beforeCases)))
 			viewcache(taskid, callername, kind, "加入前置计划/用例[<span style='color:#FF3399'>%s</span>]" % (before_des))
-			caseslist.extend(ordered(list(Order.objects.filter(main_id=planid, kind='plan_case'))))
+			caseslist.extend(ordered(list(Order.objects.filter(main_id=planid, kind='plan_case',isdelete=0))))
 			cases = [Case.objects.get(id=x.follow_id) for x in caseslist]
 		else:
 			caseid = get_node_upper_case(startnodeid)
@@ -761,12 +761,12 @@ def _step_process_check(callername, taskid, order, kind):
 			if len(str(statuscode)) == 0:
 				return ('fail', itf_msg)
 			elif statuscode == 200:
-				
+
 				##后置操作
 				status, res = _call_extra(user, postplist, taskid=taskid, kind='后置操作')  ###????
 				if status is not 'success':
 					return (status, res)
-				
+
 				if db_check:
 					res, error = _compute(taskid, user, db_check, type="db_check", kind=kind)
 					if res is not 'success':
@@ -774,7 +774,7 @@ def _step_process_check(callername, taskid, order, kind):
 						return ('fail', error)
 				# else:
 				#   viewcache(taskid,username,kind,'数据校验没配置 跳过校验')
-				
+
 				if itf_check:
 					if step.content_type in ('json', 'urlencode','formdata'):
 						res, error = _compute(taskid, user, itf_check, type='itf_check', target=text, kind=kind,
@@ -782,7 +782,7 @@ def _step_process_check(callername, taskid, order, kind):
 					else:
 						res, error = _compute(taskid, user, itf_check, type='itf_check', target=text, kind=kind,
 						                      parse_type='xml', rps_header=headers)
-					
+
 					if res is not 'success':
 						return ('fail', error)
 				# else:

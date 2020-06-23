@@ -1,4 +1,4 @@
-import difflib
+import difflib,time
 
 from django.db import connection
 from django.shortcuts import render, redirect
@@ -11,7 +11,7 @@ from manager.models import *
 from manager.db import Mysqloper
 from django.conf import settings
 from login.models import *
-from .cm import addrelation
+from .cm import addrelation, _get_node_parent_info
 from .core import *
 from manager.operate.cron import Cron
 from .invoker import *
@@ -363,13 +363,13 @@ def getplan(id, kind):
 	logger.info('get', id, kind)
 	if kind == 'case':
 		try:
-			k = Order.objects.get(follow_id=id, kind='plan_case')
+			k = Order.objects.get(follow_id=id, kind='plan_case',isdelete=0)
 		except:
-			k = Order.objects.get(follow_id=id, kind='case_case')
+			k = Order.objects.get(follow_id=id, kind='case_case',isdelete=0)
 		schemename = getplan(k.main_id, k.kind.split('_')[0])
 		return schemename
 	elif kind == 'step':
-		k = Order.objects.get(follow_id=id, kind='case_step')
+		k = Order.objects.get(follow_id=id, kind='case_step',isdelete=0)
 		schemename = getplan(k.main_id, k.kind.split('_')[0])
 		return schemename
 	elif kind == 'plan':
@@ -1587,20 +1587,23 @@ def querytreelist(request):
 			return data
 		# return get_pid_data(case.id,'case',data)
 		elif type == 'case':  ###这里会有个乱序的问题
-			orders = Order.objects.filter(kind__contains='case_', main_id=idx).extra(
+			orders = Order.objects.filter(kind__contains='case_', main_id=idx,isdelete=0).extra(
 				select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
 			for order in orders:
-				nodekind = order.kind.split('_')[1]
-				nodeid = order.follow_id
-				name = eval("%s.objects.values('description').get(id=%s)"%(nodekind.capitalize(),nodeid))
-				textIcon = 'fa icon-fa-file-o' if nodekind =='step' else 'fa icon-fa-folder'
-				data.append({
-					'id': '%s_%s' % (nodekind,nodeid),
-					'pId': 'case_%s' % idx,
-					'name': name['description'],
-					'type': nodekind,
-					'textIcon': textIcon,
-				})
+				try:
+					nodekind = order.kind.split('_')[1]
+					nodeid = order.follow_id
+					name = eval("%s.objects.values('description').get(id=%s)"%(nodekind.capitalize(),nodeid))
+					textIcon = 'fa icon-fa-file-o' if nodekind =='step' else 'fa icon-fa-folder'
+					data.append({
+						'id': '%s_%s' % (nodekind,nodeid),
+						'pId': 'case_%s' % idx,
+						'name': name['description'],
+						'type': nodekind,
+						'textIcon': textIcon,
+					})
+				except:
+					pass
 
 			# case = Case.objects.get(id=idx)
 			#
@@ -1678,7 +1681,7 @@ def querytreelist(request):
 		#logger.info('query id is None')
 		
 		datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True})
-		productlist = list(Product.objects.all())
+		productlist = list(Product.objects.all().exclude(isdelete=1))
 		for product in productlist:
 			datanode.append({
 				'id': 'product_%s' % product.id,
@@ -1687,8 +1690,7 @@ def querytreelist(request):
 				'type': 'product',
 				'textIcon': 'fa icon-fa-home'
 			})
-	
-	##
+
 	
 	#logger.info('query tree result=>%s' % datanode)
 	return JsonResponse(simplejson(code=0, data=datanode), safe=False)
@@ -2428,3 +2430,127 @@ def simple_compute(gain, plan, scheme):
 		op = Mysqloper()
 		return op.db_exec_test(gain, scheme)
 
+
+
+def recycle(request):
+	return render(request, 'manager/recycle.html', locals())
+
+
+@csrf_exempt
+def queryrecyclelist(request):
+	qtype = request.POST.get('type')
+	qid = request.POST.get('nid')
+	kind = request.POST.get('kind')
+	isdelete = [0,1] if kind =='old' else [0]
+	datanode = []
+	if qtype=='root':
+		productlist = list(Product.objects.filter(isdelete__in=isdelete))
+		print(productlist)
+		for product in productlist:
+			datanode.append({'id':product.createtime,'nid':product.id,'name': product.description,
+							 'type': 'product', 'icon': 'fa icon-fa-home',
+							 'hasChildren': True,'isdelete':product.isdelete})
+	elif qtype=='product':
+		orders = Order.objects.filter(kind='product_plan', main_id=qid,isdelete__in=isdelete).extra(
+			select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
+		for order in orders:
+			try:
+				plan = Plan.objects.get(id = order.follow_id)
+				datanode.append({'id':plan.createtime,'nid': plan.id, 'name': plan.description,
+								 'type': 'plan', 'icon': 'fa icon-fa-product-hunt',
+								 'hasChildren': True,'isdelete':plan.isdelete})
+			except:
+				pass
+	elif qtype=='plan':
+		orders = Order.objects.filter(kind='plan_case', main_id=qid,isdelete__in=isdelete).extra(
+			select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
+		for order in orders:
+			try:
+				case = Case.objects.get(id = order.follow_id)
+				datanode.append({
+					'id': case.createtime,
+					'nid': case.id,
+					'name': case.description,
+					'type': 'case',
+					'icon': 'fa icon-fa-folder',
+					'hasChildren':True,
+					'isdelete': case.isdelete
+				})
+			except:
+				pass
+	elif qtype=='case':
+		orders = Order.objects.filter(kind__contains='case_', main_id=qid,isdelete__in=isdelete).extra(
+			select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
+		for order in orders:
+			try:
+				nodekind = order.kind.split('_')[1]
+				nodeid = order.follow_id
+				name = eval("%s.objects.values('description','createtime','isdelete').get(id=%s)" % (nodekind.capitalize(), nodeid))
+				textIcon = 'fa icon-fa-file-o' if nodekind == 'step' else 'fa icon-fa-folder'
+				datanode.append({
+					'id': name['createtime'],
+					'nid': nodeid,
+					'name': name['description'],
+					'type': nodekind,
+					'icon': textIcon,
+					'hasChildren': True,
+					'isdelete': name['isdelete']
+				})
+			except:
+				pass
+	elif qtype=='step':
+		orders = Order.objects.filter(kind='step_business', main_id=qid,isdelete__in=isdelete).extra(
+			select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
+		for order in orders:
+			try:
+				businessdata = BusinessData.objects.get(id = order.follow_id)
+				datanode.append({
+					'id': businessdata.businessname +str(businessdata.id),
+					'nid': businessdata.id,
+					'name': businessdata.businessname,
+					'type': 'businessdata',
+					'icon': 'fa icon-fa-leaf',
+					'hasChildren':False,
+					'isdelete': businessdata.isdelete
+				})
+			except:
+				print(traceback.format_exc())
+	return JsonResponse({'code':0, 'data':datanode})
+
+@csrf_exempt
+def recyclenode(request):
+	type = request.POST.get('type')
+	id = request.POST.get('id')
+	porder = Order.objects.get(kind__contains='_%s' % type.replace("data",''), follow_id=id)
+	pkind = porder.kind.split("_")[0]
+	pid = porder.main_id
+	if eval('%s.objects.get(id=%s)'%(pkind.capitalize(),pid)).isdelete==1:
+		return JsonResponse({'code': 1, 'data': '请先还原上级节点'})
+	maxv = list(Order.objects.values_list('value', flat=True).filter(isdelete=0, kind__contains='%s_' % pkind, main_id=pid))
+	li = [int(i.split(".")[1]) for i in maxv] if maxv else [0]
+	orderobj = Order.objects.get(kind__contains='_%s' % type.replace('data', ''), follow_id=id)
+	orderobj.value = '1.' + str(max(li) + 1)
+	orderobj.save()
+	print(orderobj.value)
+	recyclenodes(type,id)
+	return JsonResponse({'code': 0, 'data': '操作成功','pkind':pkind,'pid':pid})
+
+
+def recyclenodes(type,id):
+
+	type = 'businessData' if type in ['business','businessdata']  else type
+	try:
+		print(type,id)
+		orderobj = Order.objects.get(kind__contains='_%s'%type.replace('Data',''),follow_id=id)
+		orderobj.isdelete = 0
+		orderobj.save()
+		print("aaaaaaaaa:",type,type.capitalize())
+		nodeobj = eval("%s.objects.get(id=%s)"%(type.title().replace('data','Data'),id))
+		nodeobj.isdelete = 0
+		nodeobj.save()
+		orders = Order.objects.filter(kind__contains='%s_'%type.replace('Data',''),main_id=id)
+		for o in orders:
+			recyclenodes(o.kind.split("_")[1],o.follow_id)
+
+	except:
+		print(traceback.format_exc())

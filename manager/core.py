@@ -82,12 +82,12 @@ def genorder(kind="case", parentid=None, childid=None):
 				# sorted_steps_order= models.Order.objects.filter(main_id=parentid,kind=kind).order_by('createtime')
 				
 				# 保持原来顺序重新排序
-				sorted_steps_order = ordered(list(models.Order.objects.filter(main_id=parentid, kind=kind)))
+				sorted_steps_order = ordered(list(models.Order.objects.filter(main_id=parentid, kind=kind,isdelete=0)))
 				
 				# print(len(sorted_steps_order))
 				for order in sorted_steps_order:
 					# print(order.id,order.main_id,order.follow_id)
-					models.Order.objects.filter(id=order.id).update(value="%s.%s" % (start_group_id, start_index))
+					models.Order.objects.filter(id=order.id,isdelete=0).update(value="%s.%s" % (start_group_id, start_index))
 					# models.Order.objects.filter(id=order.id).update(value='1.4')
 					start_index = start_index + 1
 			
@@ -96,10 +96,10 @@ def genorder(kind="case", parentid=None, childid=None):
 				
 				##更新指定step或case后的执行序号
 				sorted_steps_order = [_ for _ in
-				                      models.Order.objects.filter(main_id=parentid, kind=kind).order_by('value')]
+				                      models.Order.objects.filter(main_id=parentid, kind=kind,isdelete=0).order_by('value')]
 				size = len(sorted_steps_order)
 				if size == 1:
-					order = models.Order.objects.get(main_id=parentid, kind=kind)
+					order = models.Order.objects.get(main_id=parentid, kind=kind,isdelete=0)
 					order.value = '1.1'
 					order.save()
 				
@@ -111,17 +111,17 @@ def genorder(kind="case", parentid=None, childid=None):
 						print(type(childid))
 						if int(step_id) == int(childid):
 							is_update = True
-							value = models.Order.objects.get(main_id=parentid, follow_id=childid, kind=kind).value
+							value = models.Order.objects.get(main_id=parentid, follow_id=childid, kind=kind,isdelete=0).value
 							old_group_id = int(value.split(".")[0])
 							start_group_id = int(old_group_id) + 1
-							models.Order.objects.filter(id=order.id).update(
+							models.Order.objects.filter(id=order.id,isdelete=0).update(
 								value="%s.%s" % (start_group_id, start_index))
 							start_index = int(start_index) + 1
 						else:
 							if is_update == True:
 								if start_group_id == 1:
 									raise Exception('groupid=>1')
-								models.Order.objects.filter(id=order.id).update(
+								models.Order.objects.filter(id=order.id,isdelete=0).update(
 									value="%s.%s" % (start_group_id, start_index))
 								start_index = int(start_index) + 1
 	
@@ -142,7 +142,7 @@ def changepostion(kind, parentid, childid, move=1):
 		childid = int(childid)
 		move = int(move)
 		# print(parentid,childid,move)
-		orderlist = ordered(list(models.Order.objects.filter(main_id=parentid, kind=kind).order_by('value')))
+		orderlist = ordered(list(models.Order.objects.filter(main_id=parentid, kind=kind,isdelete=0).order_by('value')))
 		# print("orderlist=>",orderlist)
 		size = len(orderlist)
 		# print('移动项所列表长度',size)
@@ -174,8 +174,8 @@ def swap(kind, main_id, aid, bid):
 	flag, msg = 'nosee', ''
 	try:
 		
-		ao = models.Order.objects.get(kind=kind, main_id=main_id, follow_id=aid)
-		bo = models.Order.objects.get(kind=kind, main_id=main_id, follow_id=bid)
+		ao = models.Order.objects.get(kind=kind, main_id=main_id, follow_id=aid,isdelete=0)
+		bo = models.Order.objects.get(kind=kind, main_id=main_id, follow_id=bid,isdelete=0)
 		tmp = ao.value
 		ao.value = bo.value
 		bo.value = tmp
@@ -478,8 +478,8 @@ class CaseEncoder(XJsonEncoder):
 		
 		for x in L:
 			try:
-				o1 = list(models.Order.objects.filter(kind='plan_case', follow_id=int(x.get('id'))))
-				o2 = list(models.Order.objects.filter(kind='case_case', follow_id=int(x.get('id'))))
+				o1 = list(models.Order.objects.filter(kind='plan_case', follow_id=int(x.get('id')),isdelete=0))
+				o2 = list(models.Order.objects.filter(kind='case_case', follow_id=int(x.get('id')),isdelete=0))
 				
 				if len(o1) > 0:
 					x['weight'] = o1[0].value
@@ -586,7 +586,7 @@ class StepEncoder(XJsonEncoder):
 			try:
 				
 				print('weight=>', uid)
-				x['weight'] = list(models.Order.objects.filter(kind='case_step', follow_id=int(uid)))[0].value
+				x['weight'] = list(models.Order.objects.filter(kind='case_step', follow_id=int(uid),isdelete=0))[0].value
 			
 			except:
 				print(traceback.format_exc())
@@ -626,7 +626,7 @@ class BusinessDataEncoder(XJsonEncoder):
 		for x in L:
 			try:
 				
-				x['weight'] = list(models.Order.objects.filter(kind='step_business', follow_id=int(x.get('id'))))[
+				x['weight'] = list(models.Order.objects.filter(kind='step_business',isdelete=0, follow_id=int(x.get('id'))))[
 					0].value
 			
 			except:

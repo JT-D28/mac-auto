@@ -144,5 +144,9 @@ urlpatterns = [
 	path('getusernewsflag/',views.getusernewsflagstatus),
 	path('hasread/', views.hasread),
 
-	path('getParamfromFetchData/',views.getParamfromFetchData)
+	path('getParamfromFetchData/',views.getParamfromFetchData),
+	path('recycle/',views.recycle),
+	path('queryrecyclelist/',views.queryrecyclelist),
+	path('recyclenode/',views.recyclenode)
+
 ]

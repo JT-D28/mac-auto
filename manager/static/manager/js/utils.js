@@ -307,14 +307,6 @@ function reset_form() {
 }
 
 function _get(url, data, success, headers = {}) {
-    //data['username']=$("#username").text()
-    //alert($("#username").text())
-
-    // console.log('username=>'+$('#username').text())
-    // console.log('username=>'+window.sessionStorage.getItem("username"))
-    // //console.log('username'+{%request.session.username%})
-    // console.log('username=>'+window.usercache)
-    // data['username']='tester'
     console.log("【GET】" + url)
     console.log("【data】" + JSON.stringify(data))
     var loadIndex = ''
@@ -327,17 +319,9 @@ function _get(url, data, success, headers = {}) {
         success: success,
         dataType: 'json',
         complete: function (XMLHttpRequest, status) {
-
             layui.use(['layer'], function () {
                 layer.close(loadIndex);
             });
-
-            // if(status=='timeout'){
-            //   ajaxobj.abort();
-            //   layer.alert('请求超时!',{icon:2})
-
-            // }
-
         },
         beforeSend: function () {
 

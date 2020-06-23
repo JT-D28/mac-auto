@@ -13,7 +13,7 @@ async def dealruninfo(planid, taskid, info=None, startnodeid=''):
     casesdata = []
     kind, nodeid = startnodeid.split("_")
     if kind == 'plan':
-        orders = Order.objects.filter(kind='plan_case', main_id=planid).extra(
+        orders = Order.objects.filter(kind='plan_case', main_id=planid,isdelete=0).extra(
             select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
         caselist = [order.follow_id for order in orders]
     else:
@@ -24,8 +24,10 @@ async def dealruninfo(planid, taskid, info=None, startnodeid=''):
     total = ResultDetail.objects.filter(taskid=taskid).exclude(result='omit').count()
     info['successnum'] = success
     info['total'] = total
-    info['rate'] = round(success * 100 / total, 2)
-
+    if total!=0:
+        info['rate'] = round(success * 100 / total, 2)
+    else:
+        info['rate']=0.00
     # with connection.cursor() as cursor:
     #     cursor.execute('''SELECT CONCAT(success) AS success,CONCAT(total) AS total,
     # 	ROUND(CONCAT(success*100/total),1) AS rate FROM (SELECT sum(CASE WHEN result="success"
@@ -53,7 +55,7 @@ async def dealruninfo(planid, taskid, info=None, startnodeid=''):
 
 
 def getcasemap(caseid, data, taskid):
-    maps = Order.objects.values('main_id', 'kind', 'follow_id').filter(main_id=caseid, kind__contains='case_').extra(
+    maps = Order.objects.values('main_id', 'kind', 'follow_id').filter(main_id=caseid,isdelete=0, kind__contains='case_').extra(
         select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
     for map in maps:
         temp = data.get('case_' + str(map['main_id']), [])
@@ -100,7 +102,7 @@ def getcasemap(caseid, data, taskid):
 
 
 def get_business_info(stepid, data, taskid):
-    orders = Order.objects.filter(main_id=stepid, kind__contains='step_business').extra(
+    orders = Order.objects.filter(main_id=stepid, kind__contains='step_business',isdelete=0).extra(
         select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
     data['step_' + str(stepid)] = []
     for order in orders:
@@ -121,11 +123,11 @@ def get_business_info(stepid, data, taskid):
 
 
 def get_business_num(id, taskid='', num=0, successnum=0, countnum=0):
-    orders = Order.objects.filter(main_id=id, kind__contains='case_')
+    orders = Order.objects.filter(main_id=id, kind__contains='case_',isdelete=0)
     for o in orders:
         kind = o.kind
         if kind == 'case_step':
-            os = Order.objects.filter(main_id=o.follow_id, kind__contains='step_business')
+            os = Order.objects.filter(main_id=o.follow_id, kind__contains='step_business',isdelete=0)
             getsuccess = '''SELECT count(DISTINCT businessdata_id) FROM `manager_resultdetail` where taskid=%s and result='success'  and businessdata_id=%s '''
             getcount = '''SELECT count(DISTINCT businessdata_id) FROM `manager_resultdetail` where taskid=%s  and businessdata_id=%s and result!='omit' '''
             for o in os:
@@ -182,7 +184,7 @@ def get_node_case(nodeid):
     if kind == 'case':
         return id
     elif kind == 'step':
-        return Order.objects.get(kind='case_step', follow_id=id).main_id
+        return Order.objects.get(kind='case_step', follow_id=id,isdelete=0).main_id
     elif kind == 'business':
-        stepid = Order.objects.get(kind='step_business', follow_id=id).main_id
+        stepid = Order.objects.get(kind='step_business', follow_id=id,isdelete=0).main_id
         return get_node_case('step_%s' % stepid)

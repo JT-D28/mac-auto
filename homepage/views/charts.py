@@ -111,7 +111,7 @@ def jacocoreport(request):
 		if request.POST.get('s') == 'get':
 			print('库中获取覆盖率')
 			with connection.cursor() as cursor:
-				cursor.execute('''SELECT a.jobname,coverydata from (SELECT max(jobnum) AS num,jobname FROM `homepage_jacoco_data` a
+				cursor.execute('''SELECT a.jobname,coverydata from (SELECT max(jobnum+0) AS num,jobname FROM `homepage_jacoco_data` a
 				GROUP BY jobname ) a , homepage_jacoco_data b where a.num = b.jobnum and a.jobname=b.jobname
 				and a.jobname in %s
 				''', [list(jobmap.keys())])

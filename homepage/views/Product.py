@@ -13,7 +13,7 @@ def queryproduct(request):
     code, msg = 0, ''
     res = []
     try:
-        list_ = list(Product.objects.all())
+        list_ = list(Product.objects.filter(isdelete=0))
         for x in list_:
             o = dict()
             o['id'] = x.id
@@ -29,7 +29,7 @@ def queryproduct(request):
 
 @csrf_exempt
 def queryProductAndPlan(request):
-    list_ = list(Product.objects.all())
+    list_ = list(Product.objects.filter(isdelete=0))
     data = []
     try:
         for i, x in enumerate(list_):

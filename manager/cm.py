@@ -65,7 +65,8 @@ def delproduct(request):
 					'status': 'fail',
 					'msg': '删除失败,[%s]含子数据' % p.description
 				}
-			p.delete()
+			p.isdelete=1
+			p.save()
 			
 			return {
 				'status': 'success',
@@ -881,19 +882,19 @@ def movenode_reorder(srcid, targetid, movetype,name):
 	src_type = srcid.split('_')[0]
 	target_type = targetid.split('_')[0]
 	if movetype == 'inner':
-		o = mm.Order.objects.get(follow_id=src_uid, kind__contains='_%s' % src_type)
+		o = mm.Order.objects.get(follow_id=src_uid, kind__contains='_%s' % src_type,isdelete=0)
 		o.main_id = target_uid
-		maxv = list(mm.Order.objects.values_list('value', flat=True).filter(main_id=target_uid))
+		maxv = list(mm.Order.objects.values_list('value', flat=True).filter(kind__contains='%s_'%target_type,main_id=target_uid,isdelete=0))
 		li = [int(i.split(".")[1]) for i in maxv] if maxv else [0]
 		o.value = '1.' + str(max(li) + 1)
 		o.kind = '%s_%s'%(target_type,src_type)
 		o.save()
 		return
 	else:
-		o = mm.Order.objects.get(follow_id=src_uid, kind__contains='_%s' % src_type)
+		o = mm.Order.objects.get(follow_id=src_uid, kind__contains='_%s' % src_type,isdelete=0)
 		pkind , pid = _get_node_parent_info(target_type,target_uid)
 		o.main_id = pid
-		to = mm.Order.objects.get(Q(kind__contains='_%s' % target_type) & Q(follow_id=target_uid))
+		to = mm.Order.objects.get(Q(kind__contains='_%s' % target_type) & Q(follow_id=target_uid),isdelete=0)
 		ogroup = to.value.split('.')[0]
 		oindex = int(to.value.split('.')[1])
 		o.value = '%s.%s' % (ogroup, oindex)
@@ -960,10 +961,13 @@ def delrelation(kind, callername, main_id, follow_id):
 	# logger.info('main_id=>',main_id)
 	# logger.info('follow_id=>',follow_id)
 	try:
-		ol = mm.Order.objects.get(kind=kind, main_id=main_id, follow_id=follow_id)
+		ol = mm.Order.objects.get(kind=kind, main_id=main_id, follow_id=follow_id,isdelete=0)
 		logger.info('==删除节点关联[%s]' % ol)
-		ol.delete()
+		# ol.delete()
+		ol.isdelete=1
+		ol.save()
 	# length=len(ol)
+
 	# logger.info('找到[%s]条待删除'%length)
 	# for o in ol:
 	# 	o.delete()
@@ -982,7 +986,7 @@ def getchild(kind, main_id):
 	返回有序子项
 	'''
 	child = []
-	orderlist = ordered(list(mm.Order.objects.filter(kind=kind, main_id=main_id)))
+	orderlist = ordered(list(mm.Order.objects.filter(kind=kind, main_id=main_id,isdelete=0)))
 	if kind == 'product_plan':
 		for order in orderlist:
 			logger.info('planid=>', order.follow_id)
@@ -1012,7 +1016,7 @@ def getchild(kind, main_id):
 			child.append(mm.Case.objects.get(id=order.follow_id))
 	
 	else:
-		orderlist = list(mm.Order.objects.filter(Q(main_id=main_id) & Q(kind__contains=kind)))
+		orderlist = list(mm.Order.objects.filter(Q(main_id=main_id) & Q(kind__contains=kind,isdelete=0)))
 		for order in orderlist:
 			kind = order.kind
 			ctype = kind.split('_')[1]
@@ -1077,7 +1081,7 @@ def _regen_weight_force(parent_type, parent_id, ignore_id=None):
 	logger.info('==强制删除后兄弟节点权重调整')
 	try:
 		kind = ''
-		ol = ordered(list(mm.Order.objects.filter(Q(kind__contains='%s_' % parent_type) & Q(main_id=parent_id))))
+		ol = ordered(list(mm.Order.objects.filter(Q(kind__contains='%s_' % parent_type) & Q(main_id=parent_id),isdelete=0)))
 		mx = len(ol)
 		cur = 0
 		for idx in range(1, mx + 1):
@@ -1102,7 +1106,7 @@ def _regen_weight(callername, element, trigger='prev', target_id=None):
 		c = element.__class__.__name__.lower()
 		if c == 'businessdata':
 			c = 'business'
-		order = mm.Order.objects.get(Q(kind__contains='_%s' % c) & Q(follow_id=element.id))
+		order = mm.Order.objects.get(Q(kind__contains='_%s' % c) & Q(follow_id=element.id),isdelete=0)
 		parentid = order.main_id
 		group = order.value.split('.')[0]
 		parentkind = order.kind.split('_')[0]
@@ -1110,10 +1114,12 @@ def _regen_weight(callername, element, trigger='prev', target_id=None):
 		
 		delrelation(order.kind, callername, parentid, element.id)
 		
-		logger.info('==删除节点[%s]' % element)
-		element.delete()
+		# logger.info('==删除节点[%s]' % element)
+		# element.delete()
+		element.isdelete=1
+		element.save()
 		logger.info('==删除后重新生成权重')
-		orderlist = ordered(list(mm.Order.objects.filter(Q(kind__contains=text) & Q(main_id=parentid))))
+		orderlist = ordered(list(mm.Order.objects.filter(Q(kind__contains=text) & Q(main_id=parentid),isdelete=0)))
 		
 		index = 0
 		for order in orderlist:
@@ -1134,13 +1140,13 @@ def _regen_weight(callername, element, trigger='prev', target_id=None):
 		c = element.__class__.__name__.lower()
 		if c == 'businessdata':
 			c = 'business'
-		order = mm.Order.objects.get(Q(kind__contains='_%s' % c) & Q(follow_id=element.id))
+		order = mm.Order.objects.get(Q(kind__contains='_%s' % c) & Q(follow_id=element.id),isdelete=0)
 		parentid = order.main_id
 		group = order.value.split('.')[0]
 		parentkind = order.kind.split('_')[0]
 		text = '%s_' % parentkind
 		# logger.info('text=%s main_id=%s'%(text,parentid))
-		orderlist = ordered(list(mm.Order.objects.filter(Q(kind__contains=text) & Q(main_id=parentid))))
+		orderlist = ordered(list(mm.Order.objects.filter(Q(kind__contains=text) & Q(main_id=parentid),isdelete=0)))
 		
 		if trigger == 'prev':
 			orderlist = ordered(orderlist, time_asc=False)
@@ -1192,10 +1198,10 @@ def getnextvalue(kind, main_id, flag=0):
 	max_value = 0
 	orderlist = []
 	if kind in ('case_case', 'case_step'):
-		orderlist = list(mm.Order.objects.filter(kind='case_case', main_id=main_id)) + list(
-			mm.Order.objects.filter(kind='case_step', main_id=main_id))
+		orderlist = list(mm.Order.objects.filter(kind='case_case', main_id=main_id,isdelete=0)) + list(
+			mm.Order.objects.filter(kind='case_step', main_id=main_id,isdelete=0))
 	else:
-		orderlist = list(mm.Order.objects.filter(kind=kind, main_id=main_id))
+		orderlist = list(mm.Order.objects.filter(kind=kind, main_id=main_id,isdelete=0))
 	# logger.info('list=>',orderlist)
 	
 	if len(orderlist) == 0:
@@ -1256,7 +1262,7 @@ def _sort_by_weight(childs):
 			logger.info('res=>', parent_type, parent_id)
 			kind = '%s_%s' % (parent_type, node_type)
 			logger.info('o info=>%s %s %s' % (kind, parent_id, c.id))
-			ov = mm.Order.objects.get(kind=kind, main_id=parent_id, follow_id=c.id).value
+			ov = mm.Order.objects.get(kind=kind, main_id=parent_id, follow_id=c.id,isdelete=0).value
 			_m[str(ov)] = c
 		###
 		akeys = [int(k.replace('1.', '')) for k in _m.keys()]
@@ -1318,7 +1324,7 @@ def _build_node(kind, src_uid, target_uid, move_type, user, build_nodes):
 		logger.info('kindlike=>', kindlike)  ##error
 		logger.info('targetid=>', target_uid)
 		
-		parent_order = mm.Order.objects.get(Q(kind__contains=kindlike) & Q(follow_id=target_uid))
+		parent_order = mm.Order.objects.get(Q(kind__contains=kindlike) & Q(follow_id=target_uid),isdelete=0)
 		parent_type = parent_order.kind.split('_')[0]
 		##不可能为business
 		parent_type_upper = parent_type.split('_')[0][0].upper() + parent_type.split('_')[0][1:]
@@ -1330,7 +1336,7 @@ def _build_node(kind, src_uid, target_uid, move_type, user, build_nodes):
 		order.main_id = parent.id
 		order.follow_id = src.id
 		
-		o = mm.Order.objects.get(Q(kind__contains='%s_' % target_type) & Q(follow_id=target_uid))
+		o = mm.Order.objects.get(Q(kind__contains='%s_' % target_type) & Q(follow_id=target_uid),isdelete=0)
 		if len(build_nodes) == 1 and move_type == 'prev':
 			ogroup = o.value.split('.')[0]
 			oindex = int(o.value.split('.')[1])
@@ -1473,7 +1479,7 @@ def get_full_tree():
 	nodes = []
 	root = {'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
 	# products = list(mm.Product.objects.all())
-	query_product_sql = 'select description,author_id,id from manager_product'
+	query_product_sql = 'select description,author_id,id from manager_product where isdelete=0'
 	with connection.cursor() as cursor:
 		cursor.execute(query_product_sql)
 		products = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
@@ -1491,7 +1497,7 @@ def get_full_tree():
 		nodes.append(productobj)
 		# plan_order_list = list(mm.Order.objects.filter(kind='product_plan', main_id=product['id']))
 		
-		query_plan_order_list = "select * from manager_order where kind='product_plan' and main_id=%s"
+		query_plan_order_list = "select * from manager_order where kind='product_plan' and main_id=%s and isdelete=0"
 		with connection.cursor() as cursor:
 			cursor.execute(query_plan_order_list, [product['id']])
 			plan_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
@@ -1501,7 +1507,7 @@ def get_full_tree():
 		for order in plan_order_list:
 			try:
 				# plan = mm.Plan.objects.get(id=int(order.follow_id))
-				query_plan_sql = 'select * from manager_plan where id=%s'
+				query_plan_sql = 'select * from manager_plan where id=%s and isdelete=0'
 				with connection.cursor() as cursor:
 					cursor.execute(query_plan_sql, [order['follow_id']])
 					plan = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()][0]
@@ -1522,7 +1528,7 @@ def get_full_tree():
 			
 			# case_order_list = ordered(list(mm.Order.objects.filter(kind='plan_case', main_id=plan['id'])))
 			
-			query_case_order_list_sql = "select * from manager_order where kind='plan_case' and main_id=%s"
+			query_case_order_list_sql = "select * from manager_order where kind='plan_case' and main_id=%s and isdelete=0"
 			with connection.cursor() as cursor:
 				cursor.execute(query_case_order_list_sql, [plan['id']])
 				case_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
@@ -1532,7 +1538,7 @@ def get_full_tree():
 			
 			for order in case_order_list:
 				# case = mm.Case.objects.get(id=order.follow_id)
-				query_case_sql = 'select * from manager_case where id=%s'
+				query_case_sql = 'select * from manager_case where id=%s and isdelete=0'
 				with connection.cursor() as cursor:
 					cursor.execute(query_case_sql, [order['follow_id']])
 					caselist = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
@@ -1556,7 +1562,7 @@ def get_full_tree():
 def _add_next_case_node(parent, case, nodes):
 	##处理所属单节点
 	# step_order_list = ordered(list(mm.Order.objects.filter(kind='case_step', main_id=case['id'])))
-	query_step_order_sql = 'select * from manager_order where kind=%s and main_id=%s'
+	query_step_order_sql = 'select * from manager_order where kind=%s and main_id=%s and isdelete=0'
 	with connection.cursor() as cursor:
 		cursor.execute(query_step_order_sql, ['case_step', case['id']])
 		step_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
@@ -1567,7 +1573,7 @@ def _add_next_case_node(parent, case, nodes):
 	for order in step_order_list:
 		# logger.info('stepid=>', order['follow_id'])
 		# step = mm.Step.objects.get(id=order['follow_id'])
-		query_step_sql = 'select * from manager_step where id=%s'
+		query_step_sql = 'select * from manager_step where id=%s and isdelete=0'
 		with connection.cursor() as cursor:
 			cursor.execute(query_step_sql, [order['follow_id']])
 			steplist = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
@@ -1585,7 +1591,7 @@ def _add_next_case_node(parent, case, nodes):
 			})
 		
 		# business_order_list = ordered(list(mm.Order.objects.filter(kind='step_business', main_id=step['id'])))
-		query_business_order_list_sql = "select * from manager_order where kind='step' and main_id=%s"
+		query_business_order_list_sql = "select * from manager_order where kind='step' and main_id=%s and isdelete=0"
 		with connection.cursor() as cursor:
 			cursor.execute(query_business_order_list_sql, [step['id']])
 			business_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
@@ -1593,7 +1599,7 @@ def _add_next_case_node(parent, case, nodes):
 		
 		for order in business_order_list:
 			# business = mm.BusinessData.objects.get(id=order.follow_id)
-			query_business_sql = 'select * from manager_businessdata where id=%s'
+			query_business_sql = 'select * from manager_businessdata where id=%s and isdelete=0'
 			
 			with connection.cursor() as cursor:
 				cursor.execute(query_business_sql, [order['follow_id']])
@@ -1611,14 +1617,14 @@ def _add_next_case_node(parent, case, nodes):
 	
 	##处理多级节点
 	# case_order_list = ordered(list(mm.Order.objects.filter(kind='case_case', main_id=case['id'])))
-	query_case_order_list_sql = "select * from manager_order where kind='case_case' and main_id=%s"
+	query_case_order_list_sql = "select * from manager_order where kind='case_case' and main_id=%s and isdelete=0"
 	with connection.cursor() as cursor:
 		cursor.execute(query_case_order_list_sql, [case['id']])
 		case_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
 		case_order_list.sort(key=lambda e: e.get('value'))
 	for order in case_order_list:
 		# case0 = mm.Case.objects.get(id=order.follow_id)
-		query_case_sql = 'select * from manager_case where id=%s'
+		query_case_sql = 'select * from manager_case where id=%s and isdelete=0'
 		with connection.cursor() as cursor:
 			cursor.execute(query_case_sql, [order['follow_id']])
 			case0 = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()][0]
@@ -1670,7 +1676,7 @@ def weight_decorate(kind, followid):
 	text = eval('mm.%s.objects.get(id=%s).%s' % (t, followid, desp))
 	logger.info('kin=>', kind)
 	logger.info('fl=>', followid)
-	weight = mm.Order.objects.get(kind=kind, follow_id=followid).value
+	weight = mm.Order.objects.get(kind=kind, follow_id=followid,isdelete=0).value
 	# final=weight+' ' +text
 	final = text
 	return final
@@ -1748,14 +1754,14 @@ def _get_node_parent_info(node_type, node_id):
 		
 		kindlike = '_%s' % node_type
 		logger.info('fid=>%s kind like=>%s' % (node_id, kindlike))
-		o = mm.Order.objects.get(Q(kind__contains=kindlike) & Q(follow_id=node_id))
+		o = mm.Order.objects.get(Q(kind__contains=kindlike) & Q(follow_id=node_id),isdelete=0)
 		return (o.kind.split('_')[0], o.main_id)
 
 
 def _get_case_parent_info(case_id):
 	# logger.info('del case id=>',case_id)
 	case_desp = mm.Case.objects.get(id=case_id).description
-	o = list(mm.Order.objects.filter(Q(kind__contains='_case') & Q(follow_id=case_id)))[0]
+	o = list(mm.Order.objects.filter(Q(kind__contains='_case') & Q(follow_id=case_id),isdelete=0))[0]
 	# logger.info('order=>',o)
 	kind = o.kind.split('_')[0]
 	# logger.info('获得文件夹[%s]上层节点类型=>%s'%(case_desp,kind))
@@ -1765,13 +1771,14 @@ def _get_case_parent_info(case_id):
 def _del_product_force(product_id):
 	try:
 		product = mm.Product.objects.get(id=product_id)
-		product_order_list = list(mm.Order.objects.filter(kind='product_plan', main_id=product_id))
+		product_order_list = list(mm.Order.objects.filter(kind='product_plan', main_id=product_id,isdelete=0))
 		
 		for o in product_order_list:
 			# o.delete()
 			_del_plan_force(o.follow_id)
 		
-		product.delete()
+		product.isdelete=1
+		product.save()
 	except:
 		logger.info(traceback.format_exc())
 
@@ -1779,19 +1786,22 @@ def _del_product_force(product_id):
 def _del_plan_force(plan_id):
 	# 取消上层依赖
 	try:
-		mm.Order.objects.get(kind='product_plan', follow_id=plan_id).delete()
+		o = mm.Order.objects.get(kind='product_plan', follow_id=plan_id,isdelete=0)
+		o.isdelete=1
+		o.save()
 	except:
 		logger.info('取消上层依赖异常.')
 	try:
 		plan = mm.Plan.objects.get(id=plan_id)
-		plan_order_list = list(mm.Order.objects.filter(kind='plan_case', main_id=plan_id))
-		
+		plan_order_list = list(mm.Order.objects.filter(kind='plan_case', main_id=plan_id,isdelete=0))
+		plan.isdelete=1
+		plan.save()
 		if len(plan_order_list) > 0:
 			for o in plan_order_list:
 				# o.delete()
 				_del_case_force(o.follow_id, up='plan_case')
 		
-		plan.delete()
+
 	except:
 		logger.info(traceback.format_exc())
 
@@ -1799,13 +1809,17 @@ def _del_plan_force(plan_id):
 def _del_case_force(case_id, up='plan_case'):
 	# 取消上层依赖
 	try:
-		mm.Order.objects.get(kind=up, follow_id=case_id).delete()
+		o = mm.Order.objects.get(kind=up, follow_id=case_id,isdelete=0)
+		o.isdelete=1
+		o.save()
 	except:
 		logger.info('取消上层依赖异常.case_id=%s type=%s' % (case_id, up))
 	
 	case = mm.Case.objects.get(id=case_id)
-	case_order_list = list(mm.Order.objects.filter(kind='case_step', main_id=case_id))
-	case_order_list_2 = list(mm.Order.objects.filter(kind='case_case', main_id=case_id))
+	case.isdelete=1
+	case.save()
+	case_order_list = list(mm.Order.objects.filter(kind='case_step', main_id=case_id,isdelete=0))
+	case_order_list_2 = list(mm.Order.objects.filter(kind='case_case', main_id=case_id,isdelete=0))
 	
 	##处理case->step
 	for o in case_order_list:
@@ -1820,26 +1834,29 @@ def _del_case_force(case_id, up='plan_case'):
 	# c.delete()
 	# o.delete()
 	#
-	case.delete()
+
 
 
 def _del_step_force(step_id):
 	# 取消上层依赖
 	try:
-		mm.Order.objects.get(kind='case_step', follow_id=step_id).delete()
+		ord = mm.Order.objects.get(kind='case_step', follow_id=step_id,isdelete=0)
+		ord.isdelete=1
+		ord.save()
 	except:
 		logger.info('取消上层依赖异常.')
 	
 	try:
-		
 		step = mm.Step.objects.get(id=step_id)
-		step_order_list = list(mm.Order.objects.filter(kind='step_business', main_id=step_id))
+		step.isdelete=1
+		step.save()
+		step_order_list = list(mm.Order.objects.filter(kind='step_business', main_id=step_id,isdelete=0))
 		for o in step_order_list:
-			o.delete()
+			o.isdelete=1
+			o.save()
 			business = mm.BusinessData.objects.get(id=o.follow_id)
-			business.delete()
-		
-		step.delete()
+			business.isdelete=1
+			business.save()
 	
 	except:
 		logger.info('删除步骤异常=>', traceback.format_exc())

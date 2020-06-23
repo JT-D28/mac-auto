@@ -1549,8 +1549,7 @@ def querytreelist(request):
 	def _get_pid_data(idx, type, data):
 		
 		if type == 'product':
-			plans = Plan.objects.filter(
-				id__in=list(Order.objects.values_list('follow_id', flat=True).filter(main_id=idx, kind='product_plan',isdelete=0)))
+			plans = cm.getchild('product_plan', idx)
 			logger.info('plans=>', plans)
 			for plan in plans:
 				data.append({
@@ -1563,8 +1562,7 @@ def querytreelist(request):
 			return data
 		
 		elif type == 'plan':
-			cases = Case.objects.filter(
-				id__in=list(Order.objects.values_list('follow_id', flat=True).filter(main_id=idx, kind='plan_case',isdelete=0)))
+			cases = cm.getchild('plan_case', idx)
 			logger.info('cases=>', cases)
 			for case in cases:
 				logger.info('case=>', case)
@@ -1599,12 +1597,9 @@ def querytreelist(request):
 				except:
 					pass
 			return data
-		
-		
+
 		elif type == 'step':
-			businesslist = BusinessData.objects.filter(
-				id__in=list(Order.objects.values_list('follow_id', flat=True).filter(main_id=idx, kind='step_business',
-																					 isdelete=0)))
+			businesslist = cm.getchild('step_business',idx)
 			for business in businesslist:
 				bname = business.businessname
 				if business.count in (0, '0'):
@@ -1620,7 +1615,6 @@ def querytreelist(request):
 		else:
 			return data
 	
-	####
 	id_ = request.POST.get('id')
 	if id_:
 		id_ = id_.split('_')[1]
@@ -1628,18 +1622,12 @@ def querytreelist(request):
 	type_ = request.POST.get('type')
 	callername = request.session.get('username')
 	searchvalue = request.POST.get('searchvalue')
-	
-	##
-	
+
 	if id_:
 		datanode = _get_pid_data(id_, type_, datanode)
-		#logger.info('cur d=>', datanode)
 	elif searchvalue:
 		datanode = get_search_match(searchvalue)
-	
 	else:
-		#logger.info('query id is None')
-		
 		datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True})
 		productlist = list(Product.objects.all().exclude(isdelete=1))
 		for product in productlist:
@@ -1650,9 +1638,6 @@ def querytreelist(request):
 				'type': 'product',
 				'textIcon': 'fa icon-fa-home'
 			})
-
-	
-	#logger.info('query tree result=>%s' % datanode)
 	return JsonResponse(simplejson(code=0, data=datanode), safe=False)
 
 

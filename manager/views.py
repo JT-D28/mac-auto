@@ -1549,27 +1549,22 @@ def querytreelist(request):
 	def _get_pid_data(idx, type, data):
 		
 		if type == 'product':
-			
-			product = Product.objects.get(id=idx)
-			logger.info('product=>', product)
-			plans = cm.getchild('product_plan', idx)
+			plans = Plan.objects.filter(
+				id__in=list(Order.objects.values_list('follow_id', flat=True).filter(main_id=idx, kind='product_plan',isdelete=0)))
 			logger.info('plans=>', plans)
 			for plan in plans:
 				data.append({
-					
 					'id': 'plan_%s' % plan.id,
-					'pId': 'product_%s' % product.id,
+					'pId': 'product_%s' % idx,
 					'name': plan.description,
 					'type': 'plan',
 					'textIcon': 'fa icon-fa-product-hunt',
-					# 'open':True
 				})
-			
 			return data
 		
 		elif type == 'plan':
-			plan = Plan.objects.get(id=idx)
-			cases = cm.getchild('plan_case', idx)
+			cases = Case.objects.filter(
+				id__in=list(Order.objects.values_list('follow_id', flat=True).filter(main_id=idx, kind='plan_case',isdelete=0)))
 			logger.info('cases=>', cases)
 			for case in cases:
 				logger.info('case=>', case)
@@ -1578,15 +1573,14 @@ def querytreelist(request):
 					casename = '<s>%s</s>' % casename
 				data.append({
 					'id': 'case_%s' % case.id,
-					'pId': 'plan_%s' % plan.id,
+					'pId': 'plan_%s' % idx,
 					'name': casename,
 					'type': 'case',
 					'textIcon': 'fa icon-fa-folder',
-					# 'open':True
 				})
 			return data
-		# return get_pid_data(case.id,'case',data)
-		elif type == 'case':  ###这里会有个乱序的问题
+
+		elif type == 'case':
 			orders = Order.objects.filter(kind__contains='case_', main_id=idx,isdelete=0).extra(
 				select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
 			for order in orders:
@@ -1604,58 +1598,24 @@ def querytreelist(request):
 					})
 				except:
 					pass
-
-			# case = Case.objects.get(id=idx)
-			#
-			# steps = cm.getchild('case_step', idx)
-			#
-			# for step in steps:
-			# 	stepname = step.description
-			# 	if step.count in (0, '0'):
-			# 		stepname = '<s>%s</s>' % stepname
-			# 	data.append({
-			# 		'id': 'step_%s' % step.id,
-			# 		'pId': 'case_%s' % case.id,
-			# 		'name': stepname,
-			# 		'type': 'step',
-			# 		'textIcon': 'fa icon-fa-file-o',
-			# 		# 'open':True
-			# 	})
-			#
-			# cases = cm.getchild('case_case', idx)
-			# for case0 in cases:
-			# 	casename = case0.description
-			# 	if case0.count in (0, '0'):
-			# 		casename = '<s>%s</s>' % casename
-			# 	data.append({
-			# 		'id': 'case_%s' % case0.id,
-			# 		'pId': 'case_%s' % idx,
-			# 		'name': casename,
-			# 		'type': 'case',
-			# 		'textIcon': 'fa icon-fa-folder',
-			# 	})
-			
 			return data
 		
 		
 		elif type == 'step':
-			step = Step.objects.get(id=idx)
-			businesslist = cm.getchild('step_business', idx)
-			
+			businesslist = BusinessData.objects.filter(
+				id__in=list(Order.objects.values_list('follow_id', flat=True).filter(main_id=idx, kind='step_business',
+																					 isdelete=0)))
 			for business in businesslist:
 				bname = business.businessname
 				if business.count in (0, '0'):
 					bname = '<s>%s</s>' % bname
 				data.append({
 					'id': 'business_%s' % business.id,
-					'pId': 'step_%s' % step.id,
+					'pId': 'step_%s' % idx,
 					'name': bname,
 					'type': 'business',
 					'textIcon': 'fa icon-fa-leaf',
-					# 'open':True
 				})
-			
-			# return get_pid_data(business.id,'business', data)
 			return data
 		else:
 			return data

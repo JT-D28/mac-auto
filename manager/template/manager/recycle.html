@@ -98,6 +98,7 @@
                         :height="tableHeight"
                         :indent=25
                         row-key="id"
+                        :show-overflow-tooltip=true
                         :empty-text="emptytext"
                         :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
                         :data="casesdata"
@@ -122,13 +123,13 @@
                         :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
                         :data="casesdataold"
                         style="width: 100%">
-                    <el-table-column label="历史">
+                    <el-table-column label="历史" min-width="8">
                         <template slot-scope="scope">
                             <i :class=scope.row.icon></i>
                             <span style="margin-left: 10px">${ scope.row.name }</span>
                         </template>
                     </el-table-column>
-                    <el-table-column align="right">
+                    <el-table-column align="right" min-width="2">
                         <template slot-scope="scope">
                             <el-button
                                     v-if="scope.row.isdelete==1"
@@ -168,25 +169,17 @@
         methods: {
             handleRecycle(index, row) {
                 var that = this;
-                _post_nl('/manager/recyclenode/', {'type': row.type, 'id': row.nid}, function (data) {
+                _post_ll('/manager/recyclenode/', {'type': row.type, 'id': row.nid}, function (data) {
                     if (data.code == 1) {
                         layer.msg(data.data)
                     } else {
-                        app.casesdata=[]
-                        _post_nl('/manager/queryrecyclelist/', {
-                            'type': 'root',
-                            'nid': '0',
-                            'kind': 'current'
-                        }, function (data) {
+                        app.casesdata = []
+                        that.queryrecyclelist('root', '0', 'current', function (data) {
                             if (data.code === 0) {
                                 app.casesdata = data.data;
                             }
                         })
-                        _post_nl('/manager/queryrecyclelist/', {
-                            'type': data.pkind,
-                            'nid': data.pid,
-                            'kind': 'old'
-                        }, function (data) {
+                        that.queryrecyclelist(data.pkind, data.pid, 'old', function (data) {
                             if (data.code === 0) {
                                 app.casesdataold = data.data;
                             }
@@ -203,11 +196,7 @@
 
                 this.$refs.refTable.store.loadOrToggle(row)
                 if (row.type != 'businessdata') {
-                    _post_nl('/manager/queryrecyclelist/', {
-                        'type': row.type,
-                        'nid': row.nid,
-                        'kind': 'old'
-                    }, function (data) {
+                    this.queryrecyclelist(row.type, row.nid, 'old', function (data) {
                         if (data.code === 0) {
                             app.casesdataold = data.data;
                         }
@@ -216,35 +205,38 @@
             },
             load(tree, treeNode, resolve) {
                 if (['product', 'plan', 'case', 'step'].indexOf(tree.type) >= 0) {
-                    _post_nl('/manager/queryrecyclelist/', {
-                        'type': tree.type, 'nid': tree.nid, 'kind': 'current'
-                    }, function (data) {
+                    this.queryrecyclelist(tree.type, tree.nid, 'current', function (data) {
                         resolve(data.data)
-                    });
+                    })
                 }
             },
 
             loadold(tree, treeNode, resolve) {
                 if (['product', 'plan', 'case', 'step'].indexOf(tree.type) >= 0) {
-                    _post_nl('/manager/queryrecyclelist/', {
-                        'type': tree.type, 'nid': tree.nid, 'kind': 'old'
-                    }, function (data) {
+                    this.queryrecyclelist(tree.type, tree.nid, 'old', function (data) {
                         resolve(data.data)
-                    });
+                    })
                 }
             },
             changetreeHeight() {
                 this.tableHeight = window.innerHeight - 10
+            },
+            queryrecyclelist(type, id, kind, func) {
+                _post_nl('/manager/queryrecyclelist/', {
+                    'type': type,
+                    'nid': id,
+                    'kind': kind
+                }, func)
             }
+
         },
         created: function () {
             this.changetreeHeight()
-            _post_nl('/manager/queryrecyclelist/', {'type': 'root', 'nid': '0', 'kind': 'current'}, function (data) {
+            this.queryrecyclelist('root', '0', 'current', function (data) {
                 if (data.code === 0) {
                     app.casesdata = data.data;
                 }
             })
-
         },
     });
     window.onresize = function () {

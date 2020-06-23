@@ -1,0 +1,115 @@
+{%load static%}
+<!DOCTYPE html >
+<html lang="en" style="height: 100%">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+    <title>mock管理</title>
+    <style type="text/css">
+            .fa:hover {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body style="height:calc(100% - 40px);padding: 20px">
+<form class="layui-form" style="padding: 5px;">
+
+{% if is_mock_open %}
+    <input type="checkbox" name="close" lay-skin="switch" lay-text="开启|关闭" checked lay-filter='test' tid='{{nodeid}}'>
+{% else %}
+    <input type="checkbox" name="close" lay-skin="switch" lay-text="开启|关闭" lay-filter='test' tid='{{nodeid}}'>
+{% endif %}
+<div class="fa fa-refresh " id='refresh' style="color:#009688;font-size:12px;float:right;" text='{{nodeid}}'>重新生成</div>
+
+</form>
+  
+
+  <table id='table-mock' class='layui-table' lay-data="{height: 'full-80',cellMinWidth:'180',page: true, limit:10, url:'/manager/querysimpletest/?nodeid={{nodeid}}'}" lay-filter='target' style="">
+    <thead>
+    <tr>
+      <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
+      <th lay-data="{field: 'tempname', sort: true}">模板名</th>
+<!--       <th lay-data="{field: 'simplename', sort: true}">简述</th> -->
+      <th lay-data="{field: 'value', sort: true,edit:'text'}">值</th>
+      <th lay-data="{field: 'itf_check', sort: true,edit:'text'}">接口校验</th>
+      <th lay-data="{field: 'db_check', sort: true,edit:'text'}">数据校验</th>
+      <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:100}">操作</th>
+    </tr>
+  </thead>
+  </table>
+
+
+</body>
+
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+<script src="{% static 'manager/js/lay-config.js' %}"></script>
+<script type="text/javascript">
+layui.use(['table','form'], function(){
+
+table=layui.table;
+form=layui.form;
+$('#refresh').click(function(e) {
+  // body...
+  _post('/manager/regentest/',{'uid':$(this).attr('text')},function(e){
+    if(e.code==0){
+      table.reload('table-mock', {
+          page: {
+              curr: 1
+          }
+
+      })
+    }
+
+  })
+});
+
+//
+table.on('edit(target)', function(obj){ //注：edit是固定事件名，test是table原始容器的属性 lay-filter="对应的值"
+  //layer.msg('after:'+obj.value+',field:'+obj.field+',data:'+obj.data); //得到修改后的值
+  //layer.msg(JSON.stringify(obj.data))
+
+  _post('/manager/updatesimpletest/',{'data':JSON.stringify(obj.data)},function(e){
+    if(e.code!=0)
+      layer.alert(e.msg,{icon:2})
+
+  })
+
+
+});
+
+//
+
+form.on('switch(detail)',function(data) {
+  // body...
+  var checked = data.elem.checked
+  tid=data.elem.attributes['tid'].nodeValue
+  _post('/manager/opensimpletest/',{'tid':tid,'checked':checked})
+});
+
+form.on('switch(test)',function(data){
+  tid=data.elem.attributes['tid'].nodeValue
+  _post('/manager/openstepmock/',{'tid':tid,'checked':data.elem.checked})
+
+})
+
+
+
+})
+
+
+
+</script>
+<script type="text/html" id="toolbar">
+  
+    {% verbatim %}
+    {{# if (d.is_open==1) { }}
+    <input type="checkbox" name="close" lay-skin="switch" lay-text="ON|OFF" lay-filter='detail'  tid='{{d.id}}' checked>
+    {{# }else {}}
+    <input type="checkbox" name="close" lay-skin="switch" lay-text="ON|OFF" lay-filter='detail' tid='{{d.id}}'>
+    {{#} }}
+    {% endverbatim %}
+</script>
+</html>

@@ -40,7 +40,7 @@
     <button class="layui-btn layui-btn-danger" id='delbtn'>删除</button>
 </div>
 <table id="table-template" lay-filter="target"></table>
-<!--<table id='table-template' class="layui-table"
+<table id='table-template' class="layui-table"
        lay-data="{height: 'full-80',cellMinWidth:'180',page: true, limit:10, url:'/manager/querytemplatefield/?tid={{ tid }}'}"
        lay-filter='target'>
     <thead>
@@ -52,9 +52,10 @@
         <th lay-data="{field: 'index', sort: true}">排序</th>
         <th lay-data="{field: 'length', sort: true}">长度</th>
         <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:160}">操作</th>
+
     </tr>
     </thead>
-</table>-->
+</table>
 
 <form id='addhtml' hidden=true class="layui-form" style="padding: 10px;" lay-filter='addhtml'>
     <div class="layui-form-item">

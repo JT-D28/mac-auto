@@ -3,14 +3,22 @@
 # @Date    : 2019-11-19 09:51:22
 # @Author  : Blackstone
 # @to      :
-import time, traceback, redis, datetime, requests, copy, os
+import time, traceback, redis, datetime, requests, copy, os,multiprocessing
 from django.conf import settings
 from hashlib import md5
 from ME2.settings import logme, BASE_DIR
 from manager.models import *
 from manager.models import Case as Case0
 from login.models import *
+from functools import update_wrapper
 from manager.operate.redisUtils import RedisUtils
+
+'''
+
+
+'''
+m_pool=multiprocessing.Pool(processes=4)
+
 
 '''
 日志打印
@@ -192,12 +200,14 @@ def _getvid():
 redis key格式=>console.msg::username::taskid
 """
 
+
 cons={}
 
 def viewcache(taskid, username, kind=None, *msg):
     if cons.get(taskid,None) is None:
         cons[taskid]=RedisUtils()
     con = cons.get(taskid)
+
     try:
         logname = BASE_DIR + "/logs/" + taskid + ".log"
         what = "".join((msg))
@@ -302,6 +312,230 @@ def get_temp_dir():
 
 def get_project_dir():
     return os.path.dirname(os.path.dirname(__file__))
+
+
+'''
+mock
+'''
+mocknow=set()
+repeat=set()
+
+def clear_mock(username):
+    for k in list(mocknow):
+        if username in k:
+            mocknow.remove(k)
+
+def add_mock_key(key):
+    mocknow.add(key)
+
+def has_mock_run(key):
+    return True if key in mocknow else False
+
+
+def add_mock(f):
+    from tools.mock import TestMind
+    from manager.models import Step,SimpleTest
+
+    color_res = {
+        'success': 'green',
+        'fail': 'red',
+        'skip': 'orange',
+        'omit': 'green',
+    }
+    def _wrap(*args,**kws):
+        try:
+            Me2Log.info('[mock测试]==========================')
+            callername=args[0]
+            taskid=args[1]
+            order=args[2]
+            step=Step.objects.get(id=order.main_id)
+            stepid=step.id
+            Me2Log.info('[mock测试]\nusername={} stepid={}'.format(callername,stepid))
+            key='{}_{}'.format(callername,stepid)
+            if has_mock_run(key):
+                pass
+            else:
+                add_mock_key(key)
+                ##mock
+                SL=SimpleTest.objects.filter(step_id=stepid)
+                if not SL.exists():
+                    TestMind().gen_simple_test_cases('step_{}'.format(stepid))
+                vbs=TestMind().get_visual_business('step_{}'.format(stepid), callername)
+                # Me2Log.info('vbs:',vbs)
+                _m=set()
+                
+                for vb in vbs:
+                    kind=1 if vb.businessname in _m else None
+                    result,error=_step_mock(callername, taskid, step, vb,kind=kind)
+                    _m.add(vb.businessname)
+
+                    result = "<span class='layui-bg-%s'>%s</span>" % (color_res.get(result, 'orange'), result)
+                    error = '   原因=>%s' % error if 'success' not in result else ''
+                    viewcache(taskid,callername, kind, "步骤执行结果%s%s" % (result, error))
+
+        except:
+            Me2Log.info('[mock测试异常]{}',traceback.format_exc())
+
+
+        return f(*args,**kws)
+    return update_wrapper(_wrap,f)
+
+
+
+def _step_mock(callername, taskid, step,businessdata, kind=None,is_repeat=0):
+    """
+    return (resultflag,msg)
+    """
+    from manager.invoker import _callinterface,_callsocket,_compute
+
+
+    try:
+        is_mock_open=step.is_mock_open
+        if is_mock_open==0:
+            return
+
+        user = User.objects.get(name=callername)
+        # businessdata = BusinessData.objects.get(id=order.follow_id)
+        timeout = 60 if not businessdata.timeout else businessdata.timeout
+        
+        if businessdata.count == 0:
+            return ('omit', "测试点[%s]执行次数=0 略过." % businessdata.businessname)
+        preplist = businessdata.preposition.split("|") if businessdata.preposition is not None else ''
+        postplist = businessdata.postposition.split("|") if businessdata.postposition is not None else ''
+        db_check = businessdata.db_check
+        itf_check = businessdata.itf_check
+        #status, paraminfo = BusinessData.gettestdataparams(order.follow_id)
+        paraminfo = businessdata.params
+        
+        # Me2Log.info('bbid=>',businessdata.id)
+        # status1, step = BusinessData.gettestdatastep(businessdata.id)
+        
+        username = callername   
+        if is_repeat==0:     
+            viewcache(taskid, username, kind, "--" * 100)
+            viewcache(taskid, username, kind,
+                      "开始执行步骤[<span style='color:#FF3399'>%s</span>] 测试点[<span style='color:#FF3399' id=%s>%s</span>]&nbsp;<i style='background-color:#009688;color:#fff;'>mock test</i>" % (
+                          step.description,businessdata.id, businessdata.businessname))
+        
+        # dbid = getDbUse(taskid, step.db_id)
+     
+        # if dbid:
+        #     desp = DBCon.objects.get(id=int(dbid)).description
+        #     set_top_common_config(taskid, desp, src='step')
+        # # 前置操作
+        # status, res = _call_extra(user, preplist, taskid=taskid, kind='前置操作')  ###????
+        # if status is not 'success':
+        #     return (status, res)
+        
+        if step.step_type == "interface":
+            if is_repeat==0:
+                viewcache(taskid, username, kind, "数据校验配置=>%s" % db_check)
+                viewcache(taskid, username, kind, "接口校验配置=>%s" % itf_check)
+            headers = []
+            
+            text, statuscode, itf_msg = '', -1, ''
+            
+            if step.content_type == 'xml':
+                if re.search('webservice', step.url):
+                    headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), 'post',
+                                                                        None, 'xml', step.temp, kind, timeout)
+                    if not itf_msg:
+                        text = text.replace('&lt;', '<')
+                        
+                        text = re.findall('(?<=\?>).*?(?=</ns1:out>)', text, re.S)[0]
+                        text = '\n' + text
+                    else:
+                        return ('error', itf_msg)
+                else:
+                    text, statuscode, itf_msg = _callsocket(taskid, user, step.url, body=str(paraminfo))
+            else:
+                
+                headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), step.method,
+                                                                    step.headers, step.content_type, step.temp, kind,
+                                                                    timeout)
+            if text.lstrip().startswith('<!DOCTYPE html>') and is_repeat==0:
+                viewcache(taskid, username, kind,"<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>内容为HTML，不显示</xmp></span>")
+            else:
+                if is_repeat==0:
+                    viewcache(taskid, username, kind,
+                      "<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>" % text)
+            
+            if len(str(statuscode)) == 0:
+                return ('fail', itf_msg)
+            elif statuscode == 200:
+                
+                # ##后置操作
+                # status, res = _call_extra(user, postplist, taskid=taskid, kind='后置操作')  ###????
+                # if status is not 'success':
+                #     return (status, res)
+                
+                if db_check:
+                    res, error = _compute(taskid, user, db_check, type="db_check", kind=kind)
+                    if res is not 'success':
+                        Me2Log.info('################db_check###############' * 20)
+                        return ('fail', error)
+                # else:
+                #   viewcache(taskid,username,kind,'数据校验没配置 跳过校验')
+                
+                if itf_check:
+                    if step.content_type in ('json', 'urlencode','formdata'):
+                        res, error = _compute(taskid, user, itf_check, type='itf_check', target=text, kind=kind,
+                                              parse_type='json', rps_header=headers)
+                    else:
+                        res, error = _compute(taskid, user, itf_check, type='itf_check', target=text, kind=kind,
+                                              parse_type='xml', rps_header=headers)
+                    
+                    if res is not 'success':
+                        return ('fail', error)
+                # else:
+                #   viewcache(taskid,username,kind,'接口校验没配置 跳过校验')
+                
+                return ('success', '')
+            else:
+                return ('fail', 'statuscode=%s' % statuscode)
+            
+            if itf_msg:
+                Me2Log.info('################itf-msg###############' * 20)
+                return ('fail', itf_msg)
+        
+        elif step.step_type == "function":
+            if is_repeat==0:
+                viewcache(taskid, username, kind, "数据校验配置=>%s" % db_check)
+            # viewcache("接口返回校验=>%s"%itf_check)
+            
+            # methodname=re.findall("(.*?)\(.*?\)", step.body.strip())[0]
+            # builtinmethods=[x.name for x in getbuiltin() ]
+            # builtin=(methodname in builtinmethods)
+            
+                viewcache(taskid, username, kind, "调用函数=>%s" % step.body)
+            
+            Me2Log.info('关联id=>', step.related_id)
+            res, msg = _callfunction(user, step.related_id, step.body, paraminfo, taskid=taskid)
+            if is_repeat==0:
+                viewcache(taskid, username, kind, "函数执行结果=>%s" % res)
+            
+            # Me2Log.info('fjdajfd=>',res,msg)
+            if res is not 'success':
+                return res, msg
+            
+            status, res = _call_extra(user, postplist, taskid=taskid, kind='后置操作')  ###????
+            if status is not 'success':
+                return (status, res)
+            
+            if db_check:
+                res, error = _compute(taskid, user, db_check, type='db_check', kind=kind)
+                if res is not 'success':
+                    return ('fail', error)
+                else:
+                    return ('success', '')
+            else:
+                # viewcache(taskid,username,kind,'数据校验没配置 跳过校验')
+                return ('success', '')
+    
+    except Exception as e:
+        # traceback.Me2Log.info_exc()
+        Me2Log.info(traceback.format_exc())
+        return ("error", "执行任务[%s] 未处理的异常[%s]" % (taskid, traceback.format_exc()))
 
 class monitor(object):
     '''

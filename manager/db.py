@@ -123,6 +123,8 @@ class Mysqloper:
 			return ('关闭数据库连接出现异常，请确认')
 	
 	def db_execute2(self, sql, taskid=None, callername=None):
+		logger.info('='*200)
+		logger.info('dbexecute2 传入taskid:{} callername:{},sql:{}'.format(taskid,callername,sql))
 		
 		reslist = []
 		print('db_execute2执行：'+sql)
@@ -151,7 +153,7 @@ class Mysqloper:
 		sql查询返回结果
 		非查询返回影响条数
 		"""
-		logger.info('传入taskid:{},sql:{}'.format(taskid,sql))
+		logger.info('传入taskid:{} callername:{},sql:{}'.format(taskid,callername,sql))
 		sqlresult, error = None, ''
 		conname = None
 		# 判断当前连接是否正常

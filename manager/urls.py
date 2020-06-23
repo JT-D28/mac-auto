@@ -1,3 +1,5 @@
+
+
 """ME2 URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
@@ -113,7 +115,7 @@ urlpatterns = [
 	path('edittemplate/', views.edittemplate),
 	path('querytemplate/', views.querytemplate),
 	path('querytemplatelist/', views.querytemplatelist),
-	
+
 	path('templatefield/', views.templatefield),
 	path('querytemplatefield/', views.querytemplatefield),
 	path('addtemplatefield/', views.addtemplatefield),
@@ -139,14 +141,27 @@ urlpatterns = [
 
 	# #
 	path('changemode/', views.changemode),
-
+	##
+	path('simpletest/', views.simpletest),
+	path('querysimpletest/',views.querysimpletest ),
+	path('querysteptype/',views.querysteptype),
+	path('regentest/', views.regentest),
+	path('updatesimpletest/', views.updatesimpletest),
+	path('opensimpletest/', views.opensimpletest),
+	path('openstepmock/', views.openstepmock),
+	
+	##
 	path('getusernews/', views.getusernews),
 	path('getusernewsflag/',views.getusernewsflagstatus),
 	path('hasread/', views.hasread),
 
+	path('grab/', views.record),
+	path('stoprecord/', views.stoprecord),
+	
 	path('getParamfromFetchData/',views.getParamfromFetchData),
 	path('recycle/',views.recycle),
 	path('queryrecyclelist/',views.queryrecyclelist),
 	path('recyclenode/',views.recyclenode)
+
 
 ]

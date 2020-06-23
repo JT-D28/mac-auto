@@ -140,7 +140,7 @@ var tree = {
             'product': ['add', 'edit', 'del', 'mimport'],
             'plan': ['add', 'edit', 'del', 'run', 'mexport', 'logs', 'config','replace'],
             'case': ['add', 'edit', 'del', 'run','replace'],
-            'step': ['add', 'edit', 'del', 'run','replace'],
+            'step': ['add', 'edit', 'del', 'run','replace','mock'],
             'business': ['edit', 'del', 'run','replace']
         }
         _opinfo = {
@@ -156,7 +156,7 @@ var tree = {
             'logs': "<span class='fa icon-fa-bug' id='logs_#tid#' title='调试日志' onfocus='this.blur();'></span>",
             'config': "<span class='fa icon-fa-cog' id='config_#tid#' title='高级配置' onfocus='this.blur();'></span>",
             'replace': "<span class='fa fa-facebook' id='replace_#tid#' title='文本替换' onfocus='this.blur();'></span>",
-            
+            'mock':"<span class='fa fa-gg' id='mock_#tid#' title='mock' onfocus='this.blur();'></span>",
         }
 
         var type = treeNode.type
@@ -197,6 +197,7 @@ var tree = {
         if ($("#logs_" + treeNode.tId).length > 0) return
         if ($("#config_" + treeNode.tId).length > 0) return
         if ($("#replace_" + treeNode.tId).length > 0) return
+        if ($("#mock_" + treeNode.tId).length > 0) return
 
         sObj.after(btnstr);
 
@@ -471,6 +472,35 @@ var tree = {
                 });
                 
             })
+            //mock
+            var mock_btn = $("#mock_" + treeNode.tId);
+            if (mock_btn) mock_btn.bind("click", function () {
+                // alert(treeNode.id)
+                console.log('http://'+host+'/manager/simpletest/?nodeid='+treeNode.id)
+                success=function(e) {
+
+                    if(e.code!=0){
+                        layer.alert(e.msg,{icon:2})
+                        return
+
+                    }
+
+                layer.open({
+                    'title':'mock管理',
+                    'type':2,
+                    'content':'http://'+host+'/manager/simpletest/?nodeid='+treeNode.id,
+                    'btn': ['ok'],
+                    'area':['750px','540px'],
+                });
+
+                }
+
+                _get('/manager/querysteptype/',{'sid':treeNode.id},success)
+
+
+
+            });
+
 
             function opendebug(planid, nodeid) {
                 _post_nl('/homepage/queryPlanState/', {id: planid, 'type': 'debug'}, function (data) {
@@ -630,6 +660,7 @@ var tree = {
         $("#logs_" + treeNode.tId).unbind().remove();
         $("#config_" + treeNode.tId).unbind().remove();
         $("#replace_" + treeNode.tId).unbind().remove();
+        $("#mock_" + treeNode.tId).unbind().remove();
     },
 
     _onBeforeExpand: function (e, treeId, treeNode) {

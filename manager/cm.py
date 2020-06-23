@@ -7,7 +7,6 @@ import json
 import threading
 
 from manager.operate.cron import Cron
-from .models import Tag
 import traceback, datetime
 from django.db.models import Q
 from manager import models as mm
@@ -188,11 +187,11 @@ def delplan(request):
 
 def handlebindplans(olddescription, newdescription, id_):
 	logger.info("处理计划名修改后的标签中绑定的计划名称")
-	oldtags = Tag.objects.values('id', 'planids').filter(Q(planids__contains=olddescription))
+	oldtags = mm.Tag.objects.values('id', 'planids').filter(Q(planids__contains=olddescription))
 	for oldtag in oldtags:
 		planids = json.loads(oldtag['planids'])
 		if olddescription in planids and id_ in planids[olddescription]:
-			edittag = Tag.objects.get(id=oldtag['id'])
+			edittag = mm.Tag.objects.get(id=oldtag['id'])
 			ol = json.loads(edittag.planids)
 			ol[newdescription] = ol.pop(olddescription)
 			edittag.planids = str(ol).replace("'", '"')
@@ -292,7 +291,7 @@ def run(request):
 		taskid = gettaskid(plan.__str__())
 		logger.info('callername:',callername)
 		state_running =getRunningInfo(username=callername,planid=planid,type='isrunning')
-		logger.info('flag4')
+	
 		
 		if state_running != '0':
 			msg = '验证' if state_running == 'verify' else '调试'
@@ -300,9 +299,12 @@ def run(request):
 				'status': 'fail',
 				'msg': '计划正在运行[%s]任务，稍后再试！'%msg
 			}
-		# logger.info('runidd:',runid)
+		logger.info('runidd:',runid)
 		t=threading.Thread(target=runplan,args=(callername, taskid, planid, is_verify,None,runid))
 		t.start()
+		# logger.info('m_pool:',id(m_pool))
+		# m_pool.apply_async(runplan,(callername, taskid, planid, is_verify,None,runid))
+
 	return {
 		'status': 'success',
 		'msg': str(taskid),

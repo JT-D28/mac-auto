@@ -985,7 +985,7 @@ class Fu:
 					
 					elif isinstance(res, (bool,)):
 						if res is False:
-							return ('fail', '[%s]没按预期执行 提前结束' % re.findall('(.*?)\(', call_str)[0])
+							return ('fail', '[%s]返回结果不符合预期' % re.findall('(.*?)\(', call_str)[0])
 					elif res is None:
 						pass
 					

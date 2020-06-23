@@ -118,7 +118,7 @@ def dbexecute2(sql, **kws):
 	except:
 		print(traceback.format_exc())
 		return 'error', '执行内置函数报错sql[%s] error[%s]' % (sql, traceback.format_exc())
->>>>>>> f002a4de1ebeb85515590c4b3d7fa6e6dd025195
+
 
 
 def getDate(**kws):

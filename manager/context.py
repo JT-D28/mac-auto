@@ -391,7 +391,7 @@ def _step_mock(callername, taskid, step,businessdata, kind=None,is_repeat=0):
 
     try:
         is_mock_open=step.is_mock_open
-        if is_mock_open==0:
+        if not is_mock_open:
             return
 
         user = User.objects.get(name=callername)

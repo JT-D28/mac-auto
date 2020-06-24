@@ -1589,8 +1589,11 @@ def querytreelist(request):
 			return data
 
 		elif type == 'case':
-			orders = Order.objects.filter(kind__contains='case_', main_id=idx,isdelete=0).extra(
-				select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
+			#orders = Order.objects.filter(kind__contains='case_', main_id=idx,isdelete=0).extra(
+				#select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
+			orders =list(Order.objects.filter(kind__contains='case_', main_id=idx,isdelete=0))
+			orders.sort(key=lambda a:int(a.value.split('.')[1]))
+
 			for order in orders:
 				try:
 					nodekind = order.kind.split('_')[1]
@@ -1610,6 +1613,7 @@ def querytreelist(request):
 
 		elif type == 'step':
 			businesslist = cm.getchild('step_business',idx)
+			
 			for business in businesslist:
 				bname = business.businessname
 				if business.count in (0, '0'):
@@ -1640,6 +1644,7 @@ def querytreelist(request):
 	else:
 		datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True})
 		productlist = list(Product.objects.all().exclude(isdelete=1))
+		# logger.info('productlist:',productlist)
 		for product in productlist:
 			datanode.append({
 				'id': 'product_%s' % product.id,

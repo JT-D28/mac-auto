@@ -1557,7 +1557,7 @@ def querytreelist(request):
 	datanode = []
 	
 	def _get_pid_data(idx, type, data):
-		
+
 		if type == 'product':
 			plans = cm.getchild('product_plan', idx)
 			logger.info('plans=>', plans)
@@ -1570,7 +1570,7 @@ def querytreelist(request):
 					'textIcon': 'fa icon-fa-product-hunt',
 				})
 			return data
-		
+
 		elif type == 'plan':
 			cases = cm.getchild('plan_case', idx)
 			logger.info('cases=>', cases)
@@ -1595,12 +1595,13 @@ def querytreelist(request):
 				try:
 					nodekind = order.kind.split('_')[1]
 					nodeid = order.follow_id
-					name = eval("%s.objects.values('description').get(id=%s)"%(nodekind.capitalize(),nodeid))
+					obj = eval("%s.objects.values('description','count').get(id=%s)"%(nodekind.capitalize(),nodeid))
+					name = '<s>%s</s>' % obj['description'] if obj['count'] in (0, '0') else obj['description']
 					textIcon = 'fa icon-fa-file-o' if nodekind =='step' else 'fa icon-fa-folder'
 					data.append({
 						'id': '%s_%s' % (nodekind,nodeid),
 						'pId': 'case_%s' % idx,
-						'name': name['description'],
+						'name': name,
 						'type': nodekind,
 						'textIcon': textIcon,
 					})

@@ -96,36 +96,37 @@
             setTimeout(() => jQuery(m).css("color", "#000000"), 10000)
         }
     }
-
     ws = new WebSocket('ws://' + window.location.host + '/ws/getlog/' + taskid + '/');
-    ws.onopen = () => {
-    }
-    ws.onmessage = function (evt) {
-        e = JSON.parse(evt.data).message;
-        const total = e.length;
-        const once = 5000;
-        const loopCount = total / once;
-        let countOfRender = 0;
-        let ul = document.getElementById("inoooo");
-        loop()
-
-        function add() {
-            const fragment = document.createDocumentFragment();
-            const li = document.createElement("li");
-            li.innerHTML = ArraytoString(e.slice(once * countOfRender, once * (countOfRender + 1)));
-            fragment.appendChild(li);
-            ul.appendChild(fragment);
-            countOfRender += 1;
-            loop();
-        }
-
-        function loop() {
-            console.log("aaaaaaa", countOfRender, loopCount)
-            if (countOfRender < loopCount && loopCount!=0) {
-                window.requestAnimationFrame(add);
+    ws.onopen = function () {
+        ws.send(taskid)
+    };
+    let ul = document.getElementById("inoooo");
+    ws.onmessage = function (e) {
+        e = JSON.parse(e.data).message;
+        setTimeout(() => {
+            const total = e.length;
+            const once = 800;
+            const loopCount = total / once;
+            let countOfRender = 0;
+            function add() {
+                const fragment = document.createDocumentFragment();
+                const li = document.createElement("li");
+                li.innerHTML = ArraytoString(e.slice(once * countOfRender, once * (countOfRender + 1)));
+                fragment.appendChild(li);
+                ul.appendChild(fragment);
+                countOfRender += 1;
+                loop();
             }
-        }
-    }
+
+            function loop() {
+                if (countOfRender < loopCount && loopCount!=0) {
+                    window.requestAnimationFrame(add);
+                }
+            }
+
+            loop();
+        }, 100);
+    };
 
     function ArraytoString(input) {
         let r = "";

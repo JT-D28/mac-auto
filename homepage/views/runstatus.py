@@ -81,46 +81,6 @@ def _get_pid_data(idx, type):
     return data
 
 
-class getlog(WebsocketConsumer):
-    def connect(self):
-        self.read=1
-        self.taskid = self.scope["url_route"]["kwargs"]["id"]
-        self.accept()
-        self.thread = threading.Thread(target=self.sendmsg, args=(self.taskid,))
-        self.thread.start()
-        print("aaa",self.channel_name)
-    def disconnect(self, close_code):
-        self.read=0
-        print('disconnect:', self.channel_name)
-
-    def send_message(self, event):
-        self.send(text_data=json.dumps({
-            "message": event["message"]
-        }))
-
-    def sendmsg(self, taskid):
-        logname = BASE_DIR + "/logs/" + taskid + ".log"
-        if os.path.exists(logname):
-            try:
-                with open(logname, 'r', encoding='utf-8') as f:
-                    while self.read==1:
-                        log_text = f.readlines()
-                        async_to_sync(get_channel_layer().send)(
-                            self.channel_name,
-                            {
-                                "type": "send.message",
-                                "message": log_text
-                            }
-                        )
-                        for i in log_text:
-                            if '结束计划' in i:
-                                return
-                        time.sleep(0.1)
-            except Exception as e:
-                pass
-            finally:
-                f.close()
-
 
 @csrf_exempt
 def stauteofbusiness(request):
@@ -134,3 +94,41 @@ def stauteofbusiness(request):
         if r:
             info = '跳过执行'
     return JsonResponse({'info': info})
+
+
+
+
+class getlog(WebsocketConsumer):
+    def sendmsg(self, taskid):
+        logname = BASE_DIR + "/logs/" + taskid + ".log"
+        done_msg = '结束计划'
+        if os.path.exists(logname):
+            with open(logname, 'r', encoding='utf-8') as f:
+                while self.con == 1:
+                    log_text = f.readlines()
+                    async_to_sync(get_channel_layer().send)(
+                        self.channel_name,
+                        {
+                            "type": "send.message",
+                            "message": log_text
+                        }
+                    )
+                    for i in log_text:
+                        if done_msg in i:
+                            return
+                    time.sleep(0.1)
+
+    def send_message(self, event):
+        self.send(text_data=json.dumps({
+            "message": event["message"]
+        }))
+
+    def receive(self, text_data):
+        self.con = 1
+        self.thread = threading.Thread(target=self.sendmsg, args=(text_data,))
+        self.thread.setDaemon(True)
+        self.thread.start()
+
+    def disconnect(self, code=None):
+        self.con = 0
+        print("%s 的日志打印结束" % self.taskid)

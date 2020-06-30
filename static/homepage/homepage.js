@@ -186,8 +186,19 @@ var app = new Vue({
                             shadeClose: true,
                             btn: ['火速围观', '残忍拒绝'],
                             yes: function (index, layero) {
-                                window.top.document.getElementById("console").click()
-                                layer.close(index)
+                                // window.top.document.getElementById("console").click()
+                                // layer.close(index)
+                                var analysisurl = '/homepage/runstatus/?plan=' + planid+'&taskid='+data.taskid
+                                // window.open(analysisurl)
+                                layer.open({
+                                    type: 2,
+                                    title: false,
+                                    shade: [0],
+                                    area: ['90%', '90%'],
+                                    anim: 2,
+                                    shadeClose: true,
+                                    content: [analysisurl, 'yes'], //iframe的url，no代表不显示滚动条
+                                });
                             }
                         });
                     } else layer.msg(data.msg)
@@ -405,15 +416,7 @@ var app = new Vue({
                                         let ul = document.getElementById("log_text");
 
                                         function add() {
-                                            //   console.time('get')
                                             const fragment = document.createDocumentFragment();
-                                            // for (let i = 0; i < once; i++) {
-                                            //     const li = document.createElement("li");
-                                            //      li.innerHTML = e.data[once * countOfRender + i] != undefined ? e.data[once * countOfRender + i] : '';
-                                            //       fragment.appendChild(li);
-                                            //    }
-                                            //   console.timeEnd('get')
-
                                             const li = document.createElement("li");
                                             li.innerHTML = ArraytoString(e.data.slice(once * countOfRender, once * (countOfRender + 1)));
                                             fragment.appendChild(li);
@@ -956,7 +959,7 @@ var app = new Vue({
             _post_nl('/homepage/runforJacoco/', {
                 'productid': that.form.product,
             }, function (data) {
-                layer.msg(data.data,{time: 20*1000})
+                layer.msg(data.data, {time: 20 * 1000})
             })
         },
         getproductReport(rate, total) {

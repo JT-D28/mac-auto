@@ -7,20 +7,22 @@
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from django.urls import path, re_path
-from manager.consumer import ChatConsumer, ConsoleConsumer, logConsumer,PkgSaveConsumer,PkgReadConsumer
+from manager.consumer import ChatConsumer, ConsoleConsumer, logConsumer, PkgSaveConsumer, PkgReadConsumer
+from homepage.views import getlog
 
 websocket_urlpatterns = [
-	path(r"ws/intercept/", ChatConsumer),
-	path(r"ws/consolemsg/", ConsoleConsumer),
+    path(r"ws/intercept/", ChatConsumer),
+    path(r"ws/consolemsg/", ConsoleConsumer),
     path(r'ws/pkgsave/', PkgSaveConsumer),
     path(r'ws/pkgread/', PkgReadConsumer),
-	path(r"ws/runlog/", logConsumer)
+    path(r"ws/runlog/", logConsumer),
+    re_path(r'^ws/getlog/(?P<id>.*)/$', getlog),
 ]
 
 application = ProtocolTypeRouter({
-	'websocket': AuthMiddlewareStack(
-		URLRouter(
-			websocket_urlpatterns
-		)
-	)
+    'websocket': AuthMiddlewareStack(
+        URLRouter(
+            websocket_urlpatterns
+        )
+    )
 })

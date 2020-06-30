@@ -476,7 +476,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
     logger.info('节点[%s]下有测试点ID：%s'%(case0.description,case_run_nodes))
     # logger.info('传入的最终执行测试点ID：%s'%L)
     if subflag:
-        viewcache(taskid, username, kind, "开始执行用例[<span style='color:#FF3399'>%s</span>]" % case0.description)
+        viewcache(taskid, username, kind, "开始执行用例[<span id='case_%s' style='color:#FF3399'>%s</span>]" %(case0.id,case0.description))
     steporderlist = ordered(list(Order.objects.filter(Q(kind='case_step') | Q(kind='case_case'), main_id=case0.id)))
     
     ##case执行次数
@@ -547,7 +547,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
                             except:
                                 logger.info('保存结果异常=>', traceback.format_exc())
                             caseresult.append(result)
-                            result = "<span class='layui-bg-%s'>%s</span>" % (color_res.get(result, 'orange'), result)
+                            result = "<span id='step_%s' class='layui-bg-%s'>%s</span>" % (stepid,color_res.get(result, 'orange'), result)
                             
                             if 'omit' not in result:
                                 error = '   原因=>%s' % error if 'success' not in result else ''
@@ -589,9 +589,9 @@ def beforePlanCases(planid):
         before_des, before_kind, before_id = before_plan.split("@")
         before_id = base64.b64decode(before_id).decode('utf-8')
         if before_kind == 'plan':
-            caseslist = Order.objects.filter(main_id=before_id, kind='plan_case')
+            caseslist = Order.objects.filter(main_id=before_id, kind='plan_case',isdelete=0)
         elif before_kind == 'case':
-            caseslist = Order.objects.filter(follow_id=before_id, kind='plan_case')
+            caseslist = Order.objects.filter(follow_id=before_id, kind='plan_case',isdelete=0)
     return caseslist, before_des
 
 
@@ -626,7 +626,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
             beforeCases, before_des = beforePlanCases(planid)
             caseslist.extend(ordered(list(beforeCases)))
             viewcache(taskid, callername, kind, "加入前置计划/用例[<span style='color:#FF3399'>%s</span>]" % (before_des))
-            caseslist.extend(ordered(list(Order.objects.filter(main_id=planid, kind='plan_case'))))
+            caseslist.extend(ordered(list(Order.objects.filter(main_id=planid, kind='plan_case',isdelete=0))))
             cases = [Case.objects.get(id=x.follow_id) for x in caseslist]
         else:
             caseid = get_node_upper_case(startnodeid)
@@ -663,8 +663,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
         # asyncio.run(dealDeBuginfo(taskid))
         # asyncio.run(dealruninfo(planid,taskid))
 
-        # threading.Thread(target=dealDeBuginfo, args=(taskid,)).start()
-        # threading.Thread(target=dealruninfo, args=(planid,taskid,)).start()
+
 
         # 清除请求session
         clear_task_session('%s_%s' % (taskid, callername))
@@ -692,10 +691,14 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 
     finally:
         clear_data(callername, _tempinfo)
+        from manager.context import cons
+        cons[taskid].expire("console.msg::%s::%s" % (username, taskid), 600)
+        del cons[taskid]
+
         clear_mock(callername)
         setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
 
-@mock
+
 def _step_process_check(callername, taskid, order, kind):
     """
     return (resultflag,msg)
@@ -726,8 +729,8 @@ def _step_process_check(callername, taskid, order, kind):
         
         viewcache(taskid, username, kind, "--" * 100)
         viewcache(taskid, username, kind,
-                  "开始执行步骤[<span style='color:#FF3399'>%s</span>] 测试点[<span style='color:#FF3399' id=%s>%s</span>]" % (
-                      step.description,businessdata.id, businessdata.businessname))
+                  "开始执行步骤[<span style='color:#FF3399' id='step_%s'>%s</span>] 测试点[<span style='color:#FF3399' id='business_%s'>%s</span>]" % (
+                      step.id,step.description,businessdata.id, businessdata.businessname))
         
         dbid = getDbUse(taskid, step.db_id)
 
@@ -2260,7 +2263,7 @@ def save_data(username, d, k, v):
         logger.info('存属性==')
         logger.info(username, k, v)
         
-        viewcache(username, "用户%s缓存数据=> %s=%s" % (username, k, v))
+        # viewcache(username, "用户%s缓存数据=> %s=%s" % (username, k, v))
     
     except:
         raise RuntimeError("存property失败=>%s" % k)

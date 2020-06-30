@@ -1,0 +1,137 @@
+import json
+import os
+import threading
+import time
+
+from channels.layers import get_channel_layer
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
+from asgiref.sync import async_to_sync
+from channels.generic.websocket import WebsocketConsumer
+import json
+
+from ME2.settings import BASE_DIR
+from manager import cm
+from manager.consumer import logConsumer
+from manager.context import getRunningInfo
+from manager.models import Case, Order, BusinessData, Plan, Step, ResultDetail
+
+
+def runstatus(request):
+    return render(request, 'runstatus.html', locals())
+
+
+@csrf_exempt
+def runnodes(request):
+    data = []
+    id = request.POST.get('id')
+    taskid = request.POST.get('taskid')
+    type = request.POST.get('type')
+    data = _get_pid_data(id, type)
+    return JsonResponse({'data': data})
+
+
+def _get_pid_data(idx, type):
+    data = []
+    if type == 'plan':
+        cases = cm.getchild('plan_case', idx)
+        for case in cases:
+            if case.count not in (0, '0'):
+                data.append({
+                    'id': 'case_%s' % case.id,
+                    'pId': 'plan_%s' % idx,
+                    'name': case.description,
+                    'type': 'case',
+                    'textIcon': 'fa icon-fa-folder',
+                })
+
+    elif type == 'case':
+        orders = Order.objects.filter(kind__contains='case_', main_id=idx, isdelete=0).extra(
+            select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
+        for order in orders:
+            try:
+                nodekind = order.kind.split('_')[1]
+                nodeid = order.follow_id
+                obj = eval("%s.objects.values('description','count').get(id=%s)" % (nodekind.capitalize(), nodeid))
+                if obj['count'] not in (0, '0'):
+                    textIcon = 'fa icon-fa-file-o' if nodekind == 'step' else 'fa icon-fa-folder'
+                    data.append({
+                        'id': '%s_%s' % (nodekind, nodeid),
+                        'pId': 'case_%s' % idx,
+                        'name': obj['description'],
+                        'type': nodekind,
+                        'textIcon': textIcon,
+                    })
+            except Exception as e:
+                print(e)
+
+    elif type == 'step':
+        businesslist = cm.getchild('step_business', idx)
+        for business in businesslist:
+            bname = business.businessname
+            if business.count not in (0, '0'):
+                data.append({
+                    'id': 'business_%s' % business.id,
+                    'pId': 'step_%s' % idx,
+                    'name': bname,
+                    'type': 'business',
+                    'textIcon': 'fa icon-fa-leaf',
+                })
+    return data
+
+
+class getlog(WebsocketConsumer):
+    def connect(self):
+        self.read=1
+        self.taskid = self.scope["url_route"]["kwargs"]["id"]
+        self.accept()
+        self.thread = threading.Thread(target=self.sendmsg, args=(self.taskid,))
+        self.thread.start()
+        print("aaa",self.channel_name)
+    def disconnect(self, close_code):
+        self.read=0
+        print('disconnect:', self.channel_name)
+
+    def send_message(self, event):
+        self.send(text_data=json.dumps({
+            "message": event["message"]
+        }))
+
+    def sendmsg(self, taskid):
+        logname = BASE_DIR + "/logs/" + taskid + ".log"
+        if os.path.exists(logname):
+            try:
+                with open(logname, 'r', encoding='utf-8') as f:
+                    while self.read==1:
+                        log_text = f.readlines()
+                        print(self.channel_name)
+                        async_to_sync(get_channel_layer().send)(
+                            self.channel_name,
+                            {
+                                "type": "send.message",
+                                "message": log_text
+                            }
+                        )
+                        for i in log_text:
+                            if '结束计划' in i:
+                                return
+                        time.sleep(0.1)
+            except Exception as e:
+                pass
+            finally:
+                f.close()
+
+
+@csrf_exempt
+def stauteofbusiness(request):
+    type = request.POST.get('type')
+    id = request.POST.get('id')
+    planid = request.POST.get('planid')
+    taskid = request.POST.get('taskid')
+    info = '未执行'
+    if type == 'business':
+        r = ResultDetail.objects.get(taskid=taskid, plan_id=planid, businessdata_id=id)
+        if r:
+            info = '跳过执行'
+    return JsonResponse({'info': info})

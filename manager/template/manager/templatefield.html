@@ -94,6 +94,17 @@
             <input type="text" name="index" placeholder="请输入" autocomplete="off" class="layui-input">
         </div>
     </div>
+    <div class="layui-form-item  ">
+        <label class="layui-form-label">属于</label>
+        <div class="layui-input-block">
+            <select name="kind" lay-verify="">
+                <option value="">请选择</option>
+                <option value="HEAD">HEAD</option>
+                <option value="DETAIL">DETAIL</option>
+            </select>
+        </div>
+    </div>
+
 
 
 </form>
@@ -266,7 +277,8 @@
                             'description': $("[name='description']").val(),
                             'start': $("[name='start']").val(),
                             'end': $("[name='end']").val(),
-                            'index': $("[name='index']").val()
+                            'index': $("[name='index']").val(),
+                            'belongs':$("[name='kind']").val()
                         }
 
                         _post("/manager/addtemplatefield/", data, success)
@@ -299,6 +311,7 @@
                     $("[name='start']").val(data.data['start'])
                     $("[name='end']").val(data.data['end'])
                     $("[name='index']").val(data.data['index'])
+                    $("[name='kind']").val(data.data['kind'])
 
                     form.render()
                     //打开表
@@ -337,7 +350,8 @@
                                 'description': $("[name='description']").val(),
                                 'start': $("[name='start']").val(),
                                 'end': $("[name='end']").val(),
-                                'index': $("[name=index]").val()
+                                'index': $("[name=index]").val(),
+                                'belongs':$("[name='kind']").val()
 
                             }, success)
 

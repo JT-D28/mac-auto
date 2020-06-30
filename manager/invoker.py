@@ -779,7 +779,7 @@ def _step_process_check(callername, taskid, order, kind):
             elif statuscode == 200:
                 
                 ##后置操作
-                status, res = _call_extra(user, postplist, taskid=taskid, kind='后置操作')  ###????
+                status, res = _call_extra(user, postplist, taskid=taskid, kind='后置操作',response_text=text)  ###????
                 if status is not 'success':
                     return (status, res)
                 
@@ -1155,7 +1155,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
         return ('', '', '', "请求方法[%s]暂不支持.." % method)
     
     ###响应报文中props处理
-    status, err = _find_and_save_property(user, props, rps.text)
+    status, err = _find_and_save_property(taskid,user, props, rps.text)
     
     if status is not 'success':
         return ('', '', '', err)
@@ -1185,6 +1185,7 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
     except:
         pass
     
+    logger.info('params:{}'.format(call_method_params))
     call_method_params.append("taskid='%s'" % taskid)
     call_method_params.append("callername='%s'" % user.name)
     # call_method_params.append("location='%s'"%get_space_dir(user.name))
@@ -1204,7 +1205,7 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
     return Fu.call(f, call_str, builtin=builtin)
 
 
-def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
+def _call_extra(user, call_strs, taskid=None, kind='前置操作',response_text=None):
     
     f = None
     builtinmethods = [x.name for x in getbuiltin()]
@@ -1216,7 +1217,7 @@ def _call_extra(user, call_strs, taskid=None, kind='前置操作'):
             continue
             
         viewcache(taskid, user, None, "执行%s:%s" % (kind, s))
-        status, s = _replace_variable(user, s, 1, taskid)
+        status, s = _replace_variable(user, s, src=1, taskid=taskid,responsetext=response_text)
         logger.info('变量处理后的callstr:',s)
         if status is not 'success':
             return (status, s)
@@ -1438,6 +1439,7 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
     """
     # res=None
     exp = None
+    # rr=None
     try:
         
         # logger.info("ourexpression=>",ourexpression)
@@ -1892,6 +1894,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
     try:
         old = str_
         varnames = re.findall('{{(.*?)}}', str_)
+        logger.info('######################varnames:',varnames)
         for varname in varnames:
             if varname.strip() == 'STEP_PARAMS':
                 dictparams = _get_step_params(str_, taskid, user.name)
@@ -1902,7 +1905,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
                 continue;
             
             elif varname.strip() == 'RESPONSE_TEXT':
-                logger.info('==获取text/html响应报文用于替换')
+                logger.info('==获取text/html响应报文用于替换 responsetext={}'.format(responsetext))
                 if responsetext:
                     old = old.replace('{{RESPONSE_TEXT}}', responsetext)
                     logger.info('==RESPONSE_TEXT替换后=>\n', old)
@@ -2220,21 +2223,29 @@ def _save_builtin_property(taskid, username):
     save_data(username, _tempinfo, 'PLAN_SUCCESS_RATE', detail['success_rate'])
 
 
-def _find_and_save_property(user, dict_str, reponsetext):
+def _find_and_save_property(taskid,user, dict_str, responsetext):
     """
-    属性保存 如响应json中没相关字段 则当做字符串
+    接口属性字段处理  默认根据定的路径从相应中拿值 拿不到路劲当普通字符串处理
+
     """
     cur = None
     # logger.info(type(dict_str),len(dict_str))
     try:
         if dict_str is None or len(dict_str.strip()) == 0:
             return ('success', '')
-        
+
+        ##增加对变量的处理
+        status,res=_replace_variable(user, dict_str,responsetext=responsetext,taskid=taskid)
+        if status is 'success':
+            dict_str=res
+        else:
+            return ('error','处理属性异常')
+
         d = eval(dict_str)
 
         for k, v in d.items():
             cur = k
-            p = JSONParser(reponsetext)
+            p = JSONParser(responsetext)
             logger.info('================_find_and_save_property==========')
 
             v1 = p.getValue(v)

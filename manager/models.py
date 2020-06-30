@@ -37,6 +37,7 @@ class TemplateField(Model):
 	start = IntegerField(default=-1)  ##从1算起
 	end = IntegerField(default=-1)
 	index = IntegerField(default=-1)
+	kind=CharField(max_length=8)
 
 
 class Template(Model):

@@ -45,6 +45,7 @@ class Mysqloper:
 			try:
 				
 				# print(len(conname),len(conname.strip()))
+				logger.info('查询DBCON description={} scheme={}'.format(conname.strip(),scheme))
 				dbcon = models.DBCon.objects.get(description=conname.strip(), scheme=scheme)
 				
 				self.dbtype = dbcon.kind

@@ -70,7 +70,7 @@ class Mysqloper:
 					                       port=int(self.port),
 					                       user=self.user,
 					                       password=self.pwd,
-					                       charset='utf8mb4')
+					                       charset='utf8mb4',connect_timeout=1000)
 				
 				
 				elif self.dbtype.lower() == 'oracle_servicename':

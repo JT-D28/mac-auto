@@ -1840,13 +1840,11 @@ def querytemplate(request):
 
 def templatefield(request):
 	tid = request.GET.get('tid')
-	is_sort_display = ''
-	is_start_display = ''
 	kind = Template.objects.get(id=tid).kind
-
+	is_sort_display = '' if kind!='length' else 'none'
+	is_start_display = '' if kind=='length' else 'none'
 	show_index = 'false' if kind != 'length' else 'true'
 
-	
 	return render(request, 'manager/templatefield.html', locals())
 
 

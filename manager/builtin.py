@@ -29,6 +29,37 @@ def cout(*msg, **kws):
     msg = "<span style='color:%s;'>%s</span>" % (_colormap[level],text)
     viewcache(taskid, callername, None, msg)
 
+def getpropety(key,**kws):
+    '''
+    用户获取属性
+    '''
+    from manager.invoker import _tempinfo
+    username=kws['callername']
+    try:
+        v=_tempinfo.get(username,{}).get(key,'')
+        cout('用户{}获取自定义属性{}的值{}success .'.format(username,key,v),**kws)
+        return v
+
+    except:
+        return 'error'
+
+def saveproperty(key,value,**kws):
+    '''
+    用户设置属性
+    '''
+    from manager.invoker import _tempinfo
+    msg=''
+    username=kws['callername']
+    try:
+        up=_tempinfo.get(username,{})
+        up[key]=value
+        msg='用户{}自定义属性{}={} success.'.format(username,key,value)
+        return ('success',msg)
+        
+    except:
+        msg='用户{}自定义属性{}={} error.'.format(username,key,value)
+        return ('error',msg)
+
 def dbexecute(sql, **kws):
 
 	"""
@@ -334,3 +365,97 @@ def response_match_db(response_text,checkmap,**kws):
         cout(traceback.format_exc(),taskid=taskid,callername=callername)
         return False
     return True
+
+
+
+def  tuipiao_file_check(timeflag,t_templatename,td_templatename,t_checklist,td_checklist,**kws):
+    '''
+    退票场景文件校验
+    '''
+    from datetime import datetime
+    from ftplib import FTP
+    import time,io
+    import os, traceback, subprocess
+    from manager.pa import MessageParser
+    from manager.builtin import cout
+    w=kws.get('wait',None)
+    wait=int(w) if w else 5
+
+    try:
+        time.sleep(wait)
+        ip,port,username,password='10.60.45.174',21,'AS330106','123456'
+        callername=kws['callername']
+        ######
+        ftp = FTP()
+        ftp.set_debuglevel(0)
+        ftp.connect(ip, int(port))
+        ftp.login(username, password)
+
+        ###
+        #today_lt_file='.'.join([str( datetime.now())[:10],'lt']).replace('-', '')
+        today_lt_file='20200401.lt'
+        today_lt_file_path='/tenant43/AS330106/upload/'+today_lt_file
+        cout('使用的远程.lt文件:',today_lt_file_path,**kws)
+
+        ###
+        buf = io.StringIO()
+        ftp.retrlines("RETR "+ today_lt_file_path, buf.write)
+        t_file_name=[x for x in buf.getvalue().split('.t') if x][-1]+'.t'
+        td_file_name=t_file_name+'d'
+
+        buf2 = io.StringIO()
+        today_td_file_path='/tenant43/AS330106/upload/'+td_file_name
+        cout('使用的远程.td文件:',today_td_file_path,**kws)
+        ftp.retrlines("RETR "+ today_td_file_path, buf2.write)
+
+        today_t_file_path='/tenant43/AS330106/upload/'+t_file_name
+
+        ####下载.t文件 解密解压 check
+        status,msg=ftp_to_local(ip, port, username, password,today_t_file_path,**kws)
+        if status is not 'success':
+            cout('下载文件{}异常'.format(today_lt_file_path),**kws)
+            return False
+
+        local_t_file_path= os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File', callername,
+                                 t_file_name)
+
+        toolpath=os.path.join(os.path.dirname(__file__), 'storage', 'public', 'tools','jiemi_rh_20200326.jar')
+
+        command = 'java -jar %s %s' % (toolpath,local_t_file_path)
+
+        p = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE,
+                             stdout=subprocess.PIPE)
+        p.wait()
+        decryptresult = p.communicate()[0].decode('GBK').replace('\n', '||')
+
+        cout('解密解压[%s]获得文件[%s]内容:\n%s' % (command,local_t_file_path, decryptresult),**kws)
+        
+        parser = MessageParser.get_parse_config(t_templatename)
+        if parser[0] is not 'success':
+            return parser
+        mp = MessageParser(parser[1], decryptresult, t_checklist)
+        checkresult = mp.compute()
+        cout('.t 本地文件校验计算明细=>', checkresult,**kws)   
+        for exp in checkresult:
+            if checkresult[exp][0] is not 'success':
+                return checkresult[exp]
+
+        ##.td check
+        parser = MessageParser.get_parse_config(td_templatename)
+        if parser[0] is not 'success':
+            return parser
+
+        cur_td_file_content=buf2.getvalue()
+        mp = MessageParser(parser[1], cur_td_file_content, td_checklist)
+        checkresult = mp.compute()
+        cout('.td 本地文件校验计算明细=>', checkresult,**kws)
+
+        for exp in checkresult:
+            if checkresult[exp][0] is not 'success':
+                return checkresult[exp]
+
+        ftp.close()
+        return True
+    except:
+        cout('退票校验异常:{}'.format(traceback.format_exc()),**kws)
+        return False

@@ -134,6 +134,7 @@ class MessageParser(object):
 			t.name = tkws['name']
 			t.description = tkws['description']
 			t.author = tkws['author']
+
 			
 			t.save()
 			return {
@@ -298,15 +299,19 @@ class MessageParser(object):
 	
 	@classmethod
 	def add_field(cls, **fkws):
+
+		tid = fkws['tid']
+		kind = fkws['kind']
+		
+		t = Template.objects.get(id=tid)
+		
+		tf = TemplateField()
+		tf.fieldcode = fkws['fieldcode']
+		tf.description = fkws['description']
+		tf.kind=fkws['belongs']
+
+
 		try:
-			tid = fkws['tid']
-			kind = fkws['kind']
-			
-			t = Template.objects.get(id=tid)
-			
-			tf = TemplateField()
-			tf.fieldcode = fkws['fieldcode']
-			tf.description = fkws['description']
 			if kind == 'length':
 				if not fkws['start'] or not fkws['end']:
 					return {
@@ -327,7 +332,7 @@ class MessageParser(object):
 				tf.end = -1
 			
 			tf.save()
-			
+
 			t.fieldinfo.add(tf)
 			
 			return {
@@ -336,6 +341,8 @@ class MessageParser(object):
 			}
 		
 		except:
+
+			print(traceback.format_exc())
 			return {
 				'code': 4,
 				'msg': '新增字段异常=>' + traceback.format_exc()
@@ -367,6 +374,7 @@ class MessageParser(object):
 			tf = TemplateField.objects.get(id=fkws['fid'])
 			tf.fieldcode = fkws['fieldcode']
 			tf.description = fkws['description']
+			tf.kind=fkws['belongs']
 			if fkws['index']:
 				tf.index = fkws['index']
 			if fkws['start']:

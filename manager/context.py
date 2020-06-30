@@ -375,6 +375,7 @@ def add_mock(f):
 
         except:
             Me2Log.info('[mock测试异常]{}',traceback.format_exc())
+            return f(*args,**kws)
 
 
         return f(*args,**kws)
@@ -531,6 +532,7 @@ def _step_mock(callername, taskid, step,businessdata, kind=None,is_repeat=0):
             else:
                 # viewcache(taskid,username,kind,'数据校验没配置 跳过校验')
                 return ('success', '')
+        return ('success','')
     
     except Exception as e:
         # traceback.Me2Log.info_exc()

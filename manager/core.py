@@ -718,7 +718,7 @@ class TemplateEncoder(XJsonEncoder):
 class TemplateFieldEncoder(XJsonEncoder):
 	def __init__(self, **args):
 		super(TemplateFieldEncoder, self).__init__(
-			['id', 'fieldcode', 'description', 'start', 'end', 'index', 'template','length'], **args)
+			['id', 'fieldcode', 'description', 'start', 'end', 'index', 'template','length','kind'], **args)
 
 
 def simplejson(code=0, msg='', **kw):
@@ -848,7 +848,7 @@ def getbuiltin(searchvalue=None, filename='builtin.py'):
 					continue;
 				f = Function()
 				f.name = methodname
-				f.description = eval(methodname).__doc__.strip()
+				f.description = eval(methodname).__doc__
 				f.kind = '内置函数'
 				f.createtime = f.updatetime = '*'
 				list_.append(f)
@@ -856,19 +856,53 @@ def getbuiltin(searchvalue=None, filename='builtin.py'):
 			for methodname in methodnames:
 				if methodname.startswith('_'):
 					continue;
-				if (searchvalue in methodname) or (searchvalue in eval(methodname).__doc__.strip()):
+				if (searchvalue in methodname) or (searchvalue in eval(methodname).__doc__):
 					f = Function()
 					f.name = methodname
-					f.description = eval(methodname).__doc__.strip()
+					f.description = eval(methodname).__doc__
 					f.kind = '内置函数'
 					f.createtime = f.updatetime = '*'
 					list_.append(f)
 	return list_
 
 
+
+
+
+
 """
 自定义函数管理
 """
+
+
+def paramstr_separator(paramstr,seplist=None):
+
+    '''
+    处理 ' "
+    '''
+    if not paramstr.__contains__(','):
+        seplist.append(paramstr)
+        return 
+
+    curindex=0
+    prefix,suffix='',''
+    a,b,c=[],[],[]
+
+    for char in paramstr:
+        if char =='"':
+            a.append(0)
+        elif char =="'":
+            b.append(0)
+        elif char in ['{','}']:
+        	c.append(0)
+        elif char==',':
+            if len(a)%2==0 and len(b)%2==0 and len(c)%2==0:
+                prefix=paramstr[:curindex]
+                suffix=paramstr[curindex+1:]
+                seplist.append(prefix)
+                paramstr_separator(suffix,seplist)
+                
+        curindex=curindex+1
 
 
 class Fu:
@@ -944,14 +978,21 @@ class Fu:
 		"""
 		pool = [chr(x) for x in range(97, 123)]
 		m = re.findall(pattern, src)
+		print('==========使用{}解析函数表达式 {}'.format(pattern,src))
+		
 		funcname = m[0][0]
-		paramlist = m[0][1].split(",")
+		#paramlist = m[0][1].split(",")
+
+		print('========m[0][1]:\n{}'.format(m[0][1]))
+		paramlist=[]
+		paramstr_separator(m[0][1],paramlist)
+		print('=======解析结果 函数名={} 参数个数={}'.format(funcname,len(paramlist)))
 		
 		# 带关键字参数和可变参数的 都按a()计算
 		# 参数带=好 记为关键参数 去除
 		print('函数的所有参数数据=>',paramlist)
 		paramlist = [p for p in paramlist if not p.startswith('*') and not p.__contains__('=') and p.strip()]
-		print('函数的去除无效参数数据=>',paramlist)
+		print('函数的去除关键字和可变参数=>',paramlist)
 		size = len(paramlist)
 		print('大小=>',size)
 		paramstr = ",".join(pool[0:size])
@@ -975,8 +1016,7 @@ class Fu:
 					#无效代码可以去掉
 					# if call_str.startswith('dbexecute') and taskid not in call_str:
 					# 	call_str = call_str.replace(')', ',taskid="%s",callername="%s")' % (taskid, username))
-					
-
+					logger.info('############################调用{}'.format(call_str))
 					res = eval(call_str)
 					print("调用内置函数表达式:%s 结果为:%s" % (call_str, res))
 					if isinstance(res, (tuple,)):
@@ -985,7 +1025,8 @@ class Fu:
 					
 					elif isinstance(res, (bool,)):
 						if res is False:
-							return ('fail', '[%s]返回结果不符合预期' % re.findall('(.*?)\(', call_str)[0])
+							return ('fail', '[%s]返回结果[false]不符合预期' % re.findall('(.*?)\(', call_str)[0])
+					
 					elif res is None:
 						pass
 					

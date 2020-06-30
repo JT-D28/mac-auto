@@ -391,7 +391,7 @@ var app = new Vue({
                     if (data.code != 0) {
                         layer.msg(data.msg);
                     } else {
-                        var analysisurl = '/homepage/runstatus/?plan=' + planid + '&taskid=' + taskid
+                        var url = '/homepage/runstatus/?plan=' + planid + '&taskid=' + taskid
                         layer.open({
                             type: 2,
                             title: false,
@@ -399,7 +399,7 @@ var app = new Vue({
                             area: ['90%', '90%'],
                             anim: 2,
                             shadeClose: true,
-                            content: [analysisurl, 'yes'], //iframe的url，no代表不显示滚动条
+                            content: [url, 'yes'], //iframe的url，no代表不显示滚动条
                         });
                         // var logSocket = new WebSocket("ws://" + host + "/ws/runlog/");
                         // layer.open({

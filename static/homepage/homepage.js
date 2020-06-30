@@ -188,7 +188,7 @@ var app = new Vue({
                             yes: function (index, layero) {
                                 // window.top.document.getElementById("console").click()
                                 // layer.close(index)
-                                var analysisurl = '/homepage/runstatus/?plan=' + planid+'&taskid='+data.taskid
+                                var analysisurl = '/homepage/runstatus/?plan=' + planid + '&taskid=' + data.taskid
                                 // window.open(analysisurl)
                                 layer.open({
                                     type: 2,
@@ -391,61 +391,71 @@ var app = new Vue({
                     if (data.code != 0) {
                         layer.msg(data.msg);
                     } else {
-                        var logSocket = new WebSocket("ws://" + host + "/ws/runlog/");
+                        var url = '/homepage/runstatus/?plan=' + planid + '&taskid=' + taskid
                         layer.open({
-                            type: 1,
-                            id: "log-process",
+                            type: 2,
                             title: false,
                             shade: [0],
                             area: ['90%', '90%'],
                             anim: 2,
                             shadeClose: true,
-                            content: $("#seeprocess"),
-                            success: function () {
-                                $("#log_text").html('')
-                                logSocket.onopen = function () {
-                                    logSocket.send(is_running + '::' + taskid)
-                                };
-                                logSocket.onmessage = function (e) {
-                                    e = JSON.parse(e.data);
-                                    setTimeout(() => {
-                                        const total = e.count;
-                                        const once = is_running !== '0' ? 200 : 5000;
-                                        const loopCount = total / once;
-                                        let countOfRender = 0;
-                                        let ul = document.getElementById("log_text");
-
-                                        function add() {
-                                            const fragment = document.createDocumentFragment();
-                                            const li = document.createElement("li");
-                                            li.innerHTML = ArraytoString(e.data.slice(once * countOfRender, once * (countOfRender + 1)));
-                                            fragment.appendChild(li);
-                                            ul.appendChild(fragment);
-                                            countOfRender += 1;
-                                            loop();
-                                            var exits = document.getElementById('log-process');
-                                            if (is_running !== '0' && exits != null) {
-                                                exits.scrollTop = exits.scrollHeight;
-                                            }
-                                        }
-
-                                        function loop() {
-                                            if (countOfRender < loopCount) {
-                                                window.requestAnimationFrame(add);
-                                            }
-                                        }
-
-                                        loop();
-                                    }, 100);
-                                };
-                                logSocket.onclose = function () {
-                                    console.log("结束获取日志..")
-                                }
-                            }, end: function () {
-                                logSocket.close();
-                                $("#log_text").html('')
-                            }
+                            content: [url, 'yes'], //iframe的url，no代表不显示滚动条
                         });
+                        // var logSocket = new WebSocket("ws://" + host + "/ws/runlog/");
+                        // layer.open({
+                        //     type: 1,
+                        //     id: "log-process",
+                        //     title: false,
+                        //     shade: [0],
+                        //     area: ['90%', '90%'],
+                        //     anim: 2,
+                        //     shadeClose: true,
+                        //     content: $("#seeprocess"),
+                        //     success: function () {
+                        //         $("#log_text").html('')
+                        //         logSocket.onopen = function () {
+                        //             logSocket.send(is_running + '::' + taskid)
+                        //         };
+                        //         logSocket.onmessage = function (e) {
+                        //             e = JSON.parse(e.data);
+                        //             setTimeout(() => {
+                        //                 const total = e.count;
+                        //                 const once = is_running !== '0' ? 200 : 5000;
+                        //                 const loopCount = total / once;
+                        //                 let countOfRender = 0;
+                        //                 let ul = document.getElementById("log_text");
+                        //
+                        //                 function add() {
+                        //                     const fragment = document.createDocumentFragment();
+                        //                     const li = document.createElement("li");
+                        //                     li.innerHTML = ArraytoString(e.data.slice(once * countOfRender, once * (countOfRender + 1)));
+                        //                     fragment.appendChild(li);
+                        //                     ul.appendChild(fragment);
+                        //                     countOfRender += 1;
+                        //                     loop();
+                        //                     var exits = document.getElementById('log-process');
+                        //                     if (is_running !== '0' && exits != null) {
+                        //                         exits.scrollTop = exits.scrollHeight;
+                        //                     }
+                        //                 }
+                        //
+                        //                 function loop() {
+                        //                     if (countOfRender < loopCount) {
+                        //                         window.requestAnimationFrame(add);
+                        //                     }
+                        //                 }
+                        //
+                        //                 loop();
+                        //             }, 100);
+                        //         };
+                        //         logSocket.onclose = function () {
+                        //             console.log("结束获取日志..")
+                        //         }
+                        //     }, end: function () {
+                        //         logSocket.close();
+                        //         $("#log_text").html('')
+                        //     }
+                        // });
                     }
                 })
             }

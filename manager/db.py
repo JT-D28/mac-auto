@@ -125,7 +125,8 @@ class Mysqloper:
 	def db_execute2(self, sql, taskid=None, callername=None):
 		logger.info('='*200)
 		logger.info('dbexecute2 传入taskid:{} callername:{},sql:{}'.format(taskid,callername,sql))
-		
+		self.taskid =taskid
+		self.callername = callername
 		reslist = []
 		print('db_execute2执行：'+sql)
 		print('##' * 100)
@@ -173,7 +174,10 @@ class Mysqloper:
 			
 			msg, self.conn = self.db_connect(conname, scheme)
 			if msg is not 'success':
-				return (msg, self.conn)
+				viewcache(taskid, callername, None, "方案【%s】下的数据库【%s】连接失败，尝试重新连接..."%(scheme,conname))
+				msg, self.conn = self.db_connect(conname, scheme)
+				if msg is not 'success':
+					return (msg, self.conn)
 			
 			# self.db_commit()
 			cur = self.conn.cursor()  # 获取一个游标

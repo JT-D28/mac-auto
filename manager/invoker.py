@@ -1914,13 +1914,13 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
                 x = json.loads(Tag.objects.get(var=m).planids)
                 if pname in x and pid in x.get(pname):
                     var = m
-                    viewcache(taskid, user.name, None, '找到局部变量，将使用局部变量 %s 描述：%s' % (varname, var.description))
+                    viewcache(taskid, user.name, None, '使用局部变量 %s 描述：%s' % (varname, var.description))
                     break
             if var is None:
                 for m in vars:
                     try:
                         var = Tag.objects.get(var=m, isglobal=1).var
-                        viewcache(taskid, user.name, None, '未找到局部变量，将使用全局变量 %s 描述：%s' % (varname, var.description))
+                        viewcache(taskid, user.name, None, '使用全局变量 %s 描述：%s' % (varname, var.description))
                     except:
                         pass
                 if var is None:

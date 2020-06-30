@@ -121,8 +121,7 @@
 
         function loop() {
             console.log("aaaaaaa", countOfRender, loopCount)
-            if (countOfRender < loopCount) {
-                console.log("aaaaaaa")
+            if (countOfRender < loopCount && loopCount!=0) {
                 window.requestAnimationFrame(add);
             }
         }

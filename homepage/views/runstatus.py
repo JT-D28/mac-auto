@@ -105,7 +105,6 @@ class getlog(WebsocketConsumer):
                 with open(logname, 'r', encoding='utf-8') as f:
                     while self.read==1:
                         log_text = f.readlines()
-                        print(self.channel_name)
                         async_to_sync(get_channel_layer().send)(
                             self.channel_name,
                             {

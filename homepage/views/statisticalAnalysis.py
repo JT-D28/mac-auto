@@ -90,7 +90,7 @@ def geterrorinfo(request):
         with open(logname, 'r', encoding='utf-8') as f:
             res = f.read()
         ress = res.split("========")
-        pattern = re.compile('开始执行步骤.*?' + stepname + '.*?测试点\[.*?id=' + id + '.*?' + bname + '.*?<br>')
+        pattern = re.compile('开始执行步骤.*?' + stepname + '.*?测试点\[.*?id=\'business_' + id + '.*?' + bname + '.*?<br>')
         pattern1 = re.compile('步骤执行结果.*?{}'.format(state))
         res = '未匹配到日志记录，你可以试试下载并且查看完整日志！' if state != 'skip' else '该测试点被跳过'
         for i in ress:

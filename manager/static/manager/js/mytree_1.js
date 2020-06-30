@@ -366,7 +366,6 @@ var tree = {
                         }, function () {
                             window.top.document.getElementById("console").click()
                         }, function () {
-                            layer.msg("将在完成后打开")
                             opendebug(data.data, treeNode.id)
                         }, function (index, layero) {
                             layer.close(index)
@@ -422,16 +421,16 @@ var tree = {
                             'check_plan':$("[name='planname']").is(':checked'),
                             'check_case':$("[name='casename']").is(':checked'),
                             'check_step':$("[name='stepname']").is(':checked'),
-                            'check_business':$("[name='businessname']").is(':checked'), 
+                            'check_business':$("[name='businessname']").is(':checked'),
                             'check_params':$("[name='params']").is(':checked'),
-                            'check_header': $("[name='header']").is(':checked'), 
-                            'check_property':$("[name='property']").is(':checked'), 
-                            'check_url':$("[name='stepurl']").is(':checked'), 
+                            'check_header': $("[name='header']").is(':checked'),
+                            'check_property':$("[name='property']").is(':checked'),
+                            'check_url':$("[name='stepurl']").is(':checked'),
                         },function(e){
 
                             layer.close(index)
                             if(e.code==0){
-                                
+
                                 //
                                 console.log('重新加载子节点')
                                 parentnode=treeNode.getParentNode()
@@ -443,8 +442,8 @@ var tree = {
                                     treeObj.removeChildNodes(parentnode)
                                     treeObj.addNodes(parentnode, data.data);
                                     treeObj.expandNode(parentnode,true)
-                                  
-                                  
+
+
                                 }
                                 _post('/manager/querytreelist/', params, success)
 
@@ -470,7 +469,7 @@ var tree = {
                     }
 
                 });
-                
+
             })
             //mock
             var mock_btn = $("#mock_" + treeNode.tId);
@@ -504,20 +503,20 @@ var tree = {
 
             function opendebug(planid, nodeid) {
                 _post_nl('/homepage/queryPlanState/', {id: planid, 'type': 'debug'}, function (data) {
-                    if (data.data === 0) {
-                        var analysisurl = '/homepage/statisticalAnalysis/?plan=' + planid+ '&debug=1&node='+nodeid
-                        layer.open({
-                            type: 2,
-                            title: false,
-                            shade: [0],
-                            area: ['90%', '90%'],
-                            anim: 2,
-                            shadeClose: true,
-                            content: [analysisurl, 'yes'], //iframe的url，no代表不显示滚动条
-                        });
-                    } else setTimeout(function () {
-                        opendebug(planid, nodeid)
-                    }, 1000)
+                    if (data.running === 0) {
+                        var url = '/homepage/statisticalAnalysis/?plan=' + planid + '&debug=1&node=' + nodeid
+                    } else {
+                        var url = '/homepage/runstatus/?plan=' + planid + '&taskid=' + data.taskid
+                    }
+                    layer.open({
+                        type: 2,
+                        title: false,
+                        shade: [0],
+                        area: ['90%', '90%'],
+                        anim: 2,
+                        shadeClose: true,
+                        content: [url, 'yes'], //iframe的url，no代表不显示滚动条
+                    });
                 })
                 // $.ajax({
                 //     type: 'POST', url: '/homepage/plandebug/', data: {
@@ -912,7 +911,7 @@ var tree = {
             if ($(this)[0].id === 'get_node_info') {
                 let oInput = document.createElement('input');
                 oInput.value = treeNode.name + '@' + treeNode.id.split('_')[0] + '@' + btoa(treeNode.id.split('_')[1]);
-                
+
                 document.body.appendChild(oInput);
                 oInput.select(); // 选择对象;
                 document.execCommand("Copy");
@@ -969,7 +968,7 @@ var tree = {
         var target = e.target;
 
         console.log('当前curnode:'+tree.curNode)
-     
+
         if (target!=null) {
             var doc = $(document)
             var target = $(target)

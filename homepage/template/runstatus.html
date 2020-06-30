@@ -1,0 +1,142 @@
+{% load static %}
+<!DOCTYPE html>
+<html style="height: 100%">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/ztree/zTreeStyle.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/icomoon/style.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'homepage/layui/css/layui.css' %}" media="all">
+    <link rel="stylesheet" href="{% static 'homepage/layui/css/layuimini.css' %}" media="all">
+</head>
+<body style="height:100%;margin: 0">
+
+<div style="max-height:100%;overflow-y:auto;width: 30%;display: inline-block">
+    <ul id="node" class="ztree" style="padding:10px 0 0 15px "></ul>
+</div>
+<div id='info' class="layui-card-body"
+     style="max-height:100%;overflow-y:auto;width: 70%;display: inline-block;float: right;padding: 0">
+    <div id="inoooo" style="padding: 5px"></div>
+</div>
+<script src="{% static 'homepage/ztree/jquery-1.4.4.min.js' %}"></script>
+
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+<script src="{% static 'manager/ztree/jquery.ztree.core.js' %}"></script>
+
+
+<script type="text/javascript">
+    window.onload = function () {
+        document.documentElement.style.overflow = 'hidden';
+    };
+
+    function getQueryVariable(variable) {
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split("=");
+            if (pair[0] === variable) {
+                return vars[i].replace(pair[0] + '=', '');
+            }
+        }
+        return false;
+    }
+
+    let planid = getQueryVariable('plan')
+    let taskid = getQueryVariable('taskid')
+
+    _post_nl('/homepage/runnodes/', {
+        'id': planid,
+        'taskid': taskid,
+        'type': 'plan'
+    }, function (data) {
+        $.fn.zTree.init($("#node"), {
+            view: {
+                showLine: false,
+                nameIsHTML: true,
+            },
+            data: {
+                simpleData: {
+                    enable: true
+                }
+            },
+            callback: {
+                onClick: _onClick,
+            }
+        }, data.data);
+    })
+
+    function _onClick(event, treeId, treeNode, clickFlag) {
+        var treeObj = $.fn.zTree.getZTreeObj(treeId);
+        if (treeNode.open && treeNode.type !== 'business') {
+            treeObj.expandNode(treeNode, false)
+        } else {
+            param = {'id': treeNode.id.split("_")[1], 'taskid': taskid, 'type': treeNode.type}
+            _post_nl('/homepage/runnodes/', param, function (e) {
+                treeObj.removeChildNodes(treeNode)
+                treeObj.addNodes(treeNode, e.data);
+                treeObj.expandNode(treeNode, true)
+                //cnode = treeObj.getNodesByParam('id', e.data[index]['id'])[0]
+            })
+        }
+        m = $("#" + treeNode.type + '_' + treeNode.id.split("_")[1])[0]
+        console.log(m)
+        if (m === undefined) {
+            _post_nl('/homepage/stauteofbusiness/', {
+                'taskid': taskid,
+                'planid': planid,
+                'type': treeNode.type,
+                'id': treeNode.id.split("_")[1]
+            }, function (data) {
+                layer.msg(data.info)
+            })
+        } else {
+            document.getElementById('info').scrollTop = m.offsetTop
+            jQuery(m).css("color", "#B5BB35")
+            setTimeout(() => jQuery(m).css("color", "#000000"), 10000)
+        }
+    }
+
+    ws = new WebSocket('ws://' + window.location.host + '/ws/getlog/' + taskid + '/');
+    ws.onopen = () => {
+    }
+    ws.onmessage = function (evt) {
+        e = JSON.parse(evt.data).message;
+        const total = e.length;
+        const once = 5000;
+        const loopCount = total / once;
+        let countOfRender = 0;
+        let ul = document.getElementById("inoooo");
+        loop()
+
+        function add() {
+            const fragment = document.createDocumentFragment();
+            const li = document.createElement("li");
+            li.innerHTML = ArraytoString(e.slice(once * countOfRender, once * (countOfRender + 1)));
+            fragment.appendChild(li);
+            ul.appendChild(fragment);
+            countOfRender += 1;
+            loop();
+        }
+
+        function loop() {
+            console.log("aaaaaaa", countOfRender, loopCount)
+            if (countOfRender < loopCount) {
+                console.log("aaaaaaa")
+                window.requestAnimationFrame(add);
+            }
+        }
+    }
+
+    function ArraytoString(input) {
+        let r = "";
+        input.forEach(function (e) {
+            r += " " + e;
+        });
+        return r.substr(1);
+    }
+
+
+</script>
+</body>
+</html>

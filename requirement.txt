@@ -62,3 +62,4 @@ easycython
 pyinstaller
 django-debug-toolbar
 celery
+channels_redis

@@ -219,7 +219,7 @@ class logConsumer(WebsocketConsumer):
                     self.send(text_data=json.dumps({'data': log_text, 'count': count}))
                     self.disconnect()
                 else:
-                    while True:
+                    while self.con==1:
                         log_text = f.readlines()
                         count = len(log_text)
                         self.send(text_data=json.dumps({'data': log_text, 'count': count}))
@@ -234,9 +234,11 @@ class logConsumer(WebsocketConsumer):
         self.taskid = text_data.split("::")[1]
         print("receive=>", self.taskid)
         print("receive=>", self.is_running)
+        self.con = 1
         self.thread = threading.Thread(target=self.sendmsg, args=(self.taskid, self.is_running))
         self.thread.setDaemon(True)
         self.thread.start()
 
     def disconnect(self, code=None):
+        self.con = 0
         print("%s 的日志打印结束" % self.taskid)

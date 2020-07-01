@@ -542,6 +542,9 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
                                                       businessdata=BusinessData.objects.get(id=order.follow_id),
                                                       result=result,
                                                       error=error, spend=spend, loop_id=1, is_verify=is_verify)
+                                
+
+
                                 detail.save()
                                 logger.info('保存结果=>', detail)
                             except:

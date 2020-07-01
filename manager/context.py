@@ -12,6 +12,7 @@ from manager.models import Case as Case0
 from login.models import *
 from functools import update_wrapper
 from manager.operate.redisUtils import RedisUtils
+from functools import update_wrapper
 
 '''
 
@@ -696,3 +697,46 @@ class monitor(object):
             return result
 
         return _wrap
+
+
+
+
+# class ValidChecker(object):
+#     '''
+#     函数有效性校验工具  控制台输出提示
+
+#     '''
+#     _log_level='ERROR'
+    
+#     def custom_method_check(self,f):
+#         from manager.core import Fu
+#         '''
+#         自定义函数有效性校验
+#         '''
+#         def _wrap(*args,**kws):
+#             kws['level']=self._log_level
+#             src='{}({})'.format(f,','.join(args))
+#             tzm=Fu.tzm_compute(src, '(.*?)\((.*?)\)')
+#             count=Function.objects.filter(flag=tzm).count()
+#             if 0==count:
+#                 cout('函数{}调用错误,请检查参数'.format(f),**kws)
+#             elif count>1:
+#                 cout('函数{}调用错误, 库中找到多个同flag'.format(f),**kws)
+
+
+#             return f(*args,**kws)
+#         return update_wrapper(_wrap, f)
+
+
+
+#     def params_check(self,f):
+#         '''
+#         参数值有效性校验
+#         '''
+#         def _wrap(*args,**kws):
+#             for p in args:
+#                 if not isinstance(p, (str,list,tuple,dict,int,float)):
+#                     cout('函数{}调用参数{}类型python无法识别请检查'.format(f,p),**kws)
+
+#             return f(*args,**kws)
+#         return update_wrapper(_wrap, f)

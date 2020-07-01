@@ -471,18 +471,18 @@ var app = new Vue({
             hundred = [];
             taskids = [];
             if (code == 0) {
-                title = data[0][1]
+                console.log(data)
                 for (let i = data.length - 1; i >= 0; i--) {
-                    x.push(data[i][7])
-                    success.push(data[i][2])
-                    total.push(data[i][5])
-                    fail.push(data[i][3])
-                    skip.push(data[i][4])
-                    error.push(data[i][9])
+                    x.push(data[i][5])
+                    success.push(data[i][0])
+                    total.push(data[i][4])
+                    fail.push(data[i][1])
+                    skip.push(data[i][2])
+                    error.push(data[i][3])
+                    taskids.push(data[i][7])
                     //mysql  success_rate.push(data[i][8].substr(0, 5))
-                    success_rate.push(data[i][8])
-                    taskids.push(data[i][6])
-                    hundred.push(100 - data[i][8])
+                    success_rate.push(data[i][6])
+                    hundred.push(100 - data[i][6])
                 }
                 totalmax = total.map(function (e) {
                     return Math.max.apply(null, total)

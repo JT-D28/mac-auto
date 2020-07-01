@@ -537,11 +537,18 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
                             # 保存结果
                             try:
                                 logger.info("准备保存结果===")
+                                # detail = ResultDetail(taskid=taskid, plan=plan, case=case0,
+                                #                       step=Step.objects.get(id=o.follow_id),
+                                #                       businessdata=BusinessData.objects.get(id=order.follow_id),
+                                #                       result=result,
+                                #                       error=error, spend=spend, loop_id=1, is_verify=is_verify)
+                                
                                 detail = ResultDetail(taskid=taskid, plan=plan, case=case0,
                                                       step=Step.objects.get(id=o.follow_id),
                                                       businessdata=BusinessData.objects.get(id=order.follow_id),
                                                       result=result,
-                                                      error=error, spend=spend, loop_id=1, is_verify=is_verify)
+                                                      error=error, spend=spend, is_verify=is_verify)
+
                                 detail.save()
                                 logger.info('保存结果=>', detail)
                             except:

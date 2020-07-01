@@ -1,3 +1,4 @@
+
 import time, traceback, re, json
 from django.db.models import *
 from login.models import *
@@ -228,7 +229,7 @@ class ResultDetail(Model):
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 	
-	loop_id = IntegerField(null=True)
+	# loop_id = IntegerField(null=True)
 	is_verify = CharField(max_length=4, default=0, null=True)
 	
 	def __str__(self):

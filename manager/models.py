@@ -229,7 +229,7 @@ class ResultDetail(Model):
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 	
-	# loop_id = IntegerField(null=True)
+	loop_id = IntegerField(null=True)##迭代次数
 	is_verify = CharField(max_length=4, default=0, null=True)
 	
 	def __str__(self):

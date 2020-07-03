@@ -29,6 +29,7 @@ urlpatterns = [
 	path('account/', include('login.urls')),
 	path('manager/', include('manager.urls')),
 	path('homepage/', include('homepage.urls')),
+	url(r'^file/(?P<filename>.*?)$',views.getfile),
 	path('test_expression/', views.testexpress),
 	path('test_expression1/', views.testexpress1),
 	path('test_expression2/', views.testexpress2),

@@ -294,11 +294,11 @@ def getRunningInfo(username='', planid='', type='lastest_taskid'):
         return dbscheme
 
 
-def get_space_dir(callername):
+def get_space_dir():
     '''
     获取我的空间绝对地址
     '''
-    return os.path.join(os.path.dirname(__file__),'storage','private','File',callername)
+    return os.path.join(os.path.dirname(__file__),'storage','private','File')
 
 def get_temp_dir():
     '''

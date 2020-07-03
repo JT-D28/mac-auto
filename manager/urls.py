@@ -25,6 +25,7 @@ urlpatterns = [
 	path('index/', views.index),
 	
 	path('datamove/', views.datamove),
+	path('checkfilename/',views.checkfilename),
 	path('uploadfile/', views.uploadfile),
 	path('delfile/', views.delfiles),
 	path('upload/', views.upload),

@@ -89,9 +89,17 @@ def uploadfile(request):
 @csrf_exempt
 def checkfilename(request):
 	filename = request.POST.get('filename')
-	filepath = os.path.join(os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File'), filename)
-	code = 1 if os.path.exists(filepath) else 0
+	code = 1 if isfile_exists(filename) else 0
 	return JsonResponse({'code': code})
+
+
+def isfile_exists(filename):
+	filepath = os.path.join(os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File'), filename)
+	if os.path.exists(filepath):
+		return True
+	else:
+		return False
+
 
 
 @csrf_exempt

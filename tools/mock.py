@@ -32,8 +32,8 @@ class TestMind(object):
                         if not has:
                             pd[k]=pkv[k]
                         else:
-                            if not has.__contains__('{{'):
-                                pk[k]=pkv[k]
+                            if not str(has).__contains__('{{'):
+                                pd[k]=pkv[k]
 
                 else:
                     logger.info('urlencode类型：')

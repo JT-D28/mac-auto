@@ -875,34 +875,32 @@ def getbuiltin(searchvalue=None, filename='builtin.py'):
 """
 
 
-def paramstr_separator(paramstr,seplist=None):
-
-    '''
+def paramstr_separator(paramstr, seplist=None):
+	'''
     处理 ' "
     '''
-    if not paramstr.__contains__(','):
-        seplist.append(paramstr)
-        return 
+	if not paramstr.__contains__(','):
+		seplist.append(paramstr)
+		return False
+	curindex = 0
+	prefix, suffix = '', ''
+	a, b, c = [], [], []
 
-    curindex=0
-    prefix,suffix='',''
-    a,b,c=[],[],[]
-
-    for char in paramstr:
-        if char =='"':
-            a.append(0)
-        elif char =="'":
-            b.append(0)
-        elif char in ['{','}']:
-        	c.append(0)
-        elif char==',':
-            if len(a)%2==0 and len(b)%2==0 and len(c)%2==0:
-                prefix=paramstr[:curindex]
-                suffix=paramstr[curindex+1:]
-                seplist.append(prefix)
-                paramstr_separator(suffix,seplist)
-                
-        curindex=curindex+1
+	for char in paramstr:
+		if char == '"':
+			a.append(0)
+		elif char == "'":
+			b.append(0)
+		elif char in ['{', '}']:
+			c.append(0)
+		elif char == ',':
+			if len(a) % 2 == 0 and len(b) % 2 == 0 and len(c) % 2 == 0:
+				prefix = paramstr[:curindex]
+				suffix = paramstr[curindex + 1:]
+				seplist.append(prefix)
+				if not paramstr_separator(suffix, seplist):
+					return False
+		curindex = curindex + 1
 
 
 class Fu:

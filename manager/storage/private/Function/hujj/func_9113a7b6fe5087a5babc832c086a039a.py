@@ -1,4 +1,3 @@
-def sleep(sec,**kws):
+def sleep(sec):
   import time
   time.sleep(sec)
-

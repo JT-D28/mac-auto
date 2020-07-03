@@ -22,16 +22,10 @@ def reportchart(request):
 	taskids = list(ResultDetail.objects.values('taskid').filter(plan_id=planid, is_verify=1))
 	if taskids:
 		sql1 = '''
-        SELECT x.plan_id,m.description,CONCAT(success),CONCAT(FAIL),CONCAT(skip),CONCAT(total),x.taskid,DATE_FORMAT(TIME,'%%m-%%d %%H:%%i') AS time,
-        ROUND(CONCAT(success*100/total),1) ,CONCAT(error) FROM (
-        SELECT DISTINCT manager_resultdetail.taskid,plan_id,is_verify FROM manager_resultdetail) AS x JOIN (
-        SELECT taskid,sum(CASE WHEN result="success" THEN 1 ELSE 0 END) AS success,
-        sum(CASE WHEN result="fail" THEN 1 ELSE 0 END) AS FAIL,
-        sum(CASE WHEN result="error" THEN 1 ELSE 0 END) AS error,
-        sum(CASE WHEN result="skip" THEN 1 ELSE 0 END) AS skip,
-        sum(CASE WHEN result!="OMIT" THEN 1 ELSE 0 END) AS total,max(createtime) AS time
-        FROM manager_resultdetail GROUP BY taskid) AS n JOIN manager_plan m
-        ON x.taskid=n.taskid AND x.plan_id=m.id WHERE is_verify=1 and plan_id=%s ORDER BY time DESC LIMIT 10
+		SELECT CONCAT(success),CONCAT(FAIL),CONCAT(skip),CONCAT(error),CONCAT(total),DATE_FORMAT(TIME,'%%m-%%d %%H:%%i'),ROUND(CONCAT(success*100/total),1),taskid FROM (
+		SELECT taskid,sum(CASE WHEN result="success" THEN 1 ELSE 0 END) AS success,sum(CASE WHEN result="fail" THEN 1 ELSE 0 END) AS FAIL,sum(CASE WHEN result="error" THEN 1 ELSE 0 END) 
+		AS error,sum(CASE WHEN result="skip" THEN 1 ELSE 0 END) AS skip,sum(CASE WHEN result !="OMIT" THEN 1 ELSE 0 END) AS total,max(createtime) AS time FROM manager_resultdetail 
+		WHERE plan_id=%s AND is_verify=1 GROUP BY taskid ORDER BY time DESC LIMIT 12) a;
         '''
 		
 		# sqlite3

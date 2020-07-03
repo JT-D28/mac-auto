@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect, render_to_response
 from django.conf import settings
 from ME2 import configs
 from ME2.settings import logme
+from manager.context import get_space_dir
 from manager.models import *
 from login.models import *
 from manager import models as mm
@@ -415,3 +416,16 @@ def updateroledata(request):
 
 	########
 	return JsonResponse({'code':0,'msg':'update finish..'},safe=False)
+
+
+@csrf_exempt
+def getfile(request,filename):
+	upload_dir = get_space_dir()
+	filepath = os.path.join(upload_dir,filename)
+	if os.path.exists(filepath):
+		with open(os.path.join(upload_dir,filename), 'rb') as f:
+			response = HttpResponse(f)
+			response['Content-Type'] = 'application/octet-stream'
+			response['Content-Disposition'] = 'attachment;'
+			return response
+	return JsonResponse({})

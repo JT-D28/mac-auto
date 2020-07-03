@@ -953,8 +953,8 @@ def _getfiledict(callername, paraminfo):
             pdict[k] = (None, v)
         else:
             if isinstance(v, (str,)):
-                pdict[k] = (v, open(os.path.join(get_space_dir(callername), v), 'rb'))
-    
+                pdict[k] = (v, open(os.path.join(get_space_dir(), v), 'rb'))
+
     return pdict
 
 
@@ -1913,7 +1913,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
                     old = old.replace('{{RESPONSE_TEXT}}', responsetext)
                     logger.info('==RESPONSE_TEXT替换后=>\n', old)
                     continue;
-            
+
             vars = Variable.objects.filter(key=varname)
             var = None
             for m in vars:
@@ -2647,12 +2647,12 @@ class MainSender:
 
 
 def upload_personal_file(filemap, username):
-    upload_dir = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File', username)
+    upload_dir = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File')
     try:
-        
+
         if not os.path.exists(upload_dir):
             os.makedirs(upload_dir)
-        
+
         for filename in filemap:
             filepath = os.path.join(upload_dir, filename)
             with open(filepath, 'wb') as f:
@@ -2660,7 +2660,7 @@ def upload_personal_file(filemap, username):
     except:
         logger.info(traceback.format_exc())
         return ('error', '写入异常' + traceback.format_exc())
-    
+
     return ('success', '本地写完')
 
 

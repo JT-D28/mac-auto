@@ -87,6 +87,22 @@ def uploadfile(request):
 
 
 @csrf_exempt
+def checkfilename(request):
+	filename = request.POST.get('filename')
+	code = 1 if isfile_exists(filename) else 0
+	return JsonResponse({'code': code})
+
+
+def isfile_exists(filename):
+	filepath = os.path.join(os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File'), filename)
+	if os.path.exists(filepath):
+		return True
+	else:
+		return False
+
+
+
+@csrf_exempt
 def upload(request):
 	filemap = dict()
 	filenames = []
@@ -135,10 +151,17 @@ def upload(request):
 		else:
 			return JsonResponse(simplejson(code=2, msg='数据导入失败[%s]' % res[1]), safe=False)
 	elif kind == 'personfile':
-		status, msg = upload_personal_file(filemap, request.session.get('username'))
-		if status is 'success':
+		upload_dir = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File')
+		try:
+			if not os.path.exists(upload_dir):
+				os.makedirs(upload_dir)
+			for filename in filemap:
+				filepath = os.path.join(upload_dir, filename)
+				with open(filepath, 'wb') as f:
+					f.write(filemap[filename])
 			return JsonResponse(simplejson(code=0, msg='文件上传完成'), safe=False)
-		else:
+		except:
+			logger.info(traceback.format_exc())
 			return JsonResponse(simplejson(code=3, msg='文件上传异常'), safe=False)
 	else:
 		return JsonResponse(simplejson(code=4, msg='kind错误'), safe=False)
@@ -2104,19 +2127,18 @@ def queryuserfile(request):
 	'''
 	searchvalue = request.GET.get('searchvalue')
 	mfiles = list()
-	username = request.session.get('username')
-	userdir = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File', username)
-	if not os.path.exists(userdir):
-		os.makedirs(userdir)
-	files = os.listdir(userdir)
+	dir = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File')
+	if not os.path.exists(dir):
+		os.makedirs(dir)
+	files = os.listdir(dir)
 	logger.info('files=>', files)
 	for f in files:
 		if searchvalue and not f.__contains__(searchvalue):
 			continue;
 		mfiles.append({
 			'filename': f,
-			'size': _getDocSize(os.path.join(userdir, f)),
-			'createtime': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getctime(os.path.join(userdir, f))))
+			'size': _getDocSize(os.path.join(dir, f)),
+			'createtime': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getctime(os.path.join(dir, f))))
 		})
 	
 	mfiles.sort(key=lambda e: e.get('createtime'), reverse=True)

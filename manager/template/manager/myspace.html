@@ -143,7 +143,19 @@
         },
         methods: {
             handleChange(fileList) {
-                this.fileList.push(fileList)
+                var that =this
+                _post_nl('/manager/checkfilename/',{'filename':fileList.name},function (data) {
+                    if(data.code==0){
+                        that.fileList.push(fileList)
+                    }else {
+                        layer.confirm('已存在同名文件：'+fileList.name+'<br>确定上传将会覆盖。', {
+                            btn: ['确定', '取消'] //按钮
+                        }, function (index) {
+                            layer.close(index);
+                            that.fileList.push(fileList)
+                        });
+                    }
+                })
             },
             removeFile(file) {
                 let arr = [];
@@ -166,6 +178,7 @@
                 });
                 formData.append('kind', 'personfile');
                 formData.append('content_type', 'json');
+
                 $.ajax({
                     type: "post",
                     url: "/manager/upload/",

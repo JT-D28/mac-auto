@@ -1,3 +1,4 @@
+
 {% load static %}
 <!DOCTYPE html>
 <html style="height: 100%">
@@ -201,6 +202,7 @@
         <br/>
         {% if request.session.username == 'hujj' %}
         <i id="start-record">开始录制</i><i id="end-record">结束录制</i>
+        <i id='map'>关联</i>
         {% endif %}
 
 
@@ -259,6 +261,10 @@
     </div>
 </div>
 
+<div id='gl'>
+    <table id='editcfg' lay-filter='editcfg'></table>
+    <p style="color:red;margin-left:10px;">勾选和未勾选节点间存在主从关系,主节点(子节点)修改会影响相应从节点(子节点)数据;全部勾选表示平级关系,相互影响  </p>
+</div>
 
 <div id='grabview'>a.fdafdafda</div>
 
@@ -275,8 +281,6 @@
 
 
 <script type="text/javascript">
-
-    console.log($('#rform'))
     tree.init();
 
     $('#searchbtn').click(function (argument) {
@@ -287,8 +291,9 @@
         document.documentElement.style.overflow = 'hidden';
     };
 
-    layui.use(['element','layer'],function(){
+    layui.use(['element','layer','table'],function(){
         var element = layui.element;
+        var table=layui.table;
         $('#start-record').click(function(e){
 
             layer.msg('开始录制..')
@@ -299,7 +304,90 @@
 
         });
 
+
+        treeobj=$.fn.zTree.getZTreeObj('case-manager')
+        document.onkeydown = function()  
+        {  
+            selectnodes=treeobj.getSelectedNodes()
+            var oEvent = window.event;  
+
+            if (oEvent.keyCode ==81 && oEvent.ctrlKey&&selectnodes.length>1) {  
+                // alert(JSON.stringify(selectnodes));  
+                editcfgtable=table.render({
+                    elem:'#editcfg',
+                    cols:[[
+                    {type:'checkbox',fixed:'left',title:'主'},
+                    {field:'name',title:'节点名称',width:240},
+                    {field:'planname',title:'所属计划',width:240}
+                    ]],
+                    data:add_plan_attribute(treeobj.getSelectedNodes())
+                });
+
+                layer.open({
+                    title:'修改关联配置',
+                    btn:['提交','取消'],
+                    type:1,
+                    content:$('#gl'),
+                    area : [ '600px', '500px' ],
+                    yes:function(index,layero){
+                        
+                        success=function(data){
+                            layer.close(index)
+                            if(data['code']==0){
+                                layer.alert('关联成功',{icon:1})
+
+                            }
+                            else{
+                                layer.alert('关联异常',{icon:2})
+                            }
+  
+
+                        }
+                        checkidslist=[]
+                        checkeddata=table.checkStatus('editcfg').data
+        
+
+                        for(var i=0;i<checkeddata.length;i++){
+                            checkidslist.splice(-1,0,checkeddata[i]['id'])
+                        }
+                        _post('/manager/addeditlink/',{'datad':JSON.stringify(treeobj.getSelectedNodes()),'checkids':JSON.stringify(checkidslist)},success)
+
+                    }
+                })
+            }  
+        }
+
+
+
+   
+
     })
+
+
+function get_plan_name(curnode){
+
+    for (var i=0;i<5;i++){
+        p=curnode.getParentNode()
+        if('plan'==p.type)
+            return p.name
+
+    }
+    return '未知'
+
+
+
+}
+
+function add_plan_attribute(data){
+    for(var i=0;i<data.length;i++){
+        treeobj=$.fn.zTree.getZTreeObj('case-manager')
+        curnode=treeobj.getNodeByParam('id',data[i]['id'])
+        data[i]['planname']=get_plan_name(curnode)
+
+    }
+    return data
+
+}
 
 
 
@@ -308,7 +396,6 @@
 </script>
 <script type="text/html" id="toolbar">
     <input type="checkbox" name="status" lay-skin="switch" lay-text="ON|OFF" checked>
-
 
 </script>
 </body>

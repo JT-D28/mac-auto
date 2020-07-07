@@ -427,6 +427,38 @@ class SimpleTest(Model):
 
 
 
+class Diff(Model):
+	'''
+	节点文本修改广播[主从|广播]
+	'''
+	uid=CharField(max_length=40)
+	fieldname=CharField(max_length=20)
+	diff=TextField()
+	creater = ForeignKey(User, on_delete=CASCADE)
+	createtime=DateTimeField(auto_now_add=True)
+
+
+class EditLink(Model):
+	snid=CharField(max_length=20)
+	tnid=CharField(max_length=20)
+	creater=ForeignKey(User, on_delete=CASCADE)
+	createtime=DateTimeField(auto_now_add=True)
+
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
 
 
 

@@ -2127,18 +2127,18 @@ def queryuserfile(request):
 	'''
 	searchvalue = request.GET.get('searchvalue')
 	mfiles = list()
-	dir = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File')
-	if not os.path.exists(dir):
-		os.makedirs(dir)
-	files = os.listdir(dir)
+	dir_ = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File',request.session.get('username'))
+	if not os.path.exists(dir_):
+		os.makedirs(dir_)
+	files = os.listdir(dir_)
 	logger.info('files=>', files)
 	for f in files:
 		if searchvalue and not f.__contains__(searchvalue):
 			continue;
 		mfiles.append({
 			'filename': f,
-			'size': _getDocSize(os.path.join(dir, f)),
-			'createtime': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getctime(os.path.join(dir, f))))
+			'size': _getDocSize(os.path.join(dir_, f)),
+			'createtime': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getctime(os.path.join(dir_, f))))
 		})
 	
 	mfiles.sort(key=lambda e: e.get('createtime'), reverse=True)
@@ -2332,6 +2332,36 @@ def querysteptype(request):
 def regentest(request):
 	TestMind().gen_simple_test_cases(request.POST.get('uid'))
 	return JsonResponse(pkg(code=0,msg=''),safe=False)
+
+'''
+修改关联功能
+'''
+@csrf_exempt
+def addeditlink(request):
+	params=get_params(request)
+	data=params['datad']
+	checkids=params['checkids']
+	datalist=json.loads(data)
+	checkidslist=eval(checkids)
+	targetlist=[]
+	
+	if len(checkidslist)!=len(datalist):
+		[targetlist.append(x) for x in datalist if x['id'] not in checkidslist]
+
+	for snid in checkidslist:
+		for t in targetlist:
+			f=EditLink.objects.filter(snid=snid,tnid=t['id'])
+			if not f.exists():
+				link=EditLink()
+				link.snid=snid
+				link.tnid=t['id']
+				link.creater=params['user']
+				link.save()
+
+	return JsonResponse(pkg(code=0,msg=''),safe=False)
+
+
+
 
 
 '''

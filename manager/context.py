@@ -696,7 +696,7 @@ class monitor(object):
                 Me2Log.info('向用户[%s]发送一条信息[%s]'%(authorname,news.description))
             return result
 
-        return _wrap
+        return update_wrapper(_wrap,args1[0])
 
 
 

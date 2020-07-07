@@ -837,9 +837,18 @@ var tree = {
 
     },
     _onDrop: function (event, treeId, treeNodes, targetNode, moveType, isCopy) {
+
         if (moveType === null) {
             return
         }
+
+        var treeObj = $.fn.zTree.getZTreeObj(treeId);
+
+        alert(111)
+
+        console.log('===================================FLDJFLJSJASL====================')
+
+        alert(treeObj.getSelectedNodes())
         if (treeNodes.length > 1 && moveType === 'inner') {
             var nodeids = '';
             treeNodes.forEach(function (item) {
@@ -857,7 +866,7 @@ var tree = {
                 success = function (e) {
                     console.log('重加载子节点数据 =>', params)
                     data = JSON.parse(e)
-                    var treeObj = $.fn.zTree.getZTreeObj(treeId);
+  
                     treeObj.removeChildNodes(node)
                     treeObj.addNodes(node, data.data);
                     treeObj.expandNode(node, true)
@@ -882,7 +891,6 @@ var tree = {
                 success = function (e) {
                     console.log('重加载子节点数据 =>', params)
                     data = JSON.parse(e)
-                    var treeObj = $.fn.zTree.getZTreeObj(treeId);
                     treeObj.removeChildNodes(node)
                     treeObj.addNodes(node, data.data);
                     treeObj.expandNode(node, true)

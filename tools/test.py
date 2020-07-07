@@ -1,1 +1,8 @@
-print((3.83*20000+5.87*50000)/100)
+class A(object):
+    name=''
+    def test():
+        pass
+
+a=A()
+eval("a.name='1w'")
+print(a.name)

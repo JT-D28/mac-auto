@@ -150,6 +150,9 @@ urlpatterns = [
 	path('updatesimpletest/', views.updatesimpletest),
 	path('opensimpletest/', views.opensimpletest),
 	path('openstepmock/', views.openstepmock),
+
+	##
+	path('addeditlink/', views.addeditlink),
 	
 	##
 	path('getusernews/', views.getusernews),

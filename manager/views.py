@@ -2138,7 +2138,8 @@ def queryuserfile(request):
 	'''
 	searchvalue = request.GET.get('searchvalue')
 	mfiles = list()
-	dir_ = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File',request.session.get('username'))
+	dir_ = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File')
+	# dir_ = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File',request.session.get('username'))
 	if not os.path.exists(dir_):
 		os.makedirs(dir_)
 	files = os.listdir(dir_)

@@ -922,7 +922,7 @@ class Fu:
 				body = x.body
 				# path = os.path.join(os.path.dirname(__file__), 'Function', author)
 				path = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'Function', author)
-				
+				print(path)
 				if not os.path.exists(path):
 					os.makedirs(path)
 				# print("path=>",path)
@@ -939,12 +939,13 @@ class Fu:
 					a = base64.b64decode(body).decode(encoding='utf-8')
 					# print(a)
 					f.write(a)
-				
-				if id_ is not None and id_ == x.id:
-					print("*" * 20)
 					print("更新函数:%s 完毕." % x.name)
-					print("*" * 20)
-					return 0
+
+				# if id_ is not None and id_ == x.id:
+				# 	print("*" * 20)
+				# 	print("更新函数:%s 完毕." % x.name)
+				# 	print("*" * 20)
+				# 	return 0
 			
 			print("*" * 20)
 			print("更新所有函数完毕.")

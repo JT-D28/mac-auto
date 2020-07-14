@@ -532,7 +532,11 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
                                 if result not in ('success', 'omit'):
                                     groupskip.append(groupid)
                             else:
-                                result, error = 'skip', 'skip'
+                                businessdata = BusinessData.objects.values('count','businessname').get(id=order.follow_id)
+                                if businessdata['count'] == 0:
+                                    result, error = 'omit', "测试点[%s]执行次数=0 略过." % businessdata['businessname']
+                                else:
+                                    result, error = 'skip', 'skip'
                             
                             # 保存结果
                             try:
@@ -1008,11 +1012,11 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
     data_rv = _replace_variable(user, data_rp[1], taskid=taskid)
     if data_rv[0] is not 'success':
         return ('', '', '', data_rv[1])
-    
+
     data_rf = _replace_function(user, data_rv[1], taskid=taskid)
     if data_rf[0] is not 'success':
         return ('', '', '', data_rf[1])
-    
+
     body = data_rf[1]
     
     viewcache(taskid, user.name, kind,
@@ -1260,8 +1264,10 @@ def _call_extra(user, call_strs, taskid=None, kind='前置操作',response_text=
         
         logger.info('invoker.py 传入的sql：',call_str)
         status, res = Fu.call(f, call_str, builtin=isbuiltin)
-        viewcache(taskid, user.name, None, "执行[<span style='color:#009999;'>%s</span>]%s" % (kind, s))
-        if status is not 'success':
+        if status == 'success':
+            viewcache(taskid, user.name, None, "执行[<span style='color:#009999;'>%s</span>]%s【成功】" % (kind, s))
+        else:
+            viewcache(taskid, user.name, None, "执行[<span style='color:#009999;'>%s</span>]%s【失败】" % (kind, s))
             return (status, res)
     
     # viewcache(taskid,username,kind,"数据校验配置=>%s"%db_check)
@@ -1845,7 +1851,7 @@ def _get_step_params(paraminfo, taskid, callername):
     try:
         # viewcache(taskid, callername, None, '尝试字典模式解析STEP_PARAMS为' )
         ps = eval(paraminfo)
-        
+
         if isinstance(ps, (dict,)):
             # logger.info('ps=>',ps)
             _next(ps)

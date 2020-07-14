@@ -1958,7 +1958,7 @@ def editplanlink(request):
 
     ##
 
-    [_addlink(uid, planid) for planid in planids]
+    [_addlink(uid, planid,creater=params['user']) for planid in planids]
 
     return{
         'status':'success',

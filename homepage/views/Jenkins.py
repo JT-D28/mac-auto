@@ -119,7 +119,7 @@ def manyRun(jacocoConfig, callername):
     jobs=[]
     for job in jacocoConfig.jobname.split(";"):
         jobs.append(job.split(":")[0])
-    jenkinsBuild(url, name, pwd, jobs,{'all':True})
+    jenkinsBuild(url, name, pwd, jobs)
     time.sleep(3 * 60)
 
 

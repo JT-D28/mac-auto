@@ -441,6 +441,8 @@ class Diff(Model):
 class EditLink(Model):
 	snid=CharField(max_length=20)
 	tnid=CharField(max_length=20)
+	p1=IntegerField()
+	p2=IntegerField()
 	creater=ForeignKey(User, on_delete=CASCADE)
 	createtime=DateTimeField(auto_now_add=True)
 

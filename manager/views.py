@@ -11,7 +11,7 @@ from manager.models import *
 from manager.db import Mysqloper
 from django.conf import settings
 from login.models import *
-from .cm import addrelation, _get_node_parent_info
+from .cm import addrelation, _get_node_parent_info,querynodelink
 from .core import *
 from manager.operate.cron import Cron
 from .invoker import *
@@ -1038,6 +1038,17 @@ def queryplantaskid(request):
 	
 	return JsonResponse(simplejson(code=code, msg=msg, data=taskids), safe=False)
 
+@csrf_exempt
+def queryplaninfo(request):
+	res=[]
+	all_=Plan.objects.all()
+	for item in all_:
+		res.append({
+			'nid':item.id,
+			'description':item.description
+			})
+
+	return JsonResponse(res,safe=False)
 
 def querytaskdetail(request):
 	detail = {}
@@ -2333,33 +2344,6 @@ def regentest(request):
 	TestMind().gen_simple_test_cases(request.POST.get('uid'))
 	return JsonResponse(pkg(code=0,msg=''),safe=False)
 
-'''
-修改关联功能
-'''
-@csrf_exempt
-def addeditlink(request):
-	params=get_params(request)
-	data=params['datad']
-	checkids=params['checkids']
-	datalist=json.loads(data)
-	checkidslist=eval(checkids)
-	targetlist=[]
-	
-	if len(checkidslist)!=len(datalist):
-		[targetlist.append(x) for x in datalist if x['id'] not in checkidslist]
-
-	for snid in checkidslist:
-		for t in targetlist:
-			f=EditLink.objects.filter(snid=snid,tnid=t['id'])
-			if not f.exists():
-				link=EditLink()
-				link.snid=snid
-				link.tnid=t['id']
-				link.creater=params['user']
-				link.save()
-
-	return JsonResponse(pkg(code=0,msg=''),safe=False)
-
 
 
 
@@ -2616,7 +2600,6 @@ def recyclenodes(type,id):
 		orderobj = Order.objects.get(kind__contains='_%s'%type.replace('Data',''),follow_id=id)
 		orderobj.isdelete = 0
 		orderobj.save()
-		print("aaaaaaaaa:",type,type.capitalize())
 		nodeobj = eval("%s.objects.get(id=%s)"%(type.title().replace('data','Data'),id))
 		nodeobj.isdelete = 0
 		nodeobj.save()
@@ -2626,3 +2609,5 @@ def recyclenodes(type,id):
 
 	except:
 		print(traceback.format_exc())
+
+

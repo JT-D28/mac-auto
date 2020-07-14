@@ -56,6 +56,8 @@ urlpatterns = [
 	path('queryoneplan/', views.queryoneplan),
 
 	path('queryplantaskid/', views.queryplantaskid),
+
+	path('queryplaninfo/',views.queryplaninfo),
 	
 	path('resultdetail/', views.resultdetail),
 	path('delresultdetail/', views.delresultdetail),
@@ -151,8 +153,6 @@ urlpatterns = [
 	path('opensimpletest/', views.opensimpletest),
 	path('openstepmock/', views.openstepmock),
 
-	##
-	path('addeditlink/', views.addeditlink),
 	
 	##
 	path('getusernews/', views.getusernews),

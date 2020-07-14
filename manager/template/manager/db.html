@@ -229,21 +229,21 @@
         },
         methods: {
             dbschemeinput() {
-                var that = this;
-                var flag = 0;
-                temp = $(".el-select-dropdown__item.hover")[0].innerText;
-                that.schemeoptions.forEach(function (item,index) {
-                    if (item.value === temp) {
-                        flag = 1
-                    }
-                });
-                if (flag == 0) {
-                    that.schemeoptions.push({
-                        value: temp,
-                        key: temp
-                    });
-                    that.schemevalue = temp
-                }
+                // var that = this;
+                // var flag = 0;
+                // temp = $(".el-select-dropdown__item.hover")[0].innerText;
+                // that.schemeoptions.forEach(function (item,index) {
+                //     if (item.value === temp) {
+                //         flag = 1
+                //     }
+                // });
+                // if (flag == 0) {
+                //     that.schemeoptions.push({
+                //         value: temp,
+                //         key: temp
+                //     });
+                //     that.schemevalue = temp
+                // }
             },
             copydbSubmit(data, action) {
                 //1是复制并且修改，0是仅修改

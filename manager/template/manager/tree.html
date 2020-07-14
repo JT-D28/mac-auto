@@ -18,9 +18,18 @@
 
     <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'manager/css/rightMenu.css' %}">
-
+        <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+ 
 
     <style type="text/css">
+        .el-select-dropdown {
+            z-index: 20000000;
+        }
+        .el-input__inner, .el-input__icon {
+            height: 34px;
+            line-height: 34px;
+        }
         .layui-input {
             padding: 0 14px;
             background-color: rgb(252, 252, 252);
@@ -156,9 +165,6 @@
 
 </script>
 
-
-
-
 <form id='rform' hidden style="padding:10px;" class="layui-form">
   <div class="layui-form-item">
     <label class="layui-form-label">作用于</label>
@@ -198,21 +204,24 @@
                style='padding:0 14px;width:280px;height:34px;background:rgba(255,255,255,1);border-radius:2px;border:1px solid rgba(220,222,224,1);'
                id='search' autocomplete="off"><button id='searchbtn' class="layui-btn" style="vertical-align:revert;height: 34px;line-height: 34px">
         <span class='btn-text'>查询</span></button>
-
         <br/>
         {% if request.session.username == 'hujj' %}
         <i id="start-record">开始录制</i><i id="end-record">结束录制</i>
-        <i id='map'>关联</i>
         {% endif %}
-
 
     </div>
     <ul class="contextmenu" id="contextmenu"></ul>
-    
-    
     <ul id="case-manager" class="ztree" style="margin-bottom: 20px;padding:10px 0 0 15px "></ul>
 
 </div>
+
+
+<div id='addhtml' hidden>
+    <div id='transfer'></div> 
+</div>  
+
+
+
 
 <div class="layui-col-md7" style="min-height:100%;overflow-y:auto;">
     <iframe id='tree-content' name='tree-content' title="test" scrolling="yes" frameborder="0" src=""
@@ -261,13 +270,6 @@
     </div>
 </div>
 
-<div id='gl'>
-    <table id='editcfg' lay-filter='editcfg'></table>
-    <p style="color:red;margin-left:10px;">勾选和未勾选节点间存在主从关系,主节点(子节点)修改会影响相应从节点(子节点)数据;全部勾选表示平级关系,相互影响  </p>
-</div>
-
-<div id='grabview'>a.fdafdafda</div>
-
 
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
@@ -278,9 +280,12 @@
 <script src="{% static 'manager/ztree/jquery.ztree.excheck.min.js' %}"></script>
 <script src="{% static 'manager/ztree/jquery.ztree.exedit.js' %}"></script>
 <script src="{% static 'manager/js/mytree_1.js' %}"></script>
-
+<script src="{% static 'homepage/vue.js' %}"></script>
+   <!-- 引入组件库 -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
 
 <script type="text/javascript">
+    //
     tree.init();
 
     $('#searchbtn').click(function (argument) {
@@ -291,16 +296,18 @@
         document.documentElement.style.overflow = 'hidden';
     };
 
-    layui.use(['element','layer','table'],function(){
+    layui.use(['element','layer','table','form','transfer'],function(){
+
+
         var element = layui.element;
         var table=layui.table;
+        var form=layui.form
+        var transfer=layui.transfer;
         $('#start-record').click(function(e){
 
             layer.msg('开始录制..')
             record_page='http://'+host+'/manager/grab/'
             window.open(record_page,'_blank')
-
-
 
         });
 
@@ -310,92 +317,88 @@
         {  
             selectnodes=treeobj.getSelectedNodes()
             var oEvent = window.event;  
+            //ctrl+d
+            if (oEvent.keyCode==81&&oEvent.ctrlKey&&selectnodes.length==1){
 
-            if (oEvent.keyCode ==81 && oEvent.ctrlKey&&selectnodes.length>1) {  
-                // alert(JSON.stringify(selectnodes));  
-                editcfgtable=table.render({
-                    elem:'#editcfg',
-                    cols:[[
-                    {type:'checkbox',fixed:'left',title:'主'},
-                    {field:'name',title:'节点名称',width:240},
-                    {field:'planname',title:'所属计划',width:240}
-                    ]],
-                    data:add_plan_attribute(treeobj.getSelectedNodes())
-                });
+                success=function(e){
+                    
+                    render_transfer(transfer,e.data[0],e.data[1]);
+                    var o= layer.open({
 
-                layer.open({
-                    title:'修改关联配置',
-                    btn:['提交','取消'],
-                    type:1,
-                    content:$('#gl'),
-                    area : [ '600px', '500px' ],
-                    yes:function(index,layero){
-                        
-                        success=function(data){
+                        type:1,
+                        title:'配置关联',
+                        content:$('#addhtml'),
+                        area:['600px','350px'],
+                        btn:['确认','取消'],
+                        yes:function(index,layero){
+
                             layer.close(index)
-                            if(data['code']==0){
-                                layer.alert('关联成功',{icon:1})
+                            
 
+                            var getData = transfer.getData('demo1'); 
+                            planids=[]
+                            for(var i=0;i<getData.length;i++){
+                                planids.splice(0, 0, getData[i]['value'])
                             }
-                            else{
-                                layer.alert('关联异常',{icon:2})
-                            }
-  
+
+                            _post('/manager/treecontrol/',{'action':'editplanlink','uid':selectnodes[0].id,'planids':planids.join()},function(e){
+                                layer.alert(e.msg,{icon:1})
+
+                            })
 
                         }
-                        checkidslist=[]
-                        checkeddata=table.checkStatus('editcfg').data
-        
+                    });
 
-                        for(var i=0;i<checkeddata.length;i++){
-                            checkidslist.splice(-1,0,checkeddata[i]['id'])
-                        }
-                        _post('/manager/addeditlink/',{'datad':JSON.stringify(treeobj.getSelectedNodes()),'checkids':JSON.stringify(checkidslist)},success)
+                   layer.full(o);
+                };
 
-                    }
-                })
+                _post('/manager/treecontrol/',{'action':'queryplanlink','curid':selectnodes[0].id},success)
+
+                }
             }  
-        }
-
-
-
-   
+    
 
     })
 
 
-function get_plan_name(curnode){
 
-    for (var i=0;i<5;i++){
-        p=curnode.getParentNode()
-        if('plan'==p.type)
-            return p.name
 
-    }
-    return '未知'
+function render_transfer(tr,leftdata,rightdata){
+
+    console.log('开始渲染穿梭数据.')
+    console.log('left：'+leftdata)
+    console.log('right:'+rightdata)
+
+    tr.render({
+      elem: '#transfer',  //绑定元素
+      showSearch:true,
+      width:300,
+      title:['可选用户','已选用户'],
+      id: 'demo1', //定义索引
+      data:leftdata,
+      value:rightdata,
+      parseData:function(res){
+        return{
+            'title':res.description,
+            'value':res.nid,
+            'checked':false,
+            'disabled':false,
+        }
+
+      }
+
+    });
+    
 
 
 
 }
-
-function add_plan_attribute(data){
-    for(var i=0;i<data.length;i++){
-        treeobj=$.fn.zTree.getZTreeObj('case-manager')
-        curnode=treeobj.getNodeByParam('id',data[i]['id'])
-        data[i]['planname']=get_plan_name(curnode)
-
-    }
-    return data
-
-}
-
-
 
 
 
 </script>
+
 <script type="text/html" id="toolbar">
-    <input type="checkbox" name="status" lay-skin="switch" lay-text="ON|OFF" checked>
 
 </script>
 </body>

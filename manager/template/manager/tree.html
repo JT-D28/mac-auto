@@ -319,6 +319,11 @@
             var oEvent = window.event;  
             //ctrl+d
             if (oEvent.keyCode==81&&oEvent.ctrlKey&&selectnodes.length==1){
+                nodetype=selectnodes[0]['id'].split('_')[0]
+
+                if(nodetype!='plan')
+                    return
+
 
                 success=function(e){
                     
@@ -373,7 +378,7 @@ function render_transfer(tr,leftdata,rightdata){
       elem: '#transfer',  //绑定元素
       showSearch:true,
       width:300,
-      title:['可选用户','已选用户'],
+      title:['可选计划','已选计划'],
       id: 'demo1', //定义索引
       data:leftdata,
       value:rightdata,

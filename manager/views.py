@@ -91,12 +91,12 @@ def uploadfile(request):
 def checkfilename(request):
 	filename = request.POST.get('filename')
 	menu = request.POST.get('menu')
-	code = 1 if isfile_exists(filename,menu) else 0
+	code = 1 if isfile_exists(menu+'/'+filename) else 0
 	return JsonResponse({'code': code})
 
 
-def isfile_exists(filename,menu):
-	filepath = os.path.join(os.path.join(os.path.dirname(__file__), 'storage/private/File'), menu,filename)
+def isfile_exists(filename):
+	filepath = os.path.join(os.path.join(os.path.dirname(__file__), 'storage/private/File'),filename)
 	if os.path.exists(filepath):
 		return True
 	else:

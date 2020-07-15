@@ -423,7 +423,7 @@ def getfile(request,filename):
 	upload_dir = get_space_dir()
 	filepath = os.path.join(upload_dir,filename)
 	if os.path.exists(filepath):
-		with open(os.path.join(upload_dir,filename), 'rb') as f:
+		with open(filepath, 'rb') as f:
 			response = HttpResponse(f)
 			response['Content-Type'] = 'application/octet-stream'
 			response['Content-Disposition'] = 'attachment;'

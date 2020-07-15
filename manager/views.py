@@ -1,5 +1,6 @@
 import difflib,time
 
+import chardet
 from django.db import connection
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
@@ -83,18 +84,19 @@ def datamove(request):
 @csrf_exempt
 def uploadfile(request):
 	kind = 'persionfile'
-	return render(request, 'manager/myspace.html', locals())
+	return render(request, 'manager/filespace.html', locals())
 
 
 @csrf_exempt
 def checkfilename(request):
 	filename = request.POST.get('filename')
-	code = 1 if isfile_exists(filename) else 0
+	menu = request.POST.get('menu')
+	code = 1 if isfile_exists(filename,menu) else 0
 	return JsonResponse({'code': code})
 
 
-def isfile_exists(filename):
-	filepath = os.path.join(os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File'), filename)
+def isfile_exists(filename,menu):
+	filepath = os.path.join(os.path.join(os.path.dirname(__file__), 'storage/private/File'), menu,filename)
 	if os.path.exists(filepath):
 		return True
 	else:
@@ -152,11 +154,10 @@ def upload(request):
 			return JsonResponse(simplejson(code=2, msg='数据导入失败[%s]' % res[1]), safe=False)
 	elif kind == 'personfile':
 		upload_dir = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File')
+		menu = request.POST.get('menu')
 		try:
-			if not os.path.exists(upload_dir):
-				os.makedirs(upload_dir)
 			for filename in filemap:
-				filepath = os.path.join(upload_dir, filename)
+				filepath = os.path.join(upload_dir, menu,filename)
 				with open(filepath, 'wb') as f:
 					f.write(filemap[filename])
 			return JsonResponse(simplejson(code=0, msg='文件上传完成'), safe=False)
@@ -2107,29 +2108,132 @@ def _formatSize(bytes):
 	else:
 		return "%.2fkb" % (kb)
 
+def getFileFolderSize(fileOrFolderPath):
+	totalSize = 0
+	if not os.path.exists(fileOrFolderPath):
+		return _formatSize(totalSize)
+	if os.path.isfile(fileOrFolderPath):
+		totalSize = os.path.getsize(fileOrFolderPath)
+		return _formatSize(totalSize)
+	if os.path.isdir(fileOrFolderPath):
+		with os.scandir(fileOrFolderPath) as dirEntryList:
+			for curSubEntry in dirEntryList:
+				curSubEntryFullPath = os.path.join(fileOrFolderPath, curSubEntry.name)
+				if curSubEntry.is_dir():
+					curSubFolderSize = getFileFolderSize(curSubEntryFullPath)  # 5800007
+					totalSize += curSubFolderSize
+				elif curSubEntry.is_file():
+					curSubFileSize = os.path.getsize(curSubEntryFullPath)  # 1891
+					totalSize += curSubFileSize
+			return _formatSize(totalSize)
 
-# 获取文件大小
-def _getDocSize(path):
+@csrf_exempt
+def queryspacemenu(request):
+	basedir = get_space_dir()
+	if not os.path.exists(os.path.join(basedir,'默认')):
+		os.makedirs(os.path.join(basedir,'默认'))
+	files = os.listdir(basedir)
+	menu = []
+	for file in files:
+		path = os.path.join(basedir, file)
+		if os.path.isdir(path):
+			menu.append({'menuname':file,'size': getFileFolderSize(path),'path':path,
+			'createtime': time.strftime("%Y-%m-%d %H:%M", time.localtime(os.path.getctime(path)))})
+	menu.sort(key=lambda e: e.get('createtime'), reverse=True)
+	return JsonResponse({'code':0,'data':menu})
+
+
+@csrf_exempt
+def queryspacefiles(request):
+	menuname = request.POST.get('menuname')
+	basedir = os.path.join(get_space_dir(),menuname)
+	files = os.listdir(basedir)
+	filename = []
+	for file in files:
+		path = os.path.join(basedir, file)
+		if os.path.isfile(path):
+			filename.append({'filename': file, 'size': getFileFolderSize(path),'menu':menuname,'path':path,
+							 'createtime': time.strftime("%Y-%m-%d %H:%M", time.localtime(os.path.getctime(path)))})
+	filename.sort(key=lambda e: e.get('createtime'), reverse=True)
+	return JsonResponse({'code': 0, 'data': filename})
+
+@csrf_exempt
+def getfiledetail(request):
+	filename = request.POST.get('filename')
+	menu = request.POST.get('menu')
+	path = os.path.join(get_space_dir(), menu,filename)
+	filedata = ''
+	code = 1
+	with open(path, 'rb') as f:
+		predata = f.read()  # 读取文件内容
+		file_encoding = chardet.detect(predata).get('encoding')  # 得到文件的编码格式
 	try:
-		size = os.path.getsize(path)
-		return _formatSize(size)
-	except Exception as err:
-		logger.info(err)
+		print(file_encoding)
+		with open(path, 'r', encoding=file_encoding)as file:  # 使用得到的文件编码格式打开文件
+			filedata = file.read()
+			code = 0
+	except:
+		with open(os.path.join(path), 'rb') as f:
+			response = HttpResponse(f)
+			response['Content-Type'] = 'application/octet-stream'
+			response['Content-Disposition'] = 'attachment;'
+			return response
+	return JsonResponse({'code': code, 'filedata': filedata})
 
 
-# 获取文件夹大小
-def _getFileSize(path):
-	sumsize = 0
+@csrf_exempt
+def addmenu(request):
+	name = request.POST.get('name')
+	path = os.path.join(get_space_dir(), name)
+	if os.path.exists(path):
+		return JsonResponse({'code': 1, 'info': '已存在相同名称文件夹'})
+	else:
+		os.mkdir(path)
+		return JsonResponse({'code': 0, 'info': '创建成功'})
+
+@csrf_exempt
+def downloadfile(request):
+	filepath = request.POST.get('path')
+	with open(filepath, 'rb') as f:
+		response = HttpResponse(f)
+		response['Content-Type'] = 'application/octet-stream'
+		response['Content-Disposition'] = 'attachment;'
+		return response
+
+
+
+@csrf_exempt
+def editpathname(request):
+	newname = request.POST.get('newname')
+	newpath = os.path.join(get_space_dir(), newname)
+	path = request.POST.get('path')
+	code, info = 0, "修改成功"
 	try:
-		filename = os.walk(path)
-		for root, dirs, files in filename:
-			for fle in files:
-				size = os.path.getsize(path + fle)
-				sumsize += size
-		return _formatSize(sumsize)
-	except Exception as err:
-		logger.info(err)
+		os.rename(path, newpath)
+	except Exception as e:
+		code = 1
+		info = re.findall(", '(.*?)'\)", repr(e))[0]
+		print(re.findall(", '(.*?)'\)", repr(e))[0])
+	return JsonResponse({'code': code, 'info': info})
 
+
+@csrf_exempt
+def delfile(request):
+	path = request.POST.get('path')
+	code, info =0, '删除成功'
+	try:
+		if os.path.isdir(path):
+			if len(os.listdir(path))==0:
+				os.rmdir(path)
+			else:
+				info = '文件夹下存在文件'
+		elif os.path.isfile(path):
+			os.remove(path)
+	except Exception as e:
+		code = 1
+		info= re.findall(", '(.*?)'\)", repr(e))[0]
+		print(re.findall(", '(.*?)'\)", repr(e))[0])
+	return JsonResponse({'code': code, 'info': info})
 
 @csrf_exempt
 def queryuserfile(request):
@@ -2138,19 +2242,19 @@ def queryuserfile(request):
 	'''
 	searchvalue = request.GET.get('searchvalue')
 	mfiles = list()
-	dir_ = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File')
+	dir = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File')
 	# dir_ = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File',request.session.get('username'))
-	if not os.path.exists(dir_):
-		os.makedirs(dir_)
-	files = os.listdir(dir_)
+	if not os.path.exists(dir):
+		os.makedirs(dir)
+	files = os.listdir(dir)
 	logger.info('files=>', files)
 	for f in files:
 		if searchvalue and not f.__contains__(searchvalue):
 			continue;
 		mfiles.append({
 			'filename': f,
-			'size': _getDocSize(os.path.join(dir_, f)),
-			'createtime': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getctime(os.path.join(dir_, f))))
+			'size': _getDocSize(os.path.join(dir, f)),
+			'createtime': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getctime(os.path.join(dir, f))))
 		})
 	
 	mfiles.sort(key=lambda e: e.get('createtime'), reverse=True)

@@ -959,9 +959,9 @@ def _getfiledict(paraminfo):
             if isinstance(v, (str,)):
                 filepath = os.path.join(get_space_dir(), v)
                 if os.path.exists(filepath):
-                    pdict[k] = (v, open(filepath), 'rb')
+                    pdict[k] = (v, open(filepath, 'rb'))
                 elif os.path.exists(os.path.join(get_space_dir(), '默认', v)):
-                    pdict[k] = (v, open(os.path.join(get_space_dir(), '默认', v), 'rb'))
+                    pdict[k] = (v, open(os.path.join(get_space_dir(), '默认', v),'rb'))
                 else:
                     return 'fail', ''
     return 'success', pdict

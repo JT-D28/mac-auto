@@ -950,16 +950,21 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
         return ('', '', err)
 
 
-def _getfiledict(callername, paraminfo):
+def _getfiledict(paraminfo):
     pdict = dict()
     for k, v in eval(paraminfo).items():
         if not k.__contains__('file'):
             pdict[k] = (None, v)
         else:
             if isinstance(v, (str,)):
-                pdict[k] = (v, open(os.path.join(get_space_dir(), v), 'rb'))
-
-    return pdict
+                filepath = os.path.join(get_space_dir(), v)
+                if os.path.exists(filepath):
+                    pdict[k] = (v, open(filepath), 'rb')
+                elif os.path.exists(os.path.join(get_space_dir(), '默认', v)):
+                    pdict[k] = (v, open(os.path.join(get_space_dir(), '默认', v)), 'rb')
+                else:
+                    return 'fail', ''
+    return 'success', pdict
 
 
 def _callinterface(taskid, user, url, body=None, method=None, headers=None, content_type=None, props=None, kind=None,
@@ -1077,7 +1082,10 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
     elif content_type == 'xml':
         isxml = 0
     elif content_type == 'formdata':
-        body = _getfiledict(user.name, str(body))
+        state, body = _getfiledict(str(body))
+        if state == 'fail':
+            viewcache(taskid, user.name, kind, "<span style='color:#009999;'>%s</span>" % "上传文件不存在，请检查")
+            return ('', '', '', '上传文件不存在，请检查')
     else:
         raise NotImplementedError("content_type=%s没实现" % content_type)
     

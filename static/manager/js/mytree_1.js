@@ -843,12 +843,7 @@ var tree = {
         }
 
         var treeObj = $.fn.zTree.getZTreeObj(treeId);
-
-        alert(111)
-
-        console.log('===================================FLDJFLJSJASL====================')
-
-        alert(treeObj.getSelectedNodes())
+    
         if (treeNodes.length > 1 && moveType === 'inner') {
             var nodeids = '';
             treeNodes.forEach(function (item) {

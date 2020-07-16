@@ -29,26 +29,27 @@ urlpatterns = [
 	path('account/', include('login.urls')),
 	path('manager/', include('manager.urls')),
 	path('homepage/', include('homepage.urls')),
-	url(r'^file/(?P<filename>.*?)$',views.getfile),
+	url(r'^file/(?P<filename>.*?)$', views.getfile),
 	path('test_expression/', views.testexpress),
 	path('test_expression1/', views.testexpress1),
 	path('test_expression2/', views.testexpress2),
 	path('test_xml/', views.testxml),
-    path('mocktimeout/',views.mocktimeout),
-    path('updateauth/', views.updateroledata),
+	path('mocktimeout/', views.mocktimeout),
+	path('updateauth/', views.updateroledata),
 	# path('',views.index),
 
 ]
 
 if DEBUG:
-    import debug_toolbar
-    urlpatterns.append(url(r'^__debug__/', include(debug_toolbar.urls)))
+	import debug_toolbar
+	urlpatterns.append(url(r'^__debug__/', include(debug_toolbar.urls)))
 
 
-# handler404 = views.page_not_found
-# handler500 = views.page_error
 try:
 	from manager.operate.cron import Cron
 	Cron.recovertask()
 except:
 	pass
+
+# handler404 = views.page_not_found
+# handler500 = views.page_error

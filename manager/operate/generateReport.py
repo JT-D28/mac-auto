@@ -82,7 +82,7 @@ def getcasemap(caseid, data, taskid):
                 get_business_info(step.id, data, taskid)
             else:
                 data['case_' + str(map['main_id'])].append(
-                    {'id': 'step_%'%map['follow_id'], 'type': 'step',
+                    {'id': 'step_%s'%map['follow_id'], 'type': 'step',
                      'name': Step.objects.get(id=map['follow_id']).description + "(不执行)",
                      'icon': 'fa icon-fa-file-o', 'state': 'omit'})
 

@@ -46,18 +46,25 @@ var tree = {
                     onDragMove:this._onDragMove,
                     onMouseUp:this._onMouseUp,
 
-                }
+                },
+            //     check: {
+            // 　　　　enable: true,   //true / false 分别表示 显示 / 不显示 复选框或单选框
+            // 　　　　autoCheckTrigger: true,   //true / false 分别表示 触发 / 不触发 事件回调函数
+            // 　　　　chkStyle: "checkbox",   //勾选框类型(checkbox 或 radio）
+            // 　　　　chkboxType: { "Y": "p", "N": "s" }   //勾选 checkbox 对于父子节点的关联关系
+            //     }
             }
 
         return setting
 
     },
 
-    init: function (searchvalue = '') {
+    init: function (searchvalue = '',id='#case-manager') {
         // return
 
         //alert('tree init..')
         var t = this
+        this.id=id
         success = function (data) {
             data = JSON.parse(data);
             // console.log('用例树查询=>')
@@ -71,8 +78,8 @@ var tree = {
             setting = t._getsetting()
             // console.log('基本配置=>')
             // console.log(setting)
-
-            $.fn.zTree.init($("#case-manager"), setting, data.data);
+            // alert(t.id)
+            $.fn.zTree.init($(t.id), setting, data.data);
 
             //
             $("[switcher]").click(function () {
@@ -138,7 +145,7 @@ var tree = {
         _m1 = {
             'root': ['add'],
             'product': ['add', 'edit', 'del', 'mimport'],
-            'plan': ['add', 'edit', 'del', 'run', 'mexport', 'logs', 'config','replace'],
+            'plan': ['add', 'edit', 'del', 'run', 'mexport', 'logs', 'config','replace','link'],
             'case': ['add', 'edit', 'del', 'run','replace'],
             'step': ['add', 'edit', 'del', 'run','replace','mock'],
             'business': ['edit', 'del', 'run','replace']
@@ -157,6 +164,7 @@ var tree = {
             'config': "<span class='fa icon-fa-cog' id='config_#tid#' title='高级配置' onfocus='this.blur();'></span>",
             'replace': "<span class='fa fa-facebook' id='replace_#tid#' title='文本替换' onfocus='this.blur();'></span>",
             'mock':"<span class='fa fa-gg' id='mock_#tid#' title='mock' onfocus='this.blur();'></span>",
+            'link':"<span class='fa fa-link' id='link_#tid#' title='link' onfocus='this.blur();'></span>",
         }
 
         var type = treeNode.type
@@ -198,6 +206,7 @@ var tree = {
         if ($("#config_" + treeNode.tId).length > 0) return
         if ($("#replace_" + treeNode.tId).length > 0) return
         if ($("#mock_" + treeNode.tId).length > 0) return
+        if ($("#link_" + treeNode.tId).length > 0) return
 
         sObj.after(btnstr);
 
@@ -471,6 +480,36 @@ var tree = {
                 });
 
             })
+
+            //link
+            var link_btn = $("#link_" + treeNode.tId);
+            if (link_btn) link_btn.bind("click", function () {
+
+                var o=layer.open({
+                    type:2,
+                    title:'配置用例关联',
+                    content:'/manager/link/?srcid='+treeNode.id,
+                    btn:['关闭'],
+                    // success:function(){
+
+                    //       var treeObj1= $.fn.zTree.getZTreeObj("case-manager")
+                    //       var treeObj2 = $.fn.zTree.getZTreeObj("case-manager2")
+
+                    //       data1=JSON.stringify(treeObj1.getCheckedNodes(true))
+                    //       data2=JSON.stringify(treeObj2.getCheckedNodes(true))
+
+                    //       _post_nl('/manager/treecontrol/',{'action':'addeditlink','data1':data1,'data2':data2,'nid':nid},function(e){
+
+                    //         layer.alert(e.msg)
+
+                    //       })
+                    // }
+                });
+                layer.full(o);
+            })
+
+
+
             //mock
             var mock_btn = $("#mock_" + treeNode.tId);
             if (mock_btn) mock_btn.bind("click", function () {
@@ -660,6 +699,7 @@ var tree = {
         $("#config_" + treeNode.tId).unbind().remove();
         $("#replace_" + treeNode.tId).unbind().remove();
         $("#mock_" + treeNode.tId).unbind().remove();
+        $("#link_" + treeNode.tId).unbind().remove();
     },
 
     _onBeforeExpand: function (e, treeId, treeNode) {
@@ -692,7 +732,7 @@ var tree = {
     _beforeClick: function (treeId, treeNode, clickFlag) {
         if (clickFlag === 2 || clickFlag === 0) {
             if (treeNode.type !== 'product' || treeNode.type !== 'root') {
-                var treeObj = $.fn.zTree.getZTreeObj("case-manager");
+                var treeObj = $.fn.zTree.getZTreeObj(this.id);
                 flag = 0;
                 var selectnodes = treeObj.getSelectedNodes();
                 if (selectnodes.length == 1 && selectnodes[0].type !== treeNode.type) {
@@ -940,7 +980,7 @@ var tree = {
                     }
                 })
             } else if ($(this)[0].id === 'get_select_nodes') {
-                var nodes = $.fn.zTree.getZTreeObj("case-manager").getSelectedNodes().id;
+                var nodes = $.fn.zTree.getZTreeObj(this.id).getSelectedNodes().id;
                 console.log(nodes)
             } else {
                 layer.msg('暂不支持')

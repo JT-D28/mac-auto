@@ -14,10 +14,11 @@ from ME2.settings import logme
 from login import models as lm
 from .context import *
 from .invoker import runplan, runplans,get_run_node_plan_id
-from .core import gettaskid,get_params
+from .core import gettaskid,get_params,EncryptUtils
 from manager.context import Me2Log as logger
 from .operate.dataMove import DataMove
 from tools.R import R
+
 
 # addproduct
 @monitor(action='添加产品')
@@ -81,8 +82,14 @@ def editproduct(request):
     description = request.POST.get('description')
     try:
         p = mm.Product.objects.get(id=int(uid.split('_')[1]))
+        pcopy=copy.deepcopy(p)
         p.description = description
         p.save()
+
+        linkiter=mm.EditLink.objects.filter(snid='product_{}'.format(p.id))
+        for link in linkiter:
+            linkobj=mm.Product.objects.get(id=link.tnid.split('_')[1])
+            _update_object(linkobj, _diff_object(pcopy,p,ignore_attr=['id']))
         return {
             'status': 'success',
             'msg': '编辑成功',
@@ -207,6 +214,7 @@ def editplan(request):
         is_send_mail = request.POST.get("is_send_mail")
         is_send_dingding = request.POST.get("is_send_dingding")
         plan = mm.Plan.objects.get(id=id_)
+        plancopy=copy.deepcopy(plan)
         olddescription = plan.description
         plan.description = newdescription
         plan.db_id = request.POST.get('dbid')
@@ -257,6 +265,15 @@ def editplan(request):
                 mail_config.is_send_dingding = 'close'
             mail_config.save()
         msg = '编辑成功'
+
+
+        #
+        linkiter=mm.EditLink.objects.filter(snid='plan_{}'.format(plan.id))
+        for link in linkiter:
+            linkobj=mm.Plan.objects.get(id=link.tnid.split('_')[1])
+            _update_object(linkobj, _diff_object(plancopy,plan,ignore_attr=['id']))
+
+
         
         if olddescription != newdescription:
             threading.Thread(target=handlebindplans, args=(olddescription, newdescription, id_)).start()
@@ -364,13 +381,22 @@ def editcase(request):
     msg = ''
     try:
         case = mm.Case.objects.get(id=id_)
+        casecopy=copy.deepcopy(case)
         case.description = request.POST.get('description')
         case.db_id = request.POST.get('dbid')
         case.count = int(request.POST.get('count'))
         case.save()
         casename = case.description
+
+
         if case.count == 0:
             casename = '<s>%s</s>' % casename
+
+        #
+        linkiter=mm.EditLink.objects.filter(snid='case_{}'.format(case.id))
+        for link in linkiter:
+            linkobj=mm.Case.objects.get(id=link.tnid.split('_')[1])
+            _update_object(linkobj, _diff_object(casecopy,case,ignore_attr=['id']))
         
         return {
             'status': 'success',
@@ -1465,17 +1491,186 @@ def get_search_match(searchvalue):
        3.无匹配结果
     '''
     import time
-    logger.info('1=>', time.time())
     nodes = get_full_tree()
-    logger.info('2=>', time.time())
     for node in nodes:
         if searchvalue in node.get('name'):
             # node['name']="<s>%s</s>"%node['name']
             # node['name']="<span style='color:red;'>%s</span>"%node['name']
             _expand_parent(node, nodes)
-    logger.info('3=>', time.time())
     return nodes
 
+
+def get_link_left_tree(nid):
+    logger.info('开始计算左侧树数据 源id={}.'.format(nid))
+
+    datanode=[]
+    planid=nid.split('_')[1]
+    flag=None
+    histroy=mm.EditLink.objects.filter(snid=nid)
+    if histroy.exists():
+        flag=list(histroy)[0].flag
+
+    ##默认展开到计划层
+    datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p'})
+    productlist = list(mm.Product.objects.all().exclude(isdelete=1))
+    # logger.info('productlist:',productlist)
+    productid=_get_node_parent_info('plan',planid)[1]
+    product=mm.Product.objects.get(id=productid)
+
+    datanode.append({
+        'id': 'product_%s' % product.id,
+        'pId': -1,
+        'name': product.description,
+        'type': 'product',
+        'textIcon': 'fa icon-fa-home',
+    })
+
+
+    plan=mm.Plan.objects.get(id=planid)
+    datanode.append({
+        'id': 'plan_%s' % plan.id,
+        'pId': 'product_%s' % product.id,
+        'name': plan.description,
+        'type': 'plan',
+        'textIcon': 'fa icon-fa-product-hunt',
+
+    })
+
+    ##有具体关联时 构造完成展现数据
+    snids=[]
+    if flag:
+        snids=[x.snid for x in mm.EditLink.objects.filter(flag=flag)]
+        snids.append(-1)
+
+        for snid in snids:
+            if snid==-1:
+                continue;
+            if snid.startswith('business'):
+                business=mm.BusinessData.objects.get(id=snid.split('_')[1])
+                datanode.append({
+                    'id': 'business_%s' % business.id,
+                    'pId': 'step_%s' % _get_node_parent_info('business',business.id)[1],
+                    'name': business.businessname,
+                    'type': 'business',
+                    'textIcon': 'fa icon-fa-leaf',
+                })
+
+            elif snid.startswith('step'):
+                step=mm.Step.objects.get(id=snid.split('_')[1])
+                datanode.append({
+                        'id': 'step_%s' % step.id,
+                        'pId': 'case_%s' % _get_node_parent_info('step',step.id)[1],
+                        'name': step.description,
+                        'type': 'step',
+                        'textIcon': 'fa icon-fa-file-o',
+                    })
+
+            elif snid.startswith('case'):
+                case=mm.Case.objects.get(id=snid.split('_')[1])
+                datanode.append({
+                    'id': 'case_%s' % case.id,
+                    'pId': 'plan_%s' % _get_node_parent_info('case',case.id)[1],
+                    'name': case.description,
+                    'type': 'case',
+                    'textIcon': 'fa icon-fa-folder',
+                })
+
+    #所有展现数据构造完成
+    #设置open checked
+    for node in datanode:
+        node['open']=True
+        if node['id'] in snids:
+            node['checked']=True
+
+
+
+
+
+    #logger.info('左侧tree数据:\n{}'.format(datanode))
+    return datanode
+
+def set_node_checkflag(node,checkflag,nodes):
+    for node in nodes:
+        pass
+
+
+
+def get_link_right_tree(nid):
+    logger.info('计算右侧数据')
+    wait_del=_get_all_child_node_id(nid)
+
+    datanode=[]
+    history=mm.EditLink.objects.filter(snid=nid)
+
+    if history.exists():
+        tnids=[x.tnid for x in mm.EditLink.objects.filter(flag=list(history)[0].flag)]
+
+        ##加上root 和所属产品
+        tnids.append(-1)
+        tnids.append('product_{}'.format(_get_node_parent_info('plan',nid.split('_')[1])[1]))
+
+        logger.info('右侧需要勾选的项：{}'.format(tnids))
+
+        nodes=get_full_tree()      
+        with open('d:/t.txt','w') as f:
+            f.write(str(nodes)) 
+
+
+        # for node in nodes:
+        #     if node['type'].startswith('bu'):
+        #         logger.info('eys0000000000000000') 
+
+        logger.info('需要禁用的项：{}'.format(wait_del))
+        datanode=copy.deepcopy(nodes)
+        for node,node0 in zip(nodes,datanode):
+            # if node['id'] in tnids:
+            #     node0['checked']=True
+            #     _expand_parent(node0, datanode)
+
+            if node['id']==-1:
+                node0['checked']=True
+
+            elif node['id'] in wait_del:
+                logger.info('清除node：{}'.format(node))
+                datanode.remove(node)
+
+        for node in datanode:
+            # if node['type'].startswith('bu'):
+            #     logger.info('eys')
+
+            if node['id'] in tnids:
+                node['checked']=True
+                # logger.info('展开tnid:',str(node['id']),' 父节点')
+                _expand_parent(node, datanode)         
+
+
+    else:
+        datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True})
+        productlist = list(mm.Product.objects.all().exclude(isdelete=1))
+        # logger.info('productlist:',productlist)
+        for product in productlist:
+            datanode.append({
+                'id': 'product_%s' % product.id,
+                'pId': -1,
+                'name': product.description,
+                'type': 'product',
+                'textIcon': 'fa icon-fa-home'
+            })  
+
+       #无效 
+
+        # for node in datanode:
+        #     if node['id']==-1:
+        #         node['checked']=True
+
+        #     elif node['id'] in wait_del:
+        #         logger.info('清除node：{}'.format(node))
+        #         datanode.remove(node)
+
+
+    #logger.info('右侧树数据：\n{}'.format(datanode))
+
+    return datanode
 
 icon_map = {
     'product': 'fa icon-fa-home',
@@ -1484,6 +1679,54 @@ icon_map = {
     'step': 'fa icon-fa-file-o',
     'business': 'fa icon-fa-leaf'
 }
+
+
+def _get_all_parent_node_id(nodeid):
+    curparentinfo=_get_node_parent_info(nodeid.split('_')[0], nodeid.split('_')[1])
+
+def _get_all_child_node_id(plannodeid):
+
+    wait_del=[]
+
+    planid=plannodeid.split('_')[1]
+    wait_del.append(plannodeid)
+    cases=getchild('plan_case', planid)
+    for case in cases:
+        wait_del.append('case_{}'.format(case.id))
+        steps=getchild('case_step',case.id)
+        for step in steps:
+            wait_del.append('step_{}'.format(step.id))
+            businesses=getchild('step_business',step.id)
+            for b in businesses:
+                wait_del.append('business_{}'.format(b.id))
+
+        ##case-case
+        caseids=[]
+        _get_all_case_child_id('case_{}'.format(case.id), caseids)
+
+        for caseid in caseids:
+            wait_del.append('case_{}'.format(caseid))
+            steps0=getchild('case_step', caseid)
+            for step0 in steps0:
+                wait_del.append('step_{}'.format(step0.id))
+                businesses0=getchild('step_business', step0.id)
+                for bs in businesses0:
+                    wait_del.append('business_{}'.format(bs.id))
+
+    return list(set(wait_del))
+
+
+def _get_all_case_child_id(casenodeid,all_):
+    caseid=casenodeid.split('_')[1]
+    all_.append(caseid)
+    cases=getchild('case_case', caseid)
+    for case in cases:
+        all_.append(case.id)
+        _get_all_case_child_id('case_{}'.format(case.id), all_)
+
+
+
+
 
 
 def get_full_tree():
@@ -1513,8 +1756,8 @@ def get_full_tree():
             cursor.execute(query_plan_order_list, [product['id']])
             plan_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
         
-        logger.info('$' * 200)
-        logger.info('plan_order_list=>', plan_order_list, len(plan_order_list))
+        # logger.info('$' * 200)
+        # logger.info('plan_order_list=>', plan_order_list, len(plan_order_list))
         for order in plan_order_list:
             try:
                 # plan = mm.Plan.objects.get(id=int(order.follow_id))
@@ -1545,7 +1788,7 @@ def get_full_tree():
                 case_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
                 case_order_list.sort(key=lambda e: e.get('value'))
             
-            logger.info('case_order_list=>', case_order_list, len(case_order_list))
+            #logger.info('case_order_list=>', case_order_list, len(case_order_list))
             
             for order in case_order_list:
                 # case = mm.Case.objects.get(id=order.follow_id)
@@ -1573,6 +1816,7 @@ def get_full_tree():
 def _add_next_case_node(parent, case, nodes):
     ##处理所属单节点
     # step_order_list = ordered(list(mm.Order.objects.filter(kind='case_step', main_id=case['id'])))
+    step_order_list=[]
     query_step_order_sql = 'select * from manager_order where kind=%s and main_id=%s and isdelete=0'
     with connection.cursor() as cursor:
         cursor.execute(query_step_order_sql, ['case_step', case['id']])
@@ -1602,12 +1846,19 @@ def _add_next_case_node(parent, case, nodes):
             })
         
         # business_order_list = ordered(list(mm.Order.objects.filter(kind='step_business', main_id=step['id'])))
-        query_business_order_list_sql = "select * from manager_order where kind='step' and main_id=%s and isdelete=0"
+        query_business_order_list_sql = "select * from manager_order where kind='step_business' and main_id=%s and isdelete=0"
         with connection.cursor() as cursor:
+
+            # logger.info('here id:',step['id'])
             cursor.execute(query_business_order_list_sql, [step['id']])
+
+            # logger.info('fetchall size:',len(cursor.fetchall()))
+            # logger.info(list(dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()))
             business_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+            # logger.info('*'*200,'开始计算nussi大小  business:  size:',len(business_order_list))
             business_order_list.sort(key=lambda e: e.get('value'))
         
+        # logger.info('*'*200,'开始计算添加  business:  size:',len(business_order_list))
         for order in business_order_list:
             # business = mm.BusinessData.objects.get(id=order.follow_id)
             query_business_sql = 'select * from manager_businessdata where id=%s and isdelete=0'
@@ -2022,16 +2273,122 @@ def editnodelink(request):
 
 def addeditlink(request):
     params=get_params(request)
-    srcid=params['srcid']
-    targetids=[x for x in params['targetids'].split(',') if x.strip()]
+    data1=json.loads(params['data1'])
+    data2=json.loads(params['data2'])
+    ##需要都选
+    if not data1 or not data2:
+        return{
+            'status':'error',
+            'msg':'请先选择要关联的用例'
+        }
 
-    for tid in targetids:
-        _addlink(srcid,tid,creater=get_params(request)['user'])
+    data1,data2=data1[0],data2[0]
+
+
+    # logger.info('data1:\n{} \ndata2:{}'.format(data1,data2))
+
+    left_routes,right_routes=[],[]
+
+    ##检查左边树是否存在唯一的计划节点 
+
+
+    _get_route(data1,[],left_routes)
+    _get_route(data2,[],right_routes)
+
+    # logger.info('left_routes:\n{}'.format(left_routes))
+    # logger.info('right_routes:\n{}'.format(right_routes))
+
+    left_product_check,left_plan_check=[],[]
+    for x in left_routes:
+        if x[0] not in left_product_check:
+            left_product_check.append(x[0])
+        if x[1] not in left_plan_check:
+            left_plan_check.append(x[1])
+
+        if len(left_plan_check)>1 or len(left_product_check)>1:
+            return{
+                'status':'error',
+                'msg':'左边树暂时只支持选一个产品计划'
+            }
+
+    ##清除已关联数据 重新关联
+    history=list(mm.EditLink.objects.filter(snid=params['nid']))
+    if history:
+        flag=history[0].flag
+        mm.EditLink.objects.filter(flag=flag).delete()
+        logger.info('清除已关联数据 planid={} flag={}'.format(params['nid'],flag))
+
+    ##
+    count=0
+    flag=EncryptUtils.md5_encrypt(str(time.time()))
+
+    for x in left_routes:
+
+        xflag=':'.join([xx.get('name') for xx in x][2:])
+        xsize=len(x)
+        logger.info('xflag:',xflag,'xsize:',xsize)
+
+        for y in right_routes:
+            yflag=':'.join([xx.get('name') for xx in y][2:])
+            ysize=len(y)
+            logger.info('yflag:',yflag,'ysize:',ysize)
+
+            if xflag==yflag and xsize==ysize:
+                logger.info('关联数据 xflag:{} yflag:{}'.format(xflag,yflag))
+                for i in range(xsize):
+                    xnid=x[i].get('id')
+                    ynid=y[i].get('id')
+
+                    is_exist=mm.EditLink.objects.filter(snid=xnid,tnid=ynid,flag=flag)
+                    if is_exist:
+                        continue;
+
+                    el=mm.EditLink()
+                    el.snid=xnid
+                    el.tnid=ynid
+                    el.creater=params['user']
+                    el.flag=flag
+                    el.save()
+                    count=count+1
+
+
+    logger.info('本次关联结束 关联条数:{}..'.format(count))
+
 
     return {
         'status':'success',
-        'msg':'关联成功.'
+        'msg':'关联成功[{}]条.'.format(count)
     }
+
+
+
+def _get_route(data,cur_route,all_route):
+    d1checked=data.get('checked')
+    d1kind=data.get('type')
+    d1name=data.get('name','')
+    d1child=data.get('children',[])
+
+    if len(d1child)==0:
+        all_route.append(copy.deepcopy(cur_route))
+      
+        return False
+
+
+    for c in d1child:
+        if c.get('checked'):
+            cur_route.append(c)
+            flag=_get_route(c,cur_route,all_route)
+            if flag==False:
+                cur_route=copy.deepcopy(cur_route[:-1])
+
+
+
+def _filter_data(data):
+    for nodedata in data:
+        if nodedata.get('checked')==False:
+            data.remove(nodedata)
+        child=nodedata.get('children')
+
 
 
 def _addlink(nid1,nid2,creater=None):
@@ -2210,16 +2567,16 @@ def _update_object(target,diff):
             if oldvalue==diff[attrname][0]:
                 setattr(target, attrname, diff[attrname][1])
                 logger.info('==调整属性{} {}->{}'.format(attrname,diff[attrname][0],diff[attrname][1]))
-            else:
-                try:
-                    d=difflib.Differ()
-                    difflist=list(d.compare(diff[attrname][0], diff[attrname][1]))
-                    attrvalue=_compute_attribute(difflist,getattr(target,attrname))
-                    setattr(target, attrname,attrvalue)
-                    logger.info('==调整属性{} {}->{}'.format(attrname,oldvalue,attrvalue))
-                except:
-                    #get_next_by_create_time
-                    logger.info('忽略更新属性{} :\n{}'.format(attrname,traceback.format_exc()))
+            # else:
+            #     try:
+            #         d=difflib.Differ()
+            #         difflist=list(d.compare(diff[attrname][0], diff[attrname][1]))
+            #         attrvalue=_compute_attribute(difflist,getattr(target,attrname))
+            #         setattr(target, attrname,attrvalue)
+            #         logger.info('==调整属性{} {}->{}'.format(attrname,oldvalue,attrvalue))
+            #     except:
+            #         #get_next_by_create_time
+            #         logger.info('忽略更新属性{} :\n{}'.format(attrname,traceback.format_exc()))
 
     target.save()
     logger.info('==调整结束==')

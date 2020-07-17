@@ -1,0 +1,221 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>关联节点选择</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/ztree/zTreeStyle.css' %}">
+    <!--   <link rel="stylesheet" type="text/css" href="{% static 'manager/ztree/demo.css' %}"> -->
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/icomoon/style.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/bootstrap/bootstrap.min.css' %}">
+    <link href="{% static 'manager/bootstrap-fileinput-master/css/fileinput.css' %}" media="all" rel="stylesheet"
+          type="text/css"/>
+    <link href="{% static 'manager/bootstrap-fileinput-master/themes/explorer-fas/theme.css' %}" media="all"
+          rel="stylesheet" type="text/css"/>
+
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/css/rightMenu.css' %}">
+        <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+
+    <style type="text/css">
+
+       .el-select-dropdown {
+            z-index: 20000000;
+        }
+        .el-input__inner, .el-input__icon {
+            height: 34px;
+            line-height: 34px;
+        }
+        .layui-input {
+            padding: 0 14px;
+            background-color: rgb(252, 252, 252);
+        }
+
+        .layui-form-item .layui-form-checkbox[lay-skin="primary"] {
+            margin-right: 9px;
+        }
+
+        .layui-form-selectup dl {
+            top: 42px;
+            bottom: unset;
+        }
+
+        span {
+            font-size: 14px;
+            font-family: PingFang-SC-Regular, PingFang-SC;
+            font-weight: 400;
+            color: rgba(51, 51, 51, 1);
+            line-height: 20px;
+        }
+
+        .layui-tree-entry {
+            height: auto;
+            padding: 4px 0;
+        }
+
+        .layui-tree-iconClick {
+            margin-right: 8px;
+            margin-left: 0px;
+        }
+
+        .layui-table-view {
+            margin: 0 0;
+        }
+
+        .layui-table th, .layui-table td {
+            font-size: 12px;
+        }
+
+        .card {
+            padding: 0 25px;
+            line-height: 30px;
+            height: 30px;
+        }
+
+        .ztree li span.button.add {
+            margin-left: 2px;
+            margin-right: -1px;
+            background-position: -144px 0;
+            vertical-align: top;
+            *vertical-align: middle
+        }
+
+        .ztree li span.button.diy01_ico_open, .ztree li span.button.diy01_ico_close {
+            margin-right: 2px;
+            background: url(../../static/manager/ztree/img/diy/1_open.png) no-repeat scroll 0 0 transparent;
+            vertical-align: top;
+            *vertical-align: middle
+        }
+
+        .ztree li span.button.diy02_ico_docu {
+            margin-right: 2px;
+            background: url(../../static/manager/ztree/img/diy/2.png) no-repeat scroll 0 0 transparent;
+            vertical-align: top;
+            *vertical-align: middle
+        }
+
+        .ztree li span.button.diy03_ico_docu {
+            margin-right: 2px;
+            background: url(../../static/manager/ztree/img/diy/3.png) no-repeat scroll 0 0 transparent;
+            vertical-align: top;
+            *vertical-align: middle
+        }
+
+        .fa {
+
+            /*color: #FF6699;*/
+            color: #009688;
+
+        }
+
+        .btn {
+            width: 72px;
+            height: 34px;
+            background: rgba(0, 151, 136, 1);
+            border-radius: 0px 2px 2px 0px;
+        }
+
+        .btn-text {
+            width: 24px;
+            height: 17px;
+            font-size: 12px;
+            font-family: PingFang-SC-Medium, PingFang-SC;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 1);
+            line-height: 17px;
+        }
+
+
+        .fa.fa-folder {
+            color: #FFCC66;
+
+        }
+
+        .fa.fa-folder-open {
+            color: #FFCC66;
+        }
+
+        #start-record:hover{
+            cursor: pointer;
+
+        }
+        #end-record:hover{
+            cursor: pointer;
+        }
+    </style>
+
+</head>
+
+<body style="overflow: auto;">
+
+
+  <button id ='addlink' class="layui-btn btn" style="float:left;margin-left:20px;margin-top:10px;">关联</button>
+  <ul id="case-manager" class="ztree " style="margin-top:10px;margin-left:100px;padding:10px 0 0 15px;width:350px;float:left;"></ul>
+
+  <ul id="case-manager2" class="ztree " style="margin-top:10px;padding:10px 0 0 15px;float:left"></ul>
+
+
+
+   </div> 
+
+</body>
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+<script src="{% static 'manager/ztree/jquery.ztree.core.js' %}"></script>
+<script src="{% static 'manager/ztree/jquery.ztree.excheck.min.js' %}"></script>
+<script src="{% static 'manager/ztree/jquery.ztree.exedit.js' %}"></script>
+<script src="{% static 'manager/js/mytree_1.js' %}"></script>
+<script src="{% static 'manager/js/mytree_link_1.js' %}"></script>
+<script src="{% static 'manager/js/mytree_link_2.js' %}"></script>
+<script type="text/javascript">
+
+nid=_get_query_param('srcid')
+
+// $(document).ready(function(argument) {
+//   // body...
+//   setTimeout(function(){
+//     var left_tree=$.fn.zTree.getZTreeObj("case-manager")
+//     // alert(left_tree)
+//     var node=left_tree.getNodeByParam('id',nid)
+//     node.checked = true;
+//     left_tree.updateNode(node);
+
+//   },1000)
+
+// });
+
+
+tree_link1.init('',nid)
+tree_link2.init('',nid)
+// tree.init('','#treeDiv2')
+
+$('#checked_1').click(function () {
+  // body...
+
+  var treeObj = $.fn.zTree.getZTreeObj("case-manager")
+  nodes = treeObj.getCheckedNodes(true)
+
+  layer.alert(JSON.stringify(nodes))
+})
+
+$('#addlink').click(function(){
+
+  var treeObj1= $.fn.zTree.getZTreeObj("case-manager")
+  var treeObj2 = $.fn.zTree.getZTreeObj("case-manager2")
+
+  data1=JSON.stringify(treeObj1.getCheckedNodes(true))
+  data2=JSON.stringify(treeObj2.getCheckedNodes(true))
+
+  _post_nl('/manager/treecontrol/',{'action':'addeditlink','data1':data1,'data2':data2,'nid':nid},function(e){
+
+    layer.alert(e.msg)
+
+  })
+});
+</script>
+
+</html>

@@ -208,6 +208,8 @@
         {% if request.session.username == 'hujj' %}
         <i id="start-record">开始录制</i><i id="end-record">结束录制</i>
         {% endif %}
+        <i id="link-btn">关联用例</i>
+
 
     </div>
     <ul class="contextmenu" id="contextmenu"></ul>
@@ -271,6 +273,7 @@
 </div>
 
 
+
 <script src="{% static 'manager/layui/layui.js' %}"></script>
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
@@ -288,6 +291,9 @@
     //
     tree.init();
 
+    tree_link1.init('',nid)
+    tree_link2.init('',nid)
+
     $('#searchbtn').click(function (argument) {
         tree.init($('#search').val())
     });
@@ -303,6 +309,28 @@
         var table=layui.table;
         var form=layui.form
         var transfer=layui.transfer;
+
+
+        //
+        $('#link-btn').click(function(e){
+            var o=layer.open({
+                type:2,
+                title:'关联用例',
+                content:'/manager/link/',
+                btn:['确认','取消'],
+                success:function(){
+
+                    layer.msg('submit')
+                }
+            });
+
+            layer.full(o);
+
+
+
+
+
+        });
         $('#start-record').click(function(e){
 
             layer.msg('开始录制..')

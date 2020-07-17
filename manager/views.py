@@ -2188,7 +2188,9 @@ def getfiledetail(request):
 	code = 1
 	filemap = FileMap.objects.values('customname','code').get(filename=filename, path=menu + "/" + filename)
 	customname = filemap['customname']
-	if filemap['code'] is None or filemap['code']=='big' and getFileFolderSize(path)!=0:
+	if filemap['code'] in [None,'big','blank']:
+		if getFileFolderSize(path)==0:
+			return JsonResponse({'code': 0, 'filedata': '', "customname": customname})
 		return JsonResponse({'code': code, "customname": filemap['customname']})
 	else:
 		try:

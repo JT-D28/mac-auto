@@ -3,6 +3,8 @@ import threading
 import redis
 from django.shortcuts import render, redirect, render_to_response
 from django.conf import settings
+from django.utils.encoding import escape_uri_path
+
 from ME2 import configs
 from ME2.settings import logme
 from manager.context import get_space_dir
@@ -420,12 +422,55 @@ def updateroledata(request):
 
 @csrf_exempt
 def getfile(request,filename):
+	#  /file/<dir>/<file>?name=<downloadname>
 	upload_dir = get_space_dir()
 	filepath = os.path.join(upload_dir,filename)
+	downloadname = request.GET.get('name')
+
 	if os.path.exists(filepath):
-		with open(os.path.join(upload_dir,filename), 'rb') as f:
+		with open(filepath, 'rb') as f:
 			response = HttpResponse(f)
 			response['Content-Type'] = 'application/octet-stream'
-			response['Content-Disposition'] = 'attachment;'
+			if downloadname is None:
+				response["Content-Disposition"] = "attachment;"
+			else:
+				response["Content-Disposition"] = "attachment; filename*=UTF-8''{}".format(escape_uri_path(downloadname))
 			return response
 	return JsonResponse({})
+
+
+
+@csrf_exempt
+def getbusinessnum(request,id,total):
+	cases = Order.objects.filter(kind__contains='plan_',main_id=id,isdelete=0)
+	steplist = []
+	builist = []
+	for o in cases:
+		case = mm.Case.objects.values('count').get(id=o.follow_id)
+		if total=='0' and case['count'] not in ['1', 1]:
+			continue
+		getstep(steplist,o.follow_id,total)
+	for i in steplist:
+		bui = Order.objects.filter(kind__contains='step_bu',main_id=i,isdelete=0)
+		for b in bui:
+			BusinessData = mm.BusinessData.objects.values('count').get(id=b.follow_id)
+			if total=='0' and BusinessData['count'] not in ['1', 1]:
+				continue
+			builist.append(b)
+	print("总数：%s"%(len(builist)))
+	return JsonResponse({'num':len(builist)})
+
+
+def getstep(steplist,id,total):
+	orders = Order.objects.filter(kind__contains='case_',main_id=id,isdelete=0)
+	for o in orders:
+		if o.kind=='case_case':
+			case = mm.Case.objects.values('count').get(id = o.follow_id)
+			if total=='0' and case['count'] not in ['1',1]:
+				continue
+			getstep(steplist,o.follow_id,total)
+		elif o.kind=='case_step':
+			step = mm.Step.objects.values('count').get(id = o.follow_id)
+			if total=='0' and step['count'] not in ['1',1]:
+				continue
+			steplist.append(o.follow_id)

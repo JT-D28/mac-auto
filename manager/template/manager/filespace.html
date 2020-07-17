@@ -1,0 +1,806 @@
+{% load static %}
+<!DOCTYPE html>
+<html style="height: 100%">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+    <script src="{% static 'homepage/vue.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'homepage/eleui/theme-chalk/index.css' %}">
+    <script src="{% static 'homepage/eleui/index.js' %}"></script>
+    <title>文件空间</title>
+    <style type="text/css">
+        .el-upload {
+            margin-top: 8%;
+            width: 50%;
+            height: 180px;
+        }
+
+        .el-table .cell, .el-table th > .cell {
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .el-upload-list__item .el-icon-close {
+            top: 14px
+        }
+
+        .upload-demo {
+            min-height: 50%;
+        }
+
+        .el-upload-dragger {
+            width: 100%;
+            height: 100%;
+        }
+
+        .el-upload-list {
+            margin: 0 25%;
+        }
+
+        .el-upload-list__item-name {
+            background-color: rgba(247, 250, 250, 1);
+            margin-right: 0;
+            line-height: 38px;
+            height: 38px;
+            font-size: 12px;
+            font-family: PingFang-SC-Regular, PingFang-SC;
+            font-weight: 400;
+            color: rgba(53, 59, 75, 1);
+        }
+
+        .el-upload-list__item-status-label {
+            top: 9px
+        }
+
+        .layui-icon:hover {
+            cursor: pointer;
+        }
+
+        .edit {
+            width: 24px;
+            height: 17px;
+            font-size: 12px;
+            font-family: PingFang-SC-Medium, PingFang-SC;
+            font-weight: 500;
+            color: rgba(0, 151, 136, 1);
+            line-height: 17px;
+        }
+
+        .btn {
+            height: 34px;
+            line-height: 34px;
+        }
+
+        .layui-table-view {
+            margin: 20px 0;
+        }
+
+        .el-drawer__header {
+            display: none;
+        }
+
+        .el-drawer {
+            overflow: auto;
+            font-size: 14px;
+            font-family: PingFang-SC-Regular, PingFang-SC;
+            font-weight: 400;
+            color: rgba(51, 51, 51, 1);
+            line-height: 20px;
+        }
+    </style>
+</head>
+<body style="height: calc(100% - 40px);padding: 20px">
+
+<!--
+<div class="layui-inline">
+    <button class="layui-btn btn" id='addbtn'>新增</button>
+    <button class="layui-btn btn layui-btn-danger" id='delbtn'>删除</button>
+</div>
+
+<div class="layui-inline" style="float: right;">
+    <div class="layui-input-inline">
+        <input id='search-value' type="text" name="" placeholder="文件名" class="btn layui-input">
+    </div>
+    <button class="layui-btn btn" id='querybtn'>查询</button>
+</div>
+
+
+<table id='table-file' class="layui-table"
+       lay-data="{height: 'full-100', cellMinWidth: 80, page: true, limit:10, url:'/manager/queryuserfile/'}"
+       lay-filter='target'>
+    <thead>
+    <tr>
+        <th lay-data="{type:'checkbox'}"></th>
+        <th lay-data="{field: 'id',width:80,hide:true}">ID</th>
+        <th lay-data="{field: 'filename', sort: true}">文件名</th>
+        <th lay-data="{field: 'size', sort: true}">大小</th>
+        <th lay-data="{field: 'createtime', width:240,sort:true}">创建时间</th>
+        <th lay-data="{fixed: 'right',align:'center', toolbar: '#toolbar',width:100}">操作</th>
+    </tr>
+    </thead>
+</table>
+
+
+
+<div id='upload' style="height:calc(100% - 40px);padding: 20px;display: none;">
+    <div id="kv-upload" style="height: 100%;text-align: center;">
+        <el-upload
+                ref="upload"
+                style="text-align: center;"
+                class="upload-demo"
+                drag
+                action=""
+                :auto-upload="false"
+                :on-remove="removeFile"
+                :file-list="fileList"
+                :on-change="handleChange"
+                multiple
+        >
+            <i class="el-icon-upload"></i>
+            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+        </el-upload>
+        <el-button style="margin-top: 20px;width: 72px;height: 34px;line-height: 0px" type="info" @click="uploadFile">上传
+        </el-button>
+
+    </div>
+</div>-->
+<div id="filespace" style="height: 100%;overflow-y: hidden;">
+    <template>
+        <div style="height: 100%">
+            <div id="tree1" class="grid-content bg-purple"
+                 style="width: 40%;float: left;display: inline-block; cursor:pointer;height: 100% ">
+                <el-table
+                        :highlight-current-row=true
+                        :data="menus"
+                        height="100%"
+                        @row-click="getFiles"
+                        :empty-text="emptytext"
+                        :show-overflow-tooltip=true
+                        style="width: 100%"
+                >
+                    <el-table-column prop="menuname" label="目录" align="center" show-overflow-tooltip></el-table-column>
+                    <el-table-column prop="createtime" label="创建时间" align="center"></el-table-column>
+                    <el-table-column label="操作" align="center">
+                        <template slot="header" slot-scope="scope">
+                            <el-button
+                                    type="success"
+                                    @click="addmenu">新增
+                            </el-button>
+                        </template>
+                        <template slot-scope="scope">
+                            <el-button
+                                    :style="{display:(scope.row.menuname=='默认'?'none':'')}"
+                                    size="mini"
+                                    @click.stop="handleEdit(scope.$index, scope.row)">编辑
+                            </el-button>
+                            <el-button
+                                    :style="{display:(scope.row.menuname=='默认'?'none':'')}"
+                                    size="mini"
+                                    type="danger"
+                                    @click.stop="handleDelete(scope.$index, scope.row)">删除
+                            </el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+            <div id="tree" class="grid-content bg-purple"
+                 style="width: 60%;display: inline-block; cursor:pointer;height: 100% ">
+                <el-table
+                        :highlight-current-row=true
+                        :data="files"
+                        height="100%"
+                        @row-dblclick="getFileDetail"
+                        :empty-text="emptytext"
+                >
+                    <el-table-column label="文件" show-overflow-tooltip prop="filename" min-width="3"
+                                     header-align="center" align="left"></el-table-column>
+                    <el-table-column label="描述" show-overflow-tooltip prop="customname" min-width="3"
+                                     header-align="center" align="left"></el-table-column>
+                    <el-table-column label="操作" align="center" min-width="4">
+                        <template slot="header" slot-scope="scope">
+                            <el-button
+                                    type="success"
+                                    @click="upfile">上传
+                            </el-button>
+                        </template>
+                        <template slot-scope="scope">
+                            <el-button
+                                    size="mini"
+                                    style="padding-right: 13px;padding-left: 13px"
+                                    @click.stop="handleCopy(scope.$index, scope.row)">复制
+                            </el-button>
+                            <el-button
+                                    size="mini"
+                                    style="padding-right: 13px;padding-left: 13px"
+                                    @click.stop="handleDownload(scope.$index, scope.row)">下载
+                            </el-button>
+                            <el-button
+                                    size="mini"
+                                    style="padding-right: 13px;padding-left: 13px"
+                                    @click.stop="handleEdit(scope.$index, scope.row)">编辑
+                            </el-button>
+                            <el-button
+                                    size="mini"
+                                    type="danger"
+                                    style="padding-right: 13px;padding-left: 13px"
+                                    @click.stop="handleDelete(scope.$index, scope.row)">删除
+                            </el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+
+
+            <el-drawer
+                    :visible.sync="drawer"
+                    direction="ltr"
+                    size="50%">
+                <div style="padding: 10px">
+                    <pre>${filedata}</pre>
+                </div>
+            </el-drawer>
+
+        </div>
+        <div id='upload' style="height:calc(100% - 40px);padding: 20px;display: none;">
+            <div id="kv-upload" style="height: 100%;text-align: center;">
+                <el-upload
+                        ref="upload"
+                        style="text-align: center;"
+                        class="upload-demo"
+                        drag
+                        action=""
+                        :auto-upload="false"
+                        :on-remove="removeFile"
+                        :file-list="fileList"
+                        :on-change="handleChange"
+                        multiple
+                >
+                    <i class="el-icon-upload"></i>
+                    <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                </el-upload>
+                <el-button style="margin-top: 20px;width: 72px;height: 34px;line-height: 0px" type="info"
+                           @click="uploadFile">上传
+                </el-button>
+
+            </div>
+        </div>
+
+        <div id="editfile" style="display: none;width: 100%;height: 100%">
+            <div style="padding: 20px 30px;width: 25%;display: inline-block">
+                <el-form :model="fileForm" label-width="120px" class="demo"
+                         label-position="top">
+                    <el-form-item label="文件名">
+                        <el-input v-model="fileForm.filename"></el-input>
+                    </el-form-item>
+                    <el-form-item label="描述（下载）名">
+                        <el-input v-model="fileForm.customname"></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="editsubmit">提交</el-button>
+                        <el-button @click="editcancel">取消</el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+            <div style="float: right;display: inline-block;width: 65%;height: 100%">
+                <el-form :model="fileForm" class="demo" style="width: 90%;height: calc(100% - 40px);padding: 20px;">
+                    <el-form-item>
+                        <el-input id="fileinfo" type="textarea" v-model="fileForm.content"
+                                  onfocus="javascript:ResizeTextarea(this,4);"
+                                  onclick="javascript:ResizeTextarea(this,4);"
+                                  onkeyup="javascript:ResizeTextarea(this,4);"></el-input>
+                    </el-form-item>
+                </el-form>
+            </div>
+        </div>
+        <div id="editfile_no" style="display: none;width: 100%;height: 100%;">
+            <form id='addsetting' style="padding:10px;">
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 110px;text-align: left">文件名</label>
+                    <div class="layui-input-block" style="margin-left:150px">
+                        <input id="filename" type="text" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 110px;text-align: left">描述（下载）名</label>
+                    <div class="layui-input-block" style="margin-left:150px">
+                        <input id="customname" type="text" class="layui-input">
+                    </div>
+                </div>
+            </form>
+        </div>
+    </template>
+</div>
+
+
+<script src="{% static 'manager/js/jquery.min.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+
+<script>
+    var app = new Vue({
+        el: '#filespace',
+        delimiters: ['${', '}'],
+        data() {
+            return {
+                fileForm: {
+                    filename: '',
+                    customname: '',
+                    content: '',
+                },
+                menus: [],
+                files: [],
+                filedata: '',
+                emptytext: ' ',
+                display: false,
+                drawer: false,
+                curmenu: '',
+                fileList: [],
+                customnamemap: {},
+                index: '',
+                curfilepath: '',
+                oldfilename:''
+            };
+        },
+        methods: {
+            editsubmit() {
+                filename = this.fileForm.filename
+                customname = this.fileForm.customname
+                content = this.fileForm.content
+                var that = this
+                _post_ll('/manager/editfile/', {
+                    filename: filename,
+                    customname: customname,
+                    content: content,
+                    path: this.curfilepath
+                }, function (data) {
+                    if (data.code == 0) {
+                        console.log(that.curfilepath.replace("/"+that.oldfilename,''))
+                        that.reflash('file', that.curfilepath.replace("/"+that.oldfilename,''))
+                        layer.close(that.index)
+                    }
+                    layer.msg(data.info)
+                })
+
+            },
+            editcancel() {
+                layer.close(this.index)
+            },
+            handleCopy: function (index, row) {
+                let oInput = document.createElement('input');
+                oInput.value = row.menu + "/" + row.filename;
+                document.body.appendChild(oInput);
+                oInput.select(); // 选择对象;
+                document.execCommand("Copy"); // 执行浏览器复制命令
+                this.$message({
+                    message: '已成功复制路径',
+                    type: 'success'
+                });
+                oInput.remove()
+
+            },
+            handleDownload: function (index, row) {
+                path = row.path
+                const req = new XMLHttpRequest();
+                req.open('POST', '/manager/downloadfile/', true);
+                req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                req.responseType = 'blob';
+                req.send("path=" + path + "&name=" + row.customname); //输入参数
+                req.onload = function () {
+                    if (this.status === 200 & this.response.size > 20) {
+                        const data = req.response;
+                        const blob = new Blob([data]);
+                        var a = document.createElement('a');
+                        a.href = window.URL.createObjectURL(blob);
+                        a.download = row.filename
+                        a.click();
+                    }
+                };
+            },
+            addmenu: function () {
+                var that = this
+                layer.prompt({title: '输入文件夹名称', formType: 0}, function (name, index) {
+                    _post_nl('/manager/addmenu/', {'name': name}, function (data) {
+                        if (data.code == 0) {
+                            that.reflash('menu', 0)
+                        }
+                        layer.msg(data.info, {time: 2000})
+                        layer.close(index);
+                    });
+                })
+            },
+            upfile: function () {
+                layer.open({
+                    type: 1,
+                    title: '上传文件',
+                    content: $('#upload'),
+                    area: ['80%', '80%'],
+                    success: function (index) {
+                        app.fileList = []
+                    }
+                });
+            },
+            getFiles: function (row, column, event) {
+                this.curmenu = row.menuname
+                this.reflash('files', row.menuname)
+            },
+            getFileDetail(row, column, event) {
+                var that = this
+                _post_ll('/manager/getfiledetail/', {'menu': row.menu, 'filename': row.filename}, function (data) {
+                    if (data.code == 0) {
+                        that.filedata = data.filedata
+                        app.drawer = true
+                    } else {
+                        layer.msg("不支持预览的文件类型", {time: 2000})
+                    }
+                })
+            },
+            handleEdit(index, row) {
+                var that = this
+                if (row.menu !== undefined) {
+                    //文件
+                    _post_ll('/manager/getfiledetail/', {'menu': row.menu, 'filename': row.filename}, function (data) {
+                        if (data.code == 0) {
+                            layer.open({
+                                type: 1,
+                                title: '文件编辑',
+                                content: $('#editfile'),
+                                area: ['80%', '80%'],
+                                success: function (layero, index) {
+                                    that.fileForm.filename = row.filename
+                                    that.oldfilename = row.filename
+                                    that.fileForm.customname = data.customname
+                                    that.fileForm.content = data.filedata
+                                    setTimeout(() => {
+                                        javascript:ResizeTextarea($("#fileinfo")[0], 4)
+                                    }, 40)
+                                    that.index = index
+                                    that.curfilepath = row.menu + '/' + row.filename
+                                }
+                            });
+
+                        } else {
+                            $("#filename").val(row.filename)
+                            $("#customname").val(data.customname)
+                            layer.open({
+                                type: 1,
+                                title: '文件编辑',
+                                content: $('#editfile_no'),
+                                area: ['30%', '30%'],
+                                btn: ['确定', '取消'],
+                                yes: function (index, layero) {
+                                    _post_ll('/manager/editfile/', {
+                                        filename:  $("#filename").val(),
+                                        customname: $("#customname").val(),
+                                        path: row.menu + '/' + row.filename
+                                    }, function (data) {
+                                        if (data.code == 0) {
+                                            layer.close(index)
+                                            that.reflash('file', row.menu)
+                                        }
+                                        layer.msg(data.info)
+                                    })
+                                }
+                            });
+                        }
+                    })
+
+                } else {
+                    //目录
+                    layer.prompt({title: '输入新的名称', formType: 0, value: row.menuname}, function (newname, index) {
+                        _post_nl('/manager/editpathname/', {'path': row.path, 'newname': newname}, function (data) {
+                            if (data.code == 0) {
+                                kind = row.menu === undefined ? 'menu' : 'files'
+                                that.reflash(kind, row.menu)
+                            }
+                            layer.msg(data.info, {time: 2000})
+                            layer.close(index);
+                        });
+                    })
+                }
+            },
+            handleDelete(index, row) {
+                var that = this
+                layer.confirm('确认删除？', {
+                    btn: ['确定', '取消']
+                }, function () {
+                    shortpath = row.menu === undefined ? row.menuname : row.menu + '/' + row.filename
+                    _post_nl('/manager/delfile/', {'path': row.path, 'shortpath': shortpath}, function (data) {
+                        if (data.code == 0) {
+                            kind = row.menu === undefined ? 'menu' : 'files'
+                            that.reflash(kind, row.menu)
+                        }
+                        layer.msg(data.info, {time: 2000})
+                        layer.close(index);
+                    });
+                });
+            },
+            reflash(kind, menuname) {
+                var that = this
+                if (kind == 'menu') {
+                    _post_nl('/manager/queryspacemenu/', {}, function (data) {
+                        if (data.code == 0) {
+                            that.menus = data.data
+                        }
+                    })
+                } else {
+                    _post_nl('/manager/queryspacefiles/', {'menuname': menuname}, function (data) {
+                        if (data.code == 0) {
+                            that.files = data.data
+                        }
+                    })
+                }
+            },
+            handleChange(file) {
+                console.log("调用")
+                var that = this
+                _post_nl('/manager/checkfilename/', {'menu': that.curmenu, 'filename': file.name}, function (data) {
+                    if (data.code == 0) {
+                        that.inputCustomname(file)
+                    } else {
+                        layer.confirm('目录【' + that.curmenu + '】已存在同名文件：' + file.name + '<br>确定上传将会覆盖。', {
+                            btn: ['确定', '取消'], yes: function (index, layero) {
+                                layer.close(index);
+                                that.inputCustomname(file)
+                            }, btn2: function (index, layero) {
+                                that.removeFile(file)
+                                layer.close(index);
+                            }
+                        });
+                    }
+                })
+            },
+            inputCustomname(file) {
+                var that = this
+                layer.prompt({
+                    title: '输入描述',
+                    formType: 0,
+                    value: file.name,
+                    btn: ['确定', '取消'],
+                    yes: function (index, layero) {
+                        var customname = layero.find(".layui-layer-input").val();
+                        that.customnamemap[file.name] = customname
+                        layer.close(index);
+                        that.fileList.push(file)
+                    },
+                    btn2: function (index) {
+                        that.removeFile(file)
+                        layer.close(index);
+                        return false
+                    }
+                })
+            },
+            removeFile(file) {
+                let arr = [];
+                for (let i = 0; i < this.fileList.length; i++) {
+                    if (this.fileList[i].uid !== file.uid) {
+                        arr.push(this.fileList[i])
+                    }
+                }
+                this.fileList = arr
+                delete this.customnamemap[file.name]
+            },
+            uploadFile() {
+                var that = this;
+                if (that.fileList.length === 0) {
+                    that.$message.warning('请选取文件');
+                    return
+                }
+                const formData = new FormData();
+                that.fileList.forEach((file) => {
+                    formData.append('file_data', file.raw)
+                });
+                formData.append('kind', 'personfile');
+                formData.append('content_type', 'json');
+                formData.append('menu', that.curmenu);
+                formData.append('customnamemap', JSON.stringify(that.customnamemap));
+                $.ajax({
+                    type: "post",
+                    url: "/manager/upload/",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        response = JSON.parse(response);
+                        if (response.code === 0) {
+                            layer.closeAll()
+                            that.$message({
+                                type: 'success',
+                                message: response.msg
+                            });
+                            that.reflash('file', that.curmenu)
+                        } else {
+                            that.$message.error(response.msg)
+                        }
+                    }
+                });
+            }
+        },
+        created: function () {
+            var that = this
+            that.curmenu = '默认'
+            that.reflash('menu', 0)
+
+        },
+        watch: {}
+    });
+    document.getElementById('fileinfo').onkeydown = function (e) {
+        if (e.keyCode === 9) {
+            e.preventDefault();
+            var start = this.selectionStart, end = this.selectionEnd;
+            var text = this.value;
+            var tab = '    ';
+            text = text.substr(0, start) + tab + text.substr(start);
+            this.value = text;
+            this.selectionStart = start + tab.length;
+            this.selectionEnd = end + tab.length;
+        }
+    };
+
+    function ResizeTextarea(a, row) {
+        if (!a) {
+            return
+        }
+        if (!row)
+            row = 5;
+        var b = a.value.split("\n");
+        var c = 1;
+        c += b.length;
+        var d = a.cols;
+        if (d <= 20) {
+            d = 40
+        }
+        for (var e = 0; e < b.length; e++) {
+            if (b[e].length >= d) {
+                c += Math.ceil(b[e].length / d)
+            }
+        }
+        c = Math.max(c, row);
+        if (c != a.rows) {
+            a.rows = c;
+        }
+    }
+</script>
+<!--<script type="text/javascript">
+    var app = new Vue({
+        el: '#upload',
+        data() {
+            return {
+                fileList: [],
+            }
+        },
+        methods: {
+            handleChange(fileList) {
+                var that =this
+                _post_nl('/manager/checkfilename/',{'filename':fileList.name},function (data) {
+                    if(data.code==0){
+                        that.fileList.push(fileList)
+                    }else {
+                        layer.confirm('已存在同名文件：'+fileList.name+'<br>确定上传将会覆盖。', {
+                            btn: ['确定', '取消'] //按钮
+                        }, function (index) {
+                            layer.close(index);
+                            that.fileList.push(fileList)
+                        });
+                    }
+                })
+            },
+            removeFile(file) {
+                let arr = [];
+                for (let i = 0; i < this.fileList.length; i++) {
+                    if (this.fileList[i].uid !== file.uid) {
+                        arr.push(this.fileList[i])
+                    }
+                }
+                this.fileList = arr
+            },
+            uploadFile() {
+                var that = this;
+                if (that.fileList.length === 0) {
+                    that.$message.warning('请选取文件');
+                    return
+                }
+                const formData = new FormData();
+                that.fileList.forEach((file) => {
+                    formData.append('file_data', file.raw)
+                });
+                formData.append('kind', 'personfile');
+                formData.append('content_type', 'json');
+
+                $.ajax({
+                    type: "post",
+                    url: "/manager/upload/",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        response = JSON.parse(response);
+                        if (response.code === 0) {
+                            layer.closeAll()
+                            that.$message({
+                                type: 'success',
+                                message: response.msg
+                            });
+                            $('#querybtn').click()
+                        } else {
+                            that.$message.error(response.msg)
+                        }
+                    }
+                });
+            }
+        }
+    });
+
+
+    layui.use(['table', 'layer'], function () {
+        var table = layui.table;
+        var $ = layui.jquery;
+        var layer = layui.layer;
+
+        table.on("tool(target)", function (e) {
+            if (e.event === 'edit') {
+                layer.alert('暂不支持修改名称', {icon: 1})
+            }
+        });
+
+        $('#querybtn').click(function () {
+            table.reload('table-file', {
+                page: {
+                    curr: 1
+                },
+                where: {
+                    searchvalue: $("#search-value").val()
+                }
+            });
+        });
+
+        $('#addbtn').click(function () {
+            layer.open({
+                type: 1,
+                title: '上传文件',
+                content: $('#upload'),
+                area: ['80%', '80%'],
+                success: function (index) {
+                    app.fileList = []
+                }
+            });
+        });
+
+        $('#delbtn').click(function () {
+            var checkStatus = table.checkStatus("table-file");
+            data = checkStatus.data;
+            if (data.length === 0) {
+                layer.alert('你有选择删除的文件么?', {icon: 3, time: 1500});
+                return
+            }
+            layer.confirm('确认删除么?', {
+                btn1: function (index, layero) {
+                    layer.close(index)
+                    success = function (e) {
+                        if (e.code === 0) {
+                            table.reload('table-file', {
+                                page: {curr: 1},
+                                where: {searchvalue: $("#search-value").val()}
+                            });
+                            layer.alert(e.msg, {icon: 1, time: 1500})
+                        } else
+                            layer.alert(e.msg, {icon: 2})
+                    };
+                    var filenames = [];
+                    for (var index = 0; index < data.length; index++) {
+                        filenames.splice(0, 0, data[index]['filename'])
+                    }
+                    _post('/manager/delfile/', {'filenames': filenames.join()}, success)
+                },
+            })
+        })
+    });
+
+
+</script>
+
+<script type="text/html" id="toolbar">
+    <i class="layui-icon edit" lay-event="edit">编辑</i>
+</script>
+-->
+</body>
+</html>

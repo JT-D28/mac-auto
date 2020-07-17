@@ -82,7 +82,7 @@ def queryPlanState(request):
 		planid = request.POST.get('id')[5:]
 	type = request.POST.get('type')
 	if type:
-		fl = 1 if getRunningInfo('', planid, 'isrunning') =='debug' else 0
+		fl = getRunningInfo('', planid, 'isrunning')
 		taskid = getRunningInfo(request.session.get('username'), planid, 'debug_taskid')
 		return JsonResponse({'running': fl,'taskid':taskid})
 	is_running = '0' if getRunningInfo('',planid,'isrunning') =='0' else '1'

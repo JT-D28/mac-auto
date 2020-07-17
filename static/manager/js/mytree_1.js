@@ -510,10 +510,14 @@ var tree = {
 
             function opendebug(planid, nodeid) {
                 _post_nl('/homepage/queryPlanState/', {id: planid, 'type': 'debug'}, function (data) {
-                    if (data.running === 0) {
+                    if (data.running == 0) {
                         var url = '/homepage/statisticalAnalysis/?plan=' + planid + '&debug=1&node=' + nodeid
                     } else {
-                        var url = '/homepage/runstatus/?plan=' + planid + '&taskid=' + data.taskid
+                        if (data.running=='debug'){
+                            var url = '/homepage/runstatus/?plan=' + planid + '&taskid=' + data.taskid
+                        }else {
+                            layer.msg("计划正在进行【验证任务】")
+                        }
                     }
                     layer.open({
                         type: 2,

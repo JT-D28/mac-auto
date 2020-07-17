@@ -132,6 +132,7 @@ urlpatterns = [
     path('delfile/', views.delfile),
     path('addmenu/',views.addmenu),
     path('downloadfile/', views.downloadfile),
+    path('editfile/',views.editfile),
 
     path('authcontrol/', views.authcontrol),
     path('queryuicontrol/', views.queryuicontrol),

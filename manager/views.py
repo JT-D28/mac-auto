@@ -4,6 +4,7 @@ import hashlib
 import chardet
 from django.db import connection
 from django.shortcuts import render, redirect
+from django.utils.encoding import escape_uri_path
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.http import HttpResponse, JsonResponse
@@ -160,16 +161,16 @@ def upload(request):
 		try:
 			for filename in filemap:
 				filepath = os.path.join(upload_dir, menu, filename)
-				file_md5 = hashlib.md5(filemap[filename]).hexdigest()
-				print(file_md5)
+				file_encoding = chardet.detect(filemap[filename]).get('encoding')
 				with open(filepath, 'wb') as f:
 					f.write(filemap[filename])
 				try:
-					file = FileMap.objects.get(filename=filename,md5=file_md5,path=menu+'/'+filename)
+					file = FileMap.objects.get(filename=filename,path=menu+'/'+filename)
 					file.customname = customnamemap[filename]
+					file.code = file_encoding
 					file.save()
 				except:
-					FileMap(filename=filename,md5=file_md5,path=menu+'/'+filename,customname=customnamemap[filename]).save()
+					FileMap(filename=filename,path=menu+'/'+filename,customname=customnamemap[filename],code=file_encoding).save()
 
 			return JsonResponse(simplejson(code=0, msg='文件上传完成'), safe=False)
 		except:
@@ -2116,21 +2117,21 @@ def _formatSize(bytes):
 def getFileFolderSize(fileOrFolderPath):
 	totalSize = 0
 	if not os.path.exists(fileOrFolderPath):
-		return _formatSize(totalSize)
+		return totalSize
 	if os.path.isfile(fileOrFolderPath):
 		totalSize = os.path.getsize(fileOrFolderPath)
-		return _formatSize(totalSize)
+		return totalSize
 	if os.path.isdir(fileOrFolderPath):
 		with os.scandir(fileOrFolderPath) as dirEntryList:
 			for curSubEntry in dirEntryList:
 				curSubEntryFullPath = os.path.join(fileOrFolderPath, curSubEntry.name)
 				if curSubEntry.is_dir():
-					curSubFolderSize = getFileFolderSize(curSubEntryFullPath)  # 5800007
+					curSubFolderSize = getFileFolderSize(curSubEntryFullPath)
 					totalSize += curSubFolderSize
 				elif curSubEntry.is_file():
 					curSubFileSize = os.path.getsize(curSubEntryFullPath)  # 1891
 					totalSize += curSubFileSize
-			return _formatSize(totalSize)
+			return totalSize
 
 
 @csrf_exempt
@@ -2143,7 +2144,7 @@ def queryspacemenu(request):
 	for file in files:
 		path = os.path.join(basedir, file)
 		if os.path.isdir(path):
-			menu.append({'menuname': file, 'size': getFileFolderSize(path), 'path': path,
+			menu.append({'menuname': file, 'path': path,
 			             'createtime': time.strftime("%Y-%m-%d %H:%M", time.localtime(os.path.getctime(path)))})
 	menu.sort(key=lambda e: e.get('createtime'), reverse=True)
 	return JsonResponse({'code': 0, 'data': menu})
@@ -2161,10 +2162,15 @@ def queryspacefiles(request):
 			try:
 				FileMap.objects.get(path=menuname+'/'+file)
 			except:
-				with open(path, 'rb') as f:
-					FileMap(filename=file,path=menuname+'/'+file,md5=hashlib.md5(f.read()).hexdigest(),customname=file).save()
-
-			filename.append({'filename': file, 'size': getFileFolderSize(path), 'menu': menuname, 'path': path,
+				print(traceback.format_exc())
+				size = getFileFolderSize(path)
+				if size/1024/1024>5:
+					FileMap(filename=file, path=menuname + '/' + file,customname=file, code="big").save()
+				else:
+					with open(path, 'rb') as f:
+						data = f.read()
+						FileMap(filename=file,path=menuname+'/'+file,customname=file,code=chardet.detect(data).get('encoding')).save()
+			filename.append({'filename': file, 'menu': menuname, 'path': path,
 			                 'customname':FileMap.objects.get(path=menuname+'/'+file).customname,
 			                 'createtime': time.strftime("%Y-%m-%d %H:%M", time.localtime(os.path.getctime(path)))})
 	filename.sort(key=lambda e: e.get('createtime'), reverse=True)
@@ -2178,21 +2184,18 @@ def getfiledetail(request):
 	path = os.path.join(get_space_dir(), menu, filename)
 	filedata = ''
 	code = 1
-	with open(path, 'rb') as f:
-		predata = f.read()  # 读取文件内容
-		file_encoding = chardet.detect(predata).get('encoding')  # 得到文件的编码格式
-	try:
-		print(file_encoding)
-		with open(path, 'r', encoding=file_encoding)as file:  # 使用得到的文件编码格式打开文件
-			filedata = file.read()
-			code = 0
-	except:
-		with open(os.path.join(path), 'rb') as f:
-			response = HttpResponse(f)
-			response['Content-Type'] = 'application/octet-stream'
-			response['Content-Disposition'] = 'attachment;'
-			return response
-	return JsonResponse({'code': code, 'filedata': filedata})
+	filemap = FileMap.objects.values('customname','code').get(filename=filename, path=menu + "/" + filename)
+	customname = filemap['customname']
+	if filemap['code'] is None or filemap['code']=='big':
+		return JsonResponse({'code': code, "customname": filemap['customname']})
+	else:
+		try:
+			with open(path, 'r', encoding=filemap['code'])as file:  # 使用得到的文件编码格式打开文件
+				filedata = file.read()
+				code = 0
+		except:
+			return JsonResponse({'code': code, "customname": customname})
+	return JsonResponse({'code': code, 'filedata': filedata, "customname": customname})
 
 
 @csrf_exempt
@@ -2209,10 +2212,11 @@ def addmenu(request):
 @csrf_exempt
 def downloadfile(request):
 	filepath = request.POST.get('path')
+	downloadname = request.POST.get('name')
 	with open(filepath, 'rb') as f:
 		response = HttpResponse(f)
 		response['Content-Type'] = 'application/octet-stream'
-		response['Content-Disposition'] = 'attachment;'
+		response["Content-Disposition"] = "attachment; filename*=UTF-8''{}".format(escape_uri_path(downloadname))
 		return response
 
 
@@ -2228,6 +2232,31 @@ def editpathname(request):
 		code = 1
 		info = re.findall(", '(.*?)'\)", repr(e))[0]
 		print(re.findall(", '(.*?)'\)", repr(e))[0])
+	return JsonResponse({'code': code, 'info': info})
+
+
+@csrf_exempt
+def editfile(request):
+	code ,info = 0 ,'修改成功'
+	try:
+		path = request.POST.get('path')
+		file = FileMap.objects.get(path=path)
+		oldfilename = file.filename
+		newfilename = request.POST.get('filename')
+		newpath = path.replace(oldfilename, newfilename)
+		if request.POST.get('content') is not None:
+			with open(os.path.join(get_space_dir(),path), 'wb') as f:
+				f.write(request.POST.get('content').encode('UTF-8'))
+		os.rename(os.path.join(get_space_dir(),path), os.path.join(get_space_dir(),newpath))
+		file.filename = newfilename
+		file.customname = request.POST.get('customname')
+		file.path = newpath
+		file.save()
+	except:
+		print(traceback.format_exc())
+		code = 1
+		info = traceback.format_exc()
+
 	return JsonResponse({'code': code, 'info': info})
 
 

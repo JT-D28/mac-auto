@@ -125,6 +125,7 @@ class getlog(WebsocketConsumer):
 
     def receive(self, text_data):
         self.con = 1
+        self.taskid = text_data
         self.thread = threading.Thread(target=self.sendmsg, args=(text_data,))
         self.thread.setDaemon(True)
         self.thread.start()

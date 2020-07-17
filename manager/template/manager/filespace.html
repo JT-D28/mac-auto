@@ -189,32 +189,34 @@
                         :highlight-current-row=true
                         :data="files"
                         height="100%"
-                        @row-click="getFileDetail"
+                        @row-dblclick="getFileDetail"
                         :empty-text="emptytext"
                 >
-                    <el-table-column label="文件" show-overflow-tooltip  prop="filename" min-width="3" header-align="center" align="left"></el-table-column>
-                    <el-table-column label="描述" show-overflow-tooltip  prop="customname" min-width="3" header-align="center" align="left"></el-table-column>
-                    <el-table-column label="操作" align="center" min-width="4" >
+                    <el-table-column label="文件" show-overflow-tooltip prop="filename" min-width="3"
+                                     header-align="center" align="left"></el-table-column>
+                    <el-table-column label="描述" show-overflow-tooltip prop="customname" min-width="3"
+                                     header-align="center" align="left"></el-table-column>
+                    <el-table-column label="操作" align="center" min-width="4">
                         <template slot="header" slot-scope="scope">
                             <el-button
                                     type="success"
-                                    @click="addfile">新增
+                                    @click="upfile">上传
                             </el-button>
                         </template>
                         <template slot-scope="scope">
                             <el-button
                                     size="mini"
-                                     style="padding-right: 13px;padding-left: 13px"
+                                    style="padding-right: 13px;padding-left: 13px"
                                     @click.stop="handleCopy(scope.$index, scope.row)">复制
                             </el-button>
                             <el-button
                                     size="mini"
-                                     style="padding-right: 13px;padding-left: 13px"
+                                    style="padding-right: 13px;padding-left: 13px"
                                     @click.stop="handleDownload(scope.$index, scope.row)">下载
                             </el-button>
                             <el-button
                                     size="mini"
-                                     style="padding-right: 13px;padding-left: 13px"
+                                    style="padding-right: 13px;padding-left: 13px"
                                     @click.stop="handleEdit(scope.$index, scope.row)">编辑
                             </el-button>
                             <el-button
@@ -262,6 +264,50 @@
 
             </div>
         </div>
+
+        <div id="editfile" style="display: none;width: 100%;height: 100%">
+            <div style="padding: 20px 30px;width: 25%;display: inline-block">
+                <el-form :model="fileForm" label-width="120px" class="demo"
+                         label-position="top">
+                    <el-form-item label="文件名">
+                        <el-input v-model="fileForm.filename"></el-input>
+                    </el-form-item>
+                    <el-form-item label="描述（下载）名">
+                        <el-input v-model="fileForm.customname"></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="editsubmit">提交</el-button>
+                        <el-button @click="editcancel">取消</el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+            <div style="float: right;display: inline-block;width: 65%;height: 100%">
+                <el-form :model="fileForm" class="demo" style="width: 90%;height: calc(100% - 40px);padding: 20px;">
+                    <el-form-item>
+                        <el-input id="fileinfo" type="textarea" v-model="fileForm.content"
+                                  onfocus="javascript:ResizeTextarea(this,4);"
+                                  onclick="javascript:ResizeTextarea(this,4);"
+                                  onkeyup="javascript:ResizeTextarea(this,4);"></el-input>
+                    </el-form-item>
+                </el-form>
+            </div>
+        </div>
+        <div id="editfile_no" style="display: none;width: 100%;height: 100%;">
+            <form id='addsetting' style="padding:10px;">
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 110px;text-align: left">文件名</label>
+                    <div class="layui-input-block" style="margin-left:150px">
+                        <input id="filename" type="text" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 110px;text-align: left">描述（下载）名</label>
+                    <div class="layui-input-block" style="margin-left:150px">
+                        <input id="customname" type="text" class="layui-input">
+                    </div>
+                </div>
+            </form>
+        </div>
     </template>
 </div>
 
@@ -276,17 +322,49 @@
         delimiters: ['${', '}'],
         data() {
             return {
+                fileForm: {
+                    filename: '',
+                    customname: '',
+                    content: '',
+                },
                 menus: [],
                 files: [],
                 filedata: '',
                 emptytext: ' ',
+                display: false,
                 drawer: false,
                 curmenu: '',
                 fileList: [],
-                customnamemap: {}
+                customnamemap: {},
+                index: '',
+                curfilepath: '',
+                oldfilename:''
             };
         },
         methods: {
+            editsubmit() {
+                filename = this.fileForm.filename
+                customname = this.fileForm.customname
+                content = this.fileForm.content
+                var that = this
+                _post_ll('/manager/editfile/', {
+                    filename: filename,
+                    customname: customname,
+                    content: content,
+                    path: this.curfilepath
+                }, function (data) {
+                    if (data.code == 0) {
+                        console.log(that.curfilepath.replace("/"+that.oldfilename,''))
+                        that.reflash('file', that.curfilepath.replace("/"+that.oldfilename,''))
+                        layer.close(that.index)
+                    }
+                    layer.msg(data.info)
+                })
+
+            },
+            editcancel() {
+                layer.close(this.index)
+            },
             handleCopy: function (index, row) {
                 let oInput = document.createElement('input');
                 oInput.value = row.menu + "/" + row.filename;
@@ -306,7 +384,7 @@
                 req.open('POST', '/manager/downloadfile/', true);
                 req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                 req.responseType = 'blob';
-                req.send("path=" + path); //输入参数
+                req.send("path=" + path + "&name=" + row.customname); //输入参数
                 req.onload = function () {
                     if (this.status === 200 & this.response.size > 20) {
                         const data = req.response;
@@ -330,7 +408,7 @@
                     });
                 })
             },
-            addfile: function () {
+            upfile: function () {
                 layer.open({
                     type: 1,
                     title: '上传文件',
@@ -360,25 +438,52 @@
                 var that = this
                 if (row.menu !== undefined) {
                     //文件
+                    _post_ll('/manager/getfiledetail/', {'menu': row.menu, 'filename': row.filename}, function (data) {
+                        if (data.code == 0) {
+                            layer.open({
+                                type: 1,
+                                title: '文件编辑',
+                                content: $('#editfile'),
+                                area: ['80%', '80%'],
+                                success: function (layero, index) {
+                                    that.fileForm.filename = row.filename
+                                    that.oldfilename = row.filename
+                                    that.fileForm.customname = data.customname
+                                    that.fileForm.content = data.filedata
+                                    setTimeout(() => {
+                                        javascript:ResizeTextarea($("#fileinfo")[0], 4)
+                                    }, 40)
+                                    that.index = index
+                                    that.curfilepath = row.menu + '/' + row.filename
+                                }
+                            });
 
-                    layer.prompt({
-                        id: "fileedit",
-                        title: '文件编辑',
-                        formType: 0,
-                        value: row.filename,
-                        area: ['90%', '90%'],
-                    }, function (newname, index) {
-                        newname = row.menu + '/' + newname
-                        _post_nl('/manager/editpathname/', {'path': row.path, 'newname': newname}, function (data) {
-                            if (data.code == 0) {
-                                kind = row.menu === undefined ? 'menu' : 'files'
-                                that.reflash(kind, row.menu)
-                            }
-                            layer.msg(data.info, {time: 2000})
-                            layer.close(index);
-                        });
+                        } else {
+                            $("#filename").val(row.filename)
+                            $("#customname").val(data.customname)
+                            layer.open({
+                                type: 1,
+                                title: '文件编辑',
+                                content: $('#editfile_no'),
+                                area: ['30%', '30%'],
+                                btn: ['确定', '取消'],
+                                yes: function (index, layero) {
+                                    _post_ll('/manager/editfile/', {
+                                        filename:  $("#filename").val(),
+                                        customname: $("#customname").val(),
+                                        path: row.menu + '/' + row.filename
+                                    }, function (data) {
+                                        if (data.code == 0) {
+                                            layer.close(index)
+                                            that.reflash('file', row.menu)
+                                        }
+                                        layer.msg(data.info)
+                                    })
+                                }
+                            });
+                        }
                     })
-                    $("#fileedit").append("<br/><textarea type=\"text\" id= \"zxr\" class=\"layui-input\" placeholder=\"输入新的文件名\"></textarea>")
+
                 } else {
                     //目录
                     layer.prompt({title: '输入新的名称', formType: 0, value: row.menuname}, function (newname, index) {
@@ -398,8 +503,8 @@
                 layer.confirm('确认删除？', {
                     btn: ['确定', '取消']
                 }, function () {
-                    shortpath = row.menu === undefined?row.menuname:row.menu+'/'+row.filename
-                    _post_nl('/manager/delfile/', {'path': row.path,'shortpath':shortpath}, function (data) {
+                    shortpath = row.menu === undefined ? row.menuname : row.menu + '/' + row.filename
+                    _post_nl('/manager/delfile/', {'path': row.path, 'shortpath': shortpath}, function (data) {
                         if (data.code == 0) {
                             kind = row.menu === undefined ? 'menu' : 'files'
                             that.reflash(kind, row.menu)
@@ -518,8 +623,42 @@
         },
         watch: {}
     });
+    document.getElementById('fileinfo').onkeydown = function (e) {
+        if (e.keyCode === 9) {
+            e.preventDefault();
+            var start = this.selectionStart, end = this.selectionEnd;
+            var text = this.value;
+            var tab = '    ';
+            text = text.substr(0, start) + tab + text.substr(start);
+            this.value = text;
+            this.selectionStart = start + tab.length;
+            this.selectionEnd = end + tab.length;
+        }
+    };
 
-
+    function ResizeTextarea(a, row) {
+        if (!a) {
+            return
+        }
+        if (!row)
+            row = 5;
+        var b = a.value.split("\n");
+        var c = 1;
+        c += b.length;
+        var d = a.cols;
+        if (d <= 20) {
+            d = 40
+        }
+        for (var e = 0; e < b.length; e++) {
+            if (b[e].length >= d) {
+                c += Math.ceil(b[e].length / d)
+            }
+        }
+        c = Math.max(c, row);
+        if (c != a.rows) {
+            a.rows = c;
+        }
+    }
 </script>
 <!--<script type="text/javascript">
     var app = new Vue({

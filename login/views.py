@@ -426,10 +426,51 @@ def getfile(request,filename):
 	upload_dir = get_space_dir()
 	filepath = os.path.join(upload_dir,filename)
 	downloadname = request.GET.get('name')
+
 	if os.path.exists(filepath):
 		with open(filepath, 'rb') as f:
 			response = HttpResponse(f)
 			response['Content-Type'] = 'application/octet-stream'
-			response["Content-Disposition"] = "attachment; filename*=UTF-8''{}".format(escape_uri_path(downloadname))
+			if downloadname is None:
+				response["Content-Disposition"] = "attachment;"
+			else:
+				response["Content-Disposition"] = "attachment; filename*=UTF-8''{}".format(escape_uri_path(downloadname))
 			return response
 	return JsonResponse({})
+
+
+
+@csrf_exempt
+def getbusinessnum(request,id,total):
+	cases = Order.objects.filter(kind__contains='plan_',main_id=id,isdelete=0)
+	steplist = []
+	builist = []
+	for o in cases:
+		case = mm.Case.objects.values('count').get(id=o.follow_id)
+		if total=='0' and case['count'] not in ['1', 1]:
+			continue
+		getstep(steplist,o.follow_id,total)
+	for i in steplist:
+		bui = Order.objects.filter(kind__contains='step_bu',main_id=i,isdelete=0)
+		for b in bui:
+			BusinessData = mm.BusinessData.objects.values('count').get(id=b.follow_id)
+			if total=='0' and BusinessData['count'] not in ['1', 1]:
+				continue
+			builist.append(b)
+	print("总数：%s"%(len(builist)))
+	return JsonResponse({'num':len(builist)})
+
+
+def getstep(steplist,id,total):
+	orders = Order.objects.filter(kind__contains='case_',main_id=id,isdelete=0)
+	for o in orders:
+		if o.kind=='case_case':
+			case = mm.Case.objects.values('count').get(id = o.follow_id)
+			if total=='0' and case['count'] not in ['1',1]:
+				continue
+			getstep(steplist,o.follow_id,total)
+		elif o.kind=='case_step':
+			step = mm.Step.objects.values('count').get(id = o.follow_id)
+			if total=='0' and step['count'] not in ['1',1]:
+				continue
+			steplist.append(o.follow_id)

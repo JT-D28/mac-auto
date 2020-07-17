@@ -148,7 +148,7 @@
     <template>
         <div style="height: 100%">
             <div id="tree1" class="grid-content bg-purple"
-                 style="width: 50%;float: left;display: inline-block; cursor:pointer;height: 100% ">
+                 style="width: 40%;float: left;display: inline-block; cursor:pointer;height: 100% ">
                 <el-table
                         :highlight-current-row=true
                         :data="menus"
@@ -159,8 +159,7 @@
                         style="width: 100%"
                 >
                     <el-table-column prop="menuname" label="目录" align="center" show-overflow-tooltip></el-table-column>
-                    <el-table-column prop="size" label="大小" align="center" min-width="45"></el-table-column>
-                    <el-table-column prop="createtime" label="创建时间" align="center" min-width="80"></el-table-column>
+                    <el-table-column prop="createtime" label="创建时间" align="center"></el-table-column>
                     <el-table-column label="操作" align="center">
                         <template slot="header" slot-scope="scope">
                             <el-button
@@ -185,17 +184,17 @@
                 </el-table>
             </div>
             <div id="tree" class="grid-content bg-purple"
-                 style="width: 50%;display: inline-block; cursor:pointer;height: 100% ">
+                 style="width: 60%;display: inline-block; cursor:pointer;height: 100% ">
                 <el-table
                         :highlight-current-row=true
                         :data="files"
                         height="100%"
                         @row-click="getFileDetail"
                         :empty-text="emptytext"
-                        @row-contextmenu="getfilepath"
                 >
-                    <el-table-column label="文件" show-overflow-tooltip align="center" prop="filename"></el-table-column>
-                    <el-table-column label="操作" align="center" min-width="80">
+                    <el-table-column label="文件" show-overflow-tooltip  prop="filename" min-width="3" header-align="center" align="left"></el-table-column>
+                    <el-table-column label="描述" show-overflow-tooltip  prop="customname" min-width="3" header-align="center" align="left"></el-table-column>
+                    <el-table-column label="操作" align="center" min-width="4" >
                         <template slot="header" slot-scope="scope">
                             <el-button
                                     type="success"
@@ -205,19 +204,23 @@
                         <template slot-scope="scope">
                             <el-button
                                     size="mini"
+                                     style="padding-right: 13px;padding-left: 13px"
                                     @click.stop="handleCopy(scope.$index, scope.row)">复制
                             </el-button>
                             <el-button
                                     size="mini"
+                                     style="padding-right: 13px;padding-left: 13px"
                                     @click.stop="handleDownload(scope.$index, scope.row)">下载
                             </el-button>
                             <el-button
                                     size="mini"
+                                     style="padding-right: 13px;padding-left: 13px"
                                     @click.stop="handleEdit(scope.$index, scope.row)">编辑
                             </el-button>
                             <el-button
                                     size="mini"
                                     type="danger"
+                                    style="padding-right: 13px;padding-left: 13px"
                                     @click.stop="handleDelete(scope.$index, scope.row)">删除
                             </el-button>
                         </template>
@@ -280,6 +283,7 @@
                 drawer: false,
                 curmenu: '',
                 fileList: [],
+                customnamemap: {}
             };
         },
         methods: {
@@ -354,26 +358,48 @@
             },
             handleEdit(index, row) {
                 var that = this
-                layer.prompt({title: '输入新的名称', formType: 0}, function (newname, index) {
-                    if (row.menu !== undefined) {
+                if (row.menu !== undefined) {
+                    //文件
+
+                    layer.prompt({
+                        id: "fileedit",
+                        title: '文件编辑',
+                        formType: 0,
+                        value: row.filename,
+                        area: ['90%', '90%'],
+                    }, function (newname, index) {
                         newname = row.menu + '/' + newname
-                    }
-                    _post_nl('/manager/editpathname/', {'path': row.path, 'newname': newname}, function (data) {
-                        if (data.code == 0) {
-                            kind = row.menu === undefined ? 'menu' : 'files'
-                            that.reflash(kind, row.menu)
-                        }
-                        layer.msg(data.info, {time: 2000})
-                        layer.close(index);
-                    });
-                })
+                        _post_nl('/manager/editpathname/', {'path': row.path, 'newname': newname}, function (data) {
+                            if (data.code == 0) {
+                                kind = row.menu === undefined ? 'menu' : 'files'
+                                that.reflash(kind, row.menu)
+                            }
+                            layer.msg(data.info, {time: 2000})
+                            layer.close(index);
+                        });
+                    })
+                    $("#fileedit").append("<br/><textarea type=\"text\" id= \"zxr\" class=\"layui-input\" placeholder=\"输入新的文件名\"></textarea>")
+                } else {
+                    //目录
+                    layer.prompt({title: '输入新的名称', formType: 0, value: row.menuname}, function (newname, index) {
+                        _post_nl('/manager/editpathname/', {'path': row.path, 'newname': newname}, function (data) {
+                            if (data.code == 0) {
+                                kind = row.menu === undefined ? 'menu' : 'files'
+                                that.reflash(kind, row.menu)
+                            }
+                            layer.msg(data.info, {time: 2000})
+                            layer.close(index);
+                        });
+                    })
+                }
             },
             handleDelete(index, row) {
                 var that = this
                 layer.confirm('确认删除？', {
                     btn: ['确定', '取消']
                 }, function () {
-                    _post_nl('/manager/delfile/', {'path': row.path}, function (data) {
+                    shortpath = row.menu === undefined?row.menuname:row.menu+'/'+row.filename
+                    _post_nl('/manager/delfile/', {'path': row.path,'shortpath':shortpath}, function (data) {
                         if (data.code == 0) {
                             kind = row.menu === undefined ? 'menu' : 'files'
                             that.reflash(kind, row.menu)
@@ -400,17 +426,41 @@
                 }
             },
             handleChange(file) {
+                console.log("调用")
                 var that = this
                 _post_nl('/manager/checkfilename/', {'menu': that.curmenu, 'filename': file.name}, function (data) {
                     if (data.code == 0) {
-                        that.fileList.push(file)
+                        that.inputCustomname(file)
                     } else {
                         layer.confirm('目录【' + that.curmenu + '】已存在同名文件：' + file.name + '<br>确定上传将会覆盖。', {
-                            btn: ['确定', '取消'] //按钮
-                        }, function (index) {
-                            layer.close(index);
-                            that.fileList.push(file)
+                            btn: ['确定', '取消'], yes: function (index, layero) {
+                                layer.close(index);
+                                that.inputCustomname(file)
+                            }, btn2: function (index, layero) {
+                                that.removeFile(file)
+                                layer.close(index);
+                            }
                         });
+                    }
+                })
+            },
+            inputCustomname(file) {
+                var that = this
+                layer.prompt({
+                    title: '输入描述',
+                    formType: 0,
+                    value: file.name,
+                    btn: ['确定', '取消'],
+                    yes: function (index, layero) {
+                        var customname = layero.find(".layui-layer-input").val();
+                        that.customnamemap[file.name] = customname
+                        layer.close(index);
+                        that.fileList.push(file)
+                    },
+                    btn2: function (index) {
+                        that.removeFile(file)
+                        layer.close(index);
+                        return false
                     }
                 })
             },
@@ -422,6 +472,7 @@
                     }
                 }
                 this.fileList = arr
+                delete this.customnamemap[file.name]
             },
             uploadFile() {
                 var that = this;
@@ -436,6 +487,7 @@
                 formData.append('kind', 'personfile');
                 formData.append('content_type', 'json');
                 formData.append('menu', that.curmenu);
+                formData.append('customnamemap', JSON.stringify(that.customnamemap));
                 $.ajax({
                     type: "post",
                     url: "/manager/upload/",

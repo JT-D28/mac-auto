@@ -184,7 +184,7 @@ class Mysqloper:
 			cur = self.conn.cursor()  # 获取一个游标
 			sql = sql.replace(chr(13), '').replace(chr(10), '').strip()
 			self.sqlcount += 1
-			# print('sqlfda=>',sql,len(sql),len(sql.strip()))
+			print('sqlfda=>',sql,len(sql),len(sql.strip()))
 			cur.execute(str(sql))
 			# 查询sql时候
 			if re.match(r'(select).*(from).+(where){0,1}.*', sql.lower()) or re.match(r'(select).*(curdate).*',sql.lower()):

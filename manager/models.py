@@ -447,6 +447,14 @@ class EditLink(Model):
 	createtime=DateTimeField(auto_now_add=True)
 
 
+class FileMap(Model):
+	filename = CharField(max_length=255)
+	customname = CharField(max_length=255)
+	md5 = CharField(max_length=63)
+	path = CharField(max_length=255)
+
+
+
 
 
 

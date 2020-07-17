@@ -3,6 +3,8 @@ import threading
 import redis
 from django.shortcuts import render, redirect, render_to_response
 from django.conf import settings
+from django.utils.encoding import escape_uri_path
+
 from ME2 import configs
 from ME2.settings import logme
 from manager.context import get_space_dir
@@ -420,12 +422,14 @@ def updateroledata(request):
 
 @csrf_exempt
 def getfile(request,filename):
+	#  /file/<dir>/<file>?name=<downloadname>
 	upload_dir = get_space_dir()
 	filepath = os.path.join(upload_dir,filename)
+	downloadname = request.GET.get('name')
 	if os.path.exists(filepath):
 		with open(filepath, 'rb') as f:
 			response = HttpResponse(f)
 			response['Content-Type'] = 'application/octet-stream'
-			response['Content-Disposition'] = 'attachment;'
+			response["Content-Disposition"] = "attachment; filename*=UTF-8''{}".format(escape_uri_path(downloadname))
 			return response
 	return JsonResponse({})

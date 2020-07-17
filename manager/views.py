@@ -1,4 +1,5 @@
 import difflib, time
+import hashlib
 
 import chardet
 from django.db import connection
@@ -155,11 +156,21 @@ def upload(request):
 	elif kind == 'personfile':
 		upload_dir = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File')
 		menu = request.POST.get('menu')
+		customnamemap = json.loads(request.POST.get('customnamemap'))
 		try:
 			for filename in filemap:
 				filepath = os.path.join(upload_dir, menu, filename)
+				file_md5 = hashlib.md5(filemap[filename]).hexdigest()
+				print(file_md5)
 				with open(filepath, 'wb') as f:
 					f.write(filemap[filename])
+				try:
+					file = FileMap.objects.get(filename=filename,md5=file_md5,path=menu+'/'+filename)
+					file.customname = customnamemap[filename]
+					file.save()
+				except:
+					FileMap(filename=filename,md5=file_md5,path=menu+'/'+filename,customname=customnamemap[filename]).save()
+
 			return JsonResponse(simplejson(code=0, msg='文件上传完成'), safe=False)
 		except:
 			logger.info(traceback.format_exc())
@@ -2147,7 +2158,14 @@ def queryspacefiles(request):
 	for file in files:
 		path = os.path.join(basedir, file)
 		if os.path.isfile(path):
+			try:
+				FileMap.objects.get(path=menuname+'/'+file)
+			except:
+				with open(path, 'rb') as f:
+					FileMap(filename=file,path=menuname+'/'+file,md5=hashlib.md5(f.read()).hexdigest(),customname=file).save()
+
 			filename.append({'filename': file, 'size': getFileFolderSize(path), 'menu': menuname, 'path': path,
+			                 'customname':FileMap.objects.get(path=menuname+'/'+file).customname,
 			                 'createtime': time.strftime("%Y-%m-%d %H:%M", time.localtime(os.path.getctime(path)))})
 	filename.sort(key=lambda e: e.get('createtime'), reverse=True)
 	return JsonResponse({'code': 0, 'data': filename})
@@ -2224,7 +2242,9 @@ def delfile(request):
 			else:
 				info = '文件夹下存在文件'
 		elif os.path.isfile(path):
+			FileMap.objects.get(path=request.POST.get('shortpath')).delete()
 			os.remove(path)
+
 	except Exception as e:
 		code = 1
 		info = re.findall(", '(.*?)'\)", repr(e))[0]

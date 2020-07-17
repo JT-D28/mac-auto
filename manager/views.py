@@ -161,7 +161,7 @@ def upload(request):
 		try:
 			for filename in filemap:
 				filepath = os.path.join(upload_dir, menu, filename)
-				file_encoding = chardet.detect(filemap[filename]).get('encoding')
+				file_encoding = chardet.detect(filemap[filename]).get('encoding') if getFileFolderSize(filepath) != 0 else 'blank'
 				with open(filepath, 'wb') as f:
 					f.write(filemap[filename])
 				try:
@@ -2166,6 +2166,8 @@ def queryspacefiles(request):
 				size = getFileFolderSize(path)
 				if size/1024/1024>5:
 					FileMap(filename=file, path=menuname + '/' + file,customname=file, code="big").save()
+				elif size==0:
+					FileMap(filename=file, path=menuname + '/' + file, customname=file, code="blank").save()
 				else:
 					with open(path, 'rb') as f:
 						data = f.read()

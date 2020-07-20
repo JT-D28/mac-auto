@@ -22,4 +22,4 @@
 /manager/storage/private/File/*
 /homepage/views/__pycache__/*
 /ME2/config.ini
-/manager\operate\__pycache__/*
+/manager/operate/__pycache__/*

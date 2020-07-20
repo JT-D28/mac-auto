@@ -1791,7 +1791,7 @@ def querytreelist(request):
             datanode=get_link_right_tree(nid)
 
     else:
-        datanode.append({'nidid': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True})
+        datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True})
         productlist = list(Product.objects.all().exclude(isdelete=1))
         # logger.info('productlist:',productlist)
         for product in productlist:

@@ -172,7 +172,7 @@ urlpatterns = [
     path('getParamfromFetchData/', views.getParamfromFetchData),
     path('recycle/', views.recycle),
     path('queryrecyclelist/', views.queryrecyclelist),
-    path('recyclenode/', views.recyclenode)
+    path('recyclenode/', views.recyclenode),
 
     path('link/', views.link),
 

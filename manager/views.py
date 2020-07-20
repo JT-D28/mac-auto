@@ -1605,14 +1605,12 @@ def querytreelist(request):
     from .cm import getchild, get_search_match,get_link_left_tree,get_link_right_tree
     datanode = []
     
-    def _get_pid_data(idx, type, data,srcid=None,checkflag=None):
+    def _get_pid_data(idx, type, data,srcid=None,checkflag=None,flag=None):
 
         if type == 'product':
             plans = cm.getchild('product_plan', idx)
-            logger.info('plans=>', plans)
 
             for plan in plans:
-
                 data.append({
                     'id': 'plan_%s' % plan.id,
                     'pId': 'product_%s' % idx,
@@ -1621,10 +1619,14 @@ def querytreelist(request):
                     'textIcon': 'fa icon-fa-product-hunt',
                 })
 
-                is_exits=EditLink.objects.filter(snid=srcid,tnid='plan_%s'%plan.id).exists()
-                if is_exits:
-                    data[-1]['checked']=True
-                        
+                if flag=='1':
+                    is_exits=EditLink.objects.filter(snid=srcid,tnid='plan_%s'%plan.id).exists()
+                    if is_exits:
+                        data[-1]['checked']=True
+                elif flag=='0':
+                    if str(plan.id)==srcid.split('_')[1]:
+                        data[-1]['checked']=True
+            
             return data
 
         elif type == 'plan':
@@ -1643,12 +1645,17 @@ def querytreelist(request):
                     'textIcon': 'fa icon-fa-folder',
                 })
 
-                ex=EditLink.objects.filter(tnid='case_{}'.format(case.id))
-                for o in ex:
-                    bname2=Case.objects.get(id=o.snid.split('_')[1]).description
-                    if casename==bname2:
+                if flag=='1':
+                    ex=EditLink.objects.filter(tnid='case_{}'.format(case.id))
+                    for o in ex:
+                        bname2=Case.objects.get(id=o.snid.split('_')[1]).description
+                        if casename==bname2:
+                            data[-1]['checked']=True
+                            break;
+                elif flag=='0':
+                    ex=EditLink.objects.filter(snid='case_%s'%case.id)
+                    if ex.exists():
                         data[-1]['checked']=True
-                        break;
 
 
                         
@@ -1679,20 +1686,32 @@ def querytreelist(request):
                 except:
                     pass
 
-                if nodekind=='step':
-                    ex=EditLink.objects.filter(tnid='step_{}'.format(nodeid))
-                    for o in ex:
-                        bname2=Step.objects.get(id=o.snid.split('_')[1]).description
-                        if obj['description']==bname2:
+                if flag=='1':
+
+                    if nodekind=='step':
+                        ex=EditLink.objects.filter(tnid='step_{}'.format(nodeid))
+                        for o in ex:
+                            bname2=Step.objects.get(id=o.snid.split('_')[1]).description
+                            if obj['description']==bname2:
+                                data[-1]['checked']=True
+                                break;
+                    elif nodekind=='case':
+                        ex=EditLink.objects.filter(tnid='case_{}'.format(nodeid))
+                        for o in ex:
+                            bname2=Case.objects.get(id=o.snid.split('_')[1]).description
+                            if obj['description']==bname2:
+                                data[-1]['checked']=True
+                                break;
+                elif flag=='0':
+                    if nodekind=='step':
+                        ex=EditLink.objects.filter(snid='%s_%s'%(nodekind,nodeid))
+                        if ex.exists():
                             data[-1]['checked']=True
-                            break;
-                elif nodekind=='case':
-                    ex=EditLink.objects.filter(tnid='case_{}'.format(nodeid))
-                    for o in ex:
-                        bname2=Case.objects.get(id=o.snid.split('_')[1]).description
-                        if obj['description']==bname2:
+                    elif nodekind=='case':
+                        ex=EditLink.objects.filter(snid='%s_%s'%(nodekind,nodeid))
+                        if ex.exists():
                             data[-1]['checked']=True
-                            break;
+
             return data
 
         elif type == 'step':
@@ -1711,14 +1730,18 @@ def querytreelist(request):
                     'type': 'business',
                     'textIcon': 'fa icon-fa-leaf',
                 })
-
-                ##这里有有个场景暂时不考虑
-                ex=EditLink.objects.filter(tnid='business_{}'.format(business.id))
-                for o in ex:
-                    bname2=BusinessData.objects.get(id=o.snid.split('_')[1]).businessname
-                    if bname==bname2:
+                if flag=='1':
+                    ##这里有有个场景暂时不考虑
+                    ex=EditLink.objects.filter(tnid='business_{}'.format(business.id))
+                    for o in ex:
+                        bname2=BusinessData.objects.get(id=o.snid.split('_')[1]).businessname
+                        if bname==bname2:
+                            data[-1]['checked']=True
+                            break;
+                elif flag=='0':
+                    ex=EditLink.objects.filter(snid='business_%s'%business.id)
+                    if ex.exists():
                         data[-1]['checked']=True
-                        break;
 
 
             return data
@@ -1738,7 +1761,7 @@ def querytreelist(request):
     checkflag=get_params(request).get('checkflag')
 
     if id_:
-        datanode = _get_pid_data(id_, type_, datanode,srcid=nid,checkflag=checkflag)
+        datanode = _get_pid_data(id_, type_, datanode,srcid=nid,checkflag=checkflag,flag=flag)
 
 
         if  get_params(request).get('flag')=='1':
@@ -1752,9 +1775,9 @@ def querytreelist(request):
             for node in datanode:
                 if node['type'] == 'plan' and node['id']!=get_params(request).get('srcid'):
                     nodecopy.remove(node)
-                    logger.info('移除计划节点:{}'.format(node['name']))
+                    #logger.info('移除计划节点:{}'.format(node['name']))
 
-            logger.info('移除操作后 大小:{}'.format(len(nodecopy))) 
+            #logger.info('移除操作后 大小:{}'.format(len(nodecopy))) 
 
             datanode=nodecopy 
 

@@ -1017,6 +1017,62 @@ def delrelation(kind, callername, main_id, follow_id):
         logger.info(traceback.format_exc())
 
 
+def get_all_child_nodes(nodeid,cur):
+    '''
+    获得指定节点的所有子项
+    '''
+
+    kind,nid=nodeid.split('_')[0],nodeid.split('_')[1]
+
+    if kind=='plan':
+        od=mm.Order.objects.filter(kind='plan_case',main_id=nid)
+        for o in od:
+            case=mm.Case.objects.get(id=o.follow_id)
+            cur.append({
+                    'nid':'case_{}'.format(o.follow_id),
+                    'name':case.description
+                })
+            get_all_child_nodes('case_{}'.format(o.follow_id), cur)
+
+    elif kind=='case':
+        od=mm.Order.objects.filter(kind='case_step',main_id=nid)
+        for o in od:
+            step=mm.Step.objects.get(id=o.follow_id)
+            cur.append({
+                    'nid':'step_{}'.format(o.follow_id),
+                    'name':step.description
+                })
+
+            get_all_child_nodes('step_{}'.format(o.follow_id), cur)
+
+        print('fdal:',mm.Order)
+
+        od1=mm.Order.objects.filter(kind='case_case',main_id=nid)
+
+        for o1 in od1:
+            case=mm.Case.objects.get(id=o1.follow_id)
+            cur.append({
+                    'nid':'case_{}'.format(o1.follow_id),
+                    'name':case.description
+                })
+
+            get_all_child_nodes('case_{}'.format(o1.follow_id), cur)
+
+
+    elif kind=='step':
+        od=mm.Order.objects.filter(kind='step_business',main_id=nid)
+        for o in od:
+            b=mm.BusinessData.objects.get(id=o.follow_id)
+            cur.append({
+                'nid':'business_{}'.format(b.id),
+                'name':b.businessname
+                })
+
+            get_all_child_nodes('step_{}'.format(o.follow_id),cur)
+
+
+        
+
 # logger.info('删除完毕')
 def getchild(kind, main_id):
     '''
@@ -1030,7 +1086,7 @@ def getchild(kind, main_id):
             try:
                 logger.info('plan class=>', mm.Plan)
                 p = mm.Plan.objects.get(id=order.follow_id)
-                # logger.info('添加计划=>',plan)
+                # logger.infoe('添加计划=>',plan)
                 child.append(p)
             # pirnt('child=>',child)
             except:
@@ -1581,10 +1637,6 @@ def get_link_left_tree(nid):
         node['open']=True
         if node['id'] in snids:
             node['checked']=True
-
-
-
-
 
     #logger.info('左侧tree数据:\n{}'.format(datanode))
     return datanode
@@ -2260,31 +2312,98 @@ def querynodelink(request):
         'count':len(res)
     }
 
+def _check_level(data1,data2):
+    if data2.strip()=='[]':
+        return True
+    else:
+        logger.info('data2 lne:',len(data2))
+        logger.info('data2 :',data2)
+
+    m=['product','plan','case','step','business']
+    d1,d2='',''
+    for _ in m:
+        if _ in data1:
+            d1=_
+            break
+
+    for _ in m:
+        if _ in data2:
+            d2=_
+            break
+
+    return d1==d2
 
 
+def _fulldata(data):
+    res=[]
+    for item in data:
+        if item['type']!='business' and not item.get('children') and item['checked']==True:
+            cur=[]
+            get_all_child_nodes(item['id'], cur)
+            res=res+cur
 
-def editnodelink(request):
-    pass
+            # plans=getchild('product_plan',item['id'].split('_')[1])
 
 
+    return res
 
-
-
+def _handlefulldata(data1,data2,user,flag):
+    count=0
+    for d1 in data1:
+        for d2 in data2:
+            if d1['name']==d2['name']:
+                el=mm.EditLink()
+                el.snid=d1['nid']
+                el.tnid=d2['nid']
+                el.creater=user
+                el.flag=el.flag
+                el.save()
+                count=count+1
+                logger.info('[建立link]snid={} tnid={}'.format(el.snid,el.tnid))
+    return count
 
 def addeditlink(request):
     params=get_params(request)
+
+    flag=EncryptUtils.md5_encrypt(str(time.time()))
+
+    ##level校验
+    if not _check_level(params['data1'],params['data2']):
+        return{
+            'status':'fail',
+            'msg':'树两边层级不一样 不能关联'
+        }
     data1=json.loads(params['data1'])
     data2=json.loads(params['data2'])
+    ##需要补充前端可能不完整的数据
+    data11,data22=_fulldata(data1),_fulldata(data2)
+    user=User.objects.get(name=request.session.get('username'))
+    count=_handlefulldata(data11, data22, user,flag)
+
+    logger.info('补充数据时建立link关系{}条'.format(count))
+
     ##需要都选
-    if not data1 or not data2:
+    if not data1 :
         return{
             'status':'error',
             'msg':'请先选择要关联的用例'
         }
 
+    ##清除已关联数据 重新关联
+    history=list(mm.EditLink.objects.filter(snid=params['nid']))
+    if history:
+        flag=history[0].flag
+        mm.EditLink.objects.filter(flag=flag).delete()
+        logger.info('清除已关联数据 planid={} flag={}'.format(params['nid'],flag))
+
+
+    if not data2:
+        return{
+            'status':'fail',
+            'msg':'修改成功'
+        }
+
     data1,data2=data1[0],data2[0]
-
-
     # logger.info('data1:\n{} \ndata2:{}'.format(data1,data2))
 
     left_routes,right_routes=[],[]
@@ -2299,8 +2418,10 @@ def addeditlink(request):
     # logger.info('right_routes:\n{}'.format(right_routes))
 
     left_product_check,left_plan_check=[],[]
+
+
     for x in left_routes:
-        if x[0] not in left_product_check:
+        if x and x[0] not in left_product_check:
             left_product_check.append(x[0])
         if x[1] not in left_plan_check:
             left_plan_check.append(x[1])
@@ -2311,16 +2432,8 @@ def addeditlink(request):
                 'msg':'左边树暂时只支持选一个产品计划'
             }
 
-    ##清除已关联数据 重新关联
-    history=list(mm.EditLink.objects.filter(snid=params['nid']))
-    if history:
-        flag=history[0].flag
-        mm.EditLink.objects.filter(flag=flag).delete()
-        logger.info('清除已关联数据 planid={} flag={}'.format(params['nid'],flag))
 
-    ##
-    count=0
-    flag=EncryptUtils.md5_encrypt(str(time.time()))
+
 
     for x in left_routes:
 

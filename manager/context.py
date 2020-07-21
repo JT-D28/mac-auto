@@ -558,13 +558,16 @@ class monitor(object):
         self.action=kws0['action']
 
     @classmethod
-    def _push_user_message(cls,userids,news,sendername='admin',title='系统消息'):
+    def push_user_message(cls,userids,news,sendername='admin',title='系统消息'):
+        from manager.models import  News
         '''
         允许向单人推送消息
         允许向多人推送相同消息
         '''
+        Me2Log.info('准备推送消息')
         if isinstance(userids,(str,)):
             if isinstance(news, (str,)):
+
                 n=News()
                 n.title=title
                 n.description=news

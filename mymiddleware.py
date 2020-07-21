@@ -187,7 +187,7 @@ class Interceptor(MiddlewareMixin):
 		for ok in o:
 			o[ok]=o.get(ok)[0]
 		if o:
-			#logger.warn('请求参数:'+str(o))
+			logger.warn('请求参数:'+str(o))
 			pass
 		
 	

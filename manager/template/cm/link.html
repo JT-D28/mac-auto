@@ -22,17 +22,6 @@
 
     <style type="text/css">
 
-       .el-select-dropdown {
-            z-index: 20000000;
-        }
-        .el-input__inner, .el-input__icon {
-            height: 34px;
-            line-height: 34px;
-        }
-        .layui-input {
-            padding: 0 14px;
-            background-color: rgb(252, 252, 252);
-        }
 
         .layui-form-item .layui-form-checkbox[lay-skin="primary"] {
             margin-right: 9px;
@@ -51,29 +40,12 @@
             line-height: 20px;
         }
 
-        .layui-tree-entry {
-            height: auto;
-            padding: 4px 0;
-        }
-
-        .layui-tree-iconClick {
-            margin-right: 8px;
-            margin-left: 0px;
-        }
-
-        .layui-table-view {
-            margin: 0 0;
-        }
 
         .layui-table th, .layui-table td {
             font-size: 12px;
         }
 
-        .card {
-            padding: 0 25px;
-            line-height: 30px;
-            height: 30px;
-        }
+
 
         .ztree li span.button.add {
             margin-left: 2px;
@@ -104,13 +76,6 @@
             *vertical-align: middle
         }
 
-        .fa {
-
-            /*color: #FF6699;*/
-            color: #009688;
-
-        }
-
         .btn {
             width: 72px;
             height: 34px;
@@ -118,32 +83,71 @@
             border-radius: 0px 2px 2px 0px;
         }
 
-        .btn-text {
-            width: 24px;
-            height: 17px;
-            font-size: 12px;
-            font-family: PingFang-SC-Medium, PingFang-SC;
-            font-weight: 500;
-            color: rgba(255, 255, 255, 1);
-            line-height: 17px;
+        .loading{
+            width: 60px;
+            height: 60px;
+            margin: 0 auto;
+            margin-top:100px;
+            position: relative;
+            -webkit-animation: load 3s linear infinite;
         }
-
-
-        .fa.fa-folder {
-            color: #FFCC66;
-
+        .loading div{
+            width: 100%;
+            height: 100%;
+            position: absolute;
         }
-
-        .fa.fa-folder-open {
-            color: #FFCC66;
+        .loading span{
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #99CC66;
+            position: absolute;
+            left: 50%;
+            margin-top: -10px;
+            margin-left: -10px;
+            -webkit-animation: changeBgColor 3s ease infinite;
         }
-
-        #start-record:hover{
-            cursor: pointer;
-
+        @-webkit-keyframes load{
+            0%{
+                -webkit-transform: rotate(0deg);
+            }
+            33.3%{
+                -webkit-transform: rotate(120deg);
+            }
+            66.6%{
+                -webkit-transform: rotate(240deg);
+            }
+            100%{
+                -webkit-transform: rotate(360deg);
+            }
         }
-        #end-record:hover{
-            cursor: pointer;
+        @-webkit-keyframes changeBgColor{
+            0%,100%{
+                background: #99CC66;
+            }
+            33.3%{
+                background: #FFFF66;
+            }
+            66.6%{
+                background: #FF6666;
+            }
+        }
+        .loading div:nth-child(2){
+            -webkit-transform: rotate(120deg);
+        }
+        .loading div:nth-child(3){
+            -webkit-transform: rotate(240deg);
+        }
+        .loading div:nth-child(2) span{
+            -webkit-animation-delay: 1s;
+        }
+        .loading div:nth-child(3) span{
+            -webkit-animation-delay: 2s;
+        }
+        .fa {
+            color: #009688;
+
         }
     </style>
 
@@ -156,7 +160,11 @@
   <ul id="case-manager" class="ztree " style="margin-top:10px;margin-left:100px;padding:10px 0 0 15px;width:350px;float:left;"></ul>
 
   <ul id="case-manager2" class="ztree " style="margin-top:10px;padding:10px 0 0 15px;float:left"></ul>
-
+<div class="loading">
+        <div><span></span></div>
+        <div><span></span></div>
+        <div><span></span></div>
+</div>
 
 
    </div> 
@@ -210,7 +218,7 @@ $('#addlink').click(function(){
   data1=JSON.stringify(treeObj1.getCheckedNodes(true))
   data2=JSON.stringify(treeObj2.getCheckedNodes(true))
 
-  _post_nl('/manager/treecontrol/',{'action':'addeditlink','data1':data1,'data2':data2,'nid':nid},function(e){
+  _post_nl('/manager/treecontrol/?asyn=1',{'action':'addeditlink','data1':data1,'data2':data2,'nid':nid},function(e){
 
     layer.alert(e.msg)
 

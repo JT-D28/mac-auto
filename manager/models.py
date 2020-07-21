@@ -14,8 +14,8 @@ class Function(Model):
 	description = CharField(max_length=128)
 	flag = CharField(max_length=32)
 	body = TextField(null=True)
-	createtime = DateTimeField(auto_now_add=True)
-	updatetime = DateTimeField(auto_now=True)
+	create_time = DateTimeField(auto_now_add=True)
+	update_time = DateTimeField(auto_now=True)
 	
 	def __str__(self):
 		return self.name

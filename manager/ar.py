@@ -15,6 +15,8 @@ class RoleData():
     '''
     角色操作
     '''
+
+
     @classmethod
     @monitor(action='查询角色详情')
     def queryroletable(cls,**kws):

@@ -95,6 +95,8 @@ var tree_link2 = {
 
             });
 
+            $('.loading').hide()
+
         }
 
         param = {

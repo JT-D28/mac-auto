@@ -101,13 +101,13 @@
             <div class="layui-input-inline" style="width: 50%;margin-right: 0px">
                 <label class="layui-form-label">类型</label>
                 <div class="layui-input-block">
-                    <select name="kind" lay-verify="">
+                    <select name="kind" lay-filter="kind">
                         <option value="">请选择</option>
                         <option value="pgsql">pgsql</option>
                         <option value="mysql">mysql</option>
                         <option value="oracle_sid">oracle(SID)</option>
                         <option value="oracle_servicename">oracle(服务名)</option>
-                        <!--         <option value="db2">db2</option> -->
+                        <option value="WinRM">WinRM</option>
                     </select>
                 </div>
             </div>
@@ -184,7 +184,7 @@
                             v-model="schemevalue"
                             filterable
                             allow-create
-                             @blur="dbschemeinput"
+                            @blur="dbschemeinput"
                             default-first-option
                             placeholder="请选择数据库方案（填入内容并且回车可自定义方案名）">
                         <el-option
@@ -382,81 +382,84 @@
         $("#addbtn").click(function (e) {
             app.queryDbScheme(1);
             $('#addhtml')[0].reset();
-            var o = layer.open(
-                {
-                    title: '数据连接 / 新增',
-                    type: 1,
-                    zIndex: 1000,
-                    // area:["350px","350px"],
-                    content: $('#addhtml'),
-                    btn: ['测试连接', '提交', '取消'],
-                    success: function () {
-                        setTimeout(() => app.schemevalue = '全局', 20)
-                    },
-                    yes: function (index, layero) {
-                        success = function (res) {
-                            res = JSON.parse(res);
-                            if (res.code === 0) {
-                                layer.alert(res.msg, {icon: 1})
-                            } else {
-                                layer.alert(res.msg, {icon: 2})
-                            }
-                        };
-                        data = {
-                            'description': $("[name='description']").val(),
-                            'host': $("[name='host']").val(),
-                            'port': $("[name='port']").val(),
-                            'dbname': $("[name='dbname']").val(),
-                            'accountname': $("[name='accountname']").val(),
-                            'password': $("[name='password']").val(),
-                            'kind': $("[name='kind']").val(),
-                        };
-                        console.log(data);
-                        _post('/manager/testdbcon/', data, success)
-                    },
-                    btn2: function (index, layero) {
-                        //按钮【按钮一】的回调
-                        console.log('yes');
-                        var description = $("[name='description']").val();
-                        var host = $("[name='host']").val();
-                        var port = $("[name='port']").val();
-                        var dbname = $("[name='dbname']").val();
-                        var accountname = $("[name='accountname']").val();
-                        var password = $("[name='password']").val();
-                        var kind = $("[name='kind']").val();
-                        var schemevalue = app.schemevalue;
-                        console.log(description.length, host.length, port.length, dbname.length, accountname.length, password.length, kind.length)
-                        if ((schemevalue.length * description.length * host.length * port.length * dbname.length * accountname.length * password.length * kind.length) === 0) {
-                            layer.msg('请检查是否全部填写');
-                            return false
+            layer.open({
+                title: '数据连接 / 新增',
+                type: 1,
+                zIndex: 1000,
+                area: ["100%", "100%"],
+                content: $('#addhtml'),
+                btn: ['测试连接', '提交', '取消'],
+                success: function () {
+                    setTimeout(() => app.schemevalue = '全局', 20)
+                    form.on('select(kind)', function (data) {
+                        if (data.value == "WinRM") {
+                            $("[name='dbname']").val("WinRM")
                         }
-                        // $('#addhtml')[0].reset()
-                        // layui.form.render()
-                        success = function (e) {
-                            e = JSON.parse(e);
-                            if (e.code === 0) {
-                                app.queryDbScheme(0);
-                                $("#querybtn").click();
-                                layer.alert(e.msg, {icon: 1, time: 1500});
-                            } else {
-                                layer.alert(e.msg, {icon: 2})
-                            }
-                        };
-                        data = {
-                            'description': description,
-                            'host': host,
-                            'port': port,
-                            'dbname': dbname,
-                            'accountname': accountname,
-                            'password': password,
-                            'kind': kind,
-                            'schemevalue': schemevalue
-                        };
-                        console.log('添加db', data);
-                        _post('/manager/adddbcon/', data, success)
+                    });
+                },
+                yes: function (index, layero) {
+                    success = function (res) {
+                        res = JSON.parse(res);
+                        if (res.code === 0) {
+                            layer.alert(res.msg, {icon: 1})
+                        } else {
+                            layer.alert(res.msg, {icon: 2})
+                        }
+                    };
+                    data = {
+                        'description': $("[name='description']").val(),
+                        'host': $("[name='host']").val(),
+                        'port': $("[name='port']").val(),
+                        'dbname': $("[name='dbname']").val(),
+                        'accountname': $("[name='accountname']").val(),
+                        'password': $("[name='password']").val(),
+                        'kind': $("[name='kind']").val(),
+                    };
+                    console.log(data);
+                    _post('/manager/testdbcon/', data, success)
+                },
+                btn2: function (index, layero) {
+                    //按钮【按钮一】的回调
+                    console.log('yes');
+                    var description = $("[name='description']").val();
+                    var host = $("[name='host']").val();
+                    var port = $("[name='port']").val();
+                    var dbname = $("[name='dbname']").val();
+                    var accountname = $("[name='accountname']").val();
+                    var password = $("[name='password']").val();
+                    var kind = $("[name='kind']").val();
+                    var schemevalue = app.schemevalue;
+                    console.log(description.length, host.length, port.length, dbname.length, accountname.length, password.length, kind.length)
+                    if ((schemevalue.length * description.length * host.length * port.length * dbname.length * accountname.length * password.length * kind.length) === 0) {
+                        layer.msg('请检查是否全部填写');
+                        return false
                     }
-                });
-            layer.full(o);
+                    // $('#addhtml')[0].reset()
+                    // layui.form.render()
+                    success = function (e) {
+                        e = JSON.parse(e);
+                        if (e.code === 0) {
+                            app.queryDbScheme(0);
+                            $("#querybtn").click();
+                            layer.alert(e.msg, {icon: 1, time: 1500});
+                        } else {
+                            layer.alert(e.msg, {icon: 2})
+                        }
+                    };
+                    data = {
+                        'description': description,
+                        'host': host,
+                        'port': port,
+                        'dbname': dbname,
+                        'accountname': accountname,
+                        'password': password,
+                        'kind': kind,
+                        'schemevalue': schemevalue
+                    };
+                    console.log('添加db', data);
+                    _post('/manager/adddbcon/', data, success)
+                }
+            });
         });
 
 //tool事件

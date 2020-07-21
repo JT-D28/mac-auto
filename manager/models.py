@@ -450,8 +450,9 @@ class FileMap(Model):
 	filename = CharField(max_length=255)
 	customname = CharField(max_length=255)
 	path = CharField(max_length=255)
-	code = CharField(max_length=32)
-
+	code = CharField(max_length=32,null=True)
+	targetpath = CharField(max_length=255,blank=True)
+	targetserver = CharField(max_length=32,blank=True)
 
 
 

@@ -161,9 +161,9 @@ def upload(request):
         try:
             for filename in filemap:
                 filepath = os.path.join(upload_dir, menu, filename)
-                file_encoding = chardet.detect(filemap[filename]).get('encoding') if getFileFolderSize(filepath) != 0 else 'blank'
                 with open(filepath, 'wb') as f:
                     f.write(filemap[filename])
+                file_encoding = chardet.detect(filemap[filename]).get('encoding') if getFileFolderSize(filepath) != 0 else 'blank'
                 try:
                     file = FileMap.objects.get(filename=filename,path=menu+'/'+filename)
                     file.customname = customnamemap[filename]
@@ -224,19 +224,36 @@ def dbcon(request):
 
 @csrf_exempt
 def testdbcon(request):
-    status, msg = db_connect({
-        'description': request.POST.get('description'),
-        'dbtype': request.POST.get('kind'),
-        'dbname': request.POST.get('dbname'),
-        'host': request.POST.get('host'),
-        'port': request.POST.get('port'),
-        'username': request.POST.get('accountname'),
-        'password': request.POST.get('password')
+    description = request.POST.get('description'),
+    dbtype = request.POST.get('kind')
+    dbname = request.POST.get('dbname')
+    host = request.POST.get('host')
+    port = request.POST.get('port')
+    username = request.POST.get('accountname')
+    password = request.POST.get('password')
+    if dbtype =='WinRM':
+        try:
+            import winrm
+            wintest = winrm.Session("http://{}:{}/wsman".format(host,port), auth=(username, password))
+            ret = wintest.run_cmd("chdir")
+            status= 'success'
+            msg = "windows服务器连接成功"
+        except:
+            status = 'error'
+            msg = traceback.format_exc()
+    else:
+        status, msg = db_connect({
+            'description': description,
+            'dbtype': dbtype,
+            'dbname': dbname,
+            'host': host,
+            'port': port,
+            'username': username,
+            'password': password
+        })
 
-    })
     if status is 'success':
         return JsonResponse(simplejson(code=0, msg=msg), safe=False)
-
     else:
         return JsonResponse(simplejson(code=4, msg=msg), safe=False)
 
@@ -2178,6 +2195,13 @@ def getParamfromFetchData(request):
 个人空间管理
 '''
 
+@csrf_exempt
+def querywinrm(request):
+    m = []
+    data = DBCon.objects.values('id','host','description').filter(kind="WinRM")
+    for i in data:
+        m.append({'id':str(i['id']),'description':i['description']})
+    return JsonResponse({'code': 0, 'data': m})
 
 def _formatSize(bytes):
     try:
@@ -2270,20 +2294,19 @@ def getfiledetail(request):
     path = os.path.join(get_space_dir(), menu, filename)
     filedata = ''
     code = 1
-    filemap = FileMap.objects.values('customname','code').get(filename=filename, path=menu + "/" + filename)
-    customname = filemap['customname']
+    filemap = FileMap.objects.values('customname','code','targetpath','targetserver').get(filename=filename, path=menu + "/" + filename)
     if filemap['code'] in [None,'big','blank']:
         if getFileFolderSize(path)==0:
-            return JsonResponse({'code': 0, 'filedata': '', "customname": customname})
-        return JsonResponse({'code': code, "customname": filemap['customname']})
+            return JsonResponse({'code': 0, 'filedata': '', "fileinfo": filemap})
+        return JsonResponse({'code': code, "fileinfo": filemap})
     else:
         try:
             with open(path, 'r', encoding=filemap['code'])as file:  # 使用得到的文件编码格式打开文件
                 filedata = file.read()
                 code = 0
         except:
-            return JsonResponse({'code': code, "customname": customname})
-    return JsonResponse({'code': code, 'filedata': filedata, "customname": customname})
+            return JsonResponse({'code': code, "fileinfo": filemap})
+    return JsonResponse({'code': code, 'filedata': filedata, "fileinfo": filemap})
 
 
 @csrf_exempt
@@ -2338,7 +2361,10 @@ def editfile(request):
         os.rename(os.path.join(get_space_dir(),path), os.path.join(get_space_dir(),newpath))
         file.filename = newfilename
         file.customname = request.POST.get('customname')
+        file.targetpath = request.POST.get('targetpath')
+        file.targetserver = request.POST.get('targetserver')
         file.path = newpath
+        file.code = 'utf-8'
         file.save()
     except:
         print(traceback.format_exc())

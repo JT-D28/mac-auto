@@ -275,6 +275,20 @@
                     <el-form-item label="描述（下载）名">
                         <el-input v-model="fileForm.customname"></el-input>
                     </el-form-item>
+                    <el-form-item label="目标服务器">
+                        <el-select v-model="fileForm.targetserver" placeholder="请选择目标服务器" style="width: 100%;">
+                            <el-option
+                                    v-for="item in winserver"
+                                    :key="item.id"
+                                    :label="item.description"
+                                    :value="item.id">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="目标路径">
+                        <el-input v-model="fileForm.targetpath"></el-input>
+                    </el-form-item>
+
                     <el-form-item>
                         <el-button type="primary" @click="editsubmit">提交</el-button>
                         <el-button @click="editcancel">取消</el-button>
@@ -306,6 +320,13 @@
                         <input id="customname" type="text" class="layui-input">
                     </div>
                 </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 110px;text-align: left">目标路径</label>
+                    <div class="layui-input-block" style="margin-left:150px">
+                        <input id="targetpath" type="text" class="layui-input">
+                    </div>
+                </div>
+
             </form>
         </div>
     </template>
@@ -326,7 +347,10 @@
                     filename: '',
                     customname: '',
                     content: '',
+                    targetpath: '',
+                    targetserver: ''
                 },
+                winserver: [],
                 menus: [],
                 files: [],
                 filedata: '',
@@ -338,7 +362,7 @@
                 customnamemap: {},
                 index: '',
                 curfilepath: '',
-                oldfilename:''
+                oldfilename: ''
             };
         },
         methods: {
@@ -346,16 +370,20 @@
                 filename = this.fileForm.filename
                 customname = this.fileForm.customname
                 content = this.fileForm.content
+                targetpath = this.fileForm.targetpath
+                targetserver = this.fileForm.targetserver
                 var that = this
                 _post_ll('/manager/editfile/', {
                     filename: filename,
                     customname: customname,
                     content: content,
-                    path: this.curfilepath
+                    path: this.curfilepath,
+                    targetpath: targetpath,
+                    targetserver: targetserver
                 }, function (data) {
                     if (data.code == 0) {
-                        console.log(that.curfilepath.replace("/"+that.oldfilename,''))
-                        that.reflash('file', that.curfilepath.replace("/"+that.oldfilename,''))
+                        console.log(that.curfilepath.replace("/" + that.oldfilename, ''))
+                        that.reflash('file', that.curfilepath.replace("/" + that.oldfilename, ''))
                         layer.close(that.index)
                     }
                     layer.msg(data.info)
@@ -438,19 +466,23 @@
                 var that = this
                 if (row.menu !== undefined) {
                     //文件
+
                     _post_ll('/manager/getfiledetail/', {'menu': row.menu, 'filename': row.filename}, function (data) {
                         if (data.code == 0) {
                             layer.open({
                                 type: 1,
                                 title: '文件编辑',
                                 content: $('#editfile'),
+                                zIndex: 10,
                                 area: ['80%', '80%'],
                                 success: function (layero, index) {
                                     that.fileForm.filename = row.filename
                                     that.oldfilename = row.filename
-                                    that.fileForm.customname = data.customname
+                                    that.fileForm.customname = data.fileinfo.customname
                                     that.fileForm.content = data.filedata
+                                    that.fileForm.targetpath = data.fileinfo.targetpath
                                     setTimeout(() => {
+                                        that.fileForm.targetserver = data.fileinfo.targetserver
                                         javascript:ResizeTextarea($("#fileinfo")[0], 4)
                                     }, 40)
                                     that.index = index
@@ -460,7 +492,8 @@
 
                         } else {
                             $("#filename").val(row.filename)
-                            $("#customname").val(data.customname)
+                            $("#customname").val(data.fileinfo.customname)
+                            $("#targetpath").val(data.fileinfo.targetpath)
                             layer.open({
                                 type: 1,
                                 title: '文件编辑',
@@ -469,8 +502,9 @@
                                 btn: ['确定', '取消'],
                                 yes: function (index, layero) {
                                     _post_ll('/manager/editfile/', {
-                                        filename:  $("#filename").val(),
+                                        filename: $("#filename").val(),
                                         customname: $("#customname").val(),
+                                        targetpath: $('#targetpath').val(),
                                         path: row.menu + '/' + row.filename
                                     }, function (data) {
                                         if (data.code == 0) {
@@ -619,7 +653,11 @@
             var that = this
             that.curmenu = '默认'
             that.reflash('menu', 0)
-
+            _post_nl('/manager/querywinrm/', {}, function (data) {
+                if (data.code == 0) {
+                    that.winserver = data.data
+                }
+            })
         },
         watch: {}
     });

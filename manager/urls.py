@@ -134,6 +134,7 @@ urlpatterns = [
     path('addmenu/',views.addmenu),
     path('downloadfile/', views.downloadfile),
     path('editfile/',views.editfile),
+    path('querywinrm/',views.querywinrm),
 
     path('authcontrol/', views.authcontrol),
     path('queryuicontrol/', views.queryuicontrol),
@@ -172,7 +173,7 @@ urlpatterns = [
     path('getParamfromFetchData/', views.getParamfromFetchData),
     path('recycle/', views.recycle),
     path('queryrecyclelist/', views.queryrecyclelist),
-    path('recyclenode/', views.recyclenode)
+    path('recyclenode/', views.recyclenode),
 
     path('link/', views.link),
 

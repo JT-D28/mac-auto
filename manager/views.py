@@ -1445,7 +1445,10 @@ def queryoneproduct(request):
 def treecontrol(request):
     '''
     '''
+    def _add_link_task(request):
+        cm.addeditlink(request)
     action = request.GET.get('action') or request.POST.get('action', '')
+    asyn=request.GET.get('asyn') or request.POST.get('asyn', '')
     logger.info('action:', action)
     if action in ('loadpage', 'view'):
         page = request.GET.get('page') or request.POST.get('page')
@@ -1462,23 +1465,27 @@ def treecontrol(request):
         status = v = None
         try:
             # logger.info('callstr=>',callstr)
-            k = eval(callstr)
-            logger.info('k=>', k)
-            status, v, data = k.get('status'), k.get('msg'), k.get('data')
+            if not asyn:
+                k = eval(callstr)
+                # logger.info('k=>', k)
+                status, v, data = k.get('status'), k.get('msg'), k.get('data')
 
-            if status is not 'success':
-                return JsonResponse(pkg(code=2, msg=str(v)), safe=False)
+                if status is not 'success':
+                    return JsonResponse(pkg(code=2, msg=str(v)), safe=False)
+                else:
+
+                    if action == 'export':
+                        logger.info('export %s' % v)
+                        flag = str(datetime.datetime.now()).split('.')[0]
+                        response = HttpResponse(str(v))
+                        response['content-type'] = 'application/json'
+                        response['Content-Disposition'] = 'attachment;filename=plan.ME2'
+                        return response
+
+                    return JsonResponse(pkg(code=0, msg=str(v), data=data), safe=False)
             else:
-
-                if action == 'export':
-                    logger.info('export %s' % v)
-                    flag = str(datetime.datetime.now()).split('.')[0]
-                    response = HttpResponse(str(v))
-                    response['content-type'] = 'application/json'
-                    response['Content-Disposition'] = 'attachment;filename=plan.ME2'
-                    return response
-
-                return JsonResponse(pkg(code=0, msg=str(v), data=data), safe=False)
+                threading.Thread(target=_add_link_task,args=(request,)).start()
+                return JsonResponse(pkg(code=0,msg='你已完成提交 请稍等片刻'),safe=False)
 
         except:
             logger.info(traceback.format_exc())
@@ -1762,7 +1769,6 @@ def querytreelist(request):
 
     if id_:
         datanode = _get_pid_data(id_, type_, datanode,srcid=nid,checkflag=checkflag,flag=flag)
-
 
         if  get_params(request).get('flag')=='1':
             for node in datanode:

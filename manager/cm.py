@@ -1045,7 +1045,7 @@ def get_all_child_nodes(nodeid,cur):
 
             get_all_child_nodes('step_{}'.format(o.follow_id), cur)
 
-        print('fdal:',mm.Order)
+
 
         od1=mm.Order.objects.filter(kind='case_case',main_id=nid)
 
@@ -1094,11 +1094,11 @@ def getchild(kind, main_id):
                 #logger.info(traceback.format_exc())
     elif kind == 'plan_case':
         for order in orderlist:
-            logger.info('case class=>', mm.Case)
+            #logger.info('case class=>', mm.Case)
             child.append(mm.Case.objects.get(id=order.follow_id))
     elif kind == 'case_step':
         for order in orderlist:
-            logger.info('main=>%s follow=>%s v=%s' % (order.main_id, order.follow_id, order.value))
+            #logger.info('main=>%s follow=>%s v=%s' % (order.main_id, order.follow_id, order.value))
             
             child.append(mm.Step.objects.get(id=order.follow_id))
     elif kind == 'step_business':
@@ -1623,9 +1623,12 @@ def get_link_left_tree(nid):
 
             elif snid.startswith('case'):
                 case=mm.Case.objects.get(id=snid.split('_')[1])
+                parent_node_info=_get_node_parent_info('case',case.id)
+                parent_kind=parent_node_info[0]
+                parent_id=parent_node_info[1]
                 datanode.append({
                     'id': 'case_%s' % case.id,
-                    'pId': 'plan_%s' % _get_node_parent_info('case',case.id)[1],
+                    'pId': '%s_%s' % (parent_kind,parent_id),
                     'name': case.description,
                     'type': 'case',
                     'textIcon': 'fa icon-fa-folder',
@@ -1648,26 +1651,23 @@ def set_node_checkflag(node,checkflag,nodes):
 
 
 def get_link_right_tree(nid):
-    logger.info('计算右侧数据')
-    wait_del=_get_all_child_node_id(nid)
+    logger.info('开始计算右侧数据')
+    wait_del=_get_all_child_node_id(nid)#查询时间过大如果nid子节点复杂
 
     datanode=[]
     history=mm.EditLink.objects.filter(snid=nid)
 
     if history.exists():
+        logger.info('有历史数据')
         tnids=[x.tnid for x in mm.EditLink.objects.filter(flag=list(history)[0].flag)]
 
         ##加上root 和所属产品
         tnids.append(-1)
         tnids.append('product_{}'.format(_get_node_parent_info('plan',nid.split('_')[1])[1]))
-
+        tnids=list(set(tnids))
         logger.info('右侧需要勾选的项：{}'.format(tnids))
 
-        nodes=get_full_tree()      
-        with open('d:/t.txt','w') as f:
-            f.write(str(nodes)) 
-
-
+        nodes=get_full_tree()
         # for node in nodes:
         #     if node['type'].startswith('bu'):
         #         logger.info('eys0000000000000000') 
@@ -1697,6 +1697,7 @@ def get_link_right_tree(nid):
 
 
     else:
+        logger.info('无历史数据')
         datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True})
         productlist = list(mm.Product.objects.all().exclude(isdelete=1))
         # logger.info('productlist:',productlist)
@@ -2331,6 +2332,7 @@ def _check_level(data1,data2):
             d2=_
             break
 
+    logger.info('fueoreoeioer')
     return d1==d2
 
 
@@ -2343,8 +2345,6 @@ def _fulldata(data):
             res=res+cur
 
             # plans=getchild('product_plan',item['id'].split('_')[1])
-
-
     return res
 
 def _handlefulldata(data1,data2,user,flag):
@@ -2359,7 +2359,7 @@ def _handlefulldata(data1,data2,user,flag):
                 el.flag=el.flag
                 el.save()
                 count=count+1
-                logger.info('[建立link]snid={} tnid={}'.format(el.snid,el.tnid))
+                logger.info('[handledata建立link]snid={} tnid={}'.format(el.snid,el.tnid))
     return count
 
 def addeditlink(request):
@@ -2377,7 +2377,9 @@ def addeditlink(request):
     data2=json.loads(params['data2'])
     ##需要补充前端可能不完整的数据
     data11,data22=_fulldata(data1),_fulldata(data2)
+    logger.info('data11,data22',data11,',',data22)
     user=User.objects.get(name=request.session.get('username'))
+
     count=_handlefulldata(data11, data22, user,flag)
 
     logger.info('补充数据时建立link关系{}条'.format(count))
@@ -2396,8 +2398,8 @@ def addeditlink(request):
         mm.EditLink.objects.filter(flag=flag).delete()
         logger.info('清除已关联数据 planid={} flag={}'.format(params['nid'],flag))
 
-
     if not data2:
+        monitor.push_user_message(str(user.id), '关联修改完成')
         return{
             'status':'fail',
             'msg':'修改成功'
@@ -2414,8 +2416,8 @@ def addeditlink(request):
     _get_route(data1,[],left_routes)
     _get_route(data2,[],right_routes)
 
-    # logger.info('left_routes:\n{}'.format(left_routes))
-    # logger.info('right_routes:\n{}'.format(right_routes))
+    logger.info('left_routes:\n{}'.format(left_routes))
+    logger.info('right_routes:\n{}'.format(right_routes))
 
     left_product_check,left_plan_check=[],[]
 
@@ -2462,11 +2464,13 @@ def addeditlink(request):
                     el.creater=params['user']
                     el.flag=flag
                     el.save()
+                    logger.info('[建立link {}->{}]'.format(el.snid,el.tnid))
                     count=count+1
 
 
     logger.info('本次关联结束 关联条数:{}..'.format(count))
-
+    planname=mm.Plan.objects.get(id=params['nid'].split('_')[1]).description
+    monitor.push_user_message(str(user.id),'计划[{}]关联完成 成功{}条'.format(planname,count))
 
     return {
         'status':'success',

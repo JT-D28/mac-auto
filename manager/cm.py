@@ -2399,7 +2399,7 @@ def addeditlink(request):
         logger.info('清除已关联数据 planid={} flag={}'.format(params['nid'],flag))
 
     if not data2:
-        monitor.push_user_message(str(user.id), '关联修改完成')
+        monitor.push_user_message(str(user.id), '关联修改完成.')
         return{
             'status':'fail',
             'msg':'修改成功'

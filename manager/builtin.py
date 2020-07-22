@@ -62,93 +62,93 @@ def saveproperty(key,value,**kws):
 
 def dbexecute(sql, **kws):
 
-	"""
-	执行单条sql
-	单字段查询语句返回查询结果,不支持多字段
-	非查询语句返回执行后影响条数
+    """
+    执行单条sql
+    单字段查询语句返回查询结果,不支持多字段
+    非查询语句返回执行后影响条数
 
-	"""
-	taskid=kws['taskid']
-	callername=kws['callername']
+    """
+    taskid=kws['taskid']
+    callername=kws['callername']
 
-	if taskid is None:
-		return 'error', 'taskid为空'
-	op = Mysqloper()
-	sql = sql.replace('@@', '$#$')
-	if re.search('@', sql) is None:
-		sql = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")[0]
-		dbnamecache = get_top_common_config(taskid)
-		print("调用内置函数=>dbexecute \nsql=>", sql)
-		return op.db_execute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
-	else:
-		print("调用内置函数=>dbexecute \nsql=>", sql)
-		return op.db_execute(sql, taskid=taskid, callername=callername)
+    if taskid is None:
+        return 'error', 'taskid为空'
+    op = Mysqloper()
+    sql = sql.replace('@@', '$#$')
+    if re.search('@', sql) is None:
+        sql = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")[0]
+        dbnamecache = get_top_common_config(taskid)
+        print("调用内置函数=>dbexecute \nsql=>", sql)
+        return op.db_execute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
+    else:
+        print("调用内置函数=>dbexecute \nsql=>", sql)
+        return op.db_execute(sql, taskid=taskid, callername=callername)
 
 
 def dbexecute2(sql, **kws):
-	"""
-	执行多条sql
-	某条执行失败返回失败信息
-	否则返回'success'
-	"""
-	taskid=kws['taskid']
-	callername=kws['callername']
+    """
+    执行多条sql
+    某条执行失败返回失败信息
+    否则返回'success'
+    """
+    taskid=kws['taskid']
+    callername=kws['callername']
 
-	if taskid is None:
-		return 'error', 'taskid为空'
-	
-	print('调用内置函数=>dbexecute2', taskid)
-	d = []
-	try:
-		sql = sql.replace('@@','$#$')
-		if re.search('@.*(;.*@)?', sql) is not None:
-			sqls1 = re.split("@", sql)
-			for i in range(len(sqls1)):
-				if i == 0:
-					continue
-				else:
-					# print(sqls1[i].split(";")[0])
-					sqls1[i - 1] += "@" + sqls1[i].split(";")[0]
-					sqls1[i] = sqls1[i].split(";", 1)[-1]
-			if sqls1[-2].endswith(sqls1[-1]):
-				sqls1.pop()
-			for sql in sqls1:
-				if '@' in sql:
-					sqls = sql.split("@")[0].split(";")
-					conname = sql.split('@')[1]
-					for sql in sqls:
-						if sql!='':
-							res, msg = dbexecute("%s@%s" % (sql, conname), taskid=taskid, callername=callername)
-							print('执行结果=>', (res, msg))
-							if res != 'success':
-								return res, msg
-							d.append(str(msg))
-				elif '@' not in sql:
-					sqls = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")
-					dbnamecache = get_top_common_config(taskid)
-					for sql in sqls:
-						if sql != '':
-							res, msg = dbexecute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
-							print('执行结果=>', (res, msg))
-							if res != 'success':
-								return res, msg
-							d.append(str(msg))
-			return 'success', '+'.join(d)
-		elif re.search('@', sql) is None:
-			sqls2 = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")
-			dbnamecache = get_top_common_config(taskid)
-			for sql in sqls2:
-				if sql != '':
-					res, msg = dbexecute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
-					print('执行结果=>', (res, msg))
-					if res != 'success':
-						return res, msg
-					d.append(str(msg))
-			return 'success', '+'.join(d)
-	
-	except:
-		print(traceback.format_exc())
-		return 'error', '执行内置函数报错sql[%s] error[%s]' % (sql, traceback.format_exc())
+    if taskid is None:
+        return 'error', 'taskid为空'
+
+    print('调用内置函数=>dbexecute2', taskid)
+    d = []
+    try:
+        sql = sql.replace('@@','$#$')
+        if re.search('@.*(;.*@)?', sql) is not None:
+            sqls1 = re.split("@", sql)
+            for i in range(len(sqls1)):
+                if i == 0:
+                    continue
+                else:
+                    # print(sqls1[i].split(";")[0])
+                    sqls1[i - 1] += "@" + sqls1[i].split(";")[0]
+                    sqls1[i] = sqls1[i].split(";", 1)[-1]
+            if sqls1[-2].endswith(sqls1[-1]):
+                sqls1.pop()
+            for sql in sqls1:
+                if '@' in sql:
+                    sqls = sql.split("@")[0].split(";")
+                    conname = sql.split('@')[1]
+                    for sql in sqls:
+                        if sql!='':
+                            res, msg = dbexecute("%s@%s" % (sql, conname), taskid=taskid, callername=callername)
+                            print('执行结果=>', (res, msg))
+                            if res != 'success':
+                                return res, msg
+                            d.append(str(msg))
+                elif '@' not in sql:
+                    sqls = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")
+                    dbnamecache = get_top_common_config(taskid)
+                    for sql in sqls:
+                        if sql != '':
+                            res, msg = dbexecute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
+                            print('执行结果=>', (res, msg))
+                            if res != 'success':
+                                return res, msg
+                            d.append(str(msg))
+            return 'success', '+'.join(d)
+        elif re.search('@', sql) is None:
+            sqls2 = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")
+            dbnamecache = get_top_common_config(taskid)
+            for sql in sqls2:
+                if sql != '':
+                    res, msg = dbexecute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
+                    print('执行结果=>', (res, msg))
+                    if res != 'success':
+                        return res, msg
+                    d.append(str(msg))
+            return 'success', '+'.join(d)
+
+    except:
+        print(traceback.format_exc())
+        return 'error', '执行内置函数报错sql[%s] error[%s]' % (sql, traceback.format_exc())
 
 
 
@@ -459,3 +459,54 @@ def  tuipiao_file_check(timeflag,t_templatename,td_templatename,t_checklist,td_c
     except:
         cout('退票校验异常:{}'.format(traceback.format_exc()),**kws)
         return False
+
+
+def replaceAndSend(filename, **kws):
+    '''
+    DSP配置文件替换及重启通用方法
+    '''
+    import os, chardet, re,winrm
+    from ME2.settings import BASE_URL
+    from manager.context import get_space_dir
+    from manager.models import FileMap,DBCon
+    filepath = os.path.join(get_space_dir(), filename)
+    if os.path.exists(filepath):
+        cout('【{}】文件存在'.format(filename), **kws)
+        with open(filepath, 'rb') as f:
+            file_encoding = chardet.detect(f.read()).get('encoding')
+        with open(filepath, 'r', encoding=file_encoding) as f:
+            text = f.read()
+            for key, v in kws.items():
+                p = re.compile(r'\{%s}'%(key))
+                text = p.sub(str(v), text)
+    # 		生成临时文件
+        tempfile = os.path.join(get_space_dir(), 'tempfile')
+        with open(tempfile, 'w',encoding='utf-8') as tf:
+            tf.write(text)
+    # 		远程服务器下载文件
+        fileinfo = FileMap.objects.values('customname','targetserver','targetpath','filename').get(path=filename)
+        fileurl = r"%s/file/tempfile?name=%s"%(BASE_URL,fileinfo['customname'])
+        cout('下载路径{}'.format(fileurl), **kws)
+        downloadPath = fileinfo['targetpath'] if fileinfo['targetpath'].__contains__(fileinfo['customname']) else fileinfo['targetpath']+'/'+fileinfo['customname']
+        cout('服务器文件路径：{}'.format(downloadPath), **kws)
+
+        hostinfo = DBCon.objects.values('host','port','username','password','description').get(id=int(fileinfo['targetserver']))
+
+        win = winrm.Session("http://{}:{}/wsman".format(hostinfo['host'],hostinfo['port']), auth=(hostinfo['username'], hostinfo['password']))
+        ret = win.run_ps(
+            r"""$client = new-object System.Net.WebClient;$client.DownloadFile("{}","{}")""".format(fileurl, downloadPath))
+        cout(ret.std_out.decode(), **kws)
+        cout(ret.std_err.decode(), **kws)
+        cout('服务器%s上文件下载成功<br>'%hostinfo['description'], **kws)
+        cout('=====开始重启dps服务=====', **kws)
+        ret = win.run_cmd(
+            r"""
+            cd E:\simbank\0226dsp\dsp && E: && dsp.exe restart
+            """)
+        cout(ret.std_out.decode(), **kws)
+        cout(ret.std_err.decode(), **kws)
+        cout('=重启dps服务成功=', **kws)
+        time.sleep(2)
+
+    else:
+        cout('【{}】文件不存在，请检查'.format(filename), **kws)

@@ -14,8 +14,8 @@ class Function(Model):
 	description = CharField(max_length=128)
 	flag = CharField(max_length=32)
 	body = TextField(null=True)
-	create_time = DateTimeField(auto_now_add=True)
-	update_time = DateTimeField(auto_now=True)
+	createtime = DateTimeField(auto_now_add=True)
+	updatetime = DateTimeField(auto_now=True)
 	
 	def __str__(self):
 		return self.name
@@ -450,12 +450,9 @@ class FileMap(Model):
 	filename = CharField(max_length=255)
 	customname = CharField(max_length=255)
 	path = CharField(max_length=255)
-	code = CharField(max_length=32)
-
-class StatusControl(Model):
-	name=CharField(max_length=11)
-	value=CharField(max_length=11)
-	createtime=DateTimeField(auto_now_add=True)
+	code = CharField(max_length=32,null=True)
+	targetpath = CharField(max_length=255,blank=True)
+	targetserver = CharField(max_length=32,blank=True)
 
 
 

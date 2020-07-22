@@ -773,7 +773,7 @@ def editbusiness(request):
     try:
         
         b = mm.BusinessData.objects.get(id=request.POST.get('uid').split('_')[1])
-        bcopyt=copy.deepcopy(b)
+        bcopy=copy.deepcopy(b)
         b.businessname = request.POST.get('businessname')
         bname = b.businessname
         b.itf_check = request.POST.get('itf_check')

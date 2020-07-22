@@ -455,6 +455,13 @@ class FileMap(Model):
 	targetserver = CharField(max_length=32,blank=True)
 
 
+class StatusControl(Model):
+	name=CharField(max_length=11)
+	value=CharField(max_length=11)
+	createtime=DateTimeField(auto_now_add=True)
+
+
+
 
 
 

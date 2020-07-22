@@ -2362,6 +2362,7 @@ def querylinkcontrol(request):
     kind=get_params(request)['kind']
     queryid='link_control_{}'.format(nid)
     is_exist=mm.StatusControl.objects.filter(name=queryid).exists()
+    mm.
     if is_exist:
         return {
             'status':'fail',

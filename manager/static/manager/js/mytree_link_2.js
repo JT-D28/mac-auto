@@ -94,7 +94,7 @@ var tree_link2 = {
                 $("#" + node_a_id).click();
 
             });
-
+onclick
             $('.loading').hide()
 
         }
@@ -779,7 +779,26 @@ var tree_link2 = {
                 });
 
             }
+               // console.log('开始处理特殊情况')
+            if(treeNode.checked==true){
+                var flag=false
+                for(var i=0;i<data.data.length;i++){
+                    if(data.data[i]['checked']==true){
+                        flag=true;
+                        break;
+                    }
 
+                }
+                // console.log('flag='+flag)
+                if(flag==false){
+                     for(var i=0;i<data.data.length;i++) {
+                         node=treeObj.getNodesByParam('id',data.data[i]['id'])[0]
+                         console.log('node:',node)
+                         node.checked=true
+                         treeObj.updateNode(node)
+                     }
+                }
+            }
         }
        _post_nl('/manager/querytreelist/', params, success)
 

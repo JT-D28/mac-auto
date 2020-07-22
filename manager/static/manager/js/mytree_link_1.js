@@ -761,7 +761,7 @@ var tree_link1 = {
             console.log('获取子节点数据 =>', params)
             data = JSON.parse(e)
             treeObj.removeChildNodes(treeNode)
-            // console.warn(data.data)
+
             treeObj.addNodes(treeNode, data.data);
             treeObj.expandNode(treeNode, true)
             //
@@ -777,7 +777,26 @@ var tree_link1 = {
                 });
 
             }
+                // console.log('开始处理特殊情况')
+            if(treeNode.checked==true){
+                var flag=false
+                for(var i=0;i<data.data.length;i++){
+                    if(data.data[i]['checked']==true){
+                        flag=true;
+                        break;
+                    }
 
+                }
+                // console.log('flag='+flag)
+                if(flag==false){
+                     for(var i=0;i<data.data.length;i++) {
+                         node=treeObj.getNodesByParam('id',data.data[i]['id'])[0]
+                         console.log('node:',node)
+                         node.checked=true
+                         treeObj.updateNode(node)
+                     }
+                }
+            }
         }
        _post_nl('/manager/querytreelist/', params, success)
 

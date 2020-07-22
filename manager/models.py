@@ -452,6 +452,10 @@ class FileMap(Model):
 	path = CharField(max_length=255)
 	code = CharField(max_length=32)
 
+class StatusControl(Model):
+	name=CharField(max_length=11)
+	value=CharField(max_length=11)
+	createtime=DateTimeField(auto_now_add=True)
 
 
 

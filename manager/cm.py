@@ -2360,7 +2360,7 @@ def _handlefulldata(data1,data2,user,flag):
 def querylinkcontrol(request):
     nid=get_params(request)['srcid']
     kind=get_params(request)['kind']
-    queryid='{}_{}'.format(kind,nid)
+    queryid='link_control_{}'.format(nid)
     is_exist=mm.StatusControl.objects.filter(name=queryid).exists()
     if is_exist:
         return {

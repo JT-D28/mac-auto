@@ -1,7 +1,7 @@
 var tree = {
     // _newCount:1,
     className: 'dark',
-    curNode:null,
+    curNode: null,
     _getsetting: function () {
         var setting =
             {
@@ -43,28 +43,28 @@ var tree = {
                     onExpand: this._onExpand,
                     onCollapse: this._onCollapse,
                     // onRightClick: this._onRightClick,
-                    onDragMove:this._onDragMove,
-                    onMouseUp:this._onMouseUp,
+                    onDragMove: this._onDragMove,
+                    onMouseUp: this._onMouseUp,
 
                 },
-            //     check: {
-            // 　　　　enable: true,   //true / false 分别表示 显示 / 不显示 复选框或单选框
-            // 　　　　autoCheckTrigger: true,   //true / false 分别表示 触发 / 不触发 事件回调函数
-            // 　　　　chkStyle: "checkbox",   //勾选框类型(checkbox 或 radio）
-            // 　　　　chkboxType: { "Y": "p", "N": "s" }   //勾选 checkbox 对于父子节点的关联关系
-            //     }
+                //     check: {
+                // 　　　　enable: true,   //true / false 分别表示 显示 / 不显示 复选框或单选框
+                // 　　　　autoCheckTrigger: true,   //true / false 分别表示 触发 / 不触发 事件回调函数
+                // 　　　　chkStyle: "checkbox",   //勾选框类型(checkbox 或 radio）
+                // 　　　　chkboxType: { "Y": "p", "N": "s" }   //勾选 checkbox 对于父子节点的关联关系
+                //     }
             }
 
         return setting
 
     },
 
-    init: function (searchvalue = '',id='#case-manager') {
+    init: function (searchvalue = '', id = '#case-manager') {
         // return
 
         //alert('tree init..')
         var t = this
-        this.id=id
+        this.id = id
         success = function (data) {
             data = JSON.parse(data);
             // console.log('用例树查询=>')
@@ -145,10 +145,10 @@ var tree = {
         _m1 = {
             'root': ['add'],
             'product': ['add', 'edit', 'del', 'mimport'],
-            'plan': ['add', 'edit', 'del', 'run', 'mexport', 'logs', 'config','replace'],
-            'case': ['add', 'edit', 'del', 'run','replace'],
-            'step': ['add', 'edit', 'del', 'run','replace','mock'],
-            'business': ['edit', 'del', 'run','replace']
+            'plan': ['add', 'edit', 'del', 'run', 'mexport', 'logs', 'config', 'replace', 'link'],
+            'case': ['add', 'edit', 'del', 'run', 'replace'],
+            'step': ['add', 'edit', 'del', 'run', 'replace', 'mock'],
+            'business': ['edit', 'del', 'run', 'replace']
         }
         _opinfo = {
 
@@ -163,7 +163,8 @@ var tree = {
             'logs': "<span class='fa icon-fa-bug' id='logs_#tid#' title='调试日志' onfocus='this.blur();'></span>",
             'config': "<span class='fa icon-fa-cog' id='config_#tid#' title='高级配置' onfocus='this.blur();'></span>",
             'replace': "<span class='fa fa-facebook' id='replace_#tid#' title='文本替换' onfocus='this.blur();'></span>",
-            'mock':"<span class='fa fa-gg' id='mock_#tid#' title='mock' onfocus='this.blur();'></span>",
+            'mock': "<span class='fa fa-gg' id='mock_#tid#' title='mock' onfocus='this.blur();'></span>",
+            'link': "<span class='fa fa-link' id='link_#tid#' title='link' onfocus='this.blur();'></span>",
         }
 
         var type = treeNode.type
@@ -205,6 +206,7 @@ var tree = {
         if ($("#config_" + treeNode.tId).length > 0) return
         if ($("#replace_" + treeNode.tId).length > 0) return
         if ($("#mock_" + treeNode.tId).length > 0) return
+        if ($("#link_" + treeNode.tId).length > 0) return
 
         sObj.after(btnstr);
 
@@ -399,7 +401,7 @@ var tree = {
                     function (data) {
                         if (data.data == 1) {
                             layer.msg("计划正在运行[调试]任务中，请稍后！")
-                        } else opendebug(treeNode.id.substr(5),treeNode.id)
+                        } else opendebug(treeNode.id.substr(5), treeNode.id)
                     })
                 return false;
             });
@@ -411,36 +413,36 @@ var tree = {
                 $('#rform')[0].reset()
 
                 layer.open({
-                    title: '替换节点文本['+treeNode.name+']',
+                    title: '替换节点文本[' + treeNode.name + ']',
                     type: 1,
                     content: $('#rform'),
-                    btn: ['应用','回退','取消'],
-                    area:['550px','450px'],
-                    yes:function(index,layero){
+                    btn: ['应用', '回退', '取消'],
+                    area: ['550px', '450px'],
+                    yes: function (index, layero) {
 
                         // alert($("[name='planname']").is(':checked'))
 
-                        _post('/manager/treecontrol/',{
-                            'uid':treeNode.id,
-                            'old':$('#old').val(),
-                            'new':$('#new').val(),
-                            'action':'replacetext',
-                            'check_plan':$("[name='planname']").is(':checked'),
-                            'check_case':$("[name='casename']").is(':checked'),
-                            'check_step':$("[name='stepname']").is(':checked'),
-                            'check_business':$("[name='businessname']").is(':checked'),
-                            'check_params':$("[name='params']").is(':checked'),
+                        _post('/manager/treecontrol/', {
+                            'uid': treeNode.id,
+                            'old': $('#old').val(),
+                            'new': $('#new').val(),
+                            'action': 'replacetext',
+                            'check_plan': $("[name='planname']").is(':checked'),
+                            'check_case': $("[name='casename']").is(':checked'),
+                            'check_step': $("[name='stepname']").is(':checked'),
+                            'check_business': $("[name='businessname']").is(':checked'),
+                            'check_params': $("[name='params']").is(':checked'),
                             'check_header': $("[name='header']").is(':checked'),
-                            'check_property':$("[name='property']").is(':checked'),
-                            'check_url':$("[name='stepurl']").is(':checked'),
-                        },function(e){
+                            'check_property': $("[name='property']").is(':checked'),
+                            'check_url': $("[name='stepurl']").is(':checked'),
+                        }, function (e) {
 
                             layer.close(index)
-                            if(e.code==0){
+                            if (e.code == 0) {
 
                                 //
                                 console.log('重新加载子节点')
-                                parentnode=treeNode.getParentNode()
+                                parentnode = treeNode.getParentNode()
                                 params = {'id': parentnode.id, 'type': parentnode.type}
                                 success = function (e) {
                                     console.log('重加载子节点数据 =>', params)
@@ -448,28 +450,27 @@ var tree = {
                                     var treeObj = $.fn.zTree.getZTreeObj(treeId);
                                     treeObj.removeChildNodes(parentnode)
                                     treeObj.addNodes(parentnode, data.data);
-                                    treeObj.expandNode(parentnode,true)
+                                    treeObj.expandNode(parentnode, true)
 
 
                                 }
                                 _post('/manager/querytreelist/', params, success)
 
-                                layer.alert(e.msg,{icon:1})
+                                layer.alert(e.msg, {icon: 1})
 
 
-                            }
-                            else
-                                layer.alert(e.msg,{icon:2})
+                            } else
+                                layer.alert(e.msg, {icon: 2})
                         })
 
                     },
-                    btn2:function(index,layero){
-                        _post('/manager/treecontrol/',{'uid':treeNode.id,'action':'replacerecover'},function(e){
+                    btn2: function (index, layero) {
+                        _post('/manager/treecontrol/', {'uid': treeNode.id, 'action': 'replacerecover'}, function (e) {
                             layer.close(index)
-                            if(e.code==0)
-                                layer.alert(e.msg,{icon:1})
+                            if (e.code == 0)
+                                layer.alert(e.msg, {icon: 1})
                             else
-                                layer.alert(e.msg,{icon:2})
+                                layer.alert(e.msg, {icon: 2})
 
 
                         })
@@ -478,31 +479,55 @@ var tree = {
                 });
 
             })
+
+            //link
+            var link_btn = $("#link_" + treeNode.tId);
+            if (link_btn) link_btn.bind("click", function () {
+                _post('/manager/treecontrol/', {'action':'querylinkcontrol','srcid': treeNode.id, 'kind': 'link_control'}, function (e) {
+
+                    if (e.code != 0) {
+                        layer.alert('已有关联还没处理完')
+                        return
+                    }
+                    var o = layer.open({
+                        type: 2,
+                        title: '配置用例关联',
+                        content: '/manager/link/?srcid=' + treeNode.id,
+                        btn: ['关闭'],
+
+                    });
+                    layer.full(o);
+
+                })
+
+
+            })
+
+
             //mock
             var mock_btn = $("#mock_" + treeNode.tId);
             if (mock_btn) mock_btn.bind("click", function () {
                 // alert(treeNode.id)
-                console.log('http://'+host+'/manager/simpletest/?nodeid='+treeNode.id)
-                success=function(e) {
+                console.log('http://' + host + '/manager/simpletest/?nodeid=' + treeNode.id)
+                success = function (e) {
 
-                    if(e.code!=0){
-                        layer.alert(e.msg,{icon:2})
+                    if (e.code != 0) {
+                        layer.alert(e.msg, {icon: 2})
                         return
 
                     }
 
-                layer.open({
-                    'title':'mock管理',
-                    'type':2,
-                    'content':'http://'+host+'/manager/simpletest/?nodeid='+treeNode.id,
-                    'btn': ['ok'],
-                    'area':['750px','540px'],
-                });
+                    layer.open({
+                        'title': 'mock管理',
+                        'type': 2,
+                        'content': 'http://' + host + '/manager/simpletest/?nodeid=' + treeNode.id,
+                        'btn': ['ok'],
+                        'area': ['750px', '540px'],
+                    });
 
                 }
 
-                _get('/manager/querysteptype/',{'sid':treeNode.id},success)
-
+                _get('/manager/querysteptype/', {'sid': treeNode.id}, success)
 
 
             });
@@ -513,9 +538,9 @@ var tree = {
                     if (data.running == 0) {
                         var url = '/homepage/statisticalAnalysis/?plan=' + planid + '&debug=1&node=' + nodeid
                     } else {
-                        if (data.running=='debug'){
+                        if (data.running == 'debug') {
                             var url = '/homepage/runstatus/?plan=' + planid + '&taskid=' + data.taskid
-                        }else {
+                        } else {
                             layer.msg("计划正在进行【验证任务】")
                         }
                     }
@@ -671,6 +696,7 @@ var tree = {
         $("#config_" + treeNode.tId).unbind().remove();
         $("#replace_" + treeNode.tId).unbind().remove();
         $("#mock_" + treeNode.tId).unbind().remove();
+        $("#link_" + treeNode.tId).unbind().remove();
     },
 
     _onBeforeExpand: function (e, treeId, treeNode) {
@@ -854,7 +880,7 @@ var tree = {
         }
 
         var treeObj = $.fn.zTree.getZTreeObj(treeId);
-    
+
         if (treeNodes.length > 1 && moveType === 'inner') {
             var nodeids = '';
             treeNodes.forEach(function (item) {
@@ -872,7 +898,7 @@ var tree = {
                 success = function (e) {
                     console.log('重加载子节点数据 =>', params)
                     data = JSON.parse(e)
-  
+
                     treeObj.removeChildNodes(node)
                     treeObj.addNodes(node, data.data);
                     treeObj.expandNode(node, true)
@@ -959,55 +985,48 @@ var tree = {
         });
     },
 
-    _onDragMove:function(e, treeId, treeNodes){
+    _onDragMove: function (e, treeId, treeNodes) {
         console.log('==ondragmove==')
         console.log(treeNodes)
-        if(treeNodes.length>0){
-            localStorage.setItem("curNode",JSON.stringify(treeNodes[0]))
+        if (treeNodes.length > 0) {
+            localStorage.setItem("curNode", JSON.stringify(treeNodes[0]))
             console.log('设置curnode')
         }
 
 
-
-
     },
-    _onMouseUp:function(e, treeId, treeNode){
+    _onMouseUp: function (e, treeId, treeNode) {
         console.log('===onMouseUp==')
 
     },
 
 
-    bindMouseOver:function(e) {
+    bindMouseOver: function (e) {
         console.log('==bindMouseOver=')
         var target = e.target;
 
-        console.log('当前curnode:'+tree.curNode)
+        console.log('当前curnode:' + tree.curNode)
 
-        if (target!=null) {
+        if (target != null) {
             var doc = $(document)
             var target = $(target)
-            if(tree.curNode){
+            if (tree.curNode) {
                 console.log(target)
-                target.attr('value',tree.curNode.name)
+                target.attr('value', tree.curNode.name)
             }
         }
-        if(e.preventDefault) {
+        if (e.preventDefault) {
             e.preventDefault();
         }
     },
-    bindMouseOut:function(e){
+    bindMouseOut: function (e) {
         console.log('==bindMouseOut==')
-
-
-
 
 
     }
 
 
 }
-
-
 
 
 function getRightMenu(event, treeNode) {

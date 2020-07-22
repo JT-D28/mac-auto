@@ -2,6 +2,7 @@ var tree_link2 = {
     // _newCount:1,
     className: 'dark',
     curNode:null,
+    srcid:'',
     _getsetting: function () {
         var setting =
             {
@@ -51,7 +52,7 @@ var tree_link2 = {
             　　　　enable: true,   //true / false 分别表示 显示 / 不显示 复选框或单选框
             　　　　autoCheckTrigger: true,   //true / false 分别表示 触发 / 不触发 事件回调函数
             　　　　chkStyle: "checkbox",   //勾选框类型(checkbox 或 radio）
-            　　　　chkboxType: { "Y": "p", "N": "s" }   //勾选 checkbox 对于父子节点的关联关系
+            　　　　chkboxTyoe:{"Y":"ps","N":"ps"}  //勾选 checkbox 对于父子节点的关联关系
                 }
             }
 
@@ -59,12 +60,13 @@ var tree_link2 = {
 
     },
 
-    init: function (searchvalue = '',srcid='') {
+    init: function (searchvalue = '',srcid) {
         // return
 
         //alert('tree init..')
         var t = this
-        this.id=id
+        // this.srcid=srcid
+        
         success = function (data) {
             data = JSON.parse(data);
             // console.log('用例树查询=>')
@@ -79,7 +81,10 @@ var tree_link2 = {
             // console.log('基本配置=>')
             // console.log(setting)
             // alert(t.id)
-            $.fn.zTree.init($(t.id), setting, data.data);
+            $.fn.zTree.init($('#case-manager2'), setting, data.data);
+            treeObj=$.fn.zTree.getZTreeObj('case-manager2')
+            // treeObj.srcid=srcid
+            // console.log('init srcid：'+treeObj.srcid)
 
             //
             $("[switcher]").click(function () {
@@ -89,15 +94,19 @@ var tree_link2 = {
                 $("#" + node_a_id).click();
 
             });
+onclick
+            $('.loading').hide()
 
         }
 
         param = {
-            'searchvalue': searchvalue
+            'searchvalue': searchvalue,
+            'srcid':srcid,
+            'flag':1
         }
 
 
-        _post('/manager/querytreelist/', param, success)
+        _post_nl('/manager/querytreelist/', param, success)
 
     },
 
@@ -143,12 +152,12 @@ var tree_link2 = {
     _addHoverDom: function (treeId, treeNode) {
 
         _m1 = {
-            'root': ['add'],
-            'product': ['add', 'edit', 'del', 'mimport'],
-            'plan': ['add', 'edit', 'del', 'run', 'mexport', 'logs', 'config','replace'],
-            'case': ['add', 'edit', 'del', 'run','replace'],
-            'step': ['add', 'edit', 'del', 'run','replace','mock'],
-            'business': ['edit', 'del', 'run','replace']
+            // 'root': ['add'],
+            // 'product': ['add', 'edit', 'del', 'mimport'],
+            // 'plan': ['add', 'edit', 'del', 'run', 'mexport', 'logs', 'config','replace'],
+            // 'case': ['add', 'edit', 'del', 'run','replace'],
+            // 'step': ['add', 'edit', 'del', 'run','replace','mock'],
+            // 'business': ['edit', 'del', 'run','replace']
         }
         _opinfo = {
 
@@ -294,7 +303,7 @@ var tree_link2 = {
                                             layer.alert('不允许强制删除')
                                         }
 
-                                        _post('/manager/treecontrol/', {
+                                        _post_nl('/manager/treecontrol/', {
                                             'action': 'del_node_force',
                                             'ids': treeNode.id
                                         }, success)
@@ -306,7 +315,7 @@ var tree_link2 = {
                     }
 
                 };
-                _post('/manager/treecontrol/', {
+                _post_nl('/manager/treecontrol/', {
                     'action': 'del' + treeNode.type,
                     'ids': treeNode.id
                 }, success)
@@ -362,7 +371,7 @@ var tree_link2 = {
             //RUN
             run_btn = $("#run_" + treeNode.tId)
             if (run_btn) run_btn.bind("click", function () {
-                _post('/manager/treecontrol/', {
+                _post_nl('/manager/treecontrol/', {
                     'action': 'run',
                     'ids': treeNode.id,
                     'is_verify': '0'
@@ -395,7 +404,7 @@ var tree_link2 = {
 
             logs_btn = $("#logs_" + treeNode.tId)
             if (logs_btn) logs_btn.bind("click", function () {
-                _post('/homepage/queryPlanState/', {'id': treeNode.id.substr(5), 'type': 'debug'},
+                _post_nl('/homepage/queryPlanState/', {'id': treeNode.id.substr(5), 'type': 'debug'},
                     function (data) {
                         if (data.data == 1) {
                             layer.msg("计划正在运行[调试]任务中，请稍后！")
@@ -420,7 +429,7 @@ var tree_link2 = {
 
                         // alert($("[name='planname']").is(':checked'))
 
-                        _post('/manager/treecontrol/',{
+                        _post_nl('/manager/treecontrol/',{
                             'uid':treeNode.id,
                             'old':$('#old').val(),
                             'new':$('#new').val(),
@@ -452,7 +461,7 @@ var tree_link2 = {
 
 
                                 }
-                                _post('/manager/querytreelist/', params, success)
+                                _post_nl('/manager/querytreelist/', params, success)
 
                                 layer.alert(e.msg,{icon:1})
 
@@ -464,7 +473,7 @@ var tree_link2 = {
 
                     },
                     btn2:function(index,layero){
-                        _post('/manager/treecontrol/',{'uid':treeNode.id,'action':'replacerecover'},function(e){
+                        _post_nl('/manager/treecontrol/',{'uid':treeNode.id,'action':'replacerecover'},function(e){
                             layer.close(index)
                             if(e.code==0)
                                 layer.alert(e.msg,{icon:1})
@@ -509,7 +518,7 @@ var tree_link2 = {
 
 
             function opendebug(planid, nodeid) {
-                _post_nl('/homepage/queryPlanState/', {id: planid, 'type': 'debug'}, function (data) {
+               _post_nl('/homepage/queryPlanState/', {id: planid, 'type': 'debug'}, function (data) {
                     if (data.running === 0) {
                         var url = '/homepage/statisticalAnalysis/?plan=' + planid + '&debug=1&node=' + nodeid
                     } else {
@@ -601,7 +610,7 @@ var tree_link2 = {
             }
 
             function querydebug(id, type, taskid) {
-                _post_nl('/homepage/plandebug/', {
+               _post_nl('/homepage/plandebug/', {
                     'id': id,
                     'type': type,
                     'taskid': taskid
@@ -636,7 +645,7 @@ var tree_link2 = {
                             elem: '#demo3', id: 'demo3', data: data.data, accordion: true, showLine: true,
                             click: function (obj) {
                                 $("#debuginfo").css('display', 'inherit');
-                                _post_nl('/homepage/plandebug/', {
+                               _post_nl('/homepage/plandebug/', {
                                     'id': obj.data.title + ";" + obj.data.casename + ";" + obj.data.stepname + ";" + obj.data.id,
                                     'type': 'bussiness',
                                     'taskid': data.taskid
@@ -699,7 +708,7 @@ var tree_link2 = {
     _beforeClick: function (treeId, treeNode, clickFlag) {
         if (clickFlag === 2 || clickFlag === 0) {
             if (treeNode.type !== 'product' || treeNode.type !== 'root') {
-                var treeObj = $.fn.zTree.getZTreeObj(this.id);
+                var treeObj = $.fn.zTree.getZTreeObj('case-manager2');
                 flag = 0;
                 var selectnodes = treeObj.getSelectedNodes();
                 if (selectnodes.length == 1 && selectnodes[0].type !== treeNode.type) {
@@ -728,9 +737,13 @@ var tree_link2 = {
             return
         }
 
+        
+
+
         console.log('节点expand状态=>' + treeNode.open)
 
         var treeObj = $.fn.zTree.getZTreeObj(treeId);
+        console.log('srcid:'+JSON.stringify(this.srcid))
         // var node = treeObj.getNodeByTId(treeNode.tId);
 
         if (treeNode.type == 'root') return
@@ -743,7 +756,9 @@ var tree_link2 = {
             return
         }
 
-        params = {'id': treeNode.id, 'type': treeNode.type,'nid':treeN}
+        checkflag=treeNode.checked==true?'1':'0'
+
+        params = {'id': treeNode.id, 'type': treeNode.type,'srcid':_get_query_param('srcid'),'flag':'1','checkflag':checkflag}
         success = function (e) {
             console.log('获取子节点数据 =>', params)
             data = JSON.parse(e)
@@ -764,9 +779,28 @@ var tree_link2 = {
                 });
 
             }
+               // console.log('开始处理特殊情况')
+            if(treeNode.checked==true){
+                var flag=false
+                for(var i=0;i<data.data.length;i++){
+                    if(data.data[i]['checked']==true){
+                        flag=true;
+                        break;
+                    }
 
+                }
+                // console.log('flag='+flag)
+                if(flag==false){
+                     for(var i=0;i<data.data.length;i++) {
+                         node=treeObj.getNodesByParam('id',data.data[i]['id'])[0]
+                         console.log('node:',node)
+                         node.checked=true
+                         treeObj.updateNode(node)
+                     }
+                }
+            }
         }
-        _post_nl('/manager/querytreelist/', params, success)
+       _post_nl('/manager/querytreelist/', params, success)
 
 
     },
@@ -855,7 +889,7 @@ var tree_link2 = {
             treeNodes.forEach(function (item) {
                 nodeids += item.id + ';'
             });
-            _post('/manager/treecontrol/', {
+            _post_nl('/manager/treecontrol/', {
                 'action': 'movemulitnodes',
                 'move_type': moveType,
                 'src_ids': nodeids,
@@ -872,10 +906,10 @@ var tree_link2 = {
                     treeObj.addNodes(node, data.data);
                     treeObj.expandNode(node, true)
                 }
-                _post('/manager/querytreelist/', params, success)
+                _post_nl('/manager/querytreelist/', params, success)
             })
         } else if (treeNodes.length === 1) {
-            _post('/manager/treecontrol/', {
+            _post_nl('/manager/treecontrol/', {
                 'action': 'movenode',
                 'move_type': moveType,
                 'src_id': treeNodes[0].id,
@@ -896,7 +930,7 @@ var tree_link2 = {
                     treeObj.addNodes(node, data.data);
                     treeObj.expandNode(node, true)
                 }
-                _post('/manager/querytreelist/', params, success)
+                _post_nl('/manager/querytreelist/', params, success)
             })
         }
 
@@ -927,7 +961,7 @@ var tree_link2 = {
                 layer.msg('获取成功')
                 oInput.remove()
             } else if ($(this)[0].id === 'run') {
-                _post('/manager/treecontrol/', {
+                _post_nl('/manager/treecontrol/', {
                     'action': 'run', 'ids': treeNode.id, 'is_verify': '0'
                 }, function (data) {
                     if (data.code == 0) {
@@ -946,7 +980,7 @@ var tree_link2 = {
                     }
                 })
             } else if ($(this)[0].id === 'get_select_nodes') {
-                var nodes = $.fn.zTree.getZTreeObj(this.id).getSelectedNodes().id;
+                var nodes = $.fn.zTree.getZTreeObj('case-manager2').getSelectedNodes().id;
                 console.log(nodes)
             } else {
                 layer.msg('暂不支持')

@@ -796,6 +796,16 @@ var tree_link1 = {
                          treeObj.updateNode(node)
                      }
                 }
+            }else{
+
+                for(var i=0;i<data.data.length;i++){
+                    node=treeObj.getNodesByParam('id',data.data[i]['id'])[0]
+                     node.checked=false
+                     treeObj.updateNode(node)
+
+
+                }
+
             }
         }
        _post_nl('/manager/querytreelist/', params, success)

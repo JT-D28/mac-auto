@@ -1588,13 +1588,14 @@ def get_link_left_tree(nid):
         productlist = list(mm.Product.objects.all().exclude(isdelete=1))
         # logger.info('productlist:',productlist)
         for product in productlist:
-            datanode.append({
-                'id': 'product_%s' % product.id,
-                'pId': -1,
-                'name': product.description,
-                'type': 'product',
-                'textIcon': 'fa icon-fa-home'
-            })
+            if str(product.id) == str(parent_product_id):
+                datanode.append({
+                    'id': 'product_%s' % product.id,
+                    'pId': -1,
+                    'name': product.description,
+                    'type': 'product',
+                    'textIcon': 'fa icon-fa-home'
+                })
 
     return datanode
     # logger.info('开始计算左侧树数据 源id={}.'.format(nid))

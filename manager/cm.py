@@ -1557,92 +1557,132 @@ def get_search_match(searchvalue):
 
 
 def get_link_left_tree(nid):
-    logger.info('开始计算左侧树数据 源id={}.'.format(nid))
-
+    logger.info('开始计算左侧数据')
+    #wait_del=_get_all_child_node_id(nid)#查询时间过大如果nid子节点复杂
+    wait_del=[]
     datanode=[]
-    planid=nid.split('_')[1]
-    flag=None
-    histroy=mm.EditLink.objects.filter(snid=nid)
-    if histroy.exists():
-        flag=list(histroy)[0].flag
+    history=mm.EditLink.objects.filter(snid=nid)
 
-    ##默认展开到计划层
-    datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p'})
-    productlist = list(mm.Product.objects.all().exclude(isdelete=1))
-    # logger.info('productlist:',productlist)
-    productid=_get_node_parent_info('plan',planid)[1]
-    product=mm.Product.objects.get(id=productid)
-
-    datanode.append({
-        'id': 'product_%s' % product.id,
-        'pId': -1,
-        'name': product.description,
-        'type': 'product',
-        'textIcon': 'fa icon-fa-home',
-    })
-
-
-    plan=mm.Plan.objects.get(id=planid)
-    datanode.append({
-        'id': 'plan_%s' % plan.id,
-        'pId': 'product_%s' % product.id,
-        'name': plan.description,
-        'type': 'plan',
-        'textIcon': 'fa icon-fa-product-hunt',
-
-    })
-
-    ##有具体关联时 构造完成展现数据
-    snids=[]
-    if flag:
-        snids=[x.snid for x in mm.EditLink.objects.filter(flag=flag)]
-        snids.append(-1)
-
-        for snid in snids:
-            if snid==-1:
-                continue;
-            if snid.startswith('business'):
-                business=mm.BusinessData.objects.get(id=snid.split('_')[1])
+    parent_product_id=mm.Order.objects.get(kind='product_plan',follow_id=nid.split('_')[1]).main_id
+    product_name=mm.Product.objects.get(id=parent_product_id).description
+    logger.info('productname:{}'.format(product_name))
+    if history.exists():
+        logger.info('有历史数据')
+        datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True,'checked':True})
+        productlist = list(mm.Product.objects.all().exclude(isdelete=1))
+        for product in productlist:
+            if str(product.id)==str(parent_product_id):
+                #mm.Product.objects.get(id=parent_product_id).description
                 datanode.append({
-                    'id': 'business_%s' % business.id,
-                    'pId': 'step_%s' % _get_node_parent_info('business',business.id)[1],
-                    'name': business.businessname,
-                    'type': 'business',
-                    'textIcon': 'fa icon-fa-leaf',
+                    'id': 'product_%s' % product.id,
+                    'pId': -1,
+                    'name': product.description,
+                    'type': 'product',
+                    'textIcon': 'fa icon-fa-home'
                 })
+                datanode[-1]['checked']=True
 
-            elif snid.startswith('step'):
-                step=mm.Step.objects.get(id=snid.split('_')[1])
-                datanode.append({
-                        'id': 'step_%s' % step.id,
-                        'pId': 'case_%s' % _get_node_parent_info('step',step.id)[1],
-                        'name': step.description,
-                        'type': 'step',
-                        'textIcon': 'fa icon-fa-file-o',
-                    })
+    else:
+        logger.info('无历史数据')
+        datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True})
+        productlist = list(mm.Product.objects.all().exclude(isdelete=1))
+        # logger.info('productlist:',productlist)
+        for product in productlist:
+            datanode.append({
+                'id': 'product_%s' % product.id,
+                'pId': -1,
+                'name': product.description,
+                'type': 'product',
+                'textIcon': 'fa icon-fa-home'
+            })
 
-            elif snid.startswith('case'):
-                case=mm.Case.objects.get(id=snid.split('_')[1])
-                parent_node_info=_get_node_parent_info('case',case.id)
-                parent_kind=parent_node_info[0]
-                parent_id=parent_node_info[1]
-                datanode.append({
-                    'id': 'case_%s' % case.id,
-                    'pId': '%s_%s' % (parent_kind,parent_id),
-                    'name': case.description,
-                    'type': 'case',
-                    'textIcon': 'fa icon-fa-folder',
-                })
-
-    #所有展现数据构造完成
-    #设置open checked
-    for node in datanode:
-        node['open']=True
-        if node['id'] in snids:
-            node['checked']=True
-
-    #logger.info('左侧tree数据:\n{}'.format(datanode))
     return datanode
+    # logger.info('开始计算左侧树数据 源id={}.'.format(nid))
+    #
+    # datanode=[]
+    # planid=nid.split('_')[1]
+    # flag=None
+    # histroy=mm.EditLink.objects.filter(snid=nid)
+    # if histroy.exists():
+    #     flag=list(histroy)[0].flag
+    #
+    # ##默认展开到计划层
+    # datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p'})
+    # productlist = list(mm.Product.objects.all().exclude(isdelete=1))
+    # # logger.info('productlist:',productlist)
+    # productid=_get_node_parent_info('plan',planid)[1]
+    # product=mm.Product.objects.get(id=productid)
+    #
+    # datanode.append({
+    #     'id': 'product_%s' % product.id,
+    #     'pId': -1,
+    #     'name': product.description,
+    #     'type': 'product',
+    #     'textIcon': 'fa icon-fa-home',
+    # })
+    #
+    #
+    # plan=mm.Plan.objects.get(id=planid)
+    # datanode.append({
+    #     'id': 'plan_%s' % plan.id,
+    #     'pId': 'product_%s' % product.id,
+    #     'name': plan.description,
+    #     'type': 'plan',
+    #     'textIcon': 'fa icon-fa-product-hunt',
+    #
+    # })
+    #
+    # ##有具体关联时 构造完成展现数据
+    # snids=[]
+    # if flag:
+    #     snids=[x.snid for x in mm.EditLink.objects.filter(flag=flag)]
+    #     snids.append(-1)
+    #
+    #     for snid in snids:
+    #         if snid==-1:
+    #             continue;
+    #         if snid.startswith('business'):
+    #             business=mm.BusinessData.objects.get(id=snid.split('_')[1])
+    #             datanode.append({
+    #                 'id': 'business_%s' % business.id,
+    #                 'pId': 'step_%s' % _get_node_parent_info('business',business.id)[1],
+    #                 'name': business.businessname,
+    #                 'type': 'business',
+    #                 'textIcon': 'fa icon-fa-leaf',
+    #             })
+    #
+    #         elif snid.startswith('step'):
+    #             step=mm.Step.objects.get(id=snid.split('_')[1])
+    #             datanode.append({
+    #                     'id': 'step_%s' % step.id,
+    #                     'pId': 'case_%s' % _get_node_parent_info('step',step.id)[1],
+    #                     'name': step.description,
+    #                     'type': 'step',
+    #                     'textIcon': 'fa icon-fa-file-o',
+    #                 })
+    #
+    #         elif snid.startswith('case'):
+    #             case=mm.Case.objects.get(id=snid.split('_')[1])
+    #             parent_node_info=_get_node_parent_info('case',case.id)
+    #             parent_kind=parent_node_info[0]
+    #             parent_id=parent_node_info[1]
+    #             datanode.append({
+    #                 'id': 'case_%s' % case.id,
+    #                 'pId': '%s_%s' % (parent_kind,parent_id),
+    #                 'name': case.description,
+    #                 'type': 'case',
+    #                 'textIcon': 'fa icon-fa-folder',
+    #             })
+    #
+    # #所有展现数据构造完成
+    # #设置open checked
+    # for node in datanode:
+    #     node['open']=True
+    #     if node['id'] in snids:
+    #         node['checked']=True
+    #
+    # #logger.info('左侧tree数据:\n{}'.format(datanode))
+    # return datanode
 
 def set_node_checkflag(node,checkflag,nodes):
     for node in nodes:
@@ -1657,39 +1697,24 @@ def get_link_right_tree(nid):
     datanode=[]
     history=mm.EditLink.objects.filter(snid=nid)
 
+    parent_product_id=mm.Order.objects.get(kind='product_plan',follow_id=nid.split('_')[1]).main_id
+    parent_product_right_ids=[x.tnid for x in mm.EditLink.objects.filter(snid='product_{}'.format(parent_product_id))]
+    logger.info('right ids:{}'.format(parent_product_right_ids))
     if history.exists():
         logger.info('有历史数据')
-        tnids=[x.tnid for x in mm.EditLink.objects.filter(flag=list(history)[0].flag)]
-
-        ##加上root 和所属产品
-        tnids.append(-1)
-        tnids.append('product_{}'.format(_get_node_parent_info('plan',nid.split('_')[1])[1]))
-        tnids=list(set(tnids))
-        logger.info('右侧需要勾选的项：{}'.format(tnids))
-
-        nodes=get_full_tree()
-        datanode=copy.deepcopy(nodes)
-        for node,node0 in zip(nodes,datanode):
-            # if node['id'] in tnids:
-            #     node0['checked']=True
-            #     _expand_parent(node0, datanode)
-
-            if node['id']==-1:
-                node0['checked']=True
-
-            elif node['id'] in wait_del:
-                logger.info('清除node：{}'.format(node))
-                datanode.remove(node)
-
-        for node in datanode:
-            # if node['type'].startswith('bu'):
-            #     logger.info('eys')
-
-            if node['id'] in tnids:
-                node['checked']=True
-                # logger.info('展开tnid:',str(node['id']),' 父节点')
-                _expand_parent(node, datanode)         
-
+        datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True,'checked':True})
+        productlist = list(mm.Product.objects.all().exclude(isdelete=1))
+        # logger.info('productlist:',productlist)
+        for product in productlist:
+            datanode.append({
+                'id': 'product_%s' % product.id,
+                'pId': -1,
+                'name': product.description,
+                'type': 'product',
+                'textIcon': 'fa icon-fa-home'
+            })
+            if 'product_{}'.format(product.id) in parent_product_right_ids:
+                datanode[-1]['checked']=True
 
     else:
         logger.info('无历史数据')
@@ -1703,20 +1728,7 @@ def get_link_right_tree(nid):
                 'name': product.description,
                 'type': 'product',
                 'textIcon': 'fa icon-fa-home'
-            })  
-
-       #无效 
-
-        # for node in datanode:
-        #     if node['id']==-1:
-        #         node['checked']=True
-
-        #     elif node['id'] in wait_del:
-        #         logger.info('清除node：{}'.format(node))
-        #         datanode.remove(node)
-
-
-    #logger.info('右侧树数据：\n{}'.format(datanode))
+            })
 
     return datanode
 
@@ -2362,7 +2374,6 @@ def querylinkcontrol(request):
     kind=get_params(request)['kind']
     queryid='link_control_{}'.format(nid)
     is_exist=mm.StatusControl.objects.filter(name=queryid).exists()
-    mm.
     if is_exist:
         return {
             'status':'fail',

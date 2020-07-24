@@ -46,7 +46,7 @@ async def dealruninfo(planid, taskid, info=None, startnodeid=''):
 		else:
 			data['root'].append({'id': 'case_%s' % case.id, 'name': case.description + '(不执行)',
 			                     'type': 'case', 'icon': 'fa icon-fa-folder', 'state': 'omit'})
-	Mongo.taskinfo()[taskid].insert_one(data)
+	Mongo.taskinfo(taskid).insert_one(data)
 
 
 def getcasemap(caseid, data, taskid):
@@ -146,9 +146,9 @@ async def dealDeBuginfo(taskid):
 	t1 = time.time()
 	try:
 		while 1:
-			newcount = Mongo.tasklog()[taskid].count_documents({})
+			newcount = Mongo.tasklog(taskid).count_documents({})
 			if newcount != oldcount:
-				res = Mongo.tasklog()[taskid].find().limit(newcount - oldcount).skip(oldcount)
+				res = Mongo.tasklog(taskid).find().limit(newcount - oldcount).skip(oldcount)
 				for i in res:
 					temp = i['info'].replace('\n', '').replace(
 						"'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36', ",
@@ -181,7 +181,7 @@ def insertBussinessInfo(str, taskid):
 	bussinessid = re.findall("id='business_(.*?)'>", str)[0]
 	bussinessdes = re.findall("id='business_.*?'>(.*?)</span>]", str)[0]
 	result = re.findall("=>执行结果.*?class='layui-bg.*?>(.*?)</span>", str)[0]
-	Mongo.logspilt()[taskid].insert_one(
+	Mongo.logspilt(taskid).insert_one(
 		{'stepid': stepid, 'stepdes': stepdes, 'businessid': bussinessid, 'bussinessdes': bussinessdes,
 		 'result': result, 'info': str.replace("        ", '\n')})
 

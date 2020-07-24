@@ -8,7 +8,6 @@ import asyncio
 from itertools import chain
 from urllib import parse
 
-import pymongo
 from django.conf import settings
 from django.db import connection
 from django.db.models import Q
@@ -605,10 +604,7 @@ def _step_process_check(callername, taskid, order, kind):
             else:
                 return ('fail', 'statuscode=%s' % statuscode)
             
-            if itf_msg:
-                logger.info('################itf-msg###############' * 20)
-                return ('fail', itf_msg)
-        
+
         elif step.step_type == "function":
             viewcache(taskid, username, kind, "数据校验配置=>%s" % db_check)
             # viewcache("接口返回校验=>%s"%itf_check)
@@ -2191,30 +2187,3 @@ class JSONParser(Struct):
         else:
             logger.info(errms)
             return chainstr
-
-
-
-
-
-def upload_personal_file(filemap, username):
-    upload_dir = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File')
-    try:
-
-        if not os.path.exists(upload_dir):
-            os.makedirs(upload_dir)
-
-        for filename in filemap:
-            filepath = os.path.join(upload_dir, filename)
-            with open(filepath, 'wb') as f:
-                f.write(filemap[filename])
-    except:
-        logger.info(traceback.format_exc())
-        return ('error', '写入异常' + traceback.format_exc())
-
-    return ('success', '本地写完')
-
-
-
-
-
-

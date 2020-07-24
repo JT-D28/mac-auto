@@ -159,16 +159,16 @@ class ConsoleConsumer(WebsocketConsumer):
         try:
             oldcount = 0
             while 1:
-                newcount = Mongo.tasklog()[taskid].count_documents({})
-                print("asd",newcount)
+                newcount = Mongo.tasklog(taskid).count_documents({})
                 if newcount != oldcount:
-                    res = Mongo.tasklog()[taskid].find({},{"info":1,"_id":0}).limit(newcount - oldcount).skip(oldcount)
+                    res = Mongo.tasklog(taskid).find({},{"info":1,"_id":0}).limit(newcount - oldcount).skip(oldcount)
                     for i in res:
                         self.send(i['info'])
                         if '结束计划' in i['info']:
                             raise Exception
                         time.sleep(0.01)
                     oldcount = newcount
+                time.sleep(0.05)
         except:
             pass
 

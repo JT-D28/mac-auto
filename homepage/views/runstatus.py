@@ -101,9 +101,9 @@ class getlog(WebsocketConsumer):
 		try:
 			oldcount = 0
 			while self.con == 1:
-				newcount = Mongo.tasklog()[taskid].count_documents({})
+				newcount = Mongo.tasklog(taskid).count_documents({})
 				if newcount != oldcount:
-					res = Mongo.tasklog()[taskid].find({}, {"info": 1, "_id": 0}).limit(newcount - oldcount).skip(
+					res = Mongo.tasklog(taskid).find({}, {"info": 1, "_id": 0}).limit(newcount - oldcount).skip(
 						oldcount)
 					list = [i['info'] for i in res]
 					async_to_sync(get_channel_layer().send)(
@@ -113,11 +113,11 @@ class getlog(WebsocketConsumer):
 							"message": list
 						}
 					)
-					time.sleep(0.05)
 					oldcount = newcount
 					for i in list:
 						if '结束计划' in i:
 							raise Exception
+				time.sleep(0.05)
 		except:
 			pass
 

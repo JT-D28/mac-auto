@@ -15,9 +15,9 @@ def downloadlog(request):
 	list = []
 	try:
 		while 1:
-			newcount = Mongo.tasklog()[taskid].count_documents({})
+			newcount = Mongo.tasklog(taskid).count_documents({})
 			if newcount != oldcount:
-				res = Mongo.tasklog()[taskid].find().limit(newcount - oldcount).skip(oldcount)
+				res = Mongo.tasklog(taskid).find().limit(newcount - oldcount).skip(oldcount)
 				for i in res:
 					temp = i['info'].replace('\n', '').replace(
 						"'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36', ",

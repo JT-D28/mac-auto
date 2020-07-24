@@ -227,14 +227,7 @@ logme = logging.getLogger("django")
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-# STATICFILES_DIRS = [
-# 	os.path.join(BASE_DIR, "login/static"),
-# 	os.path.join(BASE_DIR, 'manager/static'),
-# 	os.path.join(BASE_DIR, 'homepage/static'),
-# 	os.path.join(BASE_DIR, 'local_reports'),
-# 	os.path.join(BASE_DIR, 'PDF.js')
-#
-# ]
+
 
 # 配置解决跨域问题
 # 跨域增加忽略

@@ -25,7 +25,7 @@ def statisticalAnalysis(request):
 def get_task_data(request):
 	taskid = request.POST.get('taskid')
 	node = request.POST.get('node')
-	x = Mongo.taskinfo()[taskid].find_one()
+	x = Mongo.taskinfo(taskid).find_one()
 	if node:
 		type, id = node.split("_")
 		if type == 'plan':
@@ -54,7 +54,7 @@ def get_task_data(request):
 def getnodes(request):
 	kind, id = request.POST.get('nodeid').split("_")
 	taskid = request.POST.get('taskid')
-	x = Mongo.taskinfo()[taskid].find_one()
+	x = Mongo.taskinfo(taskid).find_one()
 	data = x[kind + '_' + id]
 	if request.POST.get('viewkind') == 'fail':
 		for i in range(len(data) - 1, -1, -1):
@@ -73,5 +73,5 @@ def geterrorinfo(request):
 	id = request.POST.get('id').split("_")[1]
 	taskid = request.POST.get('taskid')
 	stepid = Order.objects.get(follow_id=id, kind__contains='step_business', isdelete=0).main_id
-	res = Mongo.logspilt()[taskid].find_one({'businessid':id,'stepid':str(stepid)})['info']
+	res = Mongo.logspilt(taskid).find_one({'businessid':id,'stepid':str(stepid)})['info']
 	return JsonResponse({'code': 0, 'data': res})

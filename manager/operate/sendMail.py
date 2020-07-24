@@ -52,7 +52,7 @@ def _save_builtin_property(taskid, username):
 	 ${PLAN_STEP_SKIP_COUNT}
 	 #${PLAN_SUCCESS_RATE}
 	'''
-	detail = Mongo.taskreport()[taskid].find_one()
+	detail = Mongo.taskreport(taskid).find_one()
 	if not detail:
 		logger.info('==内置属性赋值提前结束，执行结果表无数据')
 		return
@@ -246,7 +246,7 @@ def gettaskresult(taskid):
 	##
 	logger.info('报告数据=>', detail)
 
-	Mongo.taskreport()[taskid].insert_one(detail)
+	Mongo.taskreport(taskid).insert_one(detail)
 
 
 def _get_full_case_name(case_id, curent_case_name):
@@ -310,7 +310,7 @@ class MainSender:
 	@classmethod
 	def gethtmlcontent(cls, taskid, rich_text):
 
-		data = Mongo.taskreport()[taskid].find_one()
+		data = Mongo.taskreport(taskid).find_one()
 		logger.info('报告data:', data)
 
 		if not data:
@@ -451,7 +451,7 @@ class MainSender:
 				return '=========钉钉token为空 跳过发送================='
 			else:
 				url = 'https://oapi.dingtalk.com/robot/send?access_token=' + dingdingtoken
-				res = Mongo.taskreport()[taskid].find_one()
+				res = Mongo.taskreport(taskid).find_one()
 				pagrem = {
 					"msgtype": "markdown",
 					"markdown": {

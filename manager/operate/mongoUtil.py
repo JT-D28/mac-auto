@@ -10,22 +10,21 @@ class Mongo():
 
 	# self.con.authenticate("chy", "123456", source='test')
 	@classmethod
-	def tasktree(cls):
-		print(cls.mongocon)
-		return cls.mongocon.tasktree
+	def tasktree(cls,taskid):
+		return cls.mongocon.tasktree[taskid]
 
 	@classmethod
-	def tasklog(cls):
-		return cls.mongocon.tasklog
+	def tasklog(cls,taskid):
+		return cls.mongocon.tasklog[taskid]
 
 	@classmethod
-	def taskinfo(cls):
-		return cls.mongocon.taskinfo
+	def taskinfo(cls,taskid):
+		return cls.mongocon.taskinfo[taskid]
 
 	@classmethod
-	def logspilt(cls):
-		return cls.mongocon.logspilt
+	def logspilt(cls,taskid):
+		return cls.mongocon.logspilt[taskid]
 
 	@classmethod
-	def taskreport(cls):
-		return cls.mongocon.taskreport
+	def taskreport(cls,taskid):
+		return cls.mongocon.taskreport[taskid]

@@ -222,7 +222,7 @@ def viewcache(taskid, username, kind=None, *msg):
         #
         # key = "console.msg::%s::%s" % (username, taskid)
         # con.lpush(key, what)
-        Mongo.tasklog()[taskid].insert_one(
+        Mongo.tasklog(taskid).insert_one(
             {'time': datetime.datetime.utcnow(), 'info': what})
         # logname = BASE_DIR + "/logs/" + taskid + ".log"
         # what = "".join((msg))

@@ -7,7 +7,6 @@ import time, traceback, redis, datetime, requests, copy, os,multiprocessing
 from django.conf import settings
 from hashlib import md5
 from ME2.settings import logme, BASE_DIR
-from manager.invoker import _callfunction, _call_extra
 from manager.models import *
 from manager.models import Case as Case0
 from login.models import *

@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from ME2.settings import BASE_DIR
 from manager.context import getRunningInfo
 from manager.core import simplejson
-from manager.invoker import MainSender
+from manager.operate.sendMail import MainSender
 from manager.models import Plan, ResultDetail, MailConfig, User
 
 
@@ -15,6 +15,7 @@ from manager.models import Plan, ResultDetail, MailConfig, User
 def sendreport(request):
 	code = 0
 	msg = ''
+	info=''
 	planid = request.POST.get('planid')
 	plan = Plan.objects.get(id=planid)
 	username = request.session.get("username", None)

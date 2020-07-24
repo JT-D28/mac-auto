@@ -1083,7 +1083,7 @@ def querytaskdetail(request):
     detail = {}
     taskid = request.GET.get('taskid')
 
-    detail = gettaskresult(taskid)
+    detail = Mongo.taskreport()[taskid].find_one()
 
     # logger.info(detail)
 

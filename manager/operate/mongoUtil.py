@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 
-from ME2.settings import MONGO_HOST,MONGO_PORT
+from ME2.settings import MONGO_HOST, MONGO_PORT
 
 
 class Mongo():
@@ -25,3 +25,7 @@ class Mongo():
 	@classmethod
 	def logspilt(cls):
 		return cls.mongocon.logspilt
+
+	@classmethod
+	def taskreport(cls):
+		return cls.mongocon.taskreport

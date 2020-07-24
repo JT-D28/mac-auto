@@ -12,7 +12,6 @@ from ME2.settings import BASE_DIR
 from manager import cm
 from manager.models import ResultDetail, Case, Order, BusinessData, Plan, F, Step
 
-from manager.invoker import gettaskresult
 from django.views.decorators.csrf import csrf_exempt
 from manager.context import Me2Log as logger
 from manager.operate.mongoUtil import Mongo

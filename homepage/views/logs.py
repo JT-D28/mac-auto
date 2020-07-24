@@ -5,21 +5,32 @@ from django.views.decorators.csrf import csrf_exempt
 
 from ME2.settings import BASE_DIR
 from manager.core import simplejson
+from manager.operate.mongoUtil import Mongo
 
 
 @csrf_exempt
 def downloadlog(request):
-	logname = BASE_DIR+'/logs/' + request.POST.get('taskid') + '.log'
-	with open(logname, 'r', encoding='utf-8') as f:
-		log_text = '<meta charset="UTF-8">\n' + f.read()
-	# log_text = log_text.replace("<span style='color:#FF3399'>", '').replace("</xmp>", '').replace(
-	# 	"<xmp style='color:#009999;'>", '').replace(
-	# 	"<span class='layui-bg-green'>", '').replace("<span class='layui-bg-red'>", '').replace(
-	# 	"<span class='layui-bg-orange'>", '').replace("</span>", '').replace(
-	# 	"<span style='color:#009999;'>", '').replace('<br>', '').replace(
-	# 	"'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36', ",
-	# 	'')
-	response = HttpResponse(log_text)
+	taskid = request.POST.get('taskid')
+	oldcount = 0
+	list = []
+	try:
+		while 1:
+			newcount = Mongo.tasklog()[taskid].count_documents({})
+			if newcount != oldcount:
+				res = Mongo.tasklog()[taskid].find().limit(newcount - oldcount).skip(oldcount)
+				for i in res:
+					temp = i['info'].replace('\n', '').replace(
+						"'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36', ",
+						'')
+					list.append(temp)
+					if '结束计划' in temp:
+						raise Exception
+				oldcount = newcount
+	except:
+		pass
+
+
+	response = HttpResponse(''.join(list))
 	response['Content-Type'] = 'application/octet-stream'
 	response['Content-Disposition'] = 'attachment;filename=%s.html' % request.POST.get('taskid')
 	return response

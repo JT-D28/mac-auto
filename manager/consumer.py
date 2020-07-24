@@ -12,6 +12,7 @@ from django.conf import settings
 
 from ME2.settings import BASE_DIR
 from manager.context import Me2Log as logger
+from manager.operate.mongoUtil import Mongo
 from manager.operate.redisUtils import RedisUtils
 
 
@@ -155,28 +156,44 @@ class ConsoleConsumer(WebsocketConsumer):
             pass
 
     def sendmsg(self, username, taskid):
-        key = self.con.keys("console.msg::%s::%s" % (username, taskid))
-        if not key:
-            self.send('hasRead')
-            return
-        else:
-            key = key[0]
-        print("查询到的任务id=>%s" % key)
-        while True:
-            if self._flag:
-                print("================结束向用户[%s]控制台发送消息===============" % username)
-                break
-            sep = self.con.rpop(key)
-            if sep:
-                self.send(sep)
-            time.sleep(0.03)
+        try:
+            oldcount = 0
+            while 1:
+                newcount = Mongo.tasklog()[taskid].count_documents({})
+                print("asd",newcount)
+                if newcount != oldcount:
+                    res = Mongo.tasklog()[taskid].find({},{"info":1,"_id":0}).limit(newcount - oldcount).skip(oldcount)
+                    for i in res:
+                        self.send(i['info'])
+                        if '结束计划' in i['info']:
+                            raise Exception
+                        time.sleep(0.01)
+                    oldcount = newcount
+        except:
+            pass
+
+        # key = self.con.keys("console.msg::%s::%s" % (username, taskid))
+        # if not key:
+        #     self.send('hasRead')
+        #     return
+        # else:
+        #     key = key[0]
+        # print("查询到的任务id=>%s" % key)
+        # while True:
+        #     if self._flag:
+        #         print("================结束向用户[%s]控制台发送消息===============" % username)
+        #         break
+        #     sep = self.con.rpop(key)
+        #     if sep:
+        #         self.send(sep)
+        #     time.sleep(0.03)
 
     def connect(self):
         # 连接时触发
         self.accept()
         # pool = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0, decode_responses=True)
         # redis.Redis(connection_pool=pool)
-        self.con = RedisUtils()
+        # self.con = RedisUtils()
 
     # print("connect=>",self.con)
     # print('consolemsg 连接.=>',self.con.keys("console.msg::%s*"%self.username))

@@ -27,6 +27,12 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 26214400  #上传数据大小，也改成了25M
 REDIS_HOST = configs.REDIS_HOST
 REDIS_PORT = configs.REDIS_PORT
 
+##mongodb配置
+MONGO_HOST = configs.MONGO_HOST
+MONGO_PORT = configs.MONGO_PORT
+
+
+
 # 环境
 env_id = ''
 

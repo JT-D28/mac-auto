@@ -210,18 +210,30 @@ def viewcache(taskid, username, kind=None, *msg):
     con = cons.get(taskid)
 
     try:
-        logname = BASE_DIR + "/logs/" + taskid + ".log"
-        what = "".join((msg))
-        what = "%s        %s" % (time.strftime("[%m-%d %H:%M:%S]", time.localtime()), what)
-        with open(logname, 'a', encoding='UTF-8') as f:
-            f.write(what + '<br>\n')
-
-        # 定时任务不加入redis队列
-        if kind is not None or username=='定时任务':
-            return
-
-        key = "console.msg::%s::%s" % (username, taskid)
-        con.lpush(key, what)
+        what = "%s        %s<br>" % (time.strftime("[%m-%d %H:%M:%S]", time.localtime()), "".join(msg))
+        # with open(logname, 'a', encoding='UTF-8') as f:
+        #     f.write(what + '<br>\n')
+        #
+        # # 定时任务不加入redis队列
+        # if kind is not None or username=='定时任务':
+        #     return
+        #
+        # key = "console.msg::%s::%s" % (username, taskid)
+        # con.lpush(key, what)
+        Mongo.tasklog()[taskid].insert_one(
+            {'time': datetime.datetime.utcnow(), 'info': what})
+        # logname = BASE_DIR + "/logs/" + taskid + ".log"
+        # what = "".join((msg))
+        # what = "%s        %s" % (time.strftime("[%m-%d %H:%M:%S]", time.localtime()), what)
+        # with open(logname, 'a', encoding='UTF-8') as f:
+        #     f.write(what + '<br>\n')
+        #
+        # # 定时任务不加入redis队列
+        # if kind is not None or username=='定时任务':
+        #     return
+        #
+        # key = "console.msg::%s::%s" % (username, taskid)
+        # con.lpush(key, what)
 
     except Exception as e:
         Me2Log.error("viewcache异常")

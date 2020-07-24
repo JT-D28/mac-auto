@@ -8,6 +8,7 @@ import asyncio
 from itertools import chain
 from urllib import parse
 
+import pymongo
 from django.conf import settings
 from django.db import connection
 from django.db.models import Q
@@ -33,6 +34,7 @@ from email.mime.text import MIMEText
 from email.utils import formataddr, parseaddr
 from email.header import Header
 from .operate.generateReport import dealDeBuginfo, dealruninfo
+from .operate.mongoUtil import Mongo
 
 try:
     import xml.etree.cElementTree as ET
@@ -557,8 +559,10 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
                             result = "<span id='step_%s' class='layui-bg-%s'>%s</span>" % (stepid,color_res.get(result, 'orange'), result)
                             
                             if 'omit' not in result:
+                                step = "<span style='color:#FF3399' id='step_%s'>%s</span>"%(order.main_id,Step.objects.get(id=order.main_id).description)
+                                business = "<span style='color:#FF3399' id='business_%s'>%s</span>"%(order.follow_id,BusinessData.objects.get(id=order.follow_id).businessname)
                                 error = '   原因=>%s' % error if 'success' not in result else ''
-                                viewcache(taskid, username, kind, "步骤执行结果%s%s" % (result, error))
+                                viewcache(taskid, username, kind, "步骤[%s]=>测试点[%s]=>执行结果%s   %s" % (step,business,result,error))
             
             except:
                 continue
@@ -698,10 +702,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
 
     finally:
         clear_data(callername, _tempinfo)
-        from manager.context import cons
-        cons[taskid].expire("console.msg::%s::%s" % (username, taskid), 600)
-        del cons[taskid]
-
+        Mongo.tasklog()[taskid].create_index([("time", 1)], expireAfterSeconds=60*60*24*10)
         clear_mock(callername)
         setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
 

@@ -19,7 +19,9 @@ REDIS_HOST = conf['REDIS_HOST']
 REDIS_PORT = conf['REDIS_PORT']
 REDIS_PASSWORD = conf['REDIS_PASSWORD']
 
-
+##MONGODB配置
+MONGO_HOST = conf['MONGO_HOST']
+MONGO_PORT = conf['MONGO_PORT']
 
 # 邮件服务器配置 SMTP
 EMAIL_HOST = 'smtp.qq.com'

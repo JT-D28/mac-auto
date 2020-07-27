@@ -7,7 +7,7 @@ import ast, threading
 import asyncio
 from itertools import chain
 from urllib import parse
-
+from bson.objectid import ObjectId
 from django.conf import settings
 from django.db import connection
 from django.db.models import Q
@@ -266,7 +266,7 @@ def runplans(username, taskid, planids, is_verify, kind=None, startnodeid=None):
         threading.Thread(target=runplan, args=(username, taskid, planid, is_verify, kind, startnodeid)).start()
 
 
-def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startnodeid=None, L=None):
+def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startnodeid=None, L=None,proxy={}):
 
     from tools.mock import TestMind
     groupskip = []
@@ -299,12 +299,13 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
         for o in steporderlist:
             if o.kind == 'case_case':
                 case = Case.objects.get(id=o.follow_id)
-                _runcase(username, taskid, case, plan, planresult, is_verify, kind, startnodeid=startnodeid, L=L)
+                _runcase(username, taskid, case, plan, planresult, is_verify, kind, startnodeid=startnodeid, L=L,proxy=proxy)
                 continue
             
             stepid = o.follow_id
             try:
-                stepcount = Step.objects.get(id=stepid).count
+                step = Step.objects.get(id=stepid)
+                stepcount = step.count
                 
                 if stepcount == 0:
                     continue
@@ -312,18 +313,29 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
                 else:
                     # 步骤执行次数>0
                     for ldx in range(0, stepcount):
-                        businessorderlist = ordered(list(Order.objects.filter(kind='step_business', main_id=stepid)))
+                        businessorderlist = ordered(list(Order.objects.filter(kind='step_business', main_id=stepid,isdelete=0)))
                         # logger.info('bbb=>',businessorderlist)
                         for order in businessorderlist:
                             groupid = order.value.split(".")[0]
                             # step=Step.objects.get(id=order.follow_id)
                             start = time.time()
                             spend = 0
+
+
+                            businessdata = BusinessData.objects.get(id=order.follow_id)
+                            # _id = Mongo.logsplit(taskid).insert_one({
+                            #     'caseid': case0.id,
+                            #     'casedes': case0.description,
+                            #     'stepid': stepid,
+                            #     'stepdes': step.description,
+                            #     'businessid': businessdata.id,
+                            #     'bussinessdes': businessdata.businessname,
+                            #     'result': 'running',
+                            #     'info': ''
+                            # }).inserted_id
+
                             if groupid not in groupskip:
-                                # logger.info('传入order=>', order.value)
-                                # logger.info('startnodeid:',startnodeid)
                                 if order.follow_id not in L:
-                                    # logger.info('测试点[%s]不在执行链中 忽略' % order.follow_id)
                                     continue
 
                                 #####mock测试
@@ -333,15 +345,15 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
                                 # for vb in vbs:
                                 #     _step_mock(username, taskid, step,vb)
 
-                                result, error = _step_process_check(username, taskid, order, kind)
+                                result, error = _step_process_check(username, taskid, order, kind,proxy)
                                 spend = int((time.time() - start) * 1000)
                                 
                                 if result not in ('success', 'omit'):
                                     groupskip.append(groupid)
                             else:
-                                businessdata = BusinessData.objects.values('count','businessname').get(id=order.follow_id)
-                                if businessdata['count'] == 0:
-                                    result, error = 'omit', "测试点[%s]执行次数=0 略过." % businessdata['businessname']
+
+                                if businessdata.count == 0:
+                                    result, error = 'omit', "测试点[%s]执行次数=0 略过." % businessdata.businessname
                                 else:
                                     result, error = 'skip', 'skip'
                             
@@ -349,27 +361,30 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
                             try:
                                 logger.info("准备保存结果===")
                                 detail = ResultDetail(taskid=taskid, plan=plan, case=case0,
-                                                      step=Step.objects.get(id=o.follow_id),
-                                                      businessdata=BusinessData.objects.get(id=order.follow_id),
+                                                      step=step,
+                                                      businessdata=businessdata,
                                                       result=result,
                                                       error=error, spend=spend, loop_id=1, is_verify=is_verify)
-                                
-
 
                                 detail.save()
                                 logger.info('保存结果=>', detail)
                             except:
                                 logger.info('保存结果异常=>', traceback.format_exc())
                             caseresult.append(result)
+                            # Mongo.logsplit(taskid).update_one({'_id':ObjectId(_id)},{"$set":{"result":result}})
+
                             result = "<span id='step_%s' class='layui-bg-%s'>%s</span>" % (stepid,color_res.get(result, 'orange'), result)
-                            
+
+
+
                             if 'omit' not in result:
-                                step = "<span style='color:#FF3399' id='step_%s'>%s</span>"%(order.main_id,Step.objects.get(id=order.main_id).description)
-                                business = "<span style='color:#FF3399' id='business_%s'>%s</span>"%(order.follow_id,BusinessData.objects.get(id=order.follow_id).businessname)
+                                stepinfo = "<span style='color:#FF3399' id='step_%s'>%s</span>"%(order.main_id,Step.objects.get(id=order.main_id).description)
+                                businessinfo = "<span style='color:#FF3399' id='business_%s'>%s</span>"%(order.follow_id,BusinessData.objects.get(id=order.follow_id).businessname)
                                 error = '   原因=>%s' % error if 'success' not in result else ''
-                                viewcache(taskid, username, kind, "步骤[%s]=>测试点[%s]=>执行结果%s   %s" % (step,business,result,error))
+                                viewcache(taskid, username, kind, "步骤[%s]=>测试点[%s]=>执行结果%s   %s" % (stepinfo,businessinfo,result,error))
             
             except:
+                print(traceback.format_exc())
                 continue
     
     casere = (len([x for x in caseresult if x in ('success', 'omit')]) == len([x for x in caseresult]))
@@ -430,6 +445,11 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
     viewcache(taskid, username, kind,
               "=======计划【%s】开始执行%s[%s任务]【<span style='color:#FF3399'>%s</span>】,使用数据连接配置【%s】====" % (
                   plan.description, kindmsg, verifymsg, taskid, dbscheme))
+    if plan.proxy:
+        proxy = {'http': plan.proxy}
+        viewcache(taskid, username, kind, "请求代理：%s" % (plan.proxy))
+    else:
+        proxy = {}
     try:
         dbid = getDbUse(taskid, plan.db_id)
         if dbid:
@@ -456,7 +476,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
                 continue
             else:
                 logger.info('runcount:', case.count)
-                _runcase(username, taskid, case, plan, planresult, is_verify, kind=kind, startnodeid=startnodeid, L=L)
+                _runcase(username, taskid, case, plan, planresult, is_verify, kind=kind, startnodeid=startnodeid, L=L,proxy=proxy)
 
         planre = (len([x for x in planresult]) == len([x for x in planresult if x == True]))
         if planre:
@@ -468,16 +488,15 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
                   "结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-%s'>%s</span>" % (
                       plan.description, color, plan.last))
         # setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
+        config_id = plan.mail_config_id if plan.mail_config_id else None
 
         # 处理日志
-        new_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(new_loop)
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(dealDeBuginfo(taskid))
-        loop.run_until_complete(dealruninfo(planid,taskid,{'dbscheme':dbscheme,'planname':plan.description,
-                                                           'user':username,'verify':is_verify},startnodeid))
-        config_id = plan.mail_config_id if plan.mail_config_id else None
-        loop.run_until_complete(processSendReport(taskid,config_id,callername,kind))
+        t = time.time()
+        dealDeBuginfo(taskid)
+        dealruninfo(planid, taskid, {'dbscheme':dbscheme,'planname':plan.description,'user':username,'verify':is_verify}, startnodeid)
+        processSendReport(taskid, config_id, callername, kind)
+        print("整体耗时", time.time() - t)
+
 
         # 清除请求session
         clear_task_session('%s_%s' % (taskid, callername))
@@ -495,7 +514,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
         setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
 
 
-def _step_process_check(callername, taskid, order, kind):
+def _step_process_check(callername, taskid, order, kind,proxy):
     """
     return (resultflag,msg)
     order.follw_id:业务数据id
@@ -549,7 +568,7 @@ def _step_process_check(callername, taskid, order, kind):
             if step.content_type == 'xml':
                 if re.search('webservice', step.url):
                     headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), 'post',
-                                                                        None, 'xml', step.temp, kind, timeout)
+                                                                        None, 'xml', step.temp, kind, timeout,proxy)
                     if not itf_msg:
                         text = text.replace('&lt;', '<')
                         
@@ -563,7 +582,7 @@ def _step_process_check(callername, taskid, order, kind):
                 
                 headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), step.method,
                                                                     step.headers, step.content_type, step.temp, kind,
-                                                                    timeout)
+                                                                    timeout,proxy)
             if text.lstrip().startswith('<!DOCTYPE html>'):
                 viewcache(taskid, username, kind,"<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>内容为HTML，不显示</xmp></span>")
             else:
@@ -754,7 +773,7 @@ def _getfiledict(paraminfo):
 
 
 def _callinterface(taskid, user, url, body=None, method=None, headers=None, content_type=None, props=None, kind=None,
-                   timeout=None):
+                   timeout=None,proxy={}):
     """
     返回(rps.text,rps.status_code,msg)
     """
@@ -874,7 +893,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
             return ('', '', '', '上传文件不存在，请检查')
     else:
         raise NotImplementedError("content_type=%s没实现" % content_type)
-    
+
     # logger.info("method=>",method)
     rps = None
     if method == "get":
@@ -883,7 +902,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
         if body:
             if isinstance(body, (dict, list, bytes)):
                 try:
-                    rps = session.get(url, params=body, headers={**default, **headers}, timeout=timeout)
+                    rps = session.get(url, params=body, headers={**default, **headers}, timeout=timeout,proxies=proxy)
                 except:
                     err = traceback.format_exc()
                     if 'requests.exceptions.ConnectTimeout' in err:
@@ -896,7 +915,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
                 return ('', '', '', '参数类型不支持[dict,list of tuples,bytes]')
         else:
             try:
-                rps = session.get(url, headers={**default, **headers}, timeout=timeout)
+                rps = session.get(url, headers={**default, **headers}, timeout=timeout,proxies=proxy)
             except:
                 err = traceback.format_exc()
                 if 'requests.exceptions.ConnectTimeout' in err:
@@ -912,7 +931,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
         if content_type == 'formdata':
             try:
                 viewcache(taskid, user.name, kind, '---formdata请求---')
-                rps = session.post(url, files=body, headers={**default, **headers}, timeout=timeout)
+                rps = session.post(url, files=body, headers={**default, **headers}, timeout=timeout,proxies=proxy)
             except:
                 err = traceback.format_exc()
                 if 'requests.exceptions.ReadTimeout' in err:
@@ -926,7 +945,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
         elif body:
             if isinstance(body, (dict, list, bytes)):
                 try:
-                    rps = session.post(url, data=body, headers={**default, **headers}, timeout=timeout)
+                    rps = session.post(url, data=body, headers={**default, **headers}, timeout=timeout,proxies=proxy)
                 except:
                     err = traceback.format_exc()
                     print('是否超时 %s' % 'requests.exceptions.ReadTimeout' in err)
@@ -941,7 +960,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
                 return ('', '', '', '参数类型不支持[dict,list of tuples,bytes]')
         else:
             try:
-                rps = session.post(url, headers={**default, **headers}, timeout=timeout)
+                rps = session.post(url, headers={**default, **headers}, timeout=timeout,proxies=proxy)
             except:
                 err = traceback.format_exc()
                 if 'requests.exceptions.ReadTimeout' in err:

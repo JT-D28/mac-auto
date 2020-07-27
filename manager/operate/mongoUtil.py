@@ -22,8 +22,8 @@ class Mongo():
 		return cls.mongocon.taskinfo[taskid]
 
 	@classmethod
-	def logspilt(cls,taskid):
-		return cls.mongocon.logspilt[taskid]
+	def logsplit(cls,taskid):
+		return cls.mongocon.logsplit[taskid]
 
 	@classmethod
 	def taskreport(cls,taskid):

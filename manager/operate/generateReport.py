@@ -11,7 +11,7 @@ from manager.models import Order, Step, ResultDetail, Case, BusinessData
 from manager.operate.mongoUtil import Mongo
 
 
-async def dealruninfo(planid, taskid, info=None, startnodeid=''):
+def dealruninfo(planid, taskid, info=None, startnodeid=''):
 	casesdata = []
 	kind, nodeid = startnodeid.split("_")
 	if kind == 'plan':
@@ -140,7 +140,7 @@ def get_business_num(id, taskid='', num=0, successnum=0, countnum=0):
 	return num, successnum
 
 
-async def dealDeBuginfo(taskid):
+def dealDeBuginfo(taskid):
 	list = []
 	oldcount = 0
 	t1 = time.time()
@@ -181,7 +181,7 @@ def insertBussinessInfo(str, taskid):
 	bussinessid = re.findall("id='business_(.*?)'>", str)[0]
 	bussinessdes = re.findall("id='business_.*?'>(.*?)</span>]", str)[0]
 	result = re.findall("=>执行结果.*?class='layui-bg.*?>(.*?)</span>", str)[0]
-	Mongo.logspilt(taskid).insert_one(
+	Mongo.logsplit(taskid).insert_one(
 		{'stepid': stepid, 'stepdes': stepdes, 'businessid': bussinessid, 'bussinessdes': bussinessdes,
 		 'result': result, 'info': str.replace("        ", '\n')})
 

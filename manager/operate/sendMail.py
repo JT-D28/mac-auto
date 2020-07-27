@@ -18,7 +18,7 @@ from manager.models import ResultDetail, BusinessData, Order, MailConfig, Case
 from manager.operate.mongoUtil import Mongo
 
 
-async def processSendReport(taskid, config_id, callername, kind):
+def processSendReport(taskid, config_id, callername, kind):
 	# 	1.从数据库中获取该次任务的结果数据集合存到db中
 	gettaskresult(taskid)
 	#   2.生成可用属性
@@ -143,7 +143,7 @@ def gettaskresult(taskid):
 			# for rb in rblist:
 			businessobj = {}
 			business = x.businessdata
-			# logger.info('c=>%s'%business.id)
+			logger.info('c=>%s'%business.id)
 			status, step = BusinessData.gettestdatastep(business.id)
 			# logger.info('a=>%s b=>%s'%(case.id,step.id))
 			if isinstance(step, (str,)): continue;

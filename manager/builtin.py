@@ -501,6 +501,10 @@ def replaceAndSend(filename, **kws):
         cout('=====开始重启dps服务=====', **kws)
         ret = win.run_cmd(
             r"""
+            cd E:\simbank\0226dsp\dsp\bin && E: && shutdown.bat
+            """)
+        ret = win.run_cmd(
+            r"""
             cd E:\simbank\0226dsp\dsp && E: && dsp.exe restart
             """)
         cout(ret.std_out.decode(), **kws)

@@ -329,18 +329,9 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
                             #     'result': 'running',
                             #     'info': ''
                             # }).inserted_id
-
+                            if order.follow_id not in L:
+                                continue
                             if groupid not in groupskip:
-                                if order.follow_id not in L:
-                                    continue
-
-                                #####mock测试
-                                # step=Step.objects.get(id=order.main_id)
-                                # vbs=TestMind().get_visual_business('step_{}'.format(step.id), username)
-                                # logger.info('vbs size:',len(vbs))
-                                # for vb in vbs:
-                                #     _step_mock(username, taskid, step,vb)
-
                                 result, error = _step_process_check(username, taskid, order, kind,proxy)
                                 spend = int((time.time() - start) * 1000)
                                 
@@ -481,32 +472,25 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
         viewcache(taskid, callername, kind,
                   "结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-%s'>%s</span>" % (
                       plan.description, color, plan.last))
-        # setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
-        config_id = plan.mail_config_id if plan.mail_config_id else None
 
-        t = time.time()
+
         asyncio.set_event_loop(asyncio.new_event_loop())
         loop = asyncio.get_event_loop()
         loop.run_until_complete(dealruninfo(planid,taskid,{'dbscheme':dbscheme,'planname':plan.description,
                                                            'user':username,'verify':is_verify},startnodeid))
-        loop.run_until_complete(processSendReport(taskid,config_id,callername,kind))
-        print("整体耗时", time.time() - t)
-
-
         # 清除请求session
-        clear_task_session('%s_%s' % (taskid, callername))
-
-
 
     except Exception as e:
         logger.error('执行计划未知异常：', traceback.format_exc())
         viewcache(taskid, username, kind, '执行计划未知异常[%s]' % traceback.format_exc())
 
-
     finally:
-        clear_data(callername, _tempinfo)
         clear_mock(callername)
+        clear_task_session('%s_%s' % (taskid, callername))
+
         setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
+        processSendReport(taskid, plan.mail_config_id, callername, kind)
+        clear_data(callername, _tempinfo)
 
 
 def _step_process_check(callername, taskid, order, kind,proxy):

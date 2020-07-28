@@ -18,13 +18,11 @@ from manager.models import ResultDetail, BusinessData, Order, MailConfig, Case
 from manager.operate.mongoUtil import Mongo
 
 
-async def processSendReport(taskid, config_id, callername, kind):
+def processSendReport(taskid, config_id, callername, kind):
 	# 	1.从数据库中获取该次任务的结果数据集合存到db中
 	gettaskresult(taskid)
-	#   2.生成可用属性
-	_save_builtin_property(taskid, callername)
-	#   3.发送报告
 	if config_id:
+		_save_builtin_property(taskid, callername)
 		mail_config = MailConfig.objects.get(id=config_id)
 		user = User.objects.get(name=callername)
 		mail_res = MainSender.send(taskid, user, mail_config)

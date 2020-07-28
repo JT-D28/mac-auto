@@ -26,6 +26,7 @@ def get_task_data(request):
 	taskid = request.POST.get('taskid')
 	node = request.POST.get('node')
 	x = Mongo.taskinfo(taskid).find_one()
+	casesdata = []
 	if node:
 		type, id = node.split("_")
 		if type == 'plan':
@@ -34,7 +35,7 @@ def get_task_data(request):
 			stepid = Order.objects.get(follow_id=id, kind='step_business', isdelete=0).main_id
 			tps = x['step_' + str(stepid)]
 			for tp in tps:
-				tpid = tp['id']
+				tpid = tp['id'].split("_")[1]
 				if str(tpid) == str(id):
 					casesdata = [tp]
 					break

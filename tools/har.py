@@ -1,6 +1,6 @@
 import json
 
-def har_import(self,content_byte_list,callername)
+def har_import(self,content_byte_list,callername):
     content = b''
     for byte in content_byte_list:
         content = content + byte

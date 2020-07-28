@@ -59,10 +59,11 @@ def getcasemap(caseid, data, taskid):
 		if map['kind'] == 'case_step':
 			cid = map['main_id']
 			sid = map['follow_id']
-
+			bnum= Mongo.logsplit(taskid).find({"caseid": str(cid), "stepid": str(sid)}).count()
+			if bnum == 0:
+				continue
 			step = Step.objects.get(id=sid)
 			if step.count not in [0, '0', None]:
-				bnum = Mongo.logsplit(taskid).find({"caseid": str(cid), "stepid": str(sid)}).count()
 				successnum = Mongo.logsplit(taskid).find(
 					{"result": "success", "caseid": str(cid), "stepid": str(sid)}).count()
 				case_success_rate = round(successnum * 100 / bnum, 2) if bnum != 0 else 0
@@ -79,7 +80,6 @@ def getcasemap(caseid, data, taskid):
 			cid = map['follow_id']
 
 			case = Case.objects.get(id=cid)
-			print(case.description)
 			if case.count not in [0, '0', None]:
 				total, successnum = get_business_num(cid, taskid)
 				rate = round(successnum * 100 / total, 2) if total != 0 else 0
@@ -135,11 +135,8 @@ async def dealDeBuginfo(taskid):
 			if newcount != oldcount:
 				res = Mongo.tasklog(taskid).find().limit(newcount - oldcount).skip(oldcount)
 				for i in res:
-					temp = i['info'].replace('\n', '').replace(
-						"'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36', ",
-						'')
-					list.append(temp)
-					if '结束计划' in temp:
+					list.append(i['info'])
+					if '结束计划' in i['info']:
 						raise Exception
 				oldcount = newcount
 	except:
@@ -147,7 +144,7 @@ async def dealDeBuginfo(taskid):
 
 	temp2 = re.sub(r'\[(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])\s+(20|21|22|23|[0-1]\d):[0-5]\d:[0-5]\d\]', '',
 	               ''.join(list))
-	bmatchs = re.findall(r"开始执行步骤.*?步骤.*?执行结果.*?</span>.*?<br>", temp2)
+	bmatchs = re.findall(r"开始执行步骤.*?步骤.*?执行结果.*?</span>.*?<br>", temp2,flags=re.S)
 	for b in bmatchs:
 		insertBussinessInfo(b, taskid)
 	for i in list:
@@ -163,7 +160,7 @@ async def dealDeBuginfo(taskid):
 def insertBussinessInfo(str, taskid):
 	caseid = re.findall("caseid='(.*?)'", str)[0]
 	casedes = re.findall("casedes='(.*?)'", str)[0]
-	stepid = re.findall("id='step_(.*?)'>", str)[0]
+	stepid = re.findall("id='step_(.*?)'", str)[0]
 	stepdes = re.findall("id='step_.*?'>(.*?)</span>", str)[0]
 	bussinessid = re.findall("id='business_(.*?)'>", str)[0]
 	bussinessdes = re.findall("id='business_.*?'>(.*?)</span>]", str)[0]
@@ -173,7 +170,7 @@ def insertBussinessInfo(str, taskid):
 	Mongo.logsplit(taskid).insert_one(
 		{'caseid': caseid, 'casedes': casedes, 'stepid': stepid, 'stepdes': stepdes, 'businessid': bussinessid,
 		 'bussinessdes': bussinessdes,
-		 'result': result, 'info': str.replace("        ", '\n'),'error':error})
+		 'result': result, 'info': str,'error':error})
 
 
 def get_node_case(nodeid):

@@ -307,10 +307,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
                 step = Step.objects.get(id=stepid)
                 stepcount = step.count
                 
-                if stepcount == 0:
-                    continue
-                
-                else:
+                if stepcount > 0:
                     # 步骤执行次数>0
                     for ldx in range(0, stepcount):
                         businessorderlist = ordered(list(Order.objects.filter(kind='step_business', main_id=stepid,isdelete=0)))
@@ -320,7 +317,6 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
                             # step=Step.objects.get(id=order.follow_id)
                             start = time.time()
                             spend = 0
-
 
                             businessdata = BusinessData.objects.get(id=order.follow_id)
                             # _id = Mongo.logsplit(taskid).insert_one({
@@ -375,11 +371,9 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
 
                             result = "<span id='step_%s' class='layui-bg-%s'>%s</span>" % (stepid,color_res.get(result, 'orange'), result)
 
-
-
                             if 'omit' not in result:
-                                stepinfo = "<span style='color:#FF3399' id='step_%s'>%s</span>"%(order.main_id,Step.objects.get(id=order.main_id).description)
-                                businessinfo = "<span style='color:#FF3399' id='business_%s'>%s</span>"%(order.follow_id,BusinessData.objects.get(id=order.follow_id).businessname)
+                                stepinfo = "<span style='color:#FF3399' id='step_%s' caseid='%s' casedes='%s'>%s</span>"%(step.id,case0.id,case0.description,step.description)
+                                businessinfo = "<span style='color:#FF3399' id='business_%s'>%s</span>"%(businessdata.id,businessdata.businessname)
                                 error = '   原因=>%s' % error if 'success' not in result else ''
                                 viewcache(taskid, username, kind, "步骤[%s]=>测试点[%s]=>执行结果%s   %s" % (stepinfo,businessinfo,result,error))
             
@@ -490,11 +484,12 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
         # setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
         config_id = plan.mail_config_id if plan.mail_config_id else None
 
-        # 处理日志
         t = time.time()
-        dealDeBuginfo(taskid)
-        dealruninfo(planid, taskid, {'dbscheme':dbscheme,'planname':plan.description,'user':username,'verify':is_verify}, startnodeid)
-        processSendReport(taskid, config_id, callername, kind)
+        asyncio.set_event_loop(asyncio.new_event_loop())
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(dealruninfo(planid,taskid,{'dbscheme':dbscheme,'planname':plan.description,
+                                                           'user':username,'verify':is_verify},startnodeid))
+        loop.run_until_complete(processSendReport(taskid,config_id,callername,kind))
         print("整体耗时", time.time() - t)
 
 

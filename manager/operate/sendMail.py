@@ -18,7 +18,7 @@ from manager.models import ResultDetail, BusinessData, Order, MailConfig, Case
 from manager.operate.mongoUtil import Mongo
 
 
-def processSendReport(taskid, config_id, callername, kind):
+async def processSendReport(taskid, config_id, callername, kind):
 	# 	1.从数据库中获取该次任务的结果数据集合存到db中
 	gettaskresult(taskid)
 	#   2.生成可用属性

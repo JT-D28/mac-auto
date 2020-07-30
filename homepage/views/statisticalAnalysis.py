@@ -25,7 +25,7 @@ def statisticalAnalysis(request):
 def get_task_data(request):
 	taskid = request.POST.get('taskid')
 	node = request.POST.get('node')
-	x = Mongo.taskinfo(taskid).find_one()
+	x = Mongo.taskinfo().find_one({"taskid":taskid})
 	casesdata = []
 	if node:
 		type, id = node.split("_")
@@ -55,7 +55,7 @@ def get_task_data(request):
 def getnodes(request):
 	kind, id = request.POST.get('nodeid').split("_")
 	taskid = request.POST.get('taskid')
-	x = Mongo.taskinfo(taskid).find_one()
+	x = Mongo.taskinfo().find_one({"taskid":taskid})
 	data = x[kind + '_' + id]
 	if request.POST.get('viewkind') == 'fail':
 		for i in range(len(data) - 1, -1, -1):

@@ -177,7 +177,7 @@ var app = new Vue({
             var that = this;
             planid = that.form.plan.substr(5);
             if (planid != '') {
-                _post_nl('/manager/runplan', {ids: planid, is_verify: '1'}, function (data) {
+                _post_nl('/manager/runplan', {ids: planid, runkind: '1'}, function (data) {
                     data = JSON.parse(data)
                     if (data.code == 0) {
                         layer.msg(data.msg, {
@@ -866,7 +866,7 @@ var app = new Vue({
             var that = this;
             var id = that.form.forceStopPlans
             _post_nl('/homepage/queryPlanState/', {id: id}, function (data) {
-                that.runningState = data.data == 1 ? '运行' : '未运行'
+                that.runningState = data.data
             })
         },
         forceStop() {

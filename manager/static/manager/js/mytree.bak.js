@@ -457,56 +457,6 @@ var tree = {
                     dataType: 'json'
                 });
             }
-
-            function querydebug(id, type, taskid) {
-                _post_nl('/homepage/plandebug/', {
-                    'id': id,
-                    'type': type,
-                    'taskid': taskid
-                }, function (data) {
-                    plandebug(data)
-                })
-
-            }
-
-            function plandebug(data) {
-                if (data.type == "case") {
-                    tree.render({
-                        elem: '#demo1', id: 'demo1', data: data.data, accordion: true, showLine: true,
-                        text: {none: '本次调试全部通过'},
-                        click: function (obj) {
-                            $("#log_text").html('点击左侧失败步骤点查看日志');
-                            tree.render({elem: '#demo3', id: 'demo3', text: {none: ''}})
-                            querydebug(obj.data.id, 'case', data.taskid)
-                            tree.reload('demo3', {data: [], text: {none: ''}});
-                        }
-                    })
-                } else if (data.type == "step") {
-                    tree.render({
-                        elem: '#demo2', id: 'demo2', data: data.data, accordion: true, showLine: true,
-                        click: function (obj) {
-                            $("#log_text").html('点击左侧失败测试点查看日志');
-                            querydebug(obj.data.id, 'step', data.taskid)
-                        }
-                    })
-                } else if (data.type == "bussiness") {
-                    tree.render({
-                            elem: '#demo3', id: 'demo3', data: data.data, accordion: true, showLine: true,
-                            click: function (obj) {
-                                $("#debuginfo").css('display', 'inherit');
-                                _post_nl('/homepage/plandebug/', {
-                                    'id': obj.data.title + ";" + obj.data.casename + ";" + obj.data.stepname + ";" + obj.data.id,
-                                    'type': 'bussiness',
-                                    'taskid': data.taskid
-                                }, function (data) {
-                                    $("#log_text").html(data.data);
-                                })
-                            }
-                        }
-                    )
-                }
-                return false;
-            }
         })
 
 

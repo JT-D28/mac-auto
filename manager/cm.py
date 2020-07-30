@@ -13,7 +13,7 @@ from ME2.settings import logme
 
 from login import models as lm
 from .context import *
-from .invoker import runplan, runplans,get_run_node_plan_id
+from .invoker import runplan,get_run_node_plan_id
 from .core import gettaskid,get_params,EncryptUtils
 from manager.context import Me2Log as logger
 from .operate.dataMove import DataMove
@@ -297,35 +297,28 @@ def editplan(request):
 @monitor(action='运行用例')
 def run(request):
     callername = request.session.get('username')
-    runids = [x for x in request.POST.get('ids').split(',')]
-    logger.info('runids:',runids)
-    is_verify = request.POST.get('is_verify')
-    for runid in runids:
-        planid=get_run_node_plan_id(runid)
-        logger.info('获取待运行节点计划ID:',planid)
-        plan = mm.Plan.objects.get(id=planid)
-        taskid = gettaskid(plan.__str__())
-        logger.info('callername:',callername)
-        state_running =getRunningInfo(username=callername,planid=planid,type='isrunning')
-    
-        
-        if state_running != '0':
-            msg = '验证' if state_running == 'verify' else '调试'
-            return {
-                'status': 'fail',
-                'msg': '计划正在运行[%s]任务，稍后再试！'%msg
-            }
-        logger.info('runidd:',runid)
-        t=threading.Thread(target=runplan,args=(callername, taskid, planid, is_verify,None,runid))
-        t.start()
-        # logger.info('m_pool:',id(m_pool))
-        # m_pool.apply_async(runplan,(callername, taskid, planid, is_verify,None,runid))
+    runid = request.POST.get('ids')
+    logger.info('runid:',runid)
+    runkind = request.POST.get('runkind')
+    planid = get_run_node_plan_id(runid)
+    logger.info('获取待运行节点计划ID:',planid)
+    taskid = gettaskid(planid)
 
-    return {
-        'status': 'success',
-        'msg': str(taskid),
-        'data':planid
-    }
+    state_running =getRunningInfo(planid=planid,type='isrunning')
+
+    if state_running != '0':
+        msg = {"1":"验证","2":"调试","3":"定时"}[state_running]
+        return {
+            'status': 'fail',
+            'msg': '计划正在运行[%s]任务，稍后再试！'%msg
+        }
+    logger.info('runidd:',runid)
+    t=threading.Thread(target=runplan,args=(callername, taskid, planid, runkind,runid))
+    t.start()
+    request.session['console_taskid'] = taskid
+    return {'status': 'success','msg': taskid,'data':planid}
+
+
 
 @monitor(action='导出计划')
 def export(request):

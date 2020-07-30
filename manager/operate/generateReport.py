@@ -1,20 +1,12 @@
-import json
-import os
 import re
 import time
 
-from django.db import connection
-
-from manager.context import Me2Log as logger
-from ME2.settings import BASE_DIR
-from manager.models import Order, Step, ResultDetail, Case, BusinessData
+from manager.models import Order, Step, Case, BusinessData
 from manager.operate.mongoUtil import Mongo
 
 
 async def dealruninfo(planid, taskid, info=None, startnodeid=''):
-	casesdata = []
 	kind, nodeid = startnodeid.split("_")
-
 	await dealDeBuginfo(taskid)
 
 	if kind == 'plan':
@@ -32,7 +24,7 @@ async def dealruninfo(planid, taskid, info=None, startnodeid=''):
 	info['skipnum'] = Mongo.logsplit(taskid).find({"result": "skip"}).count()
 
 	info['rate'] = round(success * 100 / total, 2) if total != 0 else 0.00
-	data = {'root': [], 'info': info}
+	data = {'timestamp':time.time(),'time':time.strftime("%m-%d %H:%M", time.localtime()) ,'root': [], 'info': info, 'taskid': taskid, 'planid': planid}
 
 	for caseid in caselist:
 		case = Case.objects.get(id=caseid)
@@ -45,7 +37,7 @@ async def dealruninfo(planid, taskid, info=None, startnodeid=''):
 			                     'success': successnum,
 			                     'total': num, 'type': 'case', 'icon': 'fa icon-fa-folder'})
 			getcasemap(caseid, data, taskid)
-	Mongo.taskinfo(taskid).insert_one(data)
+	Mongo.taskinfo().insert_one(data)
 
 
 def getcasemap(caseid, data, taskid):
@@ -128,7 +120,6 @@ def get_business_num(id, taskid='', num=0, successnum=0, countnum=0):
 async def dealDeBuginfo(taskid):
 	list = []
 	oldcount = 0
-	t1 = time.time()
 	try:
 		while 1:
 			newcount = Mongo.tasklog(taskid).count_documents({})
@@ -146,18 +137,17 @@ async def dealDeBuginfo(taskid):
 	               ''.join(list))
 	bmatchs = re.findall(r"开始执行步骤.*?步骤.*?执行结果.*?</span>.*?<br>", temp2,flags=re.S)
 	for b in bmatchs:
-		insertBussinessInfo(b, taskid)
+		await insertBussinessInfo(b, taskid)
 	for i in list:
 		failbmatch = re.findall(
 			r"步骤\[<span style='color:#FF3399' id='step_.*?</span>]=>测试点\[<span style='color:#FF3399' id='business_.*?</span>]=>执行结果<span id=.*? class='layui-bg-orange'>skip</span>      原因=>skip<br>",
 			i)
 		if failbmatch:
 			b = failbmatch[0]
-			insertBussinessInfo(b, taskid)
-	print("处理信息耗时", time.time() - t1)
+			await insertBussinessInfo(b, taskid)
 
 
-def insertBussinessInfo(str, taskid):
+async def insertBussinessInfo(str, taskid):
 	caseid = re.findall("caseid='(.*?)'", str)[0]
 	casedes = re.findall("casedes='(.*?)'", str)[0]
 	stepid = re.findall("id='step_(.*?)'", str)[0]

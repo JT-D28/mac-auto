@@ -232,7 +232,7 @@ class ResultDetail(Model):
 	
 	loop_id = IntegerField(null=True)##迭代次数
 	is_verify = CharField(max_length=4, default=0, null=True)
-	
+	# 1：验证 2：调试  3:定时
 	def __str__(self):
 		return "%s,%s" % (self.case, self.step)
 

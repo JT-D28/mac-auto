@@ -1,4 +1,3 @@
-import os
 import threading
 
 from django.http import JsonResponse, HttpResponse
@@ -19,11 +18,11 @@ def sendreport(request):
 	planid = request.POST.get('planid')
 	plan = Plan.objects.get(id=planid)
 	username = request.session.get("username", None)
-	detail = list(ResultDetail.objects.filter(plan=plan, is_verify=1).order_by('-createtime'))
 	config_id = plan.mail_config_id
-	if detail is None:
+	taskid = getRunningInfo(planid, 'verify_taskid')
+	if taskid == '':
 		msg = "任务还没有运行过！"
-	elif getRunningInfo('',planid,'isrunning') in ('1', 1):
+	elif getRunningInfo(planid,'isrunning') in ['1','3']:
 		msg = "任务运行中，请稍后！"
 	else:
 		config = MailConfig.objects.get(id=plan.mail_config_id)
@@ -31,7 +30,7 @@ def sendreport(request):
 			info = '邮件发送没有开启;'
 		if config.is_send_dingding == 'close':
 			info += '钉钉发送没有开启;'
-		taskid = detail[0].taskid
+
 		threading.Thread(target=sendmail, args=(config_id, username, taskid)).start()
 		msg = '发送中...<br> {}'.format(info)
 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)

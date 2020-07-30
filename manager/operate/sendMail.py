@@ -18,7 +18,7 @@ from manager.models import ResultDetail, BusinessData, Order, MailConfig, Case
 from manager.operate.mongoUtil import Mongo
 
 
-def processSendReport(taskid, config_id, callername, kind):
+def processSendReport(taskid, config_id, callername):
 	# 	1.从数据库中获取该次任务的结果数据集合存到db中
 	gettaskresult(taskid)
 	if config_id:
@@ -28,9 +28,9 @@ def processSendReport(taskid, config_id, callername, kind):
 		mail_res = MainSender.send(taskid, user, mail_config)
 		dingding_res = MainSender.dingding(taskid, user, mail_config)
 		logger.info("发送邮件 结果[%s]" % mail_res)
-		viewcache(taskid, callername, kind, mail_res)
+		viewcache(taskid,mail_res)
 		logger.info("发送钉钉通知 结果[%s]" % dingding_res)
-		viewcache(taskid, callername, kind, dingding_res)
+		viewcache(taskid, dingding_res)
 
 
 def _save_builtin_property(taskid, username):
@@ -50,7 +50,7 @@ def _save_builtin_property(taskid, username):
 	 ${PLAN_STEP_SKIP_COUNT}
 	 #${PLAN_SUCCESS_RATE}
 	'''
-	detail = Mongo.taskreport(taskid).find_one()
+	detail = Mongo.taskreport().find_one({"taskid":taskid})
 	if not detail:
 		logger.info('==内置属性赋值提前结束，执行结果表无数据')
 		return
@@ -244,7 +244,7 @@ def gettaskresult(taskid):
 	##
 	logger.info('报告数据=>', detail)
 
-	Mongo.taskreport(taskid).insert_one(detail)
+	Mongo.taskreport().insert_one(detail)
 
 
 def _get_full_case_name(case_id, curent_case_name):
@@ -308,8 +308,7 @@ class MainSender:
 	@classmethod
 	def gethtmlcontent(cls, taskid, rich_text):
 
-		data = Mongo.taskreport(taskid).find_one()
-		logger.info('报告data:', data)
+		data = Mongo.taskreport().find_one({"taskid":taskid})
 
 		if not data:
 			return '<html>无运行数据..</html>'
@@ -320,7 +319,7 @@ class MainSender:
 		bodyhtml = ''
 		# bodyhtml='<span style="float:right;font-size:1px;font-color:#eee;">%s-%s</span>'%(data['taskid'],data['planid'])
 		bodyhtml += '<h2 style="text-align: center;">[%s]接口测试报告</h2>' % data['planname']
-		bodyhtml += "<p class='attribute'><strong>测试结果</strong></p>"
+		bodyhtml += "<p class='attribute'><strong>测试结果</strong></p><button class='layui-btn btn' id='querybtn'>查询</button>"
 		bodyhtml += "<table><tr><th>#Samples</th><th>Failures</th><th>Success Rate</th><th>Average Time</th><th>Min Time</th><th>Max Time</th></tr><tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr></table>" % (
 			data['total'], data['fail'], data['success_rate'], data['average'], data['min'], data['max'])
 		bodyhtml += "<strong>测试详情</strong>"
@@ -449,7 +448,7 @@ class MainSender:
 				return '=========钉钉token为空 跳过发送================='
 			else:
 				url = 'https://oapi.dingtalk.com/robot/send?access_token=' + dingdingtoken
-				res = Mongo.taskreport(taskid).find_one()
+				res = Mongo.taskreport().find_one({"taskid":taskid})
 				pagrem = {
 					"msgtype": "markdown",
 					"markdown": {

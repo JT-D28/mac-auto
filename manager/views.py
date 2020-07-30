@@ -986,20 +986,18 @@ def transform(request):
 def third_party_call(request):
     res = decrypt_third_invoke_url_params(request.GET.get('v'))
     planid = request.GET.get('planid')
-    plan = Plan.objects.get(id=planid)
-    taskid = gettaskid(plan.__str__())
+    taskid = gettaskid(planid)
     dbscheme = request.GET.get('scheme')
     clear_task_before(taskid)
     callername = res['callername']
-    is_verify = request.GET.get('is_verify')
 
-    if getRunningInfo(callername, planid, 'isrunning') != '0':
+    if getRunningInfo(planid, 'isrunning') != '0':
         return JsonResponse(simplejson(code=1, msg="调用失败，任务正在运行中，稍后再试！"), safe=False)
 
     logger.info('调用方=>', callername)
     logger.info('调用计划=>', planid)
     logger.info('调用数据连接方案=>', dbscheme)
-    runplans(callername, taskid, [planid], is_verify, None, dbscheme)
+    threading.Thread(target=runplan, args=(callername, taskid, planid, '1', 'plan_' + str(planid))).start()
     return JsonResponse(simplejson(code=0, msg="调用成功,使用DB配置:[%s]" % dbscheme, taskid=taskid), safe=False)
 
 
@@ -1083,7 +1081,7 @@ def querytaskdetail(request):
     detail = {}
     taskid = request.GET.get('taskid')
 
-    detail = Mongo.taskreport(taskid).find_one()
+    detail = Mongo.taskreport().find_one({"taskid":taskid})
 
     # logger.info(detail)
 
@@ -1103,25 +1101,21 @@ def querytaskdetail(request):
 
 @csrf_exempt
 def runtask(request):
-    from .context import m_pool
     callername = request.session.get('username')
-    runids = [x for x in request.POST.get('ids').split(',')]
-    is_verify = request.POST.get('is_verify')
-    for runid in runids:
-        planid = get_run_node_plan_id('plan_%s' % runid)
-        logger.info('获取待运行节点计划ID:', planid)
+    planid = request.POST.get('ids')
+    runkind = request.POST.get('runkind')
+    logger.info('获取待运行节点计划ID:', planid)
+    taskid = gettaskid(planid)
 
-        plan = Plan.objects.get(id=planid)
-        taskid = gettaskid(plan.__str__())
-        state_running = getRunningInfo(callername, planid, 'isrunning')
-        if state_running != '0':
-            msg = '验证' if state_running == 'verify' else '调试'
-            return JsonResponse(simplejson(code=1, msg='计划正在运行[%s]任务，稍后再试！' % msg), safe=False)
-        t = threading.Thread(target=runplan, args=(callername, taskid, planid, is_verify, None, 'plan_%s' % runid))
-        t.start()
-    # logger.info('m_pool:',m_pool)
-    # m_pool.apply_async(runplan,(callername, taskid, planid, is_verify,None,'plan_%s'%runid))
+    state_running =getRunningInfo(planid=planid,type='isrunning')
 
+    if state_running != '0':
+        msg = {"1":"验证","2":"调试","3":"定时"}[state_running]
+        return JsonResponse(simplejson(code=1, msg='计划正在运行[%s]任务，稍后再试！' % msg), safe=False)
+
+    t = threading.Thread(target=runplan, args=(callername, taskid, planid, runkind, 'plan_%s' % planid))
+    t.start()
+    request.session['console_taskid'] = taskid
     return JsonResponse(simplejson(code=0, msg="你的任务开始运行", taskid=taskid), safe=False)
 
 

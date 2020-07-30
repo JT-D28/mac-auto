@@ -20,7 +20,7 @@ from .db import Mysqloper as op
 from pyDes import *
 from django.conf import settings
 from manager.context import Me2Log as logger
-
+from manager.operate.mongoUtil import Mongo
 
 # 用户变量缓存 key=user.varname
 # __varcache=dict()
@@ -818,15 +818,13 @@ def ordered(iterator, key='value'):
 """
 
 
-def gettaskid(plan):
+def gettaskid(planid):
 	"""
 	任务id
 	"""
-	# s=str(time.time())
-	# new_md5 = md5()
-	# new_md5.update(s.encode(encoding='utf-8'))
-	# return new_md5.hexdigest()
-	taskid = base64.b64encode((re.findall('(?<=\[).*?(?=])', plan)[0] + '_' + str(time.time())).encode()).decode()
+	text = '%s_%s'%(planid,time.time())
+	taskid = base64.b64encode(text.encode()).decode()
+
 	return taskid
 
 

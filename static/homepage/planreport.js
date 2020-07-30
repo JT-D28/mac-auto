@@ -8,13 +8,11 @@ var app = new Vue({
                 label: 'name',
                 id: 'id'
             },
-            showReport: false,
             productCountnum: '',
             productRatenum: '',
             noticeSetVisible: false,
             runningState: '',
-            log_text: '',
-            synchronize: '获取',
+
             Coverage: {
                 branchCoverage: {
                     "covered": 0,
@@ -177,7 +175,7 @@ var app = new Vue({
             var that = this;
             planid = that.form.plan.substr(5);
             if (planid != '') {
-                _post_nl('/manager/runplan', {ids: planid, runkind: '1'}, function (data) {
+                _post_nl('/manager/runplan', {ids: planid, is_verify: '1'}, function (data) {
                     data = JSON.parse(data)
                     if (data.code == 0) {
                         layer.msg(data.msg, {

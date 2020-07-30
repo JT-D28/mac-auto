@@ -175,7 +175,7 @@ class Mysqloper:
 			
 			msg, self.conn = self.db_connect(conname, scheme)
 			if msg is not 'success':
-				viewcache(taskid, callername, None, "方案【%s】下的数据库【%s】连接失败，尝试重新连接..."%(scheme,conname))
+				viewcache(taskid, "方案【%s】下的数据库【%s】连接失败，尝试重新连接..."%(scheme,conname))
 				msg, self.conn = self.db_connect(conname, scheme)
 				if msg is not 'success':
 					return (msg, self.conn)
@@ -203,7 +203,7 @@ class Mysqloper:
 						logger.error('查询[%s]重复字段:',data)
 						return ('error', "sql[%s]查询结果为%s存在多组数据或多个字段 不支持" % (sql,data))
 				elif sqlresult == None:
-					viewcache(taskid, callername, None, "sql <span style='color:#009999;'>%s</span> 查询无结果"%(sql))
+					viewcache(taskid, "sql <span style='color:#009999;'>%s</span> 查询无结果"%(sql))
 					return ('success', '')
 				
 				else:
@@ -218,7 +218,7 @@ class Mysqloper:
 			msg = "[<span style='color:#009999;'>%s</span>]执行sql <span style='color:#009999;'>%s</span> 结果为 <span style='color:#009999;'>%s</span>" % (
 				conname, sql, sqlresult)
 			# print(msg)
-			viewcache(taskid, callername, None, msg)
+			viewcache(taskid, msg)
 			
 			return ('success', sqlresult)
 		

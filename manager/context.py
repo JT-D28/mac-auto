@@ -206,37 +206,10 @@ redis key格式=>console.msg::username::taskid
 
 cons={}
 
-def viewcache(taskid, username, kind=None, *msg):
-    if cons.get(taskid,None) is None:
-        cons[taskid]=RedisUtils()
-    con = cons.get(taskid)
-
+def viewcache(taskid, *msg):
     try:
         what = "%s        %s<br>" % (time.strftime("[%m-%d %H:%M:%S]", time.localtime()), "".join(msg))
-        # with open(logname, 'a', encoding='UTF-8') as f:
-        #     f.write(what + '<br>\n')
-        #
-        # # 定时任务不加入redis队列
-        # if kind is not None or username=='定时任务':
-        #     return
-        #
-        # key = "console.msg::%s::%s" % (username, taskid)
-        # con.lpush(key, what)
-        Mongo.tasklog(taskid).insert_one(
-            {'time': datetime.datetime.utcnow(), 'info': what})
-        # logname = BASE_DIR + "/logs/" + taskid + ".log"
-        # what = "".join((msg))
-        # what = "%s        %s" % (time.strftime("[%m-%d %H:%M:%S]", time.localtime()), what)
-        # with open(logname, 'a', encoding='UTF-8') as f:
-        #     f.write(what + '<br>\n')
-        #
-        # # 定时任务不加入redis队列
-        # if kind is not None or username=='定时任务':
-        #     return
-        #
-        # key = "console.msg::%s::%s" % (username, taskid)
-        # con.lpush(key, what)
-
+        Mongo.tasklog(taskid).insert_one({'time': time.time(), 'info': what})
     except Exception as e:
         Me2Log.error("viewcache异常")
         Me2Log.error(traceback.format_exc())
@@ -252,59 +225,39 @@ def remotecache(key, linemsg):
 _runninginfo = dict()
 
 
-def setRunningInfo(username, planid, taskid, isrunning, dbscheme='全局',is_verify='1'):
-    if 'lastest_taskid' not in _runninginfo:
-        _runninginfo['lastest_taskid'] = {}
-    lastest_taskid = _runninginfo.get('lastest_taskid', {})
-    lastest_taskid[username] = taskid
-    if str(planid) not in _runninginfo:
-        _runninginfo[str(planid)] = {}
-    planinfo = _runninginfo.get(str(planid), {})
-    if isrunning == 1:
-        planinfo['isrunning'] = 'verify' if is_verify == '1' else 'debug'
-    else:
-        planinfo['isrunning'] = '0'
-    planinfo['dbscheme'] = dbscheme
-    if 'verify' not in planinfo:
-        planinfo['verify']={}
-    if 'debug' not in planinfo:
-        planinfo['debug']={}
-    verify = planinfo.get('verify', {})
-    debug = planinfo.get('debug', {})
-    if str(is_verify) == '1':
-        verify['taskid']=taskid
-    elif str(is_verify) == '0':
-        debug['taskid'] = taskid
-    print("储存运行信息", _runninginfo)
+def setRunningInfo(planid, taskid, runkind, dbscheme='全局'):
+    planid = int(planid)
+    # runkind 0:未运行   1：验证 2：调试  3:定时
+    if Mongo.taskid().find({"planid": planid}).count() == 0:
+        Mongo.taskid().insert_one({"planid": planid, "runkind": "0", "dbscheme": "全局", "verify": "", "debug": ""})
+
+    if runkind in ['1', '3']:
+        updatestr = {"runkind": runkind, "verify": taskid, "dbscheme": dbscheme}
+    elif runkind == '2':
+        updatestr = {"runkind": "2", "debug": taskid, "dbscheme": dbscheme}
+    elif runkind == '0':
+        updatestr = {"runkind": "0"}
+
+    Mongo.taskid().update({"planid": planid}, {"$set": updatestr})
+
+    print("储存运行信息", Mongo.taskid().find_one({"planid": planid}))
 
 
-def getRunningInfo(username='', planid='', type='lastest_taskid'):
-    from .models import Plan
-    Me2Log.info('username:%s planid:%s type:%s'%(username,planid,type))
-    if type == 'lastest_taskid':
-        latest_taskids = _runninginfo.get('lastest_taskid', {})
-        latest_taskid = latest_taskids.get(username, '')
-        return latest_taskid
-    elif type == 'debug_taskid':
-        planinfo = _runninginfo.get(str(planid), {})
-        debug = planinfo.get('debug', {})
-        debug_taskid = debug.get('taskid', '')
-        return debug_taskid
+def getRunningInfo(planid='', type='isrunning'):
+    planid = int(planid)
+    _runninginfo = Mongo.taskid().find_one({"planid": planid})
+    _runninginfo = _runninginfo if _runninginfo else {}
+
+    if type == 'debug_taskid':
+        return _runninginfo.get('debug','')
     elif type == 'verify_taskid':
-        planinfo = _runninginfo.get(str(planid), {})
-        verify = planinfo.get('verify', {})
-        verify_taskid = verify.get('taskid', '')
-        return verify_taskid
+        return _runninginfo.get('verify','')
     elif type == 'isrunning':
-        planinfo = _runninginfo.get(str(planid), {})
-        isrunning = planinfo.get('isrunning', '0')
-        return str(isrunning)
+        return _runninginfo.get('runkind','0')
     elif type == 'dbscheme':
-        planinfo = _runninginfo.get(str(planid), {})
-
+        from .models import Plan
         nofind = Plan.objects.get(id=planid).schemename
-        dbscheme = planinfo.get('dbscheme', nofind)
-
+        dbscheme = _runninginfo.get('dbscheme', nofind)
         return dbscheme
 
 
@@ -386,7 +339,7 @@ def add_mock(f):
 
                     result = "<span class='layui-bg-%s'>%s</span>" % (color_res.get(result, 'orange'), result)
                     error = '   原因=>%s' % error if 'success' not in result else ''
-                    viewcache(taskid,callername, kind, "步骤执行结果%s%s" % (result, error))
+                    viewcache(taskid, "步骤执行结果%s%s" % (result, error))
 
         except:
             Me2Log.info('[mock测试异常]{}',traceback.format_exc())
@@ -428,8 +381,8 @@ def _step_mock(callername, taskid, step,businessdata, kind=None,is_repeat=0):
         
         username = callername   
         if is_repeat==0:     
-            viewcache(taskid, username, kind, "--" * 100)
-            viewcache(taskid, username, kind,
+            viewcache(taskid, "--" * 100)
+            viewcache(taskid,
                       "开始执行步骤[<span style='color:#FF3399'>%s</span>] 测试点[<span style='color:#FF3399' id=%s>%s</span>]&nbsp;<i style='background-color:#009688;color:#fff;'>mock test</i>" % (
                           step.description,businessdata.id, businessdata.businessname))
         
@@ -445,8 +398,8 @@ def _step_mock(callername, taskid, step,businessdata, kind=None,is_repeat=0):
         
         if step.step_type == "interface":
             if is_repeat==0:
-                viewcache(taskid, username, kind, "数据校验配置=>%s" % db_check)
-                viewcache(taskid, username, kind, "接口校验配置=>%s" % itf_check)
+                viewcache(taskid, "数据校验配置=>%s" % db_check)
+                viewcache(taskid, "接口校验配置=>%s" % itf_check)
             headers = []
             
             text, statuscode, itf_msg = '', -1, ''
@@ -470,11 +423,10 @@ def _step_mock(callername, taskid, step,businessdata, kind=None,is_repeat=0):
                                                                     step.headers, step.content_type, step.temp, kind,
                                                                     timeout)
             if text.lstrip().startswith('<!DOCTYPE html>') and is_repeat==0:
-                viewcache(taskid, username, kind,"<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>内容为HTML，不显示</xmp></span>")
+                viewcache(taskid,"<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>内容为HTML，不显示</xmp></span>")
             else:
                 if is_repeat==0:
-                    viewcache(taskid, username, kind,
-                      "<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>" % text)
+                    viewcache(taskid,"<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>" % text)
             
             if len(str(statuscode)) == 0:
                 return ('fail', itf_msg)
@@ -490,8 +442,6 @@ def _step_mock(callername, taskid, step,businessdata, kind=None,is_repeat=0):
                     if res is not 'success':
                         Me2Log.info('################db_check###############' * 20)
                         return ('fail', error)
-                # else:
-                #   viewcache(taskid,username,kind,'数据校验没配置 跳过校验')
                 
                 if itf_check:
                     if step.content_type in ('json', 'urlencode','formdata'):
@@ -503,8 +453,6 @@ def _step_mock(callername, taskid, step,businessdata, kind=None,is_repeat=0):
                     
                     if res is not 'success':
                         return ('fail', error)
-                # else:
-                #   viewcache(taskid,username,kind,'接口校验没配置 跳过校验')
                 
                 return ('success', '')
             else:
@@ -516,19 +464,18 @@ def _step_mock(callername, taskid, step,businessdata, kind=None,is_repeat=0):
         
         elif step.step_type == "function":
             if is_repeat==0:
-                viewcache(taskid, username, kind, "数据校验配置=>%s" % db_check)
-            # viewcache("接口返回校验=>%s"%itf_check)
+                viewcache(taskid,"数据校验配置=>%s" % db_check)
             
             # methodname=re.findall("(.*?)\(.*?\)", step.body.strip())[0]
             # builtinmethods=[x.name for x in getbuiltin() ]
             # builtin=(methodname in builtinmethods)
             
-                viewcache(taskid, username, kind, "调用函数=>%s" % step.body)
+                viewcache(taskid,"调用函数=>%s" % step.body)
             
             Me2Log.info('关联id=>', step.related_id)
             res, msg = _callfunction(user, step.related_id, step.body, paraminfo, taskid=taskid)
             if is_repeat==0:
-                viewcache(taskid, username, kind, "函数执行结果=>%s" % res)
+                viewcache(taskid, "函数执行结果=>%s" % res)
             
             # Me2Log.info('fjdajfd=>',res,msg)
             if res is not 'success':
@@ -545,7 +492,6 @@ def _step_mock(callername, taskid, step,businessdata, kind=None,is_repeat=0):
                 else:
                     return ('success', '')
             else:
-                # viewcache(taskid,username,kind,'数据校验没配置 跳过校验')
                 return ('success', '')
         return ('success','')
     

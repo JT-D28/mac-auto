@@ -35,7 +35,7 @@ def queryplan(request):
 	sql = '''
     SELECT COUNT(DISTINCT taskid) as 'total',sum(CASE WHEN r.result='success' THEN 1 ELSE 0 END) AS '成功数' ,count(*) as '总数'
     FROM manager_resultdetail r WHERE r.plan_id IN (SELECT follow_id FROM manager_order WHERE main_id=%s)
-    AND r.result NOT IN ('omit') AND r.is_verify=1
+    AND r.result NOT IN ('omit') AND r.is_verify in (1,3)
     '''
 	with connection.cursor() as cursor:
 		cursor.execute(sql, [pid])
@@ -82,19 +82,19 @@ def queryPlanState(request):
 		planid = request.POST.get('id')[5:]
 	type = request.POST.get('type')
 	if type:
-		fl = getRunningInfo('', planid, 'isrunning')
-		taskid = getRunningInfo(request.session.get('username'), planid, 'debug_taskid')
+		fl = getRunningInfo(planid, 'isrunning')
+		taskid = getRunningInfo(planid, 'debug_taskid')
 		return JsonResponse({'running': fl,'taskid':taskid})
-	is_running = '0' if getRunningInfo('',planid,'isrunning') =='0' else '1'
-	return JsonResponse({'data': is_running})
+	runkind = getRunningInfo(planid,'isrunning')
+	msg = {"0":"未运行","1": "验证", "2": "调试", "3": "定时"}[runkind]
+	return JsonResponse({'data': msg})
 
 
 @csrf_exempt
 def planforceStop(request):
 	planid = request.POST.get('id')[5:]
 	try:
-		user = request.session.get("username")
-		setRunningInfo(user, planid,getRunningInfo(user,planid,'lastest_taskid'),0)
+		setRunningInfo(planid,'','0')
 		code = 0
 		msg = 'success'
 	except:

@@ -82,7 +82,7 @@ def runforJacoco(request):
         runningPlans=[]
         for i in jacocoConfig.buildplans.split(','):
             planid= i[5:]
-            if getRunningInfo(callername, planid, 'isrunning')!='0':
+            if getRunningInfo(planid, 'isrunning')!='0':
                 planname = Plan.objects.get(id=planid).description
                 runningPlans.append('【%s】'%planname)
         if runningPlans:
@@ -111,9 +111,9 @@ def manyRun(jacocoConfig, callername):
         planid = i[5:]
         try:
             plan = Plan.objects.get(id=planid)
-            taskid = gettaskid(plan.__str__())
+            taskid = gettaskid(planid)
             print('开始执行计划【%s】' % plan.description)
-            runplan(callername, taskid, planid, 1, kind=None, startnodeid=i)
+            threading.Thread(target=runplan, args=(callername, taskid, planid, '1',i)).start()
         except:
             pass
     jobs=[]

@@ -1702,10 +1702,8 @@ def _get_all_case_child_id(casenodeid,all_):
 
 
 
-
-
-
 def get_full_tree():
+    starttime=time.time()
     nodes = []
     root = {'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
     # products = list(mm.Product.objects.all())
@@ -1733,7 +1731,7 @@ def get_full_tree():
             plan_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
         
         # logger.info('$' * 200)
-        # logger.info('plan_order_list=>', plan_order_list, len(plan_order_list))
+        logger.info('plan_order_list=>', plan_order_list, len(plan_order_list))
         for order in plan_order_list:
             try:
                 # plan = mm.Plan.objects.get(id=int(order.follow_id))
@@ -1763,8 +1761,8 @@ def get_full_tree():
                 cursor.execute(query_case_order_list_sql, [plan['id']])
                 case_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
                 case_order_list.sort(key=lambda e: e.get('value'))
-            
-            #logger.info('case_order_list=>', case_order_list, len(case_order_list))
+
+            # logger.info('case_order_list=>', case_order_list, len(case_order_list))
             
             for order in case_order_list:
                 # case = mm.Case.objects.get(id=order.follow_id)
@@ -1786,6 +1784,8 @@ def get_full_tree():
                 _add_next_case_node(plan, case, nodes)
     
     nodes.append(root)
+
+    logger.info('[花费]{}s'.format(time.time()-starttime))
     return nodes
 
 
@@ -1798,8 +1798,8 @@ def _add_next_case_node(parent, case, nodes):
         cursor.execute(query_step_order_sql, ['case_step', case['id']])
         step_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
         step_order_list.sort(key=lambda e: e.get('value'))
-    
-    # logger.info('step_order_list11=>',step_order_list,len(step_order_list))
+
+        # logger.info('step_order_list:{}'.format(step_order_list))
     
     for order in step_order_list:
         # logger.info('stepid=>', order['follow_id'])

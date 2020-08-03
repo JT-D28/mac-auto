@@ -1,22 +1,30 @@
+import  time
+from types import MethodType,FunctionType
+from functools import  update_wrapper
+class _Save(object):
+    def get(self,key):
+        return {}
 
-# m1=(a+b+c)/3
 
-# m2=3*a+2*b+1*c
 
-data=[(5,3,1),(10,6,2)]
-data=[(5,3,1),(15,3.5,1.3)]##0.45>0.38
-data=[(5,3,1),(7,4.3,6)]## 0.50<0.66
-m11=(data[0][0]+data[0][1]+data[0][2])/3
-m12=(data[1][0]+data[1][1]+data[1][2])/3
-f1=m11/m12
+cache_={}
+def cached(func):
 
-m21=7*data[0][0]+3*data[0][1]+data[0][2]
-m22=7*data[1][0]+3*data[1][1]+data[1][2]
-f2=m21/m22
+    def _wrap(*args,**kws):
+        res=func(*args,**kws)
+        a=cache_.get(args[1],{})
+        a['last']=str(time.time())
 
-print(f1,f2)
+        return res
 
-print(1.33*80000/100+1.63*100+104)
-print(80000*0.08/100+10000*0.1/100+10000*0.15/100)
-print(1.5*100000/100)
+    return update_wrapper(_wrap, func)
 
+
+class Query(object):
+    @cached
+    def _query_info(self,sql):
+        time.sleep(2)
+        return 'res:122'
+
+
+Query()._query_info('selcet ')

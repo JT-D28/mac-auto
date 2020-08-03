@@ -1,0 +1,58 @@
+{% load static %}
+<!DOCTYPE html >
+<html lang="en" style="height: 100%">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+    <title>报文模板管理</title>
+    <style type="text/css">
+        .layui-icon:hover {
+            cursor: pointer;
+        }
+
+        .btn {
+            height: 34px;
+            line-height: 34px;
+        }
+
+        .layui-table-view {
+            margin: 20px 0;
+        }
+
+        .edit {
+            width: 24px;
+            height: 17px;
+            font-size: 12px;
+            font-family: PingFang-SC-Medium, PingFang-SC;
+            font-weight: 500;
+            color: rgba(0, 151, 136, 1);
+            line-height: 17px;
+        }
+
+    </style>
+</head>
+<body style="height:calc(100% - 40px);padding: 20px">
+<button class="btn layui-btn" id="query_test_count">获取测试次数全量数据</button>
+
+</body>
+
+
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+
+<script type="text/javascript">
+layui.use(['jquery','layer'],function (e) {
+    var $=layui.jquery;
+
+    $('#query_test_count').on('click',function () {
+        layer.msg('2344')
+
+    })
+
+})
+
+
+</script>
+
+</html>

@@ -299,6 +299,13 @@ def testexpress2(request):
 def testxml(request):
 	return render(request, 'manager/test.xml', content_type="application/xml")
 
+
+@csrf_exempt
+def query_test_count_info(request):
+	from manager.hz import  query_info
+	return JsonResponse(pkg(code=0,msg='query sucess.',data=query_info()))
+
+
 @csrf_exempt
 def mocktimeout(request):
 	time.sleep(20)

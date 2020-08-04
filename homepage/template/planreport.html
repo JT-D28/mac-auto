@@ -1,0 +1,568 @@
+{% load static %}
+
+<!DOCTYPE html>
+<head>
+    <!-- 禁止浏览器从本地缓存中调阅页面。-->
+    <meta http-equiv="pragram" content="no-cache">
+    <!--网页不保存在缓存中，每次访问都刷新页面。-->
+    <meta http-equiv="cache-control" content="no-cache, must-revalidate">
+    <!--同上面意思差不多，必须重新加载页面-->
+    <!--网页在缓存中的过期时间为0，一旦网页过期，必须从服务器上重新订阅-->
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <script src="{% static 'homepage/vue.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'homepage/eleui/theme-chalk/index.css' %}">
+    <link rel="stylesheet" href="{% static 'homepage/layui/css/layui.css' %}" media="all">
+    <link rel="stylesheet" href="{% static 'homepage/layui/css/layuimini.css' %}" media="all">
+    <script src="{% static 'homepage/eleui/index.js' %}"></script>
+    <script src="{% static 'manager/js/utils.js' %}" charset="utf-8"></script>
+    <script src="{% static 'homepage/echarts.common.min.js' %}" charset="utf-8"></script>
+    <script src="{% static 'homepage/echartsTheme.js' %}" charset="utf-8"></script>
+    <script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
+    <script src="{% static 'manager/js/jquery.min.js' %}"></script>
+    <title></title>
+</head>
+
+<style>
+
+    .el-icon-arrow-left {
+        margin-left: 7px;
+    }
+
+    .el-icon-arrow-right {
+        margin-right: 7px;
+    }
+
+    #selectpd,
+    #selectpl {
+        padding-left: 42px;
+    }
+
+    body {
+        background-color: #f2f2f2
+    }
+
+    .el-input__inner {
+        height: 34px !important;
+        line-height: 34px;
+    }
+
+
+</style>
+<body>
+<template id="planbox">
+    <div>
+        <div class="layui-card" style="width:15%;margin: 0px 20px 20px 20px;display: inline-block">
+            <div style="padding:20px;height: calc(100% - 40px)">
+                <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        综合平稳指数：⭐⭐⭐⭐⭐</p>
+            </div>
+        </div>
+
+      <div class="layui-card"
+             style="width:15%;margin: 0px 10px 20px 20px;display: inline-block">
+            <div style="padding:20px;height: calc(100% - 40px)">
+                <div>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        执行次数：${ currentRunNum }</p>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        上周期执行次数：${ lastRunNum }</p>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        相比${ currentRunNum>=lastRunNum?"增长":"减少"}：${ currentRunNum - lastRunNum }</p>
+                </div>
+            </div>
+        </div>
+         <div class="layui-card"
+             style="width:15%;min-width:300px;margin: 0px 10px 20px 20px;display: inline-block">
+            <div style="padding:20px;height: calc(100% - 40px)">
+                <div>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        通过率：${ currentPassRate }</p>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        上周期执行次数：${ lastPassRate }</p>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        相比${ currentPassRate>=lastPassRate?"增长":"减少"}：${ (currentPassRate - lastPassRate).toFixed(2)
+                        }</p>
+                </div>
+            </div>
+        </div>
+        <div class="layui-card"
+             style="width:20%;min-width:300px;margin: 0px 10px 20px 20px;display: inline-block;height: 400px">
+            <div style="padding:20px;height: calc(100% - 40px)">
+                <div>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        最近${ runtimes}次：</p>
+                </div>
+                <div id="t111e" ref="mychart"
+                     style="background-color:#f2f2f2;height:100%;"></div>
+            </div>
+        </div>
+    </div>
+    </div>
+</template>
+
+
+<div id="app">
+    <template>
+        <div id="header" style="height: 74px;">
+            <el-form :inline="true" style="padding: 20px" class="demo-form-inline">
+                <el-select id="selectpd" v-model="product" filterable placeholder="选择产品"
+                           style="width: 240px;padding-right: 15px"
+                           @change="selectProduct">
+                    <img slot="prefix" src="{% static 'manager/icon/product.svg' %}"
+                         style="width:18px;height:18px;padding: 8px 10px;">
+                    <el-option v-for="product in products" :key="product.id"
+                               :label="product.description"
+                               :value="product.id">
+                    </el-option>
+                </el-select>
+
+                <el-select
+                        v-model="planid"
+                        multiple
+                        collapse-tags
+                        style="margin-left: 20px;"
+                        placeholder="选择计划"
+                        @visible-change="selectPlanVisible($event)" filterable
+                        style="width: 300px">
+                    <img slot="prefix" src="{% static 'manager/icon/plan.svg' %}"
+                         style="width:18px;height:18px;padding: 8px 10px;">
+                    <el-option
+                            v-for="item in plans"
+                            :key="item.id"
+                            :label="item.name"
+                            :value="item.id">
+                    </el-option>
+                </el-select>
+                <el-date-picker
+                        v-model="querytime"
+                        type="daterange"
+                        start-placeholder="开始日期"
+                        @change="query('omit')"
+                        end-placeholder="结束日期"
+                        unlink-panels
+                        value-format="timestamp"
+                        :picker-options="pickerOptions"
+                        :default-time="['00:00:00', '23:59:59']">
+                </el-date-picker>
+            </el-form>
+        </div>
+
+
+        <planbox
+                v-for="plan in planid"
+                v-bind:key="plan"
+                v-bind:planid="plan"
+                v-bind:querytime="querytime"
+                v-bind:productid="product"
+        >
+        </planbox>
+
+
+        <div class="layui-card" v-if="jacocoVisible"
+             style="width:20%;min-width:300px;margin: 0px 20px 20px 20px;display: inline-block">
+            <div style="padding:20px;height: calc(100% - 40px)">
+                <div>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        代码覆盖率：(时间：${ coverytime })</p>
+                </div>
+                <div>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        总代码行数：${ coverydata.line==undefined?'':coverydata.line.total }</p>
+                </div>
+                <div>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        行覆盖率：${ coverydata.line==undefined?'':coverydata.line.percentagefloat }</p>
+                </div>
+            </div>
+            <div style="padding:20px;height: calc(100% - 40px)">
+                <div>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        上一次代码覆盖率：(时间：${ oldcoverytime })</p>
+                </div>
+                <div>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        上一次总代码行数：${ oldcoverydata.line==undefined?'':oldcoverydata.line.total }</p>
+                </div>
+                <div>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        上一次行覆盖率：${ oldcoverydata.line==undefined?'':oldcoverydata.line.percentagefloat }</p>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="layui-card"
+             style="width:30%;min-width:300px;margin: 0px 20px 20px 20px;display: inline-block;height: 400px">
+            <div style="padding:20px;height: calc(100% - 40px)">
+                <div>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        代码共提交 ${ gitCommits.length } 次：</p>
+                </div>
+                <el-table
+                        :data="gitCommits"
+                        height="250"
+                        border
+                        style="width: 100%">
+                    <el-table-column
+                            prop="time"
+                            label="日期"
+                            width="130">
+                    </el-table-column>
+                    <el-table-column
+                            prop="who"
+                            label="提交人"
+                            width="130">
+                    </el-table-column>
+                    <el-table-column
+                            prop="message"
+                            label="信息">
+                    </el-table-column>
+                </el-table>
+
+                <div>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        项目在jenkins上共更新 ${ jenkinsUpdatetimes } 次：</p>
+                </div>
+            </div>
+        </div>
+
+
+    </template>
+</div>
+</body>
+
+
+<script>
+    Vue.component('planbox', {
+        template: '#planbox',
+        props: ['querytime', 'planid', 'productid'],
+        delimiters: ['${', '}'],
+        data: function () {
+            return {
+                currentRunNum: '',
+                lastRunNum: '',
+                currentPassRate: '',
+                lastPassRate: '',
+                currentBusinessNum: '',
+                currentRunBusiness: '',
+                jenkinsUpdatetimes: '',
+                coverytime: '',
+                coverydata: {},
+                oldcoverytime: '',
+                oldcoverydata: {},
+                runtimes: '',
+                echartsRecords:''
+            }
+        },
+        methods: {
+            query() {
+                var that = this;
+                var starttime = this.querytime[0].toString().substr(0, 10)
+                var endtime = this.querytime[1].toString().substr(0, 10)
+                var productid = this.product
+                var planid = this.planid
+                let dom = this.$refs.mychart
+                this.echartsRecords = echarts.init(dom, 'me2');
+                this.getReportChart(starttime, endtime)
+                _post_nl('/homepage/planrunnum/', {
+                    'id': planid,
+                    'starttime': starttime,
+                    'endtime': endtime
+                }, function (data) {
+                    that.currentRunNum = data.currentRunNum
+                    that.lastRunNum = data.lastRunNum
+                })
+                _post_nl('/homepage/planpassrate/', {
+                    'id': planid,
+                    'starttime': starttime,
+                    'endtime': endtime
+                }, function (data) {
+                    that.currentPassRate = data.currentPassRate
+                    that.lastPassRate = data.lastPassRate
+                })
+            },
+            getReportChart(starttime, endtime) {
+                var that = this
+                _post_nl('/homepage/planRunChart/', {
+                    id: this.plan, 'starttime': starttime,
+                    'endtime': endtime
+                }, function (result) {
+                    echartsRecords.resize();
+                    that.runtimes = result.info.length
+                    this.echartsRecords.setOption(that.reportconfig(result.info));
+                });
+            },
+            reportconfig(data) {
+                x = [];
+                success = [];
+                total = [];
+                fail = [];
+                skip = [];
+                error = [];
+                success_rate = []
+                hundred = [];
+                taskids = [];
+                for (let i = 0; i < data.length; i++) {
+                    x.push(data[i]['time'])
+                    success.push(data[i]['successnum'])
+                    total.push(data[i]['total'])
+                    fail.push(data[i]['failnum'])
+                    skip.push(data[i]['skipnum'])
+                    error.push(data[i]['errornum'])
+                    success_rate.push(data[i]['rate'])
+                    hundred.push(100 - data[i]['rate'])
+                }
+                totalmax = total.map(function (e) {
+                    return Math.max.apply(null, total)
+                });
+                var optionRecords = {
+                    animation: false,
+                    legend: {
+                        right: '0.7%',
+                        top: '3%',
+                        data: ['成功率', '成功数', '失败数', '错误数', '跳过数', '失败率']
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross'
+                        },
+                        backgroundColor: 'rgba(255,255,255,1)',
+                        borderWidth: 1,
+                        borderColor: '#ccc',
+                        padding: [12, 12, 4, 12],
+                        textStyle: {
+                            color: '#000'
+                        },
+                        width: '110px',
+                        position: function (pos, params, el, elRect, size) {
+                            var obj = {top: 10};
+                            obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30;
+                            return obj;
+                        },
+                        formatter: function (params) {
+                            res = '<p style="margin-bottom:4px;width:66px;height:17px;font-size:12px;font-family:PingFang-SC-Regular,PingFang-SC;font-weight:400;color:rgba(51,51,51,1);line-height:17px;">' + params[0].name + '</p>'
+                            res += '<div style="margin-bottom:14px;width:12px;height:12px;background:rgba(221,221,221,1);border-radius:1px;">' + '<p style="font-size:12px;font-family:PingFang-SC-Regular,PingFang-SC;font-weight:400;color:rgba(51,51,51,1);line-height:12px;">' + params[4].marker + ' ' + params[4].seriesName + '：' + params[4].value + '%' + '</p>' + '</div>'
+                            for (var i = 0; i < params.length - 1; i++) {
+                                res += '<p style="margin-bottom:8px;font-size:12px;font-family:PingFang-SC-Regular,PingFang-SC;font-weight:400;color:rgba(51,51,51,1);line-height:12px;">' + params[i].marker + ' ' + params[i].seriesName + '：' + params[i].value + '</p>'
+                            }
+                            return res
+                        },
+                        extraCssText: 'width: 110px'
+                    },
+                    axisPointer: {
+                        link: {xAxisIndex: 'all'},
+                        label: {
+                            backgroundColor: '#777'
+                        }
+                    },
+                    grid: [
+                        {
+                            top: '80px',
+                            left: '65px',
+                            right: '65px',
+                            bottom: '40px',
+                        },
+                    ],
+                    xAxis: [
+                        {
+                            type: 'category',
+                            data: x,
+                            scale: true,
+                            boundaryGap: false,
+                            axisLine: {onZero: false},
+                            axisLabel: {
+                                interval: 1,  //控制坐标轴刻度标签的显示间隔.设置成 0 强制显示所有标签。设置为 1，隔一个标签显示一个标签。设置为2，间隔2个标签。以此类推
+                                rotate: 0,//倾斜度 -90 至 90 默认为0
+                                textStyle: {
+                                    fontSize: 12,
+                                    fontFamily: 'ingFang-SC-Regular,PingFang-SC',
+                                    fontWeight: "400",  //加粗
+                                    color: "rgba(153,153,153,1)"   //黑色
+                                },
+                            },
+                            splitLine: {show: false},
+                            splitNumber: 3,
+                            min: 'dataMin',
+                            max: 'dataMax',
+                            axisPointer: {
+                                z: 100
+                            }
+                        },
+                    ],
+                    yAxis: [
+                        {
+                            scale: true,
+                            name: '用例数',
+                            min: 0,
+                            max: totalmax[0] + 10,
+                            position: 'left',
+                            offset: 12,
+                            splitArea: {
+                                show: true
+                            },
+                            nameTextStyle: {
+                                color: 'rgba(153,153,153,1)',
+                                fontWeight: 400,
+                                fontFamily: 'PingFang-SC-Regular,PingFang-SC',
+                                fontSize: 12,
+                                lineHeight: 17,
+                                padding: [0, 0, 0, -35],
+                            }
+                        },
+                        {
+                            scale: true,
+                            name: '成功率',
+                            position: 'right',
+                            splitNumber: 2,
+                            axisLabel: {show: true, formatter: '{value}%'},
+                            axisLine: {show: true},
+                            axisTick: {show: false},
+                            splitLine: {show: false},
+                            offset: 15,
+                            min: 0,
+                            max: 100,
+                            axisPointer: {
+                                label: {
+                                    show: false
+                                }
+                            },
+                            nameTextStyle: {
+                                color: 'rgba(153,153,153,1)',
+                                fontWeight: 400,
+                                fontFamily: 'PingFang-SC-Regular,PingFang-SC',
+                                fontSize: 12,
+                                lineHeight: 17,
+                                padding: [0, 0, 0, 44],
+                            }
+                        },
+                    ],
+
+                    series: [
+                        {
+                            name: '成功数',
+                            type: 'line',
+                            data: success,
+                            symbol: 'none',
+                            smooth: true,
+                            lineStyle: {
+                                normal: {color: 'rgba(0,151,136,1)', width: 3}
+                            },
+                            itemStyle: {
+                                normal: {
+                                    color: 'rgba(0,151,136,1)',
+                                }
+                            },
+                        },
+                        {
+                            name: '失败数',
+                            type: 'line',
+                            symbol: 'none',
+                            data: fail,
+                            smooth: true,
+                            lineStyle: {
+                                normal: {color: 'rgba(105,208,242,1)', width: 3}
+                            },
+                            itemStyle: {
+                                normal: {
+                                    color: 'rgba(105,208,242,1)',
+                                }
+                            },
+                        },
+                        {
+                            name: '跳过数',
+                            type: 'line',
+                            symbol: 'none',
+                            data: skip,
+                            smooth: true,
+                            lineStyle: {
+                                normal: {color: 'rgba(184,223,125,1)', width: 3}
+                            },
+                            itemStyle: {
+                                normal: {
+                                    color: 'rgba(184,223,125,1)',
+                                }
+                            },
+                        },
+                        {
+                            name: '错误数',
+                            type: 'line',
+                            symbol: 'none',
+                            data: error,
+                            smooth: true,
+                            lineStyle: {
+                                normal: {color: 'rgb(255,56,55)', width: 3}
+                            },
+                            itemStyle: {
+                                normal: {
+                                    color: 'rgb(255,56,55)',
+                                }
+                            },
+                        },
+                        {
+                            name: '成功率',
+                            stack: '总量',
+                            type: 'bar',
+                            label: {
+                                normal: {
+                                    show: false,
+                                    position: 'top',
+                                    color: 'black'
+                                }
+                            },
+                            itemStyle: {
+                                normal: {
+                                    color: {
+                                        type: 'linear',
+                                        x: 0,
+                                        y: 0,
+                                        x2: 0,
+                                        y2: 1,
+                                        colorStops: [{
+                                            offset: 1, color: 'rgba(255,255,255,1)' // 0% 处的颜色
+                                        }, {
+                                            offset: 0, color: 'rgba(239,239,239,1)' // 100% 处的颜色
+                                        }],
+                                        global: false // 缺省为 false
+                                    },
+                                    borderRadius: '2px'
+                                }
+                            },
+                            areaStyle: {},
+                            yAxisIndex: 1,
+                            barWidth: 30,
+                            data: success_rate
+                        },
+                        {
+                            type: 'bar',
+                            axisPointer: {show: false},
+                            stack: '总量',
+                            itemStyle: {
+                                normal: {
+                                    color: 'rgba(201,155,237,0)',
+                                }
+                            },
+                            yAxisIndex: 1,
+                            data: hundred,
+                            barWidth: 30,
+                        },
+                    ]
+                };
+                $("#echarts-records").css('background-color', 'white')
+                return optionRecords;
+            },
+        },
+        created: function () {
+            this.query();
+        },
+    });
+
+</script>
+
+
+<script src="{% static 'homepage/planreport.js' %}"></script>
+</html>
+
+
+

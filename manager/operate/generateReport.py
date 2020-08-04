@@ -24,7 +24,7 @@ async def dealruninfo(planid, taskid, info=None, startnodeid=''):
 	info['skipnum'] = Mongo.logsplit(taskid).find({"result": "skip"}).count()
 
 	info['rate'] = round(success * 100 / total, 2) if total != 0 else 0.00
-	data = {'timestamp':int(time.time()),'time':time.strftime("%m-%d %H:%M", time.localtime()) ,'root': [], 'info': info, 'taskid': taskid, 'planid': planid}
+	data = {'timestamp':int(time.time()),'time':time.strftime("%m-%d %H:%M", time.localtime()) ,'root': [], 'info': info, 'taskid': taskid, 'planid': int(planid)}
 
 	for caseid in caselist:
 		case = Case.objects.get(id=caseid)

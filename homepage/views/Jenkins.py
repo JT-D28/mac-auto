@@ -5,7 +5,7 @@ import jenkins
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from homepage.models import Jacoco_report
+from homepage.models import Jenkins
 from homepage.views.charts import dealJacocoJobName
 from manager.context import getRunningInfo
 from manager.core import gettaskid
@@ -18,7 +18,7 @@ def jenkinsJobRun(request):
     action = request.POST.get('action')
     res = ''
     try:
-        jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
+        jacocoset = Jenkins.objects.get(productid=request.POST.get('productid'))
         jobnames = dealJacocoJobName(jacocoset.jobname, jobs)
     except:
         return JsonResponse({'code': 1, 'data': '产品没有相应的代码覆盖率配置！'})
@@ -78,7 +78,7 @@ def runforJacoco(request):
     productid = request.POST.get('productid')
     callername = request.session.get('username')
     try:
-        jacocoConfig = Jacoco_report.objects.get(productid=productid)
+        jacocoConfig = Jenkins.objects.get(productid=productid)
         runningPlans=[]
         for i in jacocoConfig.buildplans.split(','):
             planid= i[5:]
@@ -113,7 +113,7 @@ def manyRun(jacocoConfig, callername):
             plan = Plan.objects.get(id=planid)
             taskid = gettaskid(planid)
             print('开始执行计划【%s】' % plan.description)
-            threading.Thread(target=runplan, args=(callername, taskid, planid, '1',i)).start()
+            runplan(callername, taskid, planid, '1',planid)
         except:
             pass
     jobs=[]

@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from ME2 import configs
-from homepage.models import Jacoco_report, Jacoco_data
+from homepage.models import Jenkins, Jacoco_data
 from manager.core import simplejson
 from manager.models import ResultDetail
 
@@ -73,7 +73,7 @@ def badresult(request):
 @csrf_exempt
 def jacocoreport(request):
 	code, msg = 0, ''
-	jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
+	jacocoset = Jenkins.objects.get(productid=request.POST.get('productid'))
 	jobs = request.POST.getlist('jobname[]')
 	jobmap = {}
 	if jobs!=['0']:
@@ -128,6 +128,7 @@ def jacocoreport(request):
 			if len(authname) & len(authpwd) != 0:
 				# 先判断下任务有没有在运行
 				num = {}
+				timemap= {}
 				server = jenkins.Jenkins(jacocoset.jenkinsurl, username=jacocoset.authname, password=jacocoset.authpwd)
 				for jobname in jobmap.keys():
 					num[jobname] = server.get_job_info(jobname)['lastBuild']['number']
@@ -136,6 +137,7 @@ def jacocoreport(request):
 						msg += '%s:正在运行<br>' % (jobname)
 					elif buildinfo['result'] != 'SUCCESS':
 						msg += '%s:上次构建失败<br>' % (jobname)
+					timemap[jobname] = buildinfo['timestamp']
 				if msg != '':
 					return JsonResponse(simplejson(code=1, msg=msg), safe=False)
 				s = requests.session()
@@ -149,6 +151,7 @@ def jacocoreport(request):
 							data.jobnum = num[jobname]
 							data.jobname = jobname
 							data.coverydata = jsonres
+							data.time =int(timemap[jobname]/1000)
 							data.save()
 							print('%s第%s次构建的覆盖率数据保存成功' % (jobname, num[jobname]))
 						for l in servicenames:

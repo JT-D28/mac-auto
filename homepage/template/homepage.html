@@ -27,9 +27,11 @@
     #coverage > .el-card__body {
         padding: 0px !important;
     }
-    .el-step.is-vertical .el-step__title{
+
+    .el-step.is-vertical .el-step__title {
         line-height: 40px;
     }
+
     #coverage > .el-card__header {
         padding: 7px 20px 0px 0;
         height: 40px;
@@ -49,9 +51,11 @@
         font-size: 12px;
         padding-left: 5px;
     }
-    .el-tree-node:hover>.el-tree-node__content{
+
+    .el-tree-node:hover > .el-tree-node__content {
         background-color: rgba(48, 217, 96, 0.69);
     }
+
     .el-input__inner {
         height: 34px !important;
         line-height: 34px;
@@ -516,17 +520,33 @@
         <el-dialog id='productSet' title='项目设置' :visible.sync="productSetVisible" width="60%" top="3vh"
                    style="height: 100%">
             <el-tabs :tab-position="topposition">
-                <el-tab-pane label="项目Jenkins">
+                <el-tab-pane label="项目信息">
                     <el-form :label-position="rightposition" label-width="18%" :model="form"
                              style="padding-top: 24px;height: calc(100% - 40px)">
-                        <el-form-item label="jenkins地址">
+                        <el-form-item label="Jenkins地址">
                             <el-input v-model="form.productset.jenkinsurl"></el-input>
                         </el-form-item>
-                        <el-form-item label="用户名">
+                        <el-form-item label="Jenkins用户名">
                             <el-input v-model="form.productset.authname"></el-input>
                         </el-form-item>
-                        <el-form-item label="密码">
+                        <el-form-item label="Jenkins密码">
                             <el-input v-model="form.productset.authpwd"></el-input>
+                        </el-form-item>
+                        <el-form-item label="Jenkins任务">
+                            <el-input v-model="form.productset.projectjob"></el-input>
+                        </el-form-item>
+                        <hr>
+                        <el-form-item label="Gitlab地址">
+                            <el-input v-model="form.productset.gitlaburl"></el-input>
+                        </el-form-item>
+                        <el-form-item label="Gitlab token">
+                            <el-input v-model="form.productset.gitlabtoken"></el-input>
+                        </el-form-item>
+                        <el-form-item label="Gitlab 项目路径">
+                            <el-input v-model="form.productset.gitpath"></el-input>
+                        </el-form-item>
+                        <el-form-item label="分支">
+                            <el-input v-model="form.productset.gitbranch"></el-input>
                         </el-form-item>
                     </el-form>
                 </el-tab-pane>
@@ -536,7 +556,8 @@
                         <el-form-item style="margin-bottom: 8px">
                             <div slot="label">
                                 <el-steps direction="vertical" :active='0' style="width: 50%;float: left;">
-                                    <el-step title="清理"></el-step></el-steps>
+                                    <el-step title="清理"></el-step>
+                                </el-steps>
                                 <span>清理任务名</span>
                             </div>
                             <el-input v-model="form.productset.jacocoClearJob"></el-input>

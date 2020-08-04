@@ -1,6 +1,6 @@
 from .Homepage import homepage
 from .Product import queryproduct,queryProductAndPlan,queryProductSet,editProductSet
-from .Plan import queryallplan, queryplan,queryPlanState,planforceStop
+from .Plan import queryallplan, queryplan,queryPlanState,planforceStop,queryplanlist
 from .charts import reportchart, badresult, jacocoreport,initbugcount
 from .Jenkins import jenkinsJobRun,runforJacoco
 from .logs import downloadlog,process

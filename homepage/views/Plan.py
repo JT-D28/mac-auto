@@ -6,12 +6,30 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import time
 from ME2 import configs
-from homepage.models import Jacoco_report
+from homepage.models import Jenkins
+from manager.models import Order,Plan
 from manager.cm import getchild
 from manager.context import getRunningInfo, setRunningInfo
 from manager.core import simplejson
 from manager.models import Plan
 
+@csrf_exempt
+def queryplanlist(request):
+	productid = request.POST.get('id')
+
+	planidlist = Order.objects.values_list('follow_id',flat=True).filter(kind='product_plan',main_id=productid,isdelete=0).extra(
+		select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
+	planlist = []
+	for planid in planidlist:
+		try:
+			description = Plan.objects.get(id=planid).description
+			planlist.append({
+				'id': planid,
+				'name': description,
+			})
+		except:
+			pass
+	return JsonResponse({'code': 0, 'data': planlist})
 
 @csrf_exempt
 def queryallplan(request):
@@ -44,7 +62,7 @@ def queryplan(request):
 	success_rate = rows[0]['成功数'] / rows[0]['总数'] * 100 if rows[0]['总数'] != 0 else 0
 	total = rows[0]['total'] if rows[0]['total'] is not None else 0
 	
-	jacocoset = Jacoco_report.objects.values().filter(productid=pid) if pid != '' else None
+	jacocoset = Jenkins.objects.values().filter(productid=pid) if pid != '' else None
 	service = [{'id': 0, 'name': '总计'}]
 	if jacocoset:
 		try:

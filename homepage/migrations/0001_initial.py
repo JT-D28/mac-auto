@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='Jacoco_report',
+            name='Jenkins',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('jenkinsurl', models.CharField(blank=True, max_length=64, null=True)),

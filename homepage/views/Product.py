@@ -2,7 +2,7 @@ import traceback
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from homepage.models import Jacoco_report
+from homepage.models import Jenkins
 from manager.cm import getchild
 from manager.core import simplejson
 from manager.models import Product, Plan
@@ -53,8 +53,8 @@ def queryProductSet(request):
     productid = request.POST.get('productid')
     try:
         jacocoset = list(
-            Jacoco_report.objects.values('jenkinsurl', 'jobname', 'authname', 'authpwd', 'clearjob',
-                                         'buildplans').filter(productid=productid))
+            Jenkins.objects.values('jenkinsurl', 'jobname', 'authname', 'authpwd', 'clearjob',
+                                         'buildplans','gitpath','gitlaburl','gitlabtoken','projectjob','gitbranch').filter(productid=productid))
         if jacocoset:
             res = jacocoset[0]
             plans = res.get('buildplans').split(',')
@@ -70,7 +70,7 @@ def queryProductSet(request):
             if rmplans:
                 for j in rmplans:
                     plans.remove(j)
-                jacoco = Jacoco_report.objects.get(productid=productid)
+                jacoco = Jenkins.objects.get(productid=productid)
                 jacoco.buildplans=','.join(plans)
                 jacoco.save()
             res['buildplans']=finplans
@@ -87,27 +87,37 @@ def editProductSet(request):
     productid = request.POST.get('productid')
     msg = ''
     try:
-        if not Jacoco_report.objects.filter(productid=productid).exists():
-            jacocoset = Jacoco_report()
-            jacocoset.jenkinsurl = request.POST.get('jenkinsurl')
-            jacocoset.authname = request.POST.get('authname')
-            jacocoset.authpwd = request.POST.get('authpwd')
-            jacocoset.jobname = request.POST.get('jobname')
-            jacocoset.productid = request.POST.get('productid')
-            jacocoset.clearjob = request.POST.get('jacocoClearJob')
-            jacocoset.buildplans = request.POST.get('buildplans')
-            jacocoset.save()
+        if not Jenkins.objects.filter(productid=productid).exists():
+            config = Jenkins()
+            config.jenkinsurl = request.POST.get('jenkinsurl')
+            config.authname = request.POST.get('authname')
+            config.authpwd = request.POST.get('authpwd')
+            config.jobname = request.POST.get('jobname')
+            config.productid = request.POST.get('productid')
+            config.clearjob = request.POST.get('jacocoClearJob')
+            config.buildplans = request.POST.get('buildplans')
+            config.projectjob = request.POST.get('projectjob')
+            config.gitlabtoken = request.POST.get('gitlabtoken')
+            config.gitlaburl = request.POST.get('gitlaburl')
+            config.gitpath = request.POST.get('gitpath')
+            config.gitbranch = request.POST.get('gitbranch')
+            config.save()
             msg = '保存成功'
         else:
-            jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
-            jacocoset.jenkinsurl = request.POST.get('jenkinsurl')
-            jacocoset.authname = request.POST.get('authname')
-            jacocoset.authpwd = request.POST.get('authpwd')
-            jacocoset.jobname = request.POST.get('jobname')
-            jacocoset.clearjob = request.POST.get('jacocoClearJob')
-            jacocoset.buildplans = request.POST.get('buildplans')
-            jacocoset.save()
-        msg = '编辑成功'
+            config = Jenkins.objects.get(productid=request.POST.get('productid'))
+            config.jenkinsurl = request.POST.get('jenkinsurl')
+            config.authname = request.POST.get('authname')
+            config.authpwd = request.POST.get('authpwd')
+            config.jobname = request.POST.get('jobname')
+            config.clearjob = request.POST.get('jacocoClearJob')
+            config.buildplans = request.POST.get('buildplans')
+            config.projectjob = request.POST.get('projectjob')
+            config.gitlabtoken = request.POST.get('gitlabtoken')
+            config.gitlaburl = request.POST.get('gitlaburl')
+            config.gitpath = request.POST.get('gitpath')
+            config.gitbranch = request.POST.get('gitbranch')
+            config.save()
+            msg = '编辑成功'
         return JsonResponse({'code': '0', 'msg': '保存成功'})
     except:
         print(traceback.format_exc())

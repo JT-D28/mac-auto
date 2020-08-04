@@ -135,7 +135,12 @@ var app = new Vue({
                     authpwd: '',
                     jobname: '',
                     order: '',
-                    jacocoClearJob: ''
+                    jacocoClearJob: '',
+                    gitlaburl: '',
+                    gitlabtoken: '',
+                    projectjob:'',
+                    gitpath: '',
+                    gitbranch: ''
                 },
                 reportNoticeSet: {
                     color: '',
@@ -227,6 +232,11 @@ var app = new Vue({
                             that.form.productset.authpwd = data.data.authpwd
                             that.form.productset.jobname = data.data.jobname
                             that.form.productset.jacocoClearJob = data.data.clearjob
+                            that.form.productset.projectjob = data.data.projectjob
+                            that.form.productset.gitlaburl = data.data.gitlaburl
+                            that.form.productset.gitlabtoken = data.data.gitlabtoken
+                            that.form.productset.gitpath = data.data.gitpath
+                            that.form.productset.gitbranch = data.data.gitbranch
                             that.productSetVisible = true;
                             if (data.data.buildplans.length != 0) {
                                 setTimeout(() => {
@@ -254,6 +264,12 @@ var app = new Vue({
             var authpwd = that.form.productset.authpwd;
             var jobname = that.form.productset.jobname;
             var jacocoClearJob = that.form.productset.jacocoClearJob;
+
+            var projectjob = that.form.productset.projectjob;
+            var gitlaburl = that.form.productset.gitlaburl;
+            var gitlabtoken = that.form.productset.gitlabtoken;
+            var gitpath = that.form.productset.gitpath;
+            var gitbranch = that.form.productset.gitbranch;
             var productid = that.form.product;
             var plansrun = []
             checknodes = app.$refs.tree.getCheckedNodes()
@@ -263,7 +279,8 @@ var app = new Vue({
             var buildplans = plansrun.join(',')
             _post_nl('/homepage/editProductSet/', {
                 'productid': productid, 'jenkinsurl': jenkinsurl, 'buildplans': buildplans,
-                'authname': authname, 'authpwd': authpwd, 'jobname': jobname, 'jacocoClearJob': jacocoClearJob
+                'authname': authname, 'authpwd': authpwd, 'jobname': jobname, 'jacocoClearJob': jacocoClearJob,
+                'projectjob': projectjob, 'gitlaburl': gitlaburl, 'gitlabtoken': gitlabtoken, 'gitpath': gitpath,'gitbranch':gitbranch
             }, function (data) {
                 if (data.code == 0) {
                     layer.msg(data.msg);

@@ -91,6 +91,12 @@
             <input type="text" name="before_plan" autocomplete="off" class="layui-input" placeholder="可以拖动依赖的计划和用例到此处后释放">
         </div>
     </div>
+        <div class="layui-form-item">
+        <label class="layui-form-label">代理</label>
+        <div class="layui-input-block">
+            <input type="text" name="proxy" autocomplete="off" class="layui-input" placeholder="请求代理(如http://127.0.0.1:59809)">
+        </div>
+    </div>
     <div class="layui-form-item">
         <button class="layui-btn" id='save'
                 style="visibility:hidden;position: center;width:72px;margin-left:110px;height: 34px;line-height: 34px">
@@ -192,6 +198,7 @@
                 }
                 data = data.data[0];
                 dbid = data['db_id'];
+                proxy = data['proxy']
                 scheme = data['schemename'];
                 $("[name='db_id']").val(dbid);
                 $("[name='scheme']").val(scheme);
@@ -210,6 +217,7 @@
 
 
                 $("[name='before_plan']").val(v);
+                $("[name='proxy']").val(proxy);
                 form.val("addplan", {
                     "mail": data['is_send_mail'] === "open",
                     "dingding": data['is_send_dingding'] === "open"
@@ -278,8 +286,8 @@
                 'is_send_dingding': $("[name='dingding']").is(':checked'),
                 'is_send_mail': $("[name='mail']").is(':checked'),
                 'scheme': $("[name='scheme']").val(),
-                'before_plan': before_plan
-
+                'before_plan': before_plan,
+                'proxy':$("[name='proxy']").val(),
             }, function (e) {
                 if (e.code === 0) {
                     // console.log(window)

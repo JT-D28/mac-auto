@@ -13,7 +13,7 @@ from ME2.settings import logme
 
 from login import models as lm
 from .context import *
-from .invoker import runplan, runplans,get_run_node_plan_id
+from .invoker import runplan,get_run_node_plan_id
 from .core import gettaskid,get_params,EncryptUtils
 from manager.context import Me2Log as logger
 from .operate.dataMove import DataMove
@@ -118,13 +118,14 @@ def addplan(request):
         author = lm.User.objects.get(name=request.session.get('username', None))
         run_type = request.POST.get('run_type')
         before_plan = request.POST.get('before_plan')
+        proxy = request.POST.get('proxy')
         is_send_mail = 'open' if request.POST.get('is_send_mail') == 'true' else 'close'
         is_send_dingding = 'open' if request.POST.get('is_send_dingding') == 'true' else 'close'
         mail_config = mm.MailConfig(is_send_mail=is_send_mail, is_send_dingding=is_send_dingding)
         mail_config.save()
         
         plan = mm.Plan(description=description, db_id=db_id, schemename=schemename, author=author,
-                       run_type=run_type, mail_config_id=mail_config.id,before_plan=before_plan)
+                       run_type=run_type, mail_config_id=mail_config.id,before_plan=before_plan,proxy=proxy)
         plan.save()
         addrelation('product_plan', author, pid, plan.id)
         extmsg=''
@@ -222,6 +223,7 @@ def editplan(request):
         plan.schemename = request.POST.get('scheme')
         logger.info('description=>', plan.description)
         plan.run_type = request.POST.get('run_type')
+        plan.proxy = request.POST.get('proxy')
         plan.save()
         extmsg=''
         if run_type == '定时运行':
@@ -295,35 +297,28 @@ def editplan(request):
 @monitor(action='运行用例')
 def run(request):
     callername = request.session.get('username')
-    runids = [x for x in request.POST.get('ids').split(',')]
-    logger.info('runids:',runids)
-    is_verify = request.POST.get('is_verify')
-    for runid in runids:
-        planid=get_run_node_plan_id(runid)
-        logger.info('获取待运行节点计划ID:',planid)
-        plan = mm.Plan.objects.get(id=planid)
-        taskid = gettaskid(plan.__str__())
-        logger.info('callername:',callername)
-        state_running =getRunningInfo(username=callername,planid=planid,type='isrunning')
-    
-        
-        if state_running != '0':
-            msg = '验证' if state_running == 'verify' else '调试'
-            return {
-                'status': 'fail',
-                'msg': '计划正在运行[%s]任务，稍后再试！'%msg
-            }
-        logger.info('runidd:',runid)
-        t=threading.Thread(target=runplan,args=(callername, taskid, planid, is_verify,None,runid))
-        t.start()
-        # logger.info('m_pool:',id(m_pool))
-        # m_pool.apply_async(runplan,(callername, taskid, planid, is_verify,None,runid))
+    runid = request.POST.get('ids')
+    logger.info('runid:',runid)
+    runkind = request.POST.get('runkind')
+    planid = get_run_node_plan_id(runid)
+    logger.info('获取待运行节点计划ID:',planid)
+    taskid = gettaskid(planid)
 
-    return {
-        'status': 'success',
-        'msg': str(taskid),
-        'data':planid
-    }
+    state_running =getRunningInfo(planid=planid,type='isrunning')
+
+    if state_running != '0':
+        msg = {"1":"验证","2":"调试","3":"定时"}[state_running]
+        return {
+            'status': 'fail',
+            'msg': '计划正在运行[%s]任务，稍后再试！'%msg
+        }
+    logger.info('runidd:',runid)
+    t=threading.Thread(target=runplan,args=(callername, taskid, planid, runkind,runid))
+    t.start()
+    request.session['console_taskid'] = taskid
+    return {'status': 'success','msg': taskid,'data':planid}
+
+
 
 @monitor(action='导出计划')
 def export(request):

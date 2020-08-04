@@ -6,12 +6,30 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import time
 from ME2 import configs
-from homepage.models import Jacoco_report
+from homepage.models import Jenkins
+from manager.models import Order,Plan
 from manager.cm import getchild
 from manager.context import getRunningInfo, setRunningInfo
 from manager.core import simplejson
 from manager.models import Plan
 
+@csrf_exempt
+def queryplanlist(request):
+	productid = request.POST.get('id')
+
+	planidlist = Order.objects.values_list('follow_id',flat=True).filter(kind='product_plan',main_id=productid,isdelete=0).extra(
+		select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
+	planlist = []
+	for planid in planidlist:
+		try:
+			description = Plan.objects.get(id=planid).description
+			planlist.append({
+				'id': planid,
+				'name': description,
+			})
+		except:
+			pass
+	return JsonResponse({'code': 0, 'data': planlist})
 
 @csrf_exempt
 def queryallplan(request):
@@ -35,7 +53,7 @@ def queryplan(request):
 	sql = '''
     SELECT COUNT(DISTINCT taskid) as 'total',sum(CASE WHEN r.result='success' THEN 1 ELSE 0 END) AS '成功数' ,count(*) as '总数'
     FROM manager_resultdetail r WHERE r.plan_id IN (SELECT follow_id FROM manager_order WHERE main_id=%s)
-    AND r.result NOT IN ('omit') AND r.is_verify=1
+    AND r.result NOT IN ('omit') AND r.is_verify in (1,3)
     '''
 	with connection.cursor() as cursor:
 		cursor.execute(sql, [pid])
@@ -44,7 +62,7 @@ def queryplan(request):
 	success_rate = rows[0]['成功数'] / rows[0]['总数'] * 100 if rows[0]['总数'] != 0 else 0
 	total = rows[0]['total'] if rows[0]['total'] is not None else 0
 	
-	jacocoset = Jacoco_report.objects.values().filter(productid=pid) if pid != '' else None
+	jacocoset = Jenkins.objects.values().filter(productid=pid) if pid != '' else None
 	service = [{'id': 0, 'name': '总计'}]
 	if jacocoset:
 		try:
@@ -82,19 +100,19 @@ def queryPlanState(request):
 		planid = request.POST.get('id')[5:]
 	type = request.POST.get('type')
 	if type:
-		fl = getRunningInfo('', planid, 'isrunning')
-		taskid = getRunningInfo(request.session.get('username'), planid, 'debug_taskid')
+		fl = getRunningInfo(planid, 'isrunning')
+		taskid = getRunningInfo(planid, 'debug_taskid')
 		return JsonResponse({'running': fl,'taskid':taskid})
-	is_running = '0' if getRunningInfo('',planid,'isrunning') =='0' else '1'
-	return JsonResponse({'data': is_running})
+	runkind = getRunningInfo(planid,'isrunning')
+	msg = {"0":"未运行","1": "验证", "2": "调试", "3": "定时"}[runkind]
+	return JsonResponse({'data': msg})
 
 
 @csrf_exempt
 def planforceStop(request):
 	planid = request.POST.get('id')[5:]
 	try:
-		user = request.session.get("username")
-		setRunningInfo(user, planid,getRunningInfo(user,planid,'lastest_taskid'),0)
+		setRunningInfo(planid,'','0')
 		code = 0
 		msg = 'success'
 	except:

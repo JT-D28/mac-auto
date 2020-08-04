@@ -9,7 +9,7 @@
 /tools/__pycache__/
 /homepage/__pycache__/
 /logs/*.log
-/logs/monitor.log
+monitor.log
 /logs/deal/*.log
 /logs/taskinfo/*.log
 /login/__pycache__/

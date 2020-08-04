@@ -27,18 +27,17 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 26214400  #上传数据大小，也改成了25M
 REDIS_HOST = configs.REDIS_HOST
 REDIS_PORT = configs.REDIS_PORT
 
+##mongodb配置
+MONGO_HOST = configs.MONGO_HOST
+MONGO_PORT = configs.MONGO_PORT
+
+
+
 # 环境
 env_id = ''
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-Deal_dir = os.path.join(BASE_DIR, 'logs', 'deal')
-Taskinfo_dir = os.path.join(BASE_DIR, 'logs', 'taskinfo')
-if not os.path.exists(Deal_dir):
-    os.makedirs(Deal_dir)
-if not os.path.exists(Taskinfo_dir):
-    os.makedirs(Taskinfo_dir)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'd6yqlb(u%mxu!t$4evtz@3#5zqo@zy8db09cj1pi2r38^6fi*y'
@@ -195,7 +194,7 @@ LOGGING = {
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': BASE_DIR + '/logs/monitor.log',
+            'filename': BASE_DIR + '/monitor.log',
             'formatter': 'verbose'
         },
         'email': {
@@ -221,14 +220,7 @@ logme = logging.getLogger("django")
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-# STATICFILES_DIRS = [
-# 	os.path.join(BASE_DIR, "login/static"),
-# 	os.path.join(BASE_DIR, 'manager/static'),
-# 	os.path.join(BASE_DIR, 'homepage/static'),
-# 	os.path.join(BASE_DIR, 'local_reports'),
-# 	os.path.join(BASE_DIR, 'PDF.js')
-#
-# ]
+
 
 # 配置解决跨域问题
 # 跨域增加忽略

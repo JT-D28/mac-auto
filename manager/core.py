@@ -20,7 +20,7 @@ from .db import Mysqloper as op
 from pyDes import *
 from django.conf import settings
 from manager.context import Me2Log as logger
-
+from manager.operate.mongoUtil import Mongo
 
 # 用户变量缓存 key=user.varname
 # __varcache=dict()
@@ -507,7 +507,7 @@ class PlanEncoder(XJsonEncoder):
 	def __init__(self, **args):
 		super(PlanEncoder, self).__init__(
 			['id', 'author', 'last', 'description', 'cases', 'createtime', 'updatetime', 'run_type', 'run_value',
-			 'mail_config_id', 'db_id', 'is_send_dingding', 'is_send_mail', 'schemename','before_plan'], **args)
+			 'mail_config_id', 'db_id', 'is_send_dingding', 'is_send_mail', 'schemename','before_plan','proxy'], **args)
 	
 	def encode(self, obj):
 		# print('hhhh'*100)
@@ -818,15 +818,13 @@ def ordered(iterator, key='value'):
 """
 
 
-def gettaskid(plan):
+def gettaskid(planid):
 	"""
 	任务id
 	"""
-	# s=str(time.time())
-	# new_md5 = md5()
-	# new_md5.update(s.encode(encoding='utf-8'))
-	# return new_md5.hexdigest()
-	taskid = base64.b64encode((re.findall('(?<=\[).*?(?=])', plan)[0] + '_' + str(time.time())).encode()).decode()
+	text = '%s_%s'%(planid,time.time())
+	taskid = base64.b64encode(text.encode()).decode()
+
 	return taskid
 
 

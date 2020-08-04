@@ -1,7 +1,7 @@
 from django.db import connection
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
+from manager.operate.mongoUtil import Mongo
 from ME2 import settings
 from manager.context import getRunningInfo
 from manager.core import simplejson, EncryptUtils
@@ -12,43 +12,18 @@ from manager.models import ResultDetail, Plan
 def querytaskid(request):  # 查询验证任务最新id
 	code = 0
 	msg = ''
-	# taskids = []
 	is_running = ''
 	username = request.session.get("username")
 	action = request.POST.get('action')
 
 	if action == 'plan':
 		planid = request.POST.get('planid')
-		taskid = getRunningInfo(username, planid, 'verify_taskid')
-		is_running= getRunningInfo(username, planid, 'isrunning')
+		taskid = getRunningInfo(planid, 'verify_taskid')
+		is_running= getRunningInfo(planid, 'isrunning')
+		print(taskid,is_running)
 	elif action == 'lastest':
-		taskid = getRunningInfo(username, '', 'lastest_taskid')
+		taskid = request.session.get('console_taskid','')
 		print("控制台获取的最新taskid", taskid)
-	
-	# if taskid is None:
-	# 	print('内存中查找不到taskid，从数据库中找')
-	# 	try:
-	# 		if action == 'lastest':
-	# 			sql = '''SELECT taskid FROM `manager_resultdetail` order by createtime desc LIMIT 1'''
-	# 			with connection.cursor() as cursor:
-	# 				cursor.execute(sql)
-	# 				row = cursor.fetchone()
-	# 				taskid = row[0]
-	# 		elif action == 'plan':
-	# 			planid = request.POST.get('planid')
-	# 			plan = Plan.objects.get(id=planid)
-	# 			is_running = plan.is_running
-	# 			print('3333333',is_running)
-	# 			taskids = list(
-	# 				ResultDetail.objects.values('taskid').filter(plan=plan, is_verify=1).order_by('-createtime'))
-	# 			if taskids:
-	# 				taskid = taskids[0]["taskid"]
-	# 			else:
-	# 				code = 1
-	# 				msg = "任务还没有运行过！"
-	# 	except:
-	# 		code = 1
-	# 		msg = "出错了！"
 	return JsonResponse(simplejson(code=code, msg=msg, data=taskid, is_running=is_running), safe=False)
 
 
@@ -69,10 +44,5 @@ def query_third_call(request):
 @csrf_exempt
 def gettaskidplan(request):
 	planid= request.POST.get('planid')
-	print(planid)
-	with connection.cursor() as cursor:
-		cursor.execute('''SELECT min(DATE_FORMAT(r.createtime,'%%m-%%d %%H:%%i')) AS time,taskid
-		FROM manager_resultdetail r where plan_id=%s GROUP BY taskid ORDER BY time DESC LIMIT 10''',[planid])
-		desc = cursor.description
-		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-	return JsonResponse({'code':0,'taskids':rows})
+	res = list(Mongo.taskinfo().find({'planid':int(planid)},{'time':1,'taskid':1,'_id':0}).sort('timestamp',-1).limit(10))
+	return JsonResponse({'code':0,'taskids':res})

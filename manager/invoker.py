@@ -7,7 +7,7 @@ import ast, threading
 import asyncio
 from itertools import chain
 from urllib import parse
-
+from bson.objectid import ObjectId
 from django.conf import settings
 from django.db import connection
 from django.db.models import Q
@@ -27,12 +27,12 @@ from .db import Mysqloper
 from .context import set_top_common_config, viewcache, get_task_session, \
     clear_task_session, get_friendly_msg, setRunningInfo, getRunningInfo, get_space_dir
 
-import re, traceback, redis, time, threading, smtplib, requests, json, warnings, datetime, socket
-import copy, base64, datetime, xlrd, os
-from email.mime.text import MIMEText
-from email.utils import formataddr, parseaddr
-from email.header import Header
+import re, traceback, time, threading, json, warnings, datetime, socket
+import copy, base64,os
+
 from .operate.generateReport import dealDeBuginfo, dealruninfo
+from .operate.mongoUtil import Mongo
+from .operate.sendMail import processSendReport
 
 try:
     import xml.etree.cElementTree as ET
@@ -113,199 +113,6 @@ def db_connect(config, timeout=5):
         error = traceback.format_exc()
         logger.info('error=>', error)
         return ('error', '连接异常->%s' % get_friendly_msg(error))
-
-
-def _get_full_case_name(case_id, curent_case_name):
-    '''
-    对于case_case结构的tree节点 报告中用例名显示为 casename0_casename1
-    '''
-
-    case0 = Case.objects.get(id=case_id)
-    # fullname=case0.description
-    olist = list(Order.objects.filter(follow_id=case_id, kind='case_case',isdelete=0))
-    if len(olist) == 0:
-        return curent_case_name
-    
-    else:
-        cname = Case.objects.get(id=olist[0].main_id).description
-        curent_case_name = "%s_%s" % (cname, curent_case_name)
-        return _get_full_case_name(olist[0].main_id, curent_case_name)
-
-
-def gettaskresult(taskid):
-    from .cm import getchild
-    logger.info("==gettaskresult==")
-    ##区分迭代次数
-    bset = set()
-    bmap = {}
-    ##
-    
-    detail = {}
-    spend_total = 0
-    res = ResultDetail.objects.filter(taskid=taskid).order_by('createtime')
-    
-    # logger.info(res)
-    reslist = list(res)
-    if len(reslist) == 0:
-        return detail
-    
-    plan = reslist[0].plan
-    planname = plan.description
-    planid = plan.id
-    
-    has_ = []
-    
-    caseids = []
-    
-    for r in list(res):
-        if r.case.id not in has_:
-            has_.append(r.case.id)
-            caseids.append(r.case.id)
-        
-        else:
-            pass
-    
-    ##修复set乱序
-    
-    cases = [Case.objects.get(id=caseid) for caseid in caseids]
-    
-    # logger.info('cases=>')
-    # logger.info(cases)
-    report_url = 'http://%s/manage/report_%s.html' % (configs.ME2_URL, taskid)
-    detail['local_report_address'] = report_url
-    detail['planname'] = planname
-    detail['planid'] = planid
-    detail['taskid'] = taskid
-    detail['cases'] = []
-    detail['success'] = 0
-    detail['fail'] = 0
-    detail['skip'] = 0
-    detail['error'] = 0
-    detail['min'] = 99999
-    detail['max'] = 0
-    detail['average'] = 0
-    
-    for d in cases:
-        caseobj = {}
-        case = d
-        casename = case.description
-        caseid = case.id
-        # caseobj['casename']=casename
-        caseobj['casename'] = _get_full_case_name(caseid, casename)
-        if caseobj.get("steps", None) is None:
-            caseobj['steps'] = {}
-        caseid = case.id
-        # logger.info('taskid=>%s case_id=>%s'%(taskid,case))
-        step_query = list(ResultDetail.objects.filter(taskid=taskid, case=case))
-        ##case_step
-        for x in step_query:
-            # rblist=list(ResultDetail.objects.filter(taskid=taskid,plan=plan,case=case,step=stepinst,businessdata=business))
-            # for rb in rblist:
-            businessobj = {}
-            business = x.businessdata
-            # logger.info('c=>%s'%business.id)
-            status, step = BusinessData.gettestdatastep(business.id)
-            # logger.info('a=>%s b=>%s'%(case.id,step.id))
-            if isinstance(step, (str,)): continue;
-            step_weight = Order.objects.get(main_id=case.id, follow_id=step.id, kind='case_step',isdelete=0).value
-            
-            business_index = \
-                Order.objects.get(main_id=step.id, follow_id=business.id, kind='step_business',isdelete=0).value.split('.')[1]
-            businessobj['num'] = '%s_%s' % (step_weight, business_index)
-            
-            stepname = business.businessname
-            result = x.result
-            if 'omit' != result:
-                if 'success' == result:
-                    detail['success'] = detail['success'] + 1
-                
-                elif 'fail' == result:
-                    detail['fail'] = detail['fail'] + 1
-                
-                elif 'skip' == result:
-                    detail['skip'] = detail['skip'] + 1
-                
-                elif 'error' == result:
-                    detail['error'] = detail['error'] + 1
-                error = x.error
-                businessobj['businessname'] = x.businessdata.businessname
-                
-                ##
-                businessobj['result'] = result
-                businessobj['error'] = error
-                # businessobj['api']=re.findall('\/(.*?)[?]',step.url)[0] or step.body
-                stepinst = None
-                error, stepinst = BusinessData.gettestdatastep(business.id)
-                if stepinst.url:
-                    
-                    # logger.info('%s=>%s,%s'%(business.id,error,stepinst))
-                    businessobj['stepname'] = stepinst.description
-                    matcher = [a for a in stepinst.url.split('/') if
-                               not a.__contains__("{{") and not a.__contains__(':')]
-                    api = '/'.join(matcher)
-                    if not api.startswith('/'):
-                        api = '/' + api
-                    businessobj['api'] = api
-                else:
-                    businessobj['stepname'] = stepinst.description
-                    businessobj['api'] = stepinst.body.strip()
-                
-                businessobj['itf_check'] = business.itf_check
-                businessobj['db_check'] = business.db_check
-                # businessobj['spend']=ResultDetail.objects.get(taskid=taskid,plan=plan,case=case,step=stepinst,businessdata=business).spend
-                businessobj['spend'] = x.spend
-                spend_total += int(businessobj['spend'])
-                if int(businessobj['spend']) <= int(detail['min']):
-                    detail['min'] = businessobj['spend']
-                
-                if int(businessobj['spend']) > int(detail['max']):
-                    detail['max'] = businessobj['spend']
-                
-                # caseobj.get('steps').append(businessobj)
-                
-                ##计算当前迭代次数
-                if x.businessdata.id in bset:
-                    bcount = bmap.get(str(x.businessdata.id), 0)
-                    bcount = bcount + 1
-                    bmap[str(x.businessdata.id)] = bcount
-                    L = caseobj.get('steps').get(str(bcount), [])
-                    L.append(businessobj)
-                    caseobj['steps'][str(bcount)] = L
-                
-                else:
-                    bset.add(x.businessdata.id)
-                    bcount = bmap.get(str(x.businessdata.id), 0)
-                    bcount = bcount + 1
-                    bmap[str(x.businessdata.id)] = bcount
-                    L = caseobj.get('steps').get(str(bcount), [])
-                    L.append(businessobj)
-                    caseobj['steps'][str(bcount)] = L
-        
-        ##case_case map
-        
-        detail.get("cases").append(caseobj)
-    
-    detail['total'] = detail['success'] + detail['fail'] + detail['skip'] + detail['error']
-    if detail['success'] == detail['total']:
-        detail['result'] = 'pass'
-    else:
-        detail['result'] = 'fail'
-    
-    try:
-        detail['average'] = int(spend_total / detail['total'])
-    except:
-        detail['average'] = '-1'
-    
-    try:
-        detail['success_rate'] = str("%.2f" % (detail['success'] / detail['total']))
-    except:
-        detail['success_rate'] = '-1'
-    detail["reporttime"] = time.strftime("%m-%d %H:%M", time.localtime())
-    
-    ##
-    logger.info('报告数据=>', detail)
-    
-    return detail
 
 
 
@@ -442,24 +249,7 @@ def get_node_upper_case(nodeid):
 
 
 
-def runplans(username, taskid, planids, is_verify, kind=None, startnodeid=None):
-    """
-    任务运行
-    kind 运行方式 手动其他
-    """
-    kindmsg = ''
-    if kind is not None:
-        kindmsg = kind
-    # logger.info("kindmsg=>",kindmsg,username,taskid)
-    verifymsg = '调试' if is_verify in ('0', None, '', 0) else '验证'
-    
-    viewcache(taskid, username, kind,
-              "=======开始%s%s任务【<span style='color:#FF3399'>%s</span>】====" % (kindmsg, verifymsg, taskid))
-    for planid in planids:
-        threading.Thread(target=runplan, args=(username, taskid, planid, is_verify, kind, startnodeid)).start()
-
-
-def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startnodeid=None, L=None):
+def _runcase(username, taskid, case0, plan, planresult, runkind, startnodeid=None, L=None,proxy={}):
 
     from tools.mock import TestMind
     groupskip = []
@@ -476,7 +266,7 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
     logger.info('节点[%s]下有测试点ID：%s'%(case0.description,case_run_nodes))
     # logger.info('传入的最终执行测试点ID：%s'%L)
     if subflag:
-        viewcache(taskid, username, kind, "开始执行用例[<span id='case_%s' style='color:#FF3399'>%s</span>]" %(case0.id,case0.description))
+        viewcache(taskid, "开始执行用例[<span id='case_%s' style='color:#FF3399'>%s</span>]" %(case0.id,case0.description))
     steporderlist = ordered(list(Order.objects.filter(Q(kind='case_step') | Q(kind='case_case'), main_id=case0.id)))
     
     ##case执行次数
@@ -492,49 +282,38 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
         for o in steporderlist:
             if o.kind == 'case_case':
                 case = Case.objects.get(id=o.follow_id)
-                _runcase(username, taskid, case, plan, planresult, is_verify, kind, startnodeid=startnodeid, L=L)
+                _runcase(username, taskid, case, plan, planresult, runkind, startnodeid=startnodeid, L=L,proxy=proxy)
                 continue
             
             stepid = o.follow_id
             try:
-                stepcount = Step.objects.get(id=stepid).count
+                step = Step.objects.get(id=stepid)
+                stepcount = step.count
                 
-                if stepcount == 0:
-                    continue
-                
-                else:
+                if stepcount > 0:
                     # 步骤执行次数>0
                     for ldx in range(0, stepcount):
-                        businessorderlist = ordered(list(Order.objects.filter(kind='step_business', main_id=stepid)))
+                        businessorderlist = ordered(list(Order.objects.filter(kind='step_business', main_id=stepid,isdelete=0)))
                         # logger.info('bbb=>',businessorderlist)
                         for order in businessorderlist:
                             groupid = order.value.split(".")[0]
                             # step=Step.objects.get(id=order.follow_id)
                             start = time.time()
                             spend = 0
+
+                            businessdata = BusinessData.objects.get(id=order.follow_id)
+                            if order.follow_id not in L:
+                                continue
                             if groupid not in groupskip:
-                                # logger.info('传入order=>', order.value)
-                                # logger.info('startnodeid:',startnodeid)
-                                if order.follow_id not in L:
-                                    # logger.info('测试点[%s]不在执行链中 忽略' % order.follow_id)
-                                    continue
-
-                                #####mock测试
-                                # step=Step.objects.get(id=order.main_id)
-                                # vbs=TestMind().get_visual_business('step_{}'.format(step.id), username)
-                                # logger.info('vbs size:',len(vbs))
-                                # for vb in vbs:
-                                #     _step_mock(username, taskid, step,vb)
-
-                                result, error = _step_process_check(username, taskid, order, kind)
+                                result, error = _step_process_check(username, taskid, order ,proxy)
                                 spend = int((time.time() - start) * 1000)
                                 
                                 if result not in ('success', 'omit'):
                                     groupskip.append(groupid)
                             else:
-                                businessdata = BusinessData.objects.values('count','businessname').get(id=order.follow_id)
-                                if businessdata['count'] == 0:
-                                    result, error = 'omit', "测试点[%s]执行次数=0 略过." % businessdata['businessname']
+
+                                if businessdata.count == 0:
+                                    result, error = 'omit', "测试点[%s]执行次数=0 略过." % businessdata.businessname
                                 else:
                                     result, error = 'skip', 'skip'
                             
@@ -542,25 +321,27 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
                             try:
                                 logger.info("准备保存结果===")
                                 detail = ResultDetail(taskid=taskid, plan=plan, case=case0,
-                                                      step=Step.objects.get(id=o.follow_id),
-                                                      businessdata=BusinessData.objects.get(id=order.follow_id),
+                                                      step=step,
+                                                      businessdata=businessdata,
                                                       result=result,
-                                                      error=error, spend=spend, loop_id=1, is_verify=is_verify)
-                                
-
+                                                      error=error, spend=spend, loop_id=1, is_verify=runkind)
 
                                 detail.save()
                                 logger.info('保存结果=>', detail)
                             except:
                                 logger.info('保存结果异常=>', traceback.format_exc())
                             caseresult.append(result)
+
                             result = "<span id='step_%s' class='layui-bg-%s'>%s</span>" % (stepid,color_res.get(result, 'orange'), result)
-                            
+
                             if 'omit' not in result:
+                                stepinfo = "<span style='color:#FF3399' id='step_%s' caseid='%s' casedes='%s'>%s</span>"%(step.id,case0.id,case0.description,step.description)
+                                businessinfo = "<span style='color:#FF3399' id='business_%s'>%s</span>"%(businessdata.id,businessdata.businessname)
                                 error = '   原因=>%s' % error if 'success' not in result else ''
-                                viewcache(taskid, username, kind, "步骤执行结果%s%s" % (result, error))
+                                viewcache(taskid, "步骤[%s]=>测试点[%s]=>执行结果%s   %s" % (stepinfo,businessinfo,result,error))
             
             except:
+                print(traceback.format_exc())
                 continue
     
     casere = (len([x for x in caseresult if x in ('success', 'omit')]) == len([x for x in caseresult]))
@@ -568,16 +349,14 @@ def _runcase(username, taskid, case0, plan, planresult, is_verify, kind, startno
 
     if subflag:
         if casere  :
-            viewcache(taskid, username, kind,
-                      "结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-green'>success</span>" % case0.description)
+            viewcache(taskid,"结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-green'>success</span>" % case0.description)
         else:
-            viewcache(taskid, username, kind,
-                      "结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-red'>fail</span>" % case0.description)
+            viewcache(taskid,"结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-red'>fail</span>" % case0.description)
 
 
 
 def getDbUse(taskid, dbname):
-    scheme = getRunningInfo('', base64.b64decode(taskid).decode().split('_')[0], 'dbscheme')
+    scheme = getRunningInfo(base64.b64decode(taskid).decode().split('_')[0], 'dbscheme')
     try:
         dbid = DBCon.objects.get(scheme=scheme, description=dbname).id
     except:
@@ -602,25 +381,25 @@ def beforePlanCases(planid):
     return caseslist, before_des
 
 
-def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
+def runplan(callername, taskid, planid, runkind, startnodeid=None):
     plan = Plan.objects.get(id=planid)
     dbscheme = plan.schemename
-    setRunningInfo(callername, planid, taskid, 1, dbscheme, is_verify)
-    viewcache(taskid, callername, kind, "=======正在初始化任务中=======")
+    setRunningInfo(planid, taskid, runkind, dbscheme)
+    viewcache(taskid, "=======正在初始化任务中=======")
     logger.info('开始执行计划：', plan)
     logger.info('startnodeid:', startnodeid)
     L = _get_final_run_node_id(startnodeid)
     logger.info('准备传入的L:', L)
-
+    starttime = time.time()
     groupskip = []
     username = callername
-    kindmsg = ''
-    if kind is not None:
-        kindmsg = kind
-    verifymsg = '调试' if is_verify in ('0', None, '', 0) else '验证'
-    viewcache(taskid, username, kind,
-              "=======计划【%s】开始执行%s[%s任务]【<span style='color:#FF3399'>%s</span>】,使用数据连接配置【%s】====" % (
-                  plan.description, kindmsg, verifymsg, taskid, dbscheme))
+    viewcache(taskid,"=======计划【%s】开始执行[%s任务]【<span style='color:#FF3399'>%s</span>】,使用数据连接配置【%s】====" % (
+                  plan.description, {"1": "验证", "2": "调试", "3": "定时"}[runkind], taskid, dbscheme))
+    if plan.proxy:
+        proxy = {'http': plan.proxy}
+        viewcache(taskid, "请求代理：%s" % (plan.proxy))
+    else:
+        proxy = {}
     try:
         dbid = getDbUse(taskid, plan.db_id)
         if dbid:
@@ -632,7 +411,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
             caseslist = []
             beforeCases, before_des = beforePlanCases(planid)
             caseslist.extend(ordered(list(beforeCases)))
-            viewcache(taskid, callername, kind, "加入前置计划/用例[<span style='color:#FF3399'>%s</span>]" % (before_des))
+            viewcache(taskid, "加入前置计划/用例[<span style='color:#FF3399'>%s</span>]" % (before_des))
             caseslist.extend(ordered(list(Order.objects.filter(main_id=planid, kind='plan_case',isdelete=0))))
             cases = [Case.objects.get(id=x.follow_id) for x in caseslist]
         else:
@@ -647,7 +426,7 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
                 continue
             else:
                 logger.info('runcount:', case.count)
-                _runcase(username, taskid, case, plan, planresult, is_verify, kind=kind, startnodeid=startnodeid, L=L)
+                _runcase(username, taskid, case, plan, planresult, runkind, startnodeid=startnodeid, L=L,proxy=proxy)
 
         planre = (len([x for x in planresult]) == len([x for x in planresult if x == True]))
         if planre:
@@ -655,58 +434,29 @@ def runplan(callername, taskid, planid, is_verify, kind=None, startnodeid=None):
         else:
             plan.last, color = 'fail', 'red'
         plan.save()
-        viewcache(taskid, callername, kind,
-                  "结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-%s'>%s</span>" % (
+        viewcache(taskid,"结束计划[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-%s'>%s</span>" % (
                       plan.description, color, plan.last))
-        # setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
-
-        # 处理日志
-        new_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(new_loop)
+        spendtime = time.time() -starttime
+        asyncio.set_event_loop(asyncio.new_event_loop())
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(dealDeBuginfo(taskid))
-        loop.run_until_complete(dealruninfo(planid,taskid,{'dbscheme':dbscheme,'planname':plan.description,
-                                                           'user':username,'verify':is_verify},startnodeid))
-        # asyncio.run(dealDeBuginfo(taskid))
-        # asyncio.run(dealruninfo(planid,taskid))
-
-
-
+        loop.run_until_complete(dealruninfo(planid,taskid,{'spend':spendtime,'dbscheme':dbscheme,'planname':plan.description,
+                                                           'user':username,'runkind':runkind},startnodeid))
         # 清除请求session
-        clear_task_session('%s_%s' % (taskid, callername))
-        # 产生内置属性
-        _save_builtin_property(taskid, callername)
-
-        # 生成本地报告
-        MainSender.gen_report(taskid, MainSender.gethtmlcontent(taskid, ''))
-        # 发送报告
-        config_id = plan.mail_config_id
-        if config_id:
-            mail_config = MailConfig.objects.get(id=config_id)
-            user = User.objects.get(name=callername)
-            mail_res = MainSender.send(taskid, user, mail_config)
-            dingding_res = MainSender.dingding(taskid, user, mail_config)
-            logger.info("发送邮件 结果[%s]" % mail_res)
-            viewcache(taskid, callername, kind, mail_res)
-            logger.info("发送钉钉通知 结果[%s]" % dingding_res)
-            viewcache(taskid, callername, kind, dingding_res)
 
     except Exception as e:
         logger.error('执行计划未知异常：', traceback.format_exc())
-        viewcache(taskid, username, kind, '执行计划未知异常[%s]' % traceback.format_exc())
-
+        viewcache(taskid,'执行计划未知异常[%s]' % traceback.format_exc())
 
     finally:
-        clear_data(callername, _tempinfo)
-        from manager.context import cons
-        cons[taskid].expire("console.msg::%s::%s" % (username, taskid), 600)
-        del cons[taskid]
-
         clear_mock(callername)
-        setRunningInfo(callername, planid, taskid, 0, dbscheme, is_verify)
+        clear_task_session('%s_%s' % (taskid, callername))
+
+        setRunningInfo(planid, taskid, '0', dbscheme)
+        processSendReport(taskid, plan.mail_config_id, callername)
+        clear_data(callername, _tempinfo)
 
 
-def _step_process_check(callername, taskid, order, kind):
+def _step_process_check(callername, taskid, order ,proxy):
     """
     return (resultflag,msg)
     order.follw_id:业务数据id
@@ -734,9 +484,8 @@ def _step_process_check(callername, taskid, order, kind):
         if status1 is not 'success':
             return (status1, step)
         
-        viewcache(taskid, username, kind, "--" * 100)
-        viewcache(taskid, username, kind,
-                  "开始执行步骤[<span style='color:#FF3399' id='step_%s'>%s</span>] 测试点[<span style='color:#FF3399' id='business_%s'>%s</span>]" % (
+        viewcache(taskid, "--" * 100)
+        viewcache(taskid,"开始执行步骤[<span style='color:#FF3399' id='step_%s'>%s</span>] 测试点[<span style='color:#FF3399' id='business_%s'>%s</span>]" % (
                       step.id,step.description,businessdata.id, businessdata.businessname))
         
         dbid = getDbUse(taskid, step.db_id)
@@ -751,8 +500,8 @@ def _step_process_check(callername, taskid, order, kind):
             return (status, res)
         
         if step.step_type == "interface":
-            viewcache(taskid, username, kind, "数据校验配置=>%s" % db_check)
-            viewcache(taskid, username, kind, "接口校验配置=>%s" % itf_check)
+            viewcache(taskid, "数据校验配置=>%s" % db_check)
+            viewcache(taskid, "接口校验配置=>%s" % itf_check)
             headers = []
             
             text, statuscode, itf_msg = '', -1, ''
@@ -760,7 +509,7 @@ def _step_process_check(callername, taskid, order, kind):
             if step.content_type == 'xml':
                 if re.search('webservice', step.url):
                     headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), 'post',
-                                                                        None, 'xml', step.temp, kind, timeout)
+                                                                        None, 'xml', step.temp, timeout,proxy)
                     if not itf_msg:
                         text = text.replace('&lt;', '<')
                         
@@ -773,13 +522,12 @@ def _step_process_check(callername, taskid, order, kind):
             else:
                 
                 headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), step.method,
-                                                                    step.headers, step.content_type, step.temp, kind,
-                                                                    timeout)
+                                                                    step.headers, step.content_type, step.temp,
+                                                                    timeout,proxy)
             if text.lstrip().startswith('<!DOCTYPE html>'):
-                viewcache(taskid, username, kind,"<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>内容为HTML，不显示</xmp></span>")
+                viewcache(taskid,"<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>内容为HTML，不显示</xmp></span>")
             else:
-                viewcache(taskid, username, kind,
-                      "<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>" % text)
+                viewcache(taskid,"<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>%s</xmp></span>" % text)
             
             if len(str(statuscode)) == 0:
                 return ('fail', itf_msg)
@@ -791,47 +539,39 @@ def _step_process_check(callername, taskid, order, kind):
                     return (status, res)
                 
                 if db_check:
-                    res, error = _compute(taskid, user, db_check, type="db_check", kind=kind)
+                    res, error = _compute(taskid, user, db_check, type="db_check")
                     if res is not 'success':
                         logger.info('################db_check###############' * 20)
                         return ('fail', error)
-                # else:
-                #   viewcache(taskid,username,kind,'数据校验没配置 跳过校验')
                 
                 if itf_check:
                     if step.content_type in ('json', 'urlencode','formdata'):
-                        res, error = _compute(taskid, user, itf_check, type='itf_check', target=text, kind=kind,
+                        res, error = _compute(taskid, user, itf_check, type='itf_check', target=text,
                                               parse_type='json', rps_header=headers)
                     else:
-                        res, error = _compute(taskid, user, itf_check, type='itf_check', target=text, kind=kind,
+                        res, error = _compute(taskid, user, itf_check, type='itf_check', target=text,
                                               parse_type='xml', rps_header=headers)
                     
                     if res is not 'success':
                         return ('fail', error)
-                # else:
-                #   viewcache(taskid,username,kind,'接口校验没配置 跳过校验')
                 
                 return ('success', '')
             else:
                 return ('fail', 'statuscode=%s' % statuscode)
             
-            if itf_msg:
-                logger.info('################itf-msg###############' * 20)
-                return ('fail', itf_msg)
-        
+
         elif step.step_type == "function":
-            viewcache(taskid, username, kind, "数据校验配置=>%s" % db_check)
-            # viewcache("接口返回校验=>%s"%itf_check)
+            viewcache(taskid, "数据校验配置=>%s" % db_check)
             
             # methodname=re.findall("(.*?)\(.*?\)", step.body.strip())[0]
             # builtinmethods=[x.name for x in getbuiltin() ]
             # builtin=(methodname in builtinmethods)
             
-            viewcache(taskid, username, kind, "调用函数=>%s" % step.body)
+            viewcache(taskid, "调用函数=>%s" % step.body)
             
             logger.info('关联id=>', step.related_id)
             res, msg = _callfunction(user, step.related_id, step.body, paraminfo, taskid=taskid)
-            viewcache(taskid, username, kind, "函数执行结果=>%s" % res)
+            viewcache(taskid, "函数执行结果=>%s" % res)
             
             # logger.info('fjdajfd=>',res,msg)
             if res is not 'success':
@@ -842,13 +582,12 @@ def _step_process_check(callername, taskid, order, kind):
                 return (status, res)
             
             if db_check:
-                res, error = _compute(taskid, user, db_check, type='db_check', kind=kind)
+                res, error = _compute(taskid, user, db_check, type='db_check')
                 if res is not 'success':
                     return ('fail', error)
                 else:
                     return ('success', '')
             else:
-                # viewcache(taskid,username,kind,'数据校验没配置 跳过校验')
                 return ('success', '')
     
     except Exception as e:
@@ -861,7 +600,7 @@ def _step_process_check(callername, taskid, order, kind):
 
 
 
-def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
+def _callsocket(taskid, user, url, body=None, timeout=1024):
     """
     xml报文请求
     """
@@ -922,25 +661,24 @@ def _callsocket(taskid, user, url, body=None, kind=None, timeout=1024):
         logger.info('Content-Length=>', length)
         sendmsg = 'Content-Length:' + str(length) + '\r\n' + body
         
-        viewcache(taskid, user.name, None, '执行socket请求')
-        viewcache(taskid, user.name, None, "<span style='color:#009999;'>请求IP=>%s</span>" % host)
-        viewcache(taskid, user.name, None, "<span style='color:#009999;'>请求端口=>%s</span>" % port)
-        viewcache(taskid, user.name, None,
+        viewcache(taskid, '执行socket请求')
+        viewcache(taskid, "<span style='color:#009999;'>请求IP=>%s</span>" % host)
+        viewcache(taskid, "<span style='color:#009999;'>请求端口=>%s</span>" % port)
+        viewcache(taskid,
                   "<span style='color:#009999;'>发送报文=><xmp style='color:#009999;'>%s</xmp></span>" % sendmsg)
-        # viewcache(taskid, user.name,None,"<span style='color:#009999;'>body=>%s</span>"%sendmsg)
-        
+
         cs.sendall(bytes(sendmsg, encoding='GBK'))
-        
+
         # recv_bytes=cs.recv(1024)
         # responsexml=b''
-        
+
         # while True:
         #   recv_bytes =cs.recv(1024)
         #   logger.info(2222)
         #   responsexml+=recv_bytes
         #   if not len(recv_bytes):
         #       break;
-        
+
         return _getback(cs), 200, ''
     except:
         if cs:
@@ -967,17 +705,17 @@ def _getfiledict(paraminfo):
     return 'success', pdict
 
 
-def _callinterface(taskid, user, url, body=None, method=None, headers=None, content_type=None, props=None, kind=None,
-                   timeout=None):
+def _callinterface(taskid, user, url, body=None, method=None, headers=None, content_type=None, props=None,
+                   timeout=None,proxy={}):
     """
     返回(rps.text,rps.status_code,msg)
     """
 
     # url data headers过滤
-    viewcache(taskid, user.name, kind, "执行接口请求=>")
-    
-    viewcache(taskid, user.name, kind, "<span style='color:#009999;'>content_type=>%s</span>" % content_type)
-    viewcache(taskid, user.name, kind, "<span style='color:#009999;'>原始url=>%s</span>" % url)
+    viewcache(taskid, "执行接口请求=>")
+
+    viewcache(taskid, "<span style='color:#009999;'>content_type=>%s</span>" % content_type)
+    viewcache(taskid, "<span style='color:#009999;'>原始url=>%s</span>" % url)
 
 
     url_rp = _replace_property(user, url)
@@ -986,7 +724,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
     url_rv = _replace_variable(user, url_rp[1], taskid=taskid)
     if url_rv[0] is not 'success':
         return ('', '', '', url_rv[1])
-    
+
     url_rf = ''
     if len(url_rv[1].split('?')) > 1:
         # logger.info('$' * 1000)
@@ -995,21 +733,21 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
         sep = _replace_function(user, url_params, taskid=taskid)
         if sep[0] is not 'success':
             return ('', '', '', sep[1])
-        
+
         url_rf = ('success', url_rv[1].split('?')[0] + '?' + sep[1])
-    
-    
-    
+
+
+
     else:
         url_rf = _replace_function(user, url_rv[1], taskid=taskid)
     if url_rf[0] is not 'success':
         return ('', '', '', url_rf[1])
-    
+
     url = url_rf[1]
     url = urlmap.getmenhu(url, taskid, user.name)
-    viewcache(taskid, user.name, kind, "<span style='color:#009999;'>url=>%s</span>" % url)
-    
-    viewcache(taskid, user.name, kind,
+    viewcache(taskid, "<span style='color:#009999;'>url=>%s</span>" % url)
+
+    viewcache(taskid,
               "<span style='color:#009999;'>原始参数=><xmp style='color:#009999;'>%s</xmp></span>" % body)
     data_rp = _replace_property(user, body)
     if data_rp[0] is not 'success':
@@ -1023,43 +761,43 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
         return ('', '', '', data_rf[1])
 
     body = data_rf[1]
-    
-    viewcache(taskid, user.name, kind,
+
+    viewcache(taskid,
               "<span style='color:#009999;'>变量替换后参数=><xmp style='color:#009999;'>%s</xmp></span>" % body)
-    
+
     # body=json.loads(body)
-    
+
     # logger.info(type(headers))
-    viewcache(taskid, user.name, kind, "<span style='color:#009999;'>用户定义请求头=>%s</span>" % (headers))
+    viewcache(taskid, "<span style='color:#009999;'>用户定义请求头=>%s</span>" % (headers))
     if headers is None or len(headers.strip()) == 0:
         headers = {}
-    
+
     headers_rp = _replace_property(user, str(headers))
-    
+
     if headers_rp[0] is not 'success':
         return ('', '', '', headers_rp[1])
     headers_rv = _replace_variable(user, headers_rp[1], taskid=taskid)
     if headers_rv[0] is not 'success':
         return ('', '', '', headers_rv[1])
-    
+
     try:
         headers = eval(headers_rv[1])
     except:
         return ('', '', '', '接口请求头格式不对 请检查')
-    
+
     ##
     default = {
         'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36"}
-    viewcache(taskid, user.name, kind, "<span style='color:#009999;'>headers=>%s</span>" % {**default, **headers})
-    viewcache(taskid, user.name, kind, "<span style='color:#009999;'>method=>%s</span>" % method)
-    
+    viewcache(taskid, "<span style='color:#009999;'>headers=>%s</span>" % {**default, **headers})
+    viewcache(taskid, "<span style='color:#009999;'>method=>%s</span>" % method)
+
     if content_type == 'json':
-        
+
         default["Content-Type"] = 'application/json;charset=UTF-8'
         body=body.replace("'null'",'null').replace('"null"','null')
         body = body.encode('utf-8')
     # body = json.dumps(eval(body))
-    
+
     elif content_type == 'xml':
         default["Content-Type"] = 'application/xml'
         body = body.encode('utf-8')
@@ -1071,33 +809,33 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
                 # old=old.replace('"null"','null').replace("'null'",'null')
                 print('vbody:',body)
                 body = parse.urlencode(ast.literal_eval(body))
-            
+
             body = body.encode('UTF-8')
-        
-        
+
+
         except:
             logger.info('参数转化异常：', traceback.format_exc())
             return ('', '', '', 'urlencode接口参数格式不对 请检查..')
-    
+
     elif content_type == 'xml':
         isxml = 0
     elif content_type == 'formdata':
         state, body = _getfiledict(str(body))
         if state == 'fail':
-            viewcache(taskid, user.name, kind, "<span style='color:#009999;'>%s</span>" % "上传文件不存在，请检查")
+            viewcache(taskid, "<span style='color:#009999;'>%s</span>" % "上传文件不存在，请检查")
             return ('', '', '', '上传文件不存在，请检查')
     else:
         raise NotImplementedError("content_type=%s没实现" % content_type)
-    
+
     # logger.info("method=>",method)
     rps = None
     if method == "get":
         session = get_task_session('%s_%s' % (taskid, user.name))
-        
+
         if body:
             if isinstance(body, (dict, list, bytes)):
                 try:
-                    rps = session.get(url, params=body, headers={**default, **headers}, timeout=timeout)
+                    rps = session.get(url, params=body, headers={**default, **headers}, timeout=timeout,proxies=proxy)
                 except:
                     err = traceback.format_exc()
                     if 'requests.exceptions.ConnectTimeout' in err:
@@ -1110,7 +848,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
                 return ('', '', '', '参数类型不支持[dict,list of tuples,bytes]')
         else:
             try:
-                rps = session.get(url, headers={**default, **headers}, timeout=timeout)
+                rps = session.get(url, headers={**default, **headers}, timeout=timeout,proxies=proxy)
             except:
                 err = traceback.format_exc()
                 if 'requests.exceptions.ConnectTimeout' in err:
@@ -1119,14 +857,14 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
                 else:
                     msg = '请求异常:%s' % err
                     return ('', '', '', msg)
-    
+
     elif method == 'post':
         session = get_task_session('%s_%s' % (taskid, user.name))
-        
+
         if content_type == 'formdata':
             try:
-                viewcache(taskid, user.name, kind, '---formdata请求---')
-                rps = session.post(url, files=body, headers={**default, **headers}, timeout=timeout)
+                viewcache(taskid, '---formdata请求---')
+                rps = session.post(url, files=body, headers={**default, **headers}, timeout=timeout,proxies=proxy)
             except:
                 err = traceback.format_exc()
                 if 'requests.exceptions.ReadTimeout' in err:
@@ -1135,12 +873,12 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
                 else:
                     msg = '请求异常:%s' % err
                     return ('', '', '', msg)
-        
-        
+
+
         elif body:
             if isinstance(body, (dict, list, bytes)):
                 try:
-                    rps = session.post(url, data=body, headers={**default, **headers}, timeout=timeout)
+                    rps = session.post(url, data=body, headers={**default, **headers}, timeout=timeout,proxies=proxy)
                 except:
                     err = traceback.format_exc()
                     print('是否超时 %s' % 'requests.exceptions.ReadTimeout' in err)
@@ -1150,12 +888,12 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
                     else:
                         msg = '请求异常:%s' % err
                         return ('', '', '', msg)
-            
+
             else:
                 return ('', '', '', '参数类型不支持[dict,list of tuples,bytes]')
         else:
             try:
-                rps = session.post(url, headers={**default, **headers}, timeout=timeout)
+                rps = session.post(url, headers={**default, **headers}, timeout=timeout,proxies=proxy)
             except:
                 err = traceback.format_exc()
                 if 'requests.exceptions.ReadTimeout' in err:
@@ -1164,17 +902,17 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
                 else:
                     msg = '请求异常:%s' % err
                     return ('', '', '', msg)
-    
+
     # logger.info("textfdafda=>",rps.text)
     else:
         return ('', '', '', "请求方法[%s]暂不支持.." % method)
-    
+
     ###响应报文中props处理
     status, err = _find_and_save_property(taskid,user, props, rps.text)
-    
+
     if status is not 'success':
         return ('', '', '', err)
-    
+
     return (rps.headers, rps.text, rps.status_code, "")
 
 
@@ -1189,56 +927,56 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
     builtin = None
     # methodname=re.findall("(.*?)\(.*?\)", call_str.strip())[0]
     methodname = call_method_name
-    
+
     builtinmethods = [x.name for x in getbuiltin()]
     builtin = (methodname in builtinmethods)
-    
+
     try:
         logme.warn('获取自定义函数id %s' % functionid)
         f = Function.objects.get(id=functionid)
         logme.warn('获取自定义函数%s' % f.__str__())
     except:
         pass
-    
+
     logger.info('params:{}'.format(call_method_params))
     call_method_params.append("taskid='%s'" % taskid)
     call_method_params.append("callername='%s'" % user.name)
     # call_method_params.append("location='%s'"%get_space_dir(user.name))
     call_method_params = [x for x in call_method_params if x]
-    
+
     call_str = '%s(%s)' % (call_method_name, ','.join(call_method_params))
-    
+
     logger.info('测试函数调用=>', call_str)
     ok = _replace_variable(user, call_str, src=1, taskid=taskid)
     if re.search(r"\(.*?(?=,taskid)", ok[1]):
-        viewcache(taskid, user, None, "替换变量后的函数参数=>%s" % re.search(r"(?<=\().*?(?=,taskid)", ok[1]).group())
-    
+        viewcache(taskid,"替换变量后的函数参数=>%s" % re.search(r"(?<=\().*?(?=,taskid)", ok[1]).group())
+
     res, call_str = ok[0], ok[1]
     if res is not 'success':
         return (res, call_str)
-    
+
     return Fu.call(f, call_str, builtin=builtin)
 
 
 def _call_extra(user, call_strs, taskid=None, kind='前置操作',response_text=None):
-    
+
     f = None
     builtinmethods = [x.name for x in getbuiltin()]
     for s in call_strs:
         if not s.strip():
             continue
-        
+
         if s == 'None' or s is None:
             continue
-            
-        viewcache(taskid, user, None, "执行%s:%s" % (kind, s))
+
+        viewcache(taskid, "执行%s:%s" % (kind, s))
         status, s = _replace_variable(user, s, src=1, taskid=taskid,responsetext=response_text)
         logger.info('变量处理后的callstr:',s)
         if status is not 'success':
             return (status, s)
 
         s=s.replace('\n', '')
-        
+
         methodname = ''
         try:
             methodname = re.findall('(.*?)\(', s)[0]
@@ -1248,15 +986,15 @@ def _call_extra(user, call_strs, taskid=None, kind='前置操作',response_text=
             logger.info('拼sql:',argstr)
             argstr = argstr + "taskid='%s',callername='%s'" % (taskid,user.name)
             call_str = '%s(%s)' % (methodname, argstr)
-        
+
         ##????????????????????????????
         except:
             return ('error', '解析%s[%s]失败[%s]' % (kind, s, traceback.format_exc()))
-        
+
         isbuiltin = (methodname in builtinmethods)
         if isbuiltin == False:
             flag = Fu.tzm_compute(s, '(.*?)\((.*?)\)')
-            
+
             al = list(Function.objects.filter(flag=flag))
             if len(al) == 0:
                 flag = Fu.tzm_compute(s, '(.*?)\(.*?\)')
@@ -1268,23 +1006,21 @@ def _call_extra(user, call_strs, taskid=None, kind='前置操作',response_text=
                 f = al[0]
             else:
                 f = al[0]
-                viewcache(taskid, user.name, None, "<span style='color:#FF3333;'>函数库中发现多个匹配函数 这里使用第一个匹配项</span>")
-        
+                viewcache(taskid, "<span style='color:#FF3333;'>函数库中发现多个匹配函数 这里使用第一个匹配项</span>")
+
         logger.info('invoker.py 传入的sql：',call_str)
         status, res = Fu.call(f, call_str, builtin=isbuiltin)
         if status == 'success':
-            viewcache(taskid, user.name, None, "执行[<span style='color:#009999;'>%s</span>]%s【成功】" % (kind, s))
+            viewcache(taskid, "执行[<span style='color:#009999;'>%s</span>]%s【成功】" % (kind, s))
         else:
-            viewcache(taskid, user.name, None, "执行[<span style='color:#009999;'>%s</span>]%s【失败】" % (kind, s))
+            viewcache(taskid, "执行[<span style='color:#009999;'>%s</span>]%s【失败】" % (kind, s))
             return (status, res)
-    
-    # viewcache(taskid,username,kind,"数据校验配置=>%s"%db_check)
-    
+
     return ('success', '操作[%s]全部执行完毕' % call_strs)
 
 
 
-def _compute(taskid, user, checkexpression, type=None, target=None, kind=None, parse_type='json', rps_header=None):
+def _compute(taskid, user, checkexpression, type=None, target=None, parse_type='json', rps_header=None):
     """
     计算各种校验表达式
     多个时 分隔符 |
@@ -1301,18 +1037,18 @@ def _compute(taskid, user, checkexpression, type=None, target=None, kind=None, p
                 item = _legal(item)
                 ress = _eval_expression(user, item, taskid=taskid)
                 logger.info('ress1=>', ress)
-                
+
                 if ress[0] is 'success':
-                    viewcache(taskid, user.name, kind,
+                    viewcache(taskid,
                               "校验表达式[<span style='color:#009999;'>%s</span>] 结果[<span style='color:#009999;'>%s</span>]" % (
                                   old, ress[0]))
                 else:
-                    viewcache(taskid, user.name, kind,
+                    viewcache(taskid,
                               "校验表达式[<span style='color:#FF6666;'>%s</span>] 结果[<span style='color:#FF6666;'>%s</span>] 原因[校验表达式[<span style='color:#FF6666;'>%s</span>]" % (
                                   old, ress[0], ress[1]))
-                
+
                 resultlist.append(ress)
-        
+
         elif type == "itf_check":
             #
             for item in checklist:
@@ -1324,36 +1060,35 @@ def _compute(taskid, user, checkexpression, type=None, target=None, kind=None, p
                                         parse_type=parse_type, rps_header=rps_header)
                 logger.info('ress2=>', ress)
                 if ress[0] is 'success':
-                    viewcache(taskid, user.name,kind,"校验表达式[<span style='color:#009999;'>%s</span>] 结果[<span style='color:#009999;'>%s</span>]" % (
+                    viewcache(taskid,"校验表达式[<span style='color:#009999;'>%s</span>] 结果[<span style='color:#009999;'>%s</span>]" % (
                                   old, ress[0]))
                 else:
                     msg = ress[1]
                     if msg is False:
                         msg = '表达式不成立'
-                    viewcache(taskid, user.name, kind,
-                              "校验表达式[<span style='color:#FF6666;'>%s</span>] 结果[<span style='color:#FF6666;'>%s</span>] 原因[<span style='color:#FF6666;'>%s</span>]" % (
+                    viewcache(taskid,"校验表达式[<span style='color:#FF6666;'>%s</span>] 结果[<span style='color:#FF6666;'>%s</span>] 原因[<span style='color:#FF6666;'>%s</span>]" % (
                                   old, ress[0], msg))
-                
+
                 resultlist.append(ress)
-        
-        
+
+
         else:
             return ('error', '计算表达式[%s]异常[_compute type传参错误]' % checkexpression)
         # logger.info("结果列表=>",resultlist)
         # errmsgs=[flag for flag,msg in resultlist if isinstance(x,(str))]
         failmsg = '请检查_compute函数,_eval_expression函数返回fail时没传失败消息'
-        
+
         logger.info('resultlist=>', resultlist)
         notsuccessmsg = [msg for flag, msg in resultlist if flag is not 'success']
         if len(notsuccessmsg) > 0:
             failmsg = notsuccessmsg[0]
-        
+
         res = len([flag for flag, msg in resultlist if flag is 'success']) == len(resultlist)
         if res is True:
             return ('success', '')
         else:
             return ('fail', failmsg)
-    
+
     except Exception as e:
         return ('error', '计算表达式[%s]异常[%s]' % (checkexpression, traceback.format_exc()))
 
@@ -1365,26 +1100,26 @@ def _separate_expression(expectedexpression):
             k = expectedexpression.split(op)[0].strip()
             v = expectedexpression.split(op)[1].strip()
             return k, v, op
-    
+
     raise RuntimeError("不能分割的表达式=>%s" % expectedexpression)
 
 
 
 def _legal(ourexpression):
     res = None
-    
+
     if "|" in ourexpression:
         res = []
         seplist = ourexpression.split("|")
         for sep in seplist:
             res.append(_replace(sep))
-        
+
         return "|".join(res)
-    
-    
+
+
     else:
         res = _replace(ourexpression)
-    
+
     return res
 
 
@@ -1394,20 +1129,20 @@ def _replace(expressionsep):
         eval(expressionsep)
     except Exception as e:
         logger.info('==_replace异常')
-        
+
         # if    'true' in expressionsep:
         #   expressionsep=expressionsep.replace('true','True')
         # elif 'false' in expressionsep:
         #   expressionsep=expressionsep.replace('false','False')
-        
+
         list_0 = re.findall("!=", expressionsep)
         list_1 = re.findall(">=", expressionsep)
         list_2 = re.findall("<=", expressionsep)
         list_3 = re.findall("=", expressionsep)
-        
+
         if len(list_0) > 0 or len(list_1) > 0 or len(list_2) > 0:
             pass
-        
+
         elif len(list_3) == 1:
             expressionsep = expressionsep.replace("=", "==")
         #兼容下面
@@ -1420,7 +1155,6 @@ def _replace(expressionsep):
                 expressionsep='=='.join([left,ms[0][1]])
     # else:
     #   msg="不能合法化的表达式!=>%s"%expressionsep
-    #   #viewcache(msg)
     #   raise RuntimeError(msg)
     finally:
         return expressionsep
@@ -1431,10 +1165,10 @@ def _get_hearder_key(r):
     def _upper_first(w):
         if len(w) == 1:
             return w.upper()
-        
+
         else:
             return w[0].upper() + w[1:]
-    
+
     rs = [_upper_first(str(_)) for _ in r.split('_')]
     return '-'.join(rs)
 
@@ -1458,30 +1192,30 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
     exp = None
     # rr=None
     try:
-        
+
         # logger.info("ourexpression=>",ourexpression)
         exp_rp = _replace_property(user, ourexpression)
         # logger.info('qqqqq=>',exp_rp)
-        
+
         # logger.info('exp-pr=>',exp_rp)
         if exp_rp[0] is not 'success':
             return exp_rp
-        
+
         exp_rv = _replace_variable(user, exp_rp[1], taskid=taskid, responsetext=data)
         if exp_rv[0] is not 'success':
             return exp_rv
         # logger.info('exp_rv=<',exp_rv)
         exp_rf = _replace_function(user, exp_rv[1], taskid=taskid)
-        
+
         if exp_rf[0] is not 'success':
             return exp_rf
-        
+
         exp = exp_rf[1]
-        
+
         res = None
-        
+
         if need_chain_handle is True:
-            
+
             k, v, op = _separate_expression(exp)
             logger.info('获取的项=>', k, v, op)
             if parse_type != 'xml':
@@ -1489,7 +1223,7 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
                     data = data.replace(badstr, '')
             data = data.replace('null', "'None'").replace('true', "'True'").replace("false", "'False'")
             # logger.info('data=>',data)
-            
+
             if 'response.text' == k:
                 if op == '$':
                     flag = str(data).__contains__(v)
@@ -1498,12 +1232,12 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
                     else:
                         return ('fail', '表达式%s校验失败' % ourexpression)
             elif k.startswith('response.header'):
-                
+
                 ak = k.split('.')[-1].lower()
                 hk = _get_hearder_key(ak)
                 rh = rps_header[hk]
                 # logger.info('响应头=>',rh)
-                
+
                 if op == '$':
                     flag = rh.__contains__(v)
                 elif op == '==':
@@ -1513,17 +1247,17 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
                     flag = act == expect
                 else:
                     return ('fail', '响应头校验暂时只支持=,$比较.')
-                
+
                 if flag is True:
                     return ('success', '')
                 else:
                     return ('fail', '表达式%s校验失败' % ourexpression)
-            
-            
+
+
             else:
-                
+
                 p = None
-                
+
                 if parse_type == 'json':
                     p = JSONParser(data)
                 elif parse_type == 'xml':
@@ -1534,9 +1268,9 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
                     data = '\n'.join(data.split('\n')[1:])
                     logger.info('reee', data)
                     p = XMLParser(data)
-                
+
                 oldk = k
-                
+
                 k = p.getValue(k)
             # try:
             #   if eval(str(k)) in(None,True,False):
@@ -1544,34 +1278,34 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
             #       v=str(v)
             # except:
             #   pass
-            
+
             ##处理左边普通字符串的情况
-            
+
             if k is None:
                 k = oldk
-            
+
             if v == 'true':
                 v = 'True'
             elif v == 'false':
                 v = 'False'
             elif v == 'null':
                 v = 'None'
-            
+
             logger.info('表达式合成{%s(%s),%s(%s),%s(%s)}' % (k, type(k), op, type(op), v, type(v)))
-            
+
             if type(k) == type(v):
                 exp = "".join([str(k), op, str(v)])
             else:
                 exp = "".join([str(k), op, str(v)])
             # return ('fail','表达式[%s]校验不通过 期望[%s]和实际类型[%s]不一致'%(ourexpression,type(v),type(k)))
             # res=eval(exp)
-            
+
             rr = eval(exp)
             if isinstance(rr, (tuple,)):
                 raise RuntimeError('需要特殊处理')
-            
+
             logger.info("实际计算表达式[%s] 结果[%s]" % (exp, rr))
-        
+
         return ('success', '') if rr is True else ('fail', '表达式%s校验失败' % ourexpression)
     except:
         logger.info(traceback.format_exc())
@@ -1591,47 +1325,47 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
                     if op == '$':
                         res = eval(
                             "'%s'.__contains__('%s')" % (str(key).replace('\n', '').replace('\r', ''), str(value)))
-                    
+
                     elif op == '>=':
                         res = eval('''"%s"%s"%s"''' % (str(key), '>=', str(value)))
                     elif op == '<=':
                         res = eval('''"%s"%s"%s"''' % (str(key), '<=', str(value)))
                     else:
                         res = eval('''"%s"%s"%s"''' % (str(key), op, str(value)))
-                    
+
                     logger.info('判断结果=>', res)
                     if res is True:
                         return ('success', res)
                     else:
                         return ('fail', res)
-            
+
             return ('fail', '')
-        
+
         except:
             logger.info('表达式计算异常.')
             return ('error', '表达式[%s]计算异常[%s]' % (ourexpression, traceback.format_exc()))
-        
+
         exp = None
         try:
-            
+
             exp_rp = _replace_property(user, ourexpression)
             if exp_rp[0] is not 'success':
                 return exp_rp
-            
+
             exp_rv = _replace_variable(user, exp_rp[1], taskid=taskid)
             if exp_rv[0] is not 'success':
                 return exp_rv
-            
+
             exp = exp_rv[1]
-            
+
             res = None
-            
+
             if need_chain_handle is True:
-                
+
                 k, v, op = _separate_expression(exp)
                 logger.info('获取的项=>', k, v, op)
                 data = data.replace('null', "'None'").replace('true', "'True'").replace("false", "'False'")
-                
+
                 if 'response.text' == k:
                     if op == '$':
                         flag = str(data).__contains__(v)
@@ -1640,12 +1374,12 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
                         else:
                             return ('fail', '表达式%s校验失败' % ourexpression)
                 elif k.startswith('response.header'):
-                    
+
                     ak = k.split('.')[-1].lower()
                     hk = _get_hearder_key(ak)
                     rh = rps_header[hk]
                     # logger.info('响应头=>',rh)
-                    
+
                     if op == '$':
                         flag = rh.__contains__(v)
                     elif op == '==':
@@ -1655,16 +1389,16 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
                         flag = act == expect
                     else:
                         return ('fail', '响应头校验暂时只支持=,$比较.')
-                    
+
                     if flag is True:
                         return ('success', '')
                     else:
                         return ('fail', '表达式%s校验失败' % ourexpression)
-                
+
                 else:
-                    
+
                     p = None
-                    
+
                     if parse_type == 'json':
                         p = JSONParser(data)
                     elif parse_type == 'xml':
@@ -1672,37 +1406,37 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
                         data = '\n'.join(data.split('\n')[1:])
                         logger.info('reee', data)
                         p = XMLParser(data)
-                    
+
                     oldk = k
                     k = p.getValue(k)
-                
+
                 ##处理左边普通字符串的情况
-                
+
                 if k is None:
                     k = oldk
-                
+
                 if v == 'true':
                     v = 'True'
                 elif v == 'false':
                     v = 'False'
                 elif v == 'null':
                     v = 'None'
-                
+
                 logger.info('表达式合成{%s(%s),%s(%s),%s(%s)}' % (k, type(k), op, type(op), v, type(v)))
-                
+
                 if type(k) == type(v):
                     exp = "".join([str(k), op, str(v)])
                 else:
                     exp = "".join([str(k), op, str(v)])
                 # return ('fail','表达式[%s]校验不通过 期望[%s]和实际类型[%s]不一致'%(ourexpression,type(v),type(k)))
                 # res=eval(exp)
-                
+
                 rr = eval(exp)
                 if isinstance(rr, (tuple,)):
                     raise RuntimeError('需要特殊处理')
-                
+
                 logger.info("实际计算表达式[%s] 结果[%s]" % (exp, rr))
-            
+
             return ('success', '') if rr is True else ('fail', '表达式%s校验失败' % ourexpression)
         except:
             logger.info(traceback.format_exc())
@@ -1722,22 +1456,22 @@ def _eval_expression(user, ourexpression, need_chain_handle=False, data=None, di
                         if op == '$':
                             res = eval(
                                 "'%s'.__contains__('%s')" % (str(key), str(value)))
-                        
+
                         elif op == '>=':
                             res = eval('''"%s"%s"%s"''' % (str(key), '>=', str(value)))
                         elif op == '<=':
                             res = eval('''"%s"%s"%s"''' % (str(key), '<=', str(value)))
                         else:
                             res = eval('''"%s"%s"%s"''' % (str(key), op, str(value)))
-                        
+
                         logger.info('判断结果=>', res)
                         if res is True:
                             return ('success', res)
                         else:
                             return ('fail', res)
-                
+
                 return ('fail', '')
-            
+
             except:
                 logger.info('表达式计算异常.')
                 return ('error', '表达式[%s]计算异常[%s]' % (ourexpression, traceback.format_exc()))
@@ -1746,16 +1480,15 @@ def _replace_function(user, str_, taskid=None):
     '''计算函数引用表达式
     '''
     # logger.info('--计算引用表达式=>',str_)
-    
+
     resultlist = []
     builtinmethods = [x.name for x in getbuiltin()]
     str_ = str(str_)
-    
+
     call_str_list = re.findall('\$\[(.*?)\((.*?)\)\]', str_)
-    # viewcache(taskid, user.name, None, '发现函数部分=>%s' % call_str_list)
-    
+
     if len(call_str_list) == 0: return ('success', str_)
-    
+
     for call_str in call_str_list:
         fname = call_str[0]
         f = None
@@ -1764,7 +1497,7 @@ def _replace_function(user, str_, taskid=None):
             logger.info('通过函数名[%s]获取函数对象'%fname)
         except:
             pass
-        
+
         appendstr = "taskid='%s',callername='%s'" % (taskid, user.name)
         itlist = []
         if call_str[1]:
@@ -1772,21 +1505,20 @@ def _replace_function(user, str_, taskid=None):
         itlist.append(appendstr)
         # 计算表达式
         invstr = '%s(%s)' % (fname, ','.join(itlist))
-        # viewcache(taskid, user.name,None,'计算表达式=>%s'%invstr)
         logger.info('invstr=>', invstr)
-        
+
         # 替换表达式
         repstr = '%s(%s)' % (fname, call_str[1])
-        
+
         status, res = Fu.call(f, invstr, builtin=(lambda: True if fname in builtinmethods else False)())
-        viewcache(taskid, user.name, None, '计算函数表达式:<br/>%s <br/>结果:<br/>%s' % (invstr, res))
+        viewcache(taskid, '计算函数表达式:<br/>%s <br/>结果:<br/>%s' % (invstr, res))
         resultlist.append((status, res))
-        
+
         if status is 'success':
             logger.info('\n\n')
             logger.info('替换函数引用 %s\n =>\n %s ' % ('$[%s]' % invstr, str(res)))
             str_ = str_.replace('$[%s]' % repstr, str(res))
-    
+
     if len([x for x in resultlist if x[0] is 'success']) == len(resultlist):
         logger.info('--成功计算引用表达式 结果=>', str_)
         return ('success', str_)
@@ -1801,25 +1533,24 @@ def _get_step_params(paraminfo, taskid, callername):
     获取内置变量STEP_PARAMS
 
     '''
-    
+
     def _next(cur):
         # logger.info('_next')
         # logger.info('初始数据=>',cur)
         # logger.info('*'*200)
-        
+
         if isinstance(cur, (dict,)):
             i = 0
             for k in list(cur.keys()):
                 i = i + 1
-                # viewcache(taskid,callername,None,'ii:%s :'%(i))
-                
+
                 v = cur[k]
                 try:
                     v = eval(v)
                 # logger.info('类型：',type(v))
                 except:
                     pass
-                
+
                 if isinstance(v, (str,)):
                     find_var = len(re.findall('\{\{.*?\}\}', v))
                     if find_var:
@@ -1831,10 +1562,10 @@ def _get_step_params(paraminfo, taskid, callername):
                         else:
                             user = User.objects.get(name=callername)
                             cur[k] = _replace_variable(user, v, taskid=taskid)[1]
-                
+
                 else:
                     _next(v)
-        
+
         elif isinstance(cur, (list,)):
             itemindex = -1
             for sb in cur:
@@ -1848,26 +1579,24 @@ def _get_step_params(paraminfo, taskid, callername):
                         else:
                             user = User.objects.get(name=callername)
                             cur[itemindex] = _replace_variable(user, sb, taskid=taskid)[1]
-                
-                
-                
+
+
+
                 else:
                     _next(sb)
-    
+
     ########################
     ps = paraminfo
     try:
-        # viewcache(taskid, callername, None, '尝试字典模式解析STEP_PARAMS为' )
         ps = eval(paraminfo)
 
         if isinstance(ps, (dict,)):
             # logger.info('ps=>',ps)
             _next(ps)
-            viewcache(taskid, callername, None, '获取内置变量[字典模式]STEP_PARAMS=> %s ' % str(ps))
+            viewcache(taskid,'获取内置变量[字典模式]STEP_PARAMS=> %s ' % str(ps))
             return ps
-    
+
     except:
-        # viewcache(taskid, callername, None, '尝试a=1&b=2模式解析STEP_PARAMS为' )
         try:
             dl = dict()
             for s1 in ps.split('&'):
@@ -1875,25 +1604,25 @@ def _get_step_params(paraminfo, taskid, callername):
                 p2 = '='.join(s1.split('=')[1:])
                 if p1.__contains__('?'):
                     p1 = p1.split('?')[1]
-                
+
                 try:
                     import json
                     logger.info('p1=>', p1)
                     dl[p1] = eval(p2)
-                
+
                 # logger.info('类型：',type(dl[p1]))
                 except:
                     # traceback.logger.info_exc()
                     dl[p1] = p2
-            
+
             logger.info('dl=>', dl)
             _next(dl)
-            viewcache(taskid, callername, None, '获取内置变量[a=1&b=2模式]STEP_PARAMS=> %s ' % str(dl))
+            viewcache(taskid,'获取内置变量[a=1&b=2模式]STEP_PARAMS=> %s ' % str(dl))
             return dl
-        
+
         except:
             return ('error', 'a=1&b=2模式获取内置变量STEP_PARAMS异常')
-        
+
         return ('error', traceback.format_exc())
 
 
@@ -1920,7 +1649,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
                 old = old.replace('{{%s}}' % varname, str(dictparams))
                 logger.info('==STEP_PARAMS替换后=>\n', old)
                 continue;
-            
+
             elif varname.strip() == 'RESPONSE_TEXT':
                 logger.info('==获取text/html响应报文用于替换 responsetext={}'.format(responsetext))
                 if responsetext:
@@ -1934,13 +1663,13 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
                 x = json.loads(Tag.objects.get(var=m).planids)
                 if pname in x and pid in x.get(pname):
                     var = m
-                    viewcache(taskid, user.name, None, '使用局部变量 %s 描述：%s' % (varname, var.description))
+                    viewcache(taskid, '使用局部变量 %s 描述：%s' % (varname, var.description))
                     break
             if var is None:
                 for m in vars:
                     try:
                         var = Tag.objects.get(var=m, isglobal=1).var
-                        viewcache(taskid, user.name, None, '使用全局变量 %s 描述：%s' % (varname, var.description))
+                        viewcache(taskid, '使用全局变量 %s 描述：%s' % (varname, var.description))
                     except:
                         pass
                 if var is None:
@@ -1975,7 +1704,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
             
                 old = old.replace('{{%s}}' % varname, value, 1)
                 old=old.replace("'null'",'None')
-                viewcache(taskid, user.name, None, '替换变量 {{%s}}=>%s' % (varname, value))
+                viewcache(taskid,'替换变量 {{%s}}=>%s' % (varname, value))
             # __replace_route["%s.%s"%(user.name,varname)]=value
             
             elif len(gain) > 0 and len(value) == 0:
@@ -1990,7 +1719,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
                         else:
                             v = v[1]
                         old = old.replace('{{%s}}' % varname, str(v), 1)
-                        viewcache(taskid, user.name, None, '替换变量 {{%s}}=>%s' % (varname, v))
+                        viewcache(taskid,'替换变量 {{%s}}=>%s' % (varname, v))
                 
                 
                 
@@ -2006,7 +1735,7 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
                     # if v is None:
                     #   return ('error','')
                     old = old.replace('{{%s}}' % varname, str(v), 1)
-                    viewcache(taskid, user.name, None, '替换变量 {{%s}}=>%s' % (varname, v))
+                    viewcache(taskid, '替换变量 {{%s}}=>%s' % (varname, v))
         
         return ('success', old)
     except Exception as e:
@@ -2117,7 +1846,7 @@ def _gain_compute(user, gain_str, src=1, taskid=None):
                 functionid = ms[0].id
             else:
                 functionid = ms[0].id
-                viewcache(taskid, user.name, None, "<span style='color:#FF3333;'>函数库中发现多个匹配函数 这里使用第一个匹配项</span>")
+                viewcache(taskid, "<span style='color:#FF3333;'>函数库中发现多个匹配函数 这里使用第一个匹配项</span>")
             # warnings.warn('库中存在两个特征码相同的自定义函数')
             
             a = re.findall('(.*?)\((.*?)\)', gain_str)
@@ -2174,11 +1903,9 @@ def _replace_property(user, str_, taskid=None):
         
         logger.info('str_=>', str_)
         b = re.findall("\$\{(.*?)\}", str_)
-        # viewcache("b length=>",len(b))
         # c=a+b
         c = b
         for it in c:
-            # viewcache("key=>",it)
             # logger.info('tmp==>',it)
             cur = it
             
@@ -2186,7 +1913,6 @@ def _replace_property(user, str_, taskid=None):
             logger.info(_tempinfo, username, it)
             v = _tempinfo.get(username).get(it)
             
-            # viewcache("vvv=>",v)
             if v is None:
                 # raise RuntimeError('没有定义属性$%s 请先定义'%it)
                 pass
@@ -2200,44 +1926,7 @@ def _replace_property(user, str_, taskid=None):
         return ('error', '请检查是否定义属性%s 错误消息:%s' % (cur, traceback.format_exc()))
 
 
-def _save_builtin_property(taskid, username):
-    '''
-    测试报告可用内置属性
-     ${TASK_ID}
-     ${TASK_REPORT_URL}
-     ${PLAN_ID}
-     ${PLAN_NAME}
-     ${PLAN_RESULT}
-     ${PLAN_CASE_TOTAL_COUNT}
-     ${PLAN_CASE_SUCCESS_COUNT}
-     ${PLAN_CASE_FAIL_COUNT}
-     ${PLAN_STEP_TOTAL_COUNT}
-     ${PLAN_STEP_SUCCESS_COUNT}
-     ${PLAN_STEP_FAIL_COUNT}
-     ${PLAN_STEP_SKIP_COUNT}
-     #${PLAN_SUCCESS_RATE}
-    '''
-    detail = gettaskresult(taskid)
-    if not detail:
-        logger.info('==内置属性赋值提前结束，执行结果表无数据')
-        return
-    
-    base_url = settings.BASE_URL
-    url = "%s/manager/querytaskdetail/?taskid=%s" % (base_url, taskid)
-    save_data(username, _tempinfo, 'TASK_ID', detail['taskid'])
-    save_data(username, _tempinfo, 'TASK_REPORT_URL', url)
-    save_data(username, _tempinfo, 'PLAN_ID', detail['planid'])
-    save_data(username, _tempinfo, 'PLAN_NAME', detail['planname'])
-    save_data(username, _tempinfo, 'PLAN_RESULT',
-              (lambda: 'success' if int(float(detail['success_rate'])) == 1 else 'fail')())
-    save_data(username, _tempinfo, 'PLAN_CASE_TOTAL_COUNT', str(len(detail['cases'])))
-    # save_data(username,_tempinfo, 'PLAN_CASE_SUCCESS_COUNT', detail[''])
-    # save_data(username,_tempinfo, 'PLAN_CASE_FAIL_COUNT', detail[''])
-    save_data(username, _tempinfo, 'PLAN_STEP_TOTAL_COUNT', detail['total'])
-    save_data(username, _tempinfo, 'PLAN_STEP_SUCCESS_COUNT', detail['success'])
-    save_data(username, _tempinfo, 'PLAN_STEP_FAIL_COUNT', detail['fail'])
-    save_data(username, _tempinfo, 'PLAN_STEP_SKIP_COUNT', detail['skip'])
-    save_data(username, _tempinfo, 'PLAN_SUCCESS_RATE', detail['success_rate'])
+
 
 
 def _find_and_save_property(taskid,user, dict_str, responsetext):
@@ -2285,14 +1974,12 @@ def save_data(username, d, k, v):
     try:
         if d.get(username) is None:
             d[username] = {}
-        
+
         d[username][k] = v
-        
+
         logger.info('存属性==')
         logger.info(username, k, v)
-        
-        # viewcache(username, "用户%s缓存数据=> %s=%s" % (username, k, v))
-    
+
     except:
         raise RuntimeError("存property失败=>%s" % k)
 
@@ -2304,8 +1991,6 @@ def clear_data(username, d):
     for key in list(d.keys()):
         if username in key:
             del d[key]
-    
-    viewcache(username, "清空用户%s缓存信息" % username)
 
 
 class Struct(object):
@@ -2438,247 +2123,3 @@ class JSONParser(Struct):
         else:
             logger.info(errms)
             return chainstr
-
-
-class MainSender:
-    '''
-    测试报告工具类
-    '''
-    
-    # my_sender='971406187@qq.com'    # 发件人邮箱账号
-    # my_pass = 'mafkywyadboibfbj'              # 发件人邮箱密码
-    # my_receive={
-    # # 'hujj':'15157266151@126.com',
-    # # 'hujj2':'971406187@qq.com',
-    # 'hujj3':'hujj@fingard.com',
-    # # 'chl':"chenhy@fingard.com",
-    # # 'fhp':'fuhp@fingard.com',
-    # # 'syc':'shanyc@fingard.com',
-    # # 'xsl':'xuesl@fingard.com',
-    # # 'zby':'zhengby@fingard.com',
-    # # 'zjr':'zhanjr@fingard.com'
-    # }
-    # subject=""
-    # workcontent=[
-    
-    # '1.新框架所有页面 编辑删除[100% 删除没做依赖检查后面加]',
-    # '2.测试邮件配置分任务[15% 做了部分接口和数据模型调整]',
-    # '3.迁移脚本优化',
-    # '4.迁移用例',
-    # '5.优化',
-    # 'a.所有接口的session失效跳转',
-    # 'b.一些重要bug修复 如步骤和用例调序bug修复',
-    # 'c.删除依赖检查',
-    # 'd.增加测试步骤测试用例时的批量操作',
-    # 'e.增加文本验证规则',
-    # 'f.@字符数据库关联查询 变量输入快捷键'
-    # 'g.详情查看'
-    
-    # ]
-    
-    @classmethod
-    def _format_addr(cls, s):
-        name, addr = parseaddr(s)
-        return formataddr((Header(name, 'utf-8').encode(), addr))
-    
-    @classmethod
-    def gethtmlcontent(cls, taskid, rich_text):
-        
-        data = gettaskresult(taskid)
-        logger.info('报告data:', data)
-        
-        if not data:
-            return '<html>无运行数据..</html>'
-        
-        # cls.subject='%s自动化测试报告-%s'%(data['planname'],str(datetime.datetime.now())[0:10])
-        cls.subject = '%s自动化测试报告-%s' % (data['planname'], '2019-10-31')
-        cssstr = '<style type="text/css">body{font-family:Microsoft YaHei}.success{color:#093}.fail{color:#f03}.skip{color:#f90}.error{color:#f0f}table{width:95%;margin:auto}th{background-color:#39c;color:#fff}td{background-color:#eee;text-align:center}</style>'
-        bodyhtml = ''
-        # bodyhtml='<span style="float:right;font-size:1px;font-color:#eee;">%s-%s</span>'%(data['taskid'],data['planid'])
-        bodyhtml += '<h2 style="text-align: center;">[%s]接口测试报告</h2>' % data['planname']
-        bodyhtml += "<p class='attribute'><strong>测试结果</strong></p>"
-        bodyhtml += "<table><tr><th>#Samples</th><th>Failures</th><th>Success Rate</th><th>Average Time</th><th>Min Time</th><th>Max Time</th></tr><tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr></table>" % (
-            data['total'], data['fail'], data['success_rate'], data['average'], data['min'], data['max'])
-        bodyhtml += "<strong>测试详情</strong>"
-        
-        for case in data['cases']:
-            bodyhtml += '<p style="text-indent:2em;" >用例名[%s]</p>' % (case['casename'])
-            
-            # bodyhtml+='<table>'
-            # bodyhtml+="<tr><th>执行序号</th><th>结果</th><th>耗时(ms)</th><th>步骤名称</th><th>api</th><th>接口验证</th><th>数据验证</th><th>消息</th></tr>"
-            steps_iterator = case['steps']
-            for iter_index, vs in steps_iterator.items():
-                bodyhtml += '<p>第%s次迭代</p>' % iter_index
-                
-                bodyhtml += '<table>'
-                bodyhtml += "<tr><th>执行序号</th><th>结果</th><th>耗时(ms)</th><th>步骤名称</th><th>api</th><th>接口验证</th><th>数据验证</th><th>消息</th></tr>"
-                for step in vs:
-                    logger.info('nnufa=>', step)
-                    bodyhtml += '<tr>'
-                    bodyhtml += '<td style="width:100px;">%s</td>' % step['num']
-                    bodyhtml += '<td style="width:100px;" class="%s">%s</td>' % (step['result'], step['result'])
-                    bodyhtml += '<td style="width:100px;">%s</td>' % step['spend']
-                    bodyhtml += '<td style="width:200px;" title="%s">%s</td>' % (step['stepname'], step['stepname'])
-                    bodyhtml += '<td style="width:200px;">%s</td>' % step['api']
-                    bodyhtml += '<td style="width:100px;">%s</td>' % step['itf_check']
-                    bodyhtml += '<td style="width:100px;">%s</td>' % step['db_check']
-                    bodyhtml += '<td>%s</td>' % step['error']
-                    bodyhtml += '</tr>'
-                
-                bodyhtml += '</table>'
-        
-        return cssstr + rich_text + '<br/>' + bodyhtml
-    
-    @classmethod
-    def send(cls, taskid, user, mail_config):
-        ret = 0
-        error = ''
-        try:
-            is_send_mail = mail_config.is_send_mail
-            if is_send_mail == 'close':
-                return '=========发送邮件功能没开启 跳过发送================='
-            sender_name = configs.EMAIL_HOST_USER
-            sender_nick = configs.EMAIL_sender_nick
-            sender_pass = configs.EMAIL_HOST_PASSWORD
-            to_receive = mail_config.to_receive
-            
-            rich_text_rp = _replace_property(user, mail_config.rich_text)
-            rich_text = ''
-            if rich_text_rp[0] is 'success':
-                rich_text_rv = _replace_variable(user, rich_text_rp[1], taskid=taskid)
-                if rich_text_rv[0] is 'success':
-                    rich_text = rich_text_rv[1]
-                else:
-                    ret = 1
-                    error = '变量替换异常,检查变量是否已定义'
-            else:
-                ret = 1
-                error = '属性替换异常 可用属性'
-            
-            smtp_host = configs.EMAIL_HOST  # "smtp.qq.com"
-            smtp_port = configs.EMAIL_PORT  # 465
-            subject = ''
-            description = mail_config.description
-            description_rp = _replace_property(user, description)
-            if description_rp[0] is 'success':
-                description_rv = _replace_variable(user, description_rp[1], taskid=taskid)
-                if description_rv[0] is 'success':
-                    subject = description_rv[1] + '————' + str(time.strftime("%m-%d %H:%M", time.localtime()))
-                else:
-                    ret = 1
-                    error = '变量替换异常,检查变量是否已定义'
-            
-            else:
-                ret = 1
-                error = '属性替换异常 可用属性'
-            
-            htmlcontent = cls.gethtmlcontent(taskid, rich_text)
-            msg = MIMEText(htmlcontent, 'html', 'utf-8')
-            msg['From'] = formataddr([sender_nick, sender_name])  # 括号里的对应发件人邮箱昵称、发件人邮箱账号
-            msg['To'] = '%s' % ','.join([cls._format_addr('<%s>' % to_addr) for to_addr in
-                                         list(to_receive.split(','))])  # 括号里的对应收件人邮箱昵称、收件人邮箱账号
-            # msg['Subject']=cls.subject          # 邮件的主题，也可以说是标题
-            msg['Subject'] = subject
-            server = smtplib.SMTP_SSL(smtp_host, smtp_port)  # 发件人邮箱中的SMTP服务器，端口是25
-            server.login(sender_name, sender_pass)  # 括号中对应的是发件人邮箱账号、邮箱密码
-            server.sendmail(sender_name, list(to_receive.split(',')), msg.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
-            server.quit()  # 关闭连接
-        
-        except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
-            logger.info(traceback.format_exc())
-            ret = 2
-            error = traceback.format_exc()
-        
-        return cls._getdescrpition(mail_config.to_receive, ret, error)
-    
-    @classmethod
-    def gen_report(cls, taskid, htmlcontent):
-        logger.info('==本地缓存测试报告')
-        
-        filepath = '%s/logs/local_reports/report_%s.html' % (BASE_DIR, taskid)
-        if os.path.exists(filepath):
-            with open(filepath, 'w') as f:
-                f.write(htmlcontent)
-    
-    @classmethod
-    def _getdescrpition(cls, to_receive, send_result, error=None):
-        res = None
-        if send_result is 0:
-            res = '发送成功'
-        elif send_result is 1:
-            res = '发送成功 但邮件内容可能有小问题[%s]' % error
-        
-        elif send_result is 2:
-            res = '发送失败[%s]' % error
-        
-        return '========================发送邮件 收件人:%s 结果：%s' % (to_receive, res)
-    
-    @classmethod
-    def dingding(cls, taskid, user, mail_config):
-        try:
-            is_send_dingding = mail_config.is_send_dingding
-            if is_send_dingding == 'close':
-                return '=========发送钉钉功能没开启 跳过发送================='
-            dingdingtoken = mail_config.dingdingtoken
-            if dingdingtoken == '' or dingdingtoken is None:
-                return '=========钉钉token为空 跳过发送================='
-            else:
-                url = 'https://oapi.dingtalk.com/robot/send?access_token=' + dingdingtoken
-                res = gettaskresult(taskid)
-                pagrem = {
-                    "msgtype": "markdown",
-                    "markdown": {
-                        "title": "自动化测试报告",
-                        "text": "计划【%s】的测试报告已生成：\n\n" % (res["planname"]) +
-                                "> ***测试结果*** :\n\n" +
-                                ">          用例总数：%s\n\n" % (res["total"]) +
-                                ">          失败数量：%s\n\n" % (res["fail"]) +
-                                ">          成功率：%s\n\n" % (res["success_rate"]) +
-                                "> ###### %s [详情](%s) \n" % (time.strftime('%m-%d %H:%M', time.localtime(time.time())),
-                                                             settings.BASE_URL + "/manager/querytaskdetail/?taskid=" + taskid)
-                    },
-                    "at": {
-                        "isAtAll": True
-                    }
-                }
-                headers = {
-                    'Content-Type': 'application/json'
-                }
-                requests.post(url, data=json.dumps(pagrem), headers=headers)
-                
-                send_result = 0
-        except:
-            send_result = 1
-        return cls._getdingding(mail_config.dingdingtoken, send_result)
-    
-    @classmethod
-    def _getdingding(cls, dingdingtoken, send_result):
-        if send_result == 0:
-            res = '发送钉钉消息成功'
-        elif send_result == 1:
-            res = '发送钉钉消息失败'
-        return '=========发送钉钉通知 结果：%s=================' % (res)
-
-
-def upload_personal_file(filemap, username):
-    upload_dir = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File')
-    try:
-
-        if not os.path.exists(upload_dir):
-            os.makedirs(upload_dir)
-
-        for filename in filemap:
-            filepath = os.path.join(upload_dir, filename)
-            with open(filepath, 'wb') as f:
-                f.write(filemap[filename])
-    except:
-        logger.info(traceback.format_exc())
-        return ('error', '写入异常' + traceback.format_exc())
-
-    return ('success', '本地写完')
-
-
-
-
-
-

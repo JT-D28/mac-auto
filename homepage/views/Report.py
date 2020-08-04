@@ -1,4 +1,3 @@
-import os
 import threading
 
 from django.http import JsonResponse, HttpResponse
@@ -7,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from ME2.settings import BASE_DIR
 from manager.context import getRunningInfo
 from manager.core import simplejson
-from manager.invoker import MainSender
+from manager.operate.sendMail import MainSender
 from manager.models import Plan, ResultDetail, MailConfig, User
 
 
@@ -15,14 +14,15 @@ from manager.models import Plan, ResultDetail, MailConfig, User
 def sendreport(request):
 	code = 0
 	msg = ''
+	info=''
 	planid = request.POST.get('planid')
 	plan = Plan.objects.get(id=planid)
 	username = request.session.get("username", None)
-	detail = list(ResultDetail.objects.filter(plan=plan, is_verify=1).order_by('-createtime'))
 	config_id = plan.mail_config_id
-	if detail is None:
+	taskid = getRunningInfo(planid, 'verify_taskid')
+	if taskid == '':
 		msg = "任务还没有运行过！"
-	elif getRunningInfo('',planid,'isrunning') in ('1', 1):
+	elif getRunningInfo(planid,'isrunning') in ['1','3']:
 		msg = "任务运行中，请稍后！"
 	else:
 		config = MailConfig.objects.get(id=plan.mail_config_id)
@@ -30,7 +30,7 @@ def sendreport(request):
 			info = '邮件发送没有开启;'
 		if config.is_send_dingding == 'close':
 			info += '钉钉发送没有开启;'
-		taskid = detail[0].taskid
+
 		threading.Thread(target=sendmail, args=(config_id, username, taskid)).start()
 		msg = '发送中...<br> {}'.format(info)
 	return JsonResponse(simplejson(code=code, msg=msg), safe=False)
@@ -46,13 +46,9 @@ def sendmail(config_id, username, taskid):
 		
 @csrf_exempt
 def downloadReport(request):
-	reportname = BASE_DIR+'/logs/local_reports/report_' + request.POST.get("taskid") + '.html'
-	if os.path.exists(reportname):
-		with open(reportname, 'r', encoding='gbk') as f:
-			text = '<meta charset="UTF-8">\n' + f.read()
-		response = HttpResponse(text)
-		response['Content-Type'] = 'application/octet-stream'
-		response['Content-Disposition'] = 'attachment;filename=%s.html' % request.POST.get('taskid')
-		return response
-	else:
-		return JsonResponse({'msg': ''})
+	taskid = request.POST.get("taskid")
+	text = MainSender.gethtmlcontent(taskid,'<meta charset="UTF-8">\n')
+	response = HttpResponse(text)
+	response['Content-Type'] = 'application/octet-stream'
+	response['Content-Disposition'] = 'attachment;filename=%s.html' % request.POST.get('taskid')
+	return response

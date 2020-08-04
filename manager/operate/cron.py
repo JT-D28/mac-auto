@@ -12,9 +12,8 @@ import threading
 
 
 def cronRun(planid):
-    plan = Plan.objects.get(id=planid)
-    taskid = gettaskid(plan.__str__())
-    threading.Thread(target=runplan, args=('定时任务', taskid, planid, 1, '定时任务', 'plan_' + str(planid))).start()
+    taskid = gettaskid(planid)
+    threading.Thread(target=runplan, args=('定时任务', taskid, planid, '3', 'plan_' + str(planid))).start()
 
 
 class Cron(object):

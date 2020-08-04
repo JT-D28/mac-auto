@@ -9,10 +9,8 @@ def getmenhu(url,taskid,username):
         for url0 in v:
             if url0 in url:
                 N=url
-                #viewcache(taskid, username,None , "<span style='color:red;'>?ϵͳ???ǰurl=>%s</span>" % N)
-                #viewcache(taskid, username,None , "<span style='color:red;'>url0=>%s</span>" % url0)
                 N=N.replace(url0,k+'/'+url0)
-                viewcache(taskid, username,None , "<span style='color:red;'>找到匹配子系统后url变更为 =>%s</span>" % N)
+                viewcache(taskid,"<span style='color:red;'>找到匹配子系统后url变更为 =>%s</span>" % N)
                 return N
     
     return url

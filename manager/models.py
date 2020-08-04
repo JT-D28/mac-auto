@@ -200,6 +200,7 @@ class Plan(Model):
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 	before_plan = CharField(max_length=128, blank=True, null=True)
+	proxy = CharField(max_length=128, blank=True, null=True)
 	# 运行方式:手动运行|定时运行
 	run_type = CharField(max_length=32)
 	# run_value=CharField(max_length=64)
@@ -231,7 +232,7 @@ class ResultDetail(Model):
 	
 	loop_id = IntegerField(null=True)##迭代次数
 	is_verify = CharField(max_length=4, default=0, null=True)
-	
+	# 1：验证 2：调试  3:定时
 	def __str__(self):
 		return "%s,%s" % (self.case, self.step)
 

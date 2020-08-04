@@ -535,129 +535,6 @@ var tree_link1 = {
                         content: [url, 'yes'], //iframe的url，no代表不显示滚动条
                     });
                 })
-                // $.ajax({
-                //     type: 'POST', url: '/homepage/plandebug/', data: {
-                //         // 'id': treeNode.id.substr(5),
-                //         'id': treeNode.id,
-                //         'type': 'info'
-                //     }, success: function (data) {
-                //         if (data.code == 0) {
-                //             // layer.open({
-                //             //     title: '任务名【' + data.data[0]['planname'] + '】在【' + data.data[0]['time'].substr(5, 11) + '】执行不通过情况',
-                //             //     type: 1,
-                //             //     area: ['90%', '90%'],
-                //             //     content: $('#test'),
-                //             //     shade: [0],
-                //             //     anim: 2,
-                //             //     shadeClose: true,
-                //             //     success: function () {
-                //             //         $("#log_text").html('点击左侧失败用例查看日志');
-                //             //         querydebug(treeNode.id.substr(5), 'plan', data.data[0]['taskid']);
-                //             //         $("#downloadlog").unbind('click');
-                //             //         $("#downloadlog").click(function () {
-                //             //             taskid = data.data[0]["taskid"]
-                //             //             const req = new XMLHttpRequest();
-                //             //             req.open('POST', '/homepage/downloadlog/', true);
-                //             //             req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                //             //             req.responseType = 'blob';
-                //             //             req.send("taskid=" + taskid); //输入参数
-                //             //             req.onload = function () {
-                //             //                 if (this.status === 200) {
-                //             //                     const data = req.response;
-                //             //                     const blob = new Blob([data]);
-                //             //                     var a = document.createElement('a');
-                //             //                     a.download = taskid + '.html';
-                //             //                     a.href = window.URL.createObjectURL(blob);
-                //             //                     a.click();
-                //             //                 }
-                //             //             };
-                //             //             $.ajax({
-                //             //                 type: 'POST',
-                //             //                 url: '/homepage/downloadlog/',
-                //             //                 data: {taskid: taskid},
-                //             //                 success: function (data) {
-                //             //                     console.log("下载" + taskid + "的日志")
-                //             //                     var b = document.createElement('b');
-                //             //                     b.download = 'plan.ME2';
-                //             //                     b.href = window.URL.createObjectURL(blob);
-                //             //                     b.click();
-                //             //                 },
-                //             //             });
-                //             //         })
-                //             //     },
-                //             //     end: function () {
-                //             //         tree.reload('demo1', {data: [], text: {none: ''}});
-                //             //         tree.reload('demo2', {data: [], text: {none: ''}});
-                //             //         tree.reload('demo3', {data: [], text: {none: ''}});
-                //             //         $("#log_text").html('');
-                //             //     }
-                //             // });
-                //             var analysisurl = '/homepage/statisticalAnalysis/?plan=' + treeNode.id.substr(5) + '&debug=1'
-                //             layer.open({
-                //                 type: 2,
-                //                 title: false,
-                //                 shade: [0],
-                //                 area: ['90%', '90%'],
-                //                 anim: 2,
-                //                 shadeClose: true,
-                //                 content: [analysisurl, 'yes'], //iframe的url，no代表不显示滚动条
-                //             });
-                //         } else setTimeout(function () {
-                //             opendebug(treeNode)
-                //         }, 1000)
-                //     },
-                //     dataType: 'json'
-                // });
-            }
-
-            function querydebug(id, type, taskid) {
-               _post_nl('/homepage/plandebug/', {
-                    'id': id,
-                    'type': type,
-                    'taskid': taskid
-                }, function (data) {
-                    plandebug(data)
-                })
-
-            }
-
-            function plandebug(data) {
-                if (data.type == "case") {
-                    tree.render({
-                        elem: '#demo1', id: 'demo1', data: data.data, accordion: true, showLine: true,
-                        text: {none: '本次调试全部通过'},
-                        click: function (obj) {
-                            $("#log_text").html('点击左侧失败步骤点查看日志');
-                            tree.render({elem: '#demo3', id: 'demo3', text: {none: ''}})
-                            querydebug(obj.data.id, 'case', data.taskid)
-                            tree.reload('demo3', {data: [], text: {none: ''}});
-                        }
-                    })
-                } else if (data.type == "step") {
-                    tree.render({
-                        elem: '#demo2', id: 'demo2', data: data.data, accordion: true, showLine: true,
-                        click: function (obj) {
-                            $("#log_text").html('点击左侧失败测试点查看日志');
-                            querydebug(obj.data.id, 'step', data.taskid)
-                        }
-                    })
-                } else if (data.type == "bussiness") {
-                    tree.render({
-                            elem: '#demo3', id: 'demo3', data: data.data, accordion: true, showLine: true,
-                            click: function (obj) {
-                                $("#debuginfo").css('display', 'inherit');
-                               _post_nl('/homepage/plandebug/', {
-                                    'id': obj.data.title + ";" + obj.data.casename + ";" + obj.data.stepname + ";" + obj.data.id,
-                                    'type': 'bussiness',
-                                    'taskid': data.taskid
-                                }, function (data) {
-                                    $("#log_text").html(data.data);
-                                })
-                            }
-                        }
-                    )
-                }
-                return false;
             }
         })
 
@@ -796,6 +673,16 @@ var tree_link1 = {
                          treeObj.updateNode(node)
                      }
                 }
+            }else{
+
+                for(var i=0;i<data.data.length;i++){
+                    node=treeObj.getNodesByParam('id',data.data[i]['id'])[0]
+                     node.checked=false
+                     treeObj.updateNode(node)
+
+
+                }
+
             }
         }
        _post_nl('/manager/querytreelist/', params, success)

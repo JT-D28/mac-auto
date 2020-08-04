@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from ME2 import configs
-from homepage.models import Jacoco_report, Jacoco_data
+from homepage.models import Jenkins, Jacoco_data
 from manager.core import simplejson
 from manager.models import ResultDetail
 
@@ -19,13 +19,13 @@ def reportchart(request):
 	s = time.time()
 	planid = request.POST.get("planid")
 	code = 0
-	taskids = list(ResultDetail.objects.values('taskid').filter(plan_id=planid, is_verify=1))
+	taskids = list(ResultDetail.objects.values('taskid').filter(plan_id=planid, is_verify__in=[1,3]))
 	if taskids:
 		sql1 = '''
 		SELECT CONCAT(success),CONCAT(FAIL),CONCAT(skip),CONCAT(error),CONCAT(total),DATE_FORMAT(TIME,'%%m-%%d %%H:%%i'),ROUND(CONCAT(success*100/total),1),taskid FROM (
 		SELECT taskid,sum(CASE WHEN result="success" THEN 1 ELSE 0 END) AS success,sum(CASE WHEN result="fail" THEN 1 ELSE 0 END) AS FAIL,sum(CASE WHEN result="error" THEN 1 ELSE 0 END) 
 		AS error,sum(CASE WHEN result="skip" THEN 1 ELSE 0 END) AS skip,sum(CASE WHEN result !="OMIT" THEN 1 ELSE 0 END) AS total,max(createtime) AS time FROM manager_resultdetail 
-		WHERE plan_id=%s AND is_verify=1 GROUP BY taskid ORDER BY time DESC LIMIT 12) a;
+		WHERE plan_id=%s AND is_verify in (1,3) GROUP BY taskid ORDER BY time DESC LIMIT 12) a;
         '''
 		
 		# sqlite3
@@ -35,7 +35,7 @@ def reportchart(request):
         sum(CASE WHEN result="fail" THEN 1 ELSE 0 END) AS FAIL,sum(CASE WHEN result="skip" THEN 1 ELSE 0 END) AS skip,
         sum(CASE WHEN result="omit" THEN 1 ELSE 0 END) AS omit,sum(CASE WHEN result!="omit" THEN 1 ELSE 0 END) AS total,taskid,
         strftime('%%m-%%d %%H:%%M',manager_resultdetail.createtime) AS time FROM manager_resultdetail LEFT JOIN
-        manager_plan ON manager_resultdetail.plan_id=manager_plan.id WHERE plan_id=%s and is_verify=1 GROUP BY taskid) AS m ORDER BY time DESC LIMIT 10
+        manager_plan ON manager_resultdetail.plan_id=manager_plan.id WHERE plan_id=%s and is_verify in (1,3) GROUP BY taskid) AS m ORDER BY time DESC LIMIT 10
         '''
 		
 		sql = sql2 if configs.dbtype == 'sqlite3' else sql1
@@ -58,7 +58,7 @@ def badresult(request):
     manager_businessdata.businessname as businessname,manager_businessdata.itf_check as itfcheck,
     manager_businessdata.db_check as dbcheck ,manager_resultdetail.result as result,manager_resultdetail.error as failresult
     from manager_case,manager_step,manager_businessdata,manager_resultdetail where manager_resultdetail.result in('fail','error')
-    and manager_resultdetail.taskid=%s and manager_resultdetail.case_id=manager_case.id and manager_resultdetail.is_verify=1
+    and manager_resultdetail.taskid=%s and manager_resultdetail.case_id=manager_case.id and manager_resultdetail.is_verify in (1,3)
     and manager_resultdetail.step_id=manager_step.id and manager_resultdetail.businessdata_id=manager_businessdata.id
     order by manager_resultdetail.createtime
     '''
@@ -73,7 +73,7 @@ def badresult(request):
 @csrf_exempt
 def jacocoreport(request):
 	code, msg = 0, ''
-	jacocoset = Jacoco_report.objects.get(productid=request.POST.get('productid'))
+	jacocoset = Jenkins.objects.get(productid=request.POST.get('productid'))
 	jobs = request.POST.getlist('jobname[]')
 	jobmap = {}
 	if jobs!=['0']:
@@ -128,6 +128,7 @@ def jacocoreport(request):
 			if len(authname) & len(authpwd) != 0:
 				# 先判断下任务有没有在运行
 				num = {}
+				timemap= {}
 				server = jenkins.Jenkins(jacocoset.jenkinsurl, username=jacocoset.authname, password=jacocoset.authpwd)
 				for jobname in jobmap.keys():
 					num[jobname] = server.get_job_info(jobname)['lastBuild']['number']
@@ -136,6 +137,7 @@ def jacocoreport(request):
 						msg += '%s:正在运行<br>' % (jobname)
 					elif buildinfo['result'] != 'SUCCESS':
 						msg += '%s:上次构建失败<br>' % (jobname)
+					timemap[jobname] = buildinfo['timestamp']
 				if msg != '':
 					return JsonResponse(simplejson(code=1, msg=msg), safe=False)
 				s = requests.session()
@@ -149,6 +151,7 @@ def jacocoreport(request):
 							data.jobnum = num[jobname]
 							data.jobname = jobname
 							data.coverydata = jsonres
+							data.time =int(timemap[jobname]/1000)
 							data.save()
 							print('%s第%s次构建的覆盖率数据保存成功' % (jobname, num[jobname]))
 						for l in servicenames:
@@ -190,7 +193,7 @@ def initbugcount(request):  # 缺陷统计
 	sql = '''
     SELECT url as '接口' ,count(*) as '次数' from manager_resultdetail r ,manager_step s
     WHERE r.plan_id in (SELECT follow_id FROM manager_order WHERE main_id=%s) and r.result
-    in ('error','fail') and r.is_verify=1 and r.step_id=s.id GROUP BY s.url order by 次数 desc limit 10
+    in ('error','fail') and r.is_verify in (1,3) and r.step_id=s.id GROUP BY s.url order by 次数 desc limit 10
     '''
 	with connection.cursor() as cursor:
 		cursor.execute(sql, [productid])

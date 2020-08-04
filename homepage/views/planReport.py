@@ -59,7 +59,7 @@ def planpassrate(request):
 		lastrate.append(rate)
 	lastPassRate = round(mean(lastrate),2)  if lastrate else 0
 	currentPassRate = round(mean(currentrate),2) if currentrate else 0
-	codeStabilityIndex = (int(currentPassRate)//20)*"⭐"
+	codeStabilityIndex = (math.ceil(currentPassRate/20))*"⭐"
 	return JsonResponse({'code': 0, 'currentPassRate': currentPassRate, 'lastPassRate': lastPassRate,'codeStabilityIndex':codeStabilityIndex})
 
 

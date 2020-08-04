@@ -538,11 +538,7 @@ var tree = {
                     if (data.running == 0) {
                         var url = '/homepage/statisticalAnalysis/?plan=' + planid + '&debug=1&node=' + nodeid
                     } else {
-                        if (data.running !=1) {
-                            var url = '/homepage/runstatus/?plan=' + planid + '&taskid=' + data.taskid
-                        } else {
-                            layer.msg("计划正在进行【验证任务】")
-                        }
+                        var url = '/homepage/runstatus/?plan=' + planid + '&taskid=' + data.taskid
                     }
                     layer.open({
                         type: 2,

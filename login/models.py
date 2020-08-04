@@ -54,7 +54,6 @@ class Role(Model):
 		return '%s'%(self.name)
 
 
-
 class UIControl(Model):
 	'''
 	ui控制

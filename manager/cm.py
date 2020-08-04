@@ -4,7 +4,7 @@
 # @Author  : Blackstone
 # @to      :用例管理
 
-import traceback, datetime,json,threading,difflib
+import traceback, datetime,json,threading,difflib,asyncio
 from manager.operate.cron import Cron
 from django.db.models import Q
 from manager import models as mm
@@ -1027,48 +1027,63 @@ def get_all_child_nodes(nodeid,cur):
     if kind=='plan':
         od=mm.Order.objects.filter(kind='plan_case',main_id=nid)
         for o in od:
-            case=mm.Case.objects.get(id=o.follow_id)
-            cur.append({
-                    'nid':'case_{}'.format(o.follow_id),
-                    'name':case.description
-                })
-            get_all_child_nodes('case_{}'.format(o.follow_id), cur)
+            try:
+                case=mm.Case.objects.get(id=o.follow_id,isdelete=0)
+                cur.append({
+                        'nid':'case_{}'.format(o.follow_id),
+                        'name':case.description,
+                        'level':'plan_case',
+                    })
+                get_all_child_nodes('case_{}'.format(o.follow_id), cur)
+            except:
+                pass
 
     elif kind=='case':
         od=mm.Order.objects.filter(kind='case_step',main_id=nid)
         for o in od:
-            step=mm.Step.objects.get(id=o.follow_id)
-            cur.append({
-                    'nid':'step_{}'.format(o.follow_id),
-                    'name':step.description
-                })
+            try:
+                print('followid:=>',o.follow_id)
+                step=mm.Step.objects.get(id=o.follow_id,isdelete=0)
+                cur.append({
+                        'nid':'step_{}'.format(o.follow_id),
+                        'name':step.description,
+                        'level':'case_step'
+                    })
 
-            get_all_child_nodes('step_{}'.format(o.follow_id), cur)
-
-
+                get_all_child_nodes('step_{}'.format(o.follow_id), cur)
+            except:
+                pass
 
         od1=mm.Order.objects.filter(kind='case_case',main_id=nid)
 
         for o1 in od1:
-            case=mm.Case.objects.get(id=o1.follow_id)
-            cur.append({
-                    'nid':'case_{}'.format(o1.follow_id),
-                    'name':case.description
-                })
+            try:
+                case=mm.Case.objects.get(id=o1.follow_id,isdelete=0)
+                cur.append({
+                        'nid':'case_{}'.format(o1.follow_id),
+                        'name':case.description,
+                        'level':'case_case'
+                    })
 
-            get_all_child_nodes('case_{}'.format(o1.follow_id), cur)
+                get_all_child_nodes('case_{}'.format(o1.follow_id), cur)
+            except:
+                pass
 
 
     elif kind=='step':
         od=mm.Order.objects.filter(kind='step_business',main_id=nid)
         for o in od:
-            b=mm.BusinessData.objects.get(id=o.follow_id)
-            cur.append({
-                'nid':'business_{}'.format(b.id),
-                'name':b.businessname
-                })
+            try:
+                b=mm.BusinessData.objects.get(id=o.follow_id,isdelete=0)
+                cur.append({
+                    'nid':'business_{}'.format(b.id),
+                    'name':b.businessname,
+                    'level':'step_business'
+                    })
 
-            get_all_child_nodes('step_{}'.format(o.follow_id),cur)
+                get_all_child_nodes('step_{}'.format(o.follow_id),cur)
+            except:
+                pass
 
 
         
@@ -1699,6 +1714,40 @@ def _get_all_case_child_id(casenodeid,all_):
     for case in cases:
         all_.append(case.id)
         _get_all_case_child_id('case_{}'.format(case.id), all_)
+
+def get_full_tree_new():
+    async  def _add_node(classname,nodes):
+        oldclassname=classname
+        classname=classname.capitalize()
+        logger.info('this classname:',classname)
+        if classname=='Business':
+            classname='BusinessData'
+        nodeobjs=eval('mm.{}.objects.filter(isdelete=0)'.format(classname))
+        for nodeobj in nodeobjs:
+            try:
+                nodename=nodeobj.businessname if oldclassname=='business' else nodeobj.description
+                res=_get_node_parent_info(oldclassname,nodeobj.id)
+                nodepid=-1 if oldclassname=='product' else '{}_{}'.format(res[0],res[1])
+                nodes.append({
+                'id': '%s_%s' % (oldclassname,nodeobj.id),
+                'pId': nodepid,
+                'name': nodename,
+                'type': oldclassname,
+                'textIcon': icon_map.get(oldclassname)
+                })
+            except:
+                logger.error('添加节点异常 {}_{}'.format(oldclassname,nodeobj.id))
+
+    root = {'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
+    nodes=[]
+    nodes.append(root)
+    tasks=[_add_node('product',nodes),_add_node('plan',nodes),_add_node('case',nodes),_add_node('Step',nodes),_add_node('business',nodes)]
+    l=asyncio.new_event_loop()
+    asyncio.set_event_loop(l)
+    l.run_until_complete(asyncio.gather(*tasks))
+    l.close()
+
+    return nodes
 
 
 
@@ -2345,14 +2394,6 @@ def addeditlink(request):
         }
     data1=json.loads(params['data1'])
     data2=json.loads(params['data2'])
-    ##需要补充前端可能不完整的数据
-    # data11,data22=_fulldata(data1),_fulldata(data2)
-    # logger.info('data11,data22',data11,',',data22)
-
-    #
-    # count=_handlefulldata(data11, data22, user,flag)
-    #
-    # logger.info('补充数据时建立link关系{}条'.format(count))
 
     ##需要都选
     if not data1 :
@@ -2399,23 +2440,64 @@ def addeditlink(request):
                 'status':'error',
                 'msg':'左边树暂时只支持选一个产品计划'
             }
+    logger.info('left_routes_k:\n{}'.format([xx.get('name') for x in left_routes for xx in x]))
+    logger.info('right_routes_k:\n{}'.format([xx.get('name') for x in right_routes for xx in x]))
 
+    ##处理前端可能不完整的数据
+    logger.info('开始处理前端可能不完整的数据')
+    start_time = time.time()
+    grab_node_left, grab_node_right = [], []
+    need_link_left, need_link_right = [], []
+    _get_need_handle_nodeid([data1], grab_node_left)
+    for x in grab_node_left:
+        get_all_child_nodes(x, need_link_left)
+    _get_need_handle_nodeid([data2], grab_node_right)
+    for x in grab_node_right:
+        get_all_child_nodes(x, need_link_right)
+
+    logger.info('need_link_left:', need_link_left)
+    logger.info('need_link_right:', need_link_right)
+
+    ###有BUG
+    for x in need_link_left:
+        for y in need_link_right:
+            if x['name'] == y['name'] and x['nid'].split('_')[0] == y['nid'].split('_')[0] and x['level'] == y['level']:
+                el = mm.EditLink()
+                el.snid = x['nid']
+                el.tnid = y['nid']
+                el.creater = user
+                el.flag = flag
+                el.save()
+                count = count + 1
+
+    logger.info('处理完不完整数据 关联{}条'.format(count ))
+
+    ##处理结束
+    logger.info('开始处理前端完整的数据')
+    cur_count=copy.deepcopy(count)
     for x in left_routes:
-
-        xflag=':'.join([xx.get('name') for xx in x][2:])
+        xflag=':'.join(['{}_{}'.format(xx.get('id').split("_")[0],xx.get('name')) for xx in x][2:])
         xsize=len(x)
-        logger.info('xflag:',xflag,'xsize:',xsize)
-
+        # if xsize<5:
+        #     logger.info('关联链节点最后不是测试点略过.')
+        #     continue;
+        # logger.info('xflag:',xflag,'xsize:',xsize)
         for y in right_routes:
-            yflag=':'.join([xx.get('name') for xx in y][2:])
+            yflag=':'.join(['{}_{}'.format(xx.get('id').split("_")[0],xx.get('name')) for xx in y][2:])
             ysize=len(y)
-            logger.info('yflag:',yflag,'ysize:',ysize)
+            # if ysize<5:
+            #     logger.info('关联链节点最后不是测试点略过.')
+            #     continue;
 
-            if xflag==yflag and xsize==ysize:
+            if xflag==yflag and xsize==ysize :
                 logger.info('关联数据 xflag:{} yflag:{}'.format(xflag,yflag))
                 for i in range(xsize):
                     xnid=x[i].get('id')
                     ynid=y[i].get('id')
+                    xkind=xnid.split('_')[0]
+                    ykind=ynid.split('_')[0]
+                    if xkind!=ykind:
+                        continue;
 
                     is_exist=mm.EditLink.objects.filter(snid=xnid,tnid=ynid,flag=flag)
                     if is_exist:
@@ -2430,40 +2512,8 @@ def addeditlink(request):
                     logger.info('[建立link {}->{}]'.format(el.snid,el.tnid))
                     count=count+1
 
-
-    ##处理前端可能不完整的数据
-    cur_count=copy.deepcopy(count)
-    logger.info('处理完前端明确关联数据 {}条'.format(cur_count))
-    logger.info('开始处理前端可能不完整的数据')
-    start_time=time.time()
-    grab_node_left,grab_node_right=[],[]
-    need_link_left,need_link_right=[],[]
-    _get_need_handle_nodeid([data1],grab_node_left)
-    for x in grab_node_left:
-        get_all_child_nodes(x,need_link_left)
-    _get_need_handle_nodeid([data2],grab_node_right)
-    for x in grab_node_right:
-        get_all_child_nodes(x,need_link_right)
-
-    logger.info('need_link_left:',need_link_left)
-    logger.info('need_link_right:', need_link_right)
-    for x in need_link_left:
-        for y in need_link_right:
-            if x['name']==y['name'] and x['nid'].split('_')[0]==y['nid'].split('_')[0]:
-                el=mm.EditLink()
-                el.snid=x['nid']
-                el.tnid=y['nid']
-                el.creater=user
-                el.flag=flag
-                el.save()
-                count=count+1
-
-
-    logger.info('处理完不完整数据 关联{}条'.format(count-cur_count))
-
-    ##处理结束
-
-
+    logger.info('处理完前端明确关联数据 {}条'.format(count-cur_count))
+    ##
     logger.info('本次关联结束 关联条数:{}..'.format(count))
     planname=mm.Plan.objects.get(id=params['nid'].split('_')[1]).description
     monitor.push_user_message(str(user.id),'计划[{}]关联完成 成功{}条'.format(planname,count))

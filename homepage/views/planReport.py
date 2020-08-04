@@ -10,7 +10,6 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
-from homepage.Gitlab import GitlabAPI
 from homepage.models import Jenkins
 from manager.models import Order, Case, Step, BusinessData, Plan
 from manager.operate.mongoUtil import Mongo

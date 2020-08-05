@@ -238,7 +238,7 @@ def setRunningInfo(planid, taskid, runkind, dbscheme='全局'):
     elif runkind == '0':
         updatestr = {"runkind": "0"}
 
-    #Mongo.taskid().update({"planid": planid}, {"$set": updatestr})
+    Mongo.taskid().update({"planid": planid}, {"$set": updatestr})
 
     print("储存运行信息", Mongo.taskid().find_one({"planid": planid}))
 

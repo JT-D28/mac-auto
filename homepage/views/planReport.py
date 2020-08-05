@@ -16,7 +16,7 @@ from manager.operate.mongoUtil import Mongo
 from numpy import *
 
 def planreport(request):
-	return render(request, 'planreport.html')
+	return render(request, 'planreport1.html')
 
 
 @csrf_exempt
@@ -102,6 +102,21 @@ def HasJacoco(request):
 		return JsonResponse({'has': '1',"service":service})
 	except:
 		return JsonResponse({'has':'0'})
+
+
+@csrf_exempt
+def HasGit(request):
+	productid = request.POST.get('productid')
+	try:
+		service=[]
+		gitset = Jenkins.objects.get(productid=productid)
+		if gitset.gitlaburl and gitset.gitlabtoken and gitset.gitpath:
+			return JsonResponse({'hasGit': '1'})
+		else:
+			return JsonResponse({'hasGit': '0'})
+	except:
+		return JsonResponse({'hasGit':'0'})
+
 
 @csrf_exempt
 def queryCoveryInfo(request):
@@ -204,15 +219,19 @@ def queryJenkinsUpdatetimes(request):
 			pass
 	planidlist = list(Order.objects.values_list('follow_id',flat=True).filter(main_id=productid,kind='product_plan',isdelete=0))
 	jobcovertimes = 0
-	timeSpent= 0
+	aspend =[]
+	totalcount = 0
 	for id in planidlist:
+		timeSpent = 0
 		query = {'planid': int(id),'info.runkind': {'$in':['1','3']}, 'timestamp': {'$lt': endtime, '$gt': starttime}}
 		jobcovertimes += Mongo.taskinfo().find(query).count()
 		ms = Mongo.taskinfo().find(query)
 		for m in ms:
-			timeSpent += m['info']['spend']
-	print(jobcovertimes,"jobcovertimes")
-	averageTimeSpent = round(timeSpent/(60*jobcovertimes))
+			print(m['info']['spend']/60)
+			timeSpent += m['info']['spend']/60
+		totalcount+=ms.count()
+		aspend.append(timeSpent*ms.count())
+	averageTimeSpent = round(sum(aspend)/totalcount,2)
 	return JsonResponse({'jenkinsUpdatetimes': 1,'jobcovertimes':jobcovertimes,'averageTimeSpent':averageTimeSpent})
 
 

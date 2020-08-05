@@ -29,10 +29,9 @@ def planrunnum(request):
 	# 上一个周期起始时间
 	laststarttime = 2 * starttime - endtime - 1
 	lastendtime = starttime - 1
-	# print(strftime(laststarttime), strftime(lastendtime), strftime(starttime), strftime(endtime))
 
-	currentRunNum = Mongo.taskinfo().find({'planid': int(planid), 'timestamp': {'$lt': endtime, '$gt': starttime}}).count()
-	lastRunNum = Mongo.taskinfo().find({'planid': int(planid), 'timestamp': {'$lt': lastendtime, '$gt': laststarttime}}).count()
+	currentRunNum = Mongo.taskinfo().find({'planid': int(planid), 'info.runkind': {'$in':['1','3']},'timestamp': {'$lt': endtime, '$gt': starttime}}).count()
+	lastRunNum = Mongo.taskinfo().find({'planid': int(planid),'info.runkind': {'$in':['1','3']}, 'timestamp': {'$lt': lastendtime, '$gt': laststarttime}}).count()
 
 	return JsonResponse({'code': 0, 'currentRunNum': currentRunNum, 'lastRunNum': lastRunNum})
 
@@ -47,8 +46,8 @@ def planpassrate(request):
 	laststarttime = 2 * starttime - endtime - 1
 	lastendtime = starttime - 1
 
-	currentinfo = Mongo.taskinfo().find({'planid': int(planid), 'timestamp': {'$lt': endtime, '$gt': starttime}},{'info.rate':1,'_id':0})
-	lastinfo = Mongo.taskinfo().find({'planid': int(planid), 'timestamp': {'$lt': lastendtime, '$gt': laststarttime}},{'info.rate': 1, '_id': 0})
+	currentinfo = Mongo.taskinfo().find({'planid': int(planid),'info.runkind': {'$in':['1','3']}, 'timestamp': {'$lt': endtime, '$gt': starttime}},{'info.rate':1,'_id':0})
+	lastinfo = Mongo.taskinfo().find({'planid': int(planid),'info.runkind': {'$in':['1','3']}, 'timestamp': {'$lt': lastendtime, '$gt': laststarttime}},{'info.rate': 1, '_id': 0})
 
 	currentrate =[]
 	lastrate = []
@@ -60,8 +59,8 @@ def planpassrate(request):
 		lastrate.append(rate)
 	lastPassRate = round(mean(lastrate),2)  if lastrate else 0
 	currentPassRate = round(mean(currentrate),2) if currentrate else 0
-
-	return JsonResponse({'code': 0, 'currentPassRate': currentPassRate, 'lastPassRate': lastPassRate})
+	codeStabilityIndex = (math.ceil(currentPassRate/20))*"⭐"
+	return JsonResponse({'code': 0, 'currentPassRate': currentPassRate, 'lastPassRate': lastPassRate,'codeStabilityIndex':codeStabilityIndex})
 
 
 @csrf_exempt
@@ -69,7 +68,7 @@ def planRunChart(request):
 	planid = request.POST.get('id')
 	starttime = int(request.POST.get('starttime'))
 	endtime = int(request.POST.get('endtime'))
-	info = list(Mongo.taskinfo().find({'planid': int(planid), 'timestamp': {'$lt': endtime, '$gt': starttime}},
+	info = list(Mongo.taskinfo().find({'planid': int(planid),'info.runkind': {'$in':['1','3']}, 'timestamp': {'$lt': endtime, '$gt': starttime}},
 	                                  {'info': 1, '_id': 0, 'time': 1}).sort('timestamp').limit(10))
 	infolist = []
 	for i in info:
@@ -194,13 +193,27 @@ def queryGitCommit(request):
 @csrf_exempt
 def queryJenkinsUpdatetimes(request):
 	productid = request.POST.get('productid')
+	starttime = int(request.POST.get('starttime'))
+	endtime = int(request.POST.get('endtime'))
+
 	jenkinsconfig = Jenkins.objects.get(productid=productid)
 	authname, authpwd, jenkinsurl = jenkinsconfig.authname, jenkinsconfig.authname, jenkinsconfig.jenkinsurl
 	server = jenkins.Jenkins(jenkinsurl, username=authname, password=authpwd)
 	if jenkinsconfig.projectjob:
 		for job in jenkinsconfig.projectjob.split(";"):
 			pass
-	return JsonResponse({'data': 1})
+	planidlist = list(Order.objects.values_list('follow_id',flat=True).filter(main_id=productid,kind='product_plan',isdelete=0))
+	jobcovertimes = 0
+	timeSpent= 0
+	for id in planidlist:
+		query = {'planid': int(id),'info.runkind': {'$in':['1','3']}, 'timestamp': {'$lt': endtime, '$gt': starttime}}
+		jobcovertimes += Mongo.taskinfo().find(query).count()
+		ms = Mongo.taskinfo().find(query)
+		for m in ms:
+			timeSpent += m['info']['spend']
+	print(jobcovertimes,"jobcovertimes")
+	averageTimeSpent = round(timeSpent/(60*jobcovertimes))
+	return JsonResponse({'jenkinsUpdatetimes': 1,'jobcovertimes':jobcovertimes,'averageTimeSpent':averageTimeSpent})
 
 
 

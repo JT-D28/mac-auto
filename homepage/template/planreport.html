@@ -55,11 +55,11 @@
         <div class="layui-card" style="width:15%;margin: 0px 20px 20px 20px;display: inline-block">
             <div style="padding:20px;height: calc(100% - 40px)">
                 <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
-                        综合平稳指数：⭐⭐⭐⭐⭐</p>
+                    综合平稳指数：${codeStabilityIndex}</p>
             </div>
         </div>
 
-      <div class="layui-card"
+        <div class="layui-card"
              style="width:15%;margin: 0px 10px 20px 20px;display: inline-block">
             <div style="padding:20px;height: calc(100% - 40px)">
                 <div>
@@ -72,7 +72,7 @@
                 </div>
             </div>
         </div>
-         <div class="layui-card"
+        <div class="layui-card"
              style="width:15%;min-width:300px;margin: 0px 10px 20px 20px;display: inline-block">
             <div style="padding:20px;height: calc(100% - 40px)">
                 <div>
@@ -87,13 +87,13 @@
             </div>
         </div>
         <div class="layui-card"
-             style="width:20%;min-width:300px;margin: 0px 10px 20px 20px;display: inline-block;height: 400px">
+             style="width:35%;min-width:300px;margin: 0px 10px 20px 20px;display: inline-block;height: 400px">
             <div style="padding:20px;height: calc(100% - 40px)">
                 <div>
                     <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
                         最近${ runtimes}次：</p>
                 </div>
-                <div id="t111e" ref="mychart"
+                <div id="mychart" ref="mychart"
                      style="background-color:#f2f2f2;height:100%;"></div>
             </div>
         </div>
@@ -223,6 +223,10 @@
                 <div>
                     <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
                         项目在jenkins上共更新 ${ jenkinsUpdatetimes } 次：</p>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        已覆盖 ${ jobcovertimes } 次：</p>
+                    <p style="font-size:14px;font-family:PingFang-SC-Medium,PingFang-SC;font-weight:500;line-height:20px;">
+                        平均每次发布自动化用例执行时间 ${ averageTimeSpent } 分钟：</p>
                 </div>
             </div>
         </div>
@@ -252,7 +256,8 @@
                 oldcoverytime: '',
                 oldcoverydata: {},
                 runtimes: '',
-                echartsRecords:''
+                myChart: {},
+                codeStabilityIndex: ''
             }
         },
         methods: {
@@ -262,8 +267,6 @@
                 var endtime = this.querytime[1].toString().substr(0, 10)
                 var productid = this.product
                 var planid = this.planid
-                let dom = this.$refs.mychart
-                this.echartsRecords = echarts.init(dom, 'me2');
                 this.getReportChart(starttime, endtime)
                 _post_nl('/homepage/planrunnum/', {
                     'id': planid,
@@ -280,17 +283,18 @@
                 }, function (data) {
                     that.currentPassRate = data.currentPassRate
                     that.lastPassRate = data.lastPassRate
+                    that.codeStabilityIndex = data.codeStabilityIndex
                 })
             },
             getReportChart(starttime, endtime) {
                 var that = this
                 _post_nl('/homepage/planRunChart/', {
-                    id: this.plan, 'starttime': starttime,
+                    id: this.planid, 'starttime': starttime,
                     'endtime': endtime
                 }, function (result) {
-                    echartsRecords.resize();
+                    that.myChart.resize();
                     that.runtimes = result.info.length
-                    this.echartsRecords.setOption(that.reportconfig(result.info));
+                    that.myChart.setOption(that.reportconfig(result.info));
                 });
             },
             reportconfig(data) {
@@ -552,6 +556,13 @@
                 $("#echarts-records").css('background-color', 'white')
                 return optionRecords;
             },
+            setEchart() {
+                let dom = this.$refs.mychart;
+                this.myChart = echarts.init(dom, 'me2');
+            },
+        },
+        mounted() {
+            this.setEchart();
         },
         created: function () {
             this.query();

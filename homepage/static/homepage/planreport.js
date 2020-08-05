@@ -4,35 +4,15 @@ var app = new Vue({
     data() {
         var vue = this;
         return {
-            currentRunNum: '',
-            lastRunNum: '',
-            currentPassRate: '',
-            lastPassRate: '',
-            currentBusinessNum: '',
-            currentRunBusiness: '',
             querytime: '',
             jenkinsUpdatetimes: '',
             coverytime: '',
             coverydata: {},
+            jobcovertimes:'',
             oldcoverytime: '',
-            options: [{
-                value: '选项1',
-                label: '黄金糕'
-            }, {
-                value: '选项2',
-                label: '双皮奶'
-            }, {
-                value: '选项3',
-                label: '蚵仔煎'
-            }, {
-                value: '选项4',
-                label: '龙须面'
-            }, {
-                value: '选项5',
-                label: '北京烤鸭'
-            }],
             planid: [],
             product: '',
+            averageTimeSpent:'',
             oldcoverydata: {},
             pickerOptions: {
                 shortcuts: [{
@@ -143,7 +123,9 @@ var app = new Vue({
                     'starttime': starttime,
                     'endtime': endtime
                 }, function (data) {
-                    that.jenkinsUpdatetimes = data.data
+                    that.jenkinsUpdatetimes = data.jenkinsUpdatetimes
+                    that.jobcovertimes = data.jobcovertimes
+                    that.averageTimeSpent = data.averageTimeSpent
                 }
             )
 

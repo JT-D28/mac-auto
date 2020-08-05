@@ -933,7 +933,7 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
     builtin = (methodname in builtinmethods)
 
     try:
-        logme.warn('获取自定义函数id %s' % functionid)
+        logme.warn('获取自定义函数id %s isbuiltin:%s' % (functionid,builtin))
         f = Function.objects.get(id=functionid)
         logme.warn('获取自定义函数%s' % f.__str__())
     except:

@@ -208,9 +208,7 @@ cons={}
 
 def viewcache(taskid, *msg):
     try:
-        if msg is None:
-            msg=''
-        what = "%s        %s<br>" % (time.strftime("[%m-%d %H:%M:%S]", time.localtime()), "".join(msg))
+        what = "%s        %s<br>" % (time.strftime("[%m-%d %H:%M:%S]", time.localtime()), "".join([str(x) for x in msg if x]))
         Mongo.tasklog(taskid).insert_one({'time': time.time(), 'info': what})
     except Exception as e:
         Me2Log.error("viewcache异常")

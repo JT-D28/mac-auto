@@ -78,7 +78,14 @@ class SpaceMeta(object):
 			p = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE,
 			                     stdout=subprocess.PIPE)
 			p.wait()
-			decryptresult = p.communicate()[0].decode('GBK')
+
+			decryptresult = ''
+			try:
+				decryptresult=p.communicate()[0].decode('GBK')
+			except:
+				logger.info('解码指令:',command)
+				logger.error('编码异常：\n',str(p.communicate()[0]))
+				return ('error','GBK编码异常:')
 		
 		logger.info('==获得文件[%s]内容:\n%s' % (filename, decryptresult))
 		

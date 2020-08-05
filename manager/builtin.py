@@ -27,7 +27,8 @@ def cout(*msg, **kws):
     }
     text=' '.join([str(x) for x in msg])
     msg = "<span style='color:%s;'>%s</span>" % (_colormap[level],text)
-    viewcache(taskid, callername, None, msg)
+    #viewcache(taskid, callername, None, msg)
+    viewcache(taskid,msg)
 
 def getpropety(key,**kws):
     '''

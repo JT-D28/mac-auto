@@ -147,29 +147,33 @@ def queryCoveryInfo(request):
 			cursor.execute(sql,[i])
 			desc = cursor.description
 			maps[i] = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-	print(maps)
 	for jobname,temp in maps.items():
-		data = json.loads(temp[0]['coverydata'].replace("'", '"'))
-		for j in jobmap[jobname]:
-			jsond = data[j]
-			for m in coveragelist:
-				for k in items:
-					if k in ['percentage', 'percentagefloat']:
-						jsond[m][k] = round(res[m][k] + jsond[m][k] / jobnum, 2)
-					else:
-						jsond[m][k] = res[m][k] + jsond[m][k]
-			res = jsond.copy()
-
-		data1 = json.loads(temp[1]['coverydata'].replace("'", '"'))
-		for j in jobmap[jobname]:
-			jsond1 = data1[j]
-			for m in coveragelist:
-				for k in items:
-					if k in ['percentage', 'percentagefloat']:
-						jsond1[m][k] = round(lastres[m][k] + jsond1[m][k] / jobnum, 2)
-					else:
-						jsond1[m][k] = lastres[m][k] + jsond1[m][k]
-			lastres = jsond1.copy()
+		try:
+			data = json.loads(temp[0]['coverydata'].replace("'", '"'))
+			for j in jobmap[jobname]:
+				jsond = data[j]
+				for m in coveragelist:
+					for k in items:
+						if k in ['percentage', 'percentagefloat']:
+							jsond[m][k] = round(res[m][k] + jsond[m][k] / jobnum, 2)
+						else:
+							jsond[m][k] = res[m][k] + jsond[m][k]
+				res = jsond.copy()
+		except:
+			pass
+		try:
+			data1 = json.loads(temp[1]['coverydata'].replace("'", '"'))
+			for j in jobmap[jobname]:
+				jsond1 = data1[j]
+				for m in coveragelist:
+					for k in items:
+						if k in ['percentage', 'percentagefloat']:
+							jsond1[m][k] = round(lastres[m][k] + jsond1[m][k] / jobnum, 2)
+						else:
+							jsond1[m][k] = lastres[m][k] + jsond1[m][k]
+				lastres = jsond1.copy()
+		except:
+			pass
 	timelist = [int(i[0]['time']) if i[0]['time'] not in [None,''] else 0 for i in maps.values()]
 	time = max(timelist)
 	timelist = [int(i[1]['time']) if i[1]['time'] not in [None,''] else 0 for i in maps.values()]

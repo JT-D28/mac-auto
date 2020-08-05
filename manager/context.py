@@ -208,7 +208,7 @@ cons={}
 
 def viewcache(taskid, *msg):
     try:
-        what = "%s        %s<br>" % (time.strftime("[%m-%d %H:%M:%S]", time.localtime()), "".join(msg))
+        what = "%s        %s<br>" % (time.strftime("[%m-%d %H:%M:%S]", time.localtime()), "".join([str(x) for x in msg if x]))
         Mongo.tasklog(taskid).insert_one({'time': time.time(), 'info': what})
     except Exception as e:
         Me2Log.error("viewcache异常")
@@ -230,7 +230,7 @@ def setRunningInfo(planid, taskid, runkind, dbscheme='全局'):
     # runkind 0:未运行   1：验证 2：调试  3:定时
     if Mongo.taskid().find({"planid": planid}).count() == 0:
         Mongo.taskid().insert_one({"planid": planid, "runkind": "0", "dbscheme": "全局", "verify": "", "debug": ""})
-
+    updatestr=''
     if runkind in ['1', '3']:
         updatestr = {"runkind": runkind, "verify": taskid, "dbscheme": dbscheme}
     elif runkind == '2':
@@ -238,7 +238,7 @@ def setRunningInfo(planid, taskid, runkind, dbscheme='全局'):
     elif runkind == '0':
         updatestr = {"runkind": "0"}
 
-    Mongo.taskid().update({"planid": planid}, {"$set": updatestr})
+    #Mongo.taskid().update({"planid": planid}, {"$set": updatestr})
 
     print("储存运行信息", Mongo.taskid().find_one({"planid": planid}))
 

@@ -61,13 +61,13 @@ class SpaceMeta(object):
 	
 	@classmethod
 	def local_file_check(cls, filename, templatename, checklist, callername, jarname='jiemi_rh_20200326.jar'):
-		
+		logger.info('开始本地文件校验')
 		toolpath = os.path.join(os.path.dirname(__file__), 'storage', 'public', 'tools', jarname)
 		filepath = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File', callername, filename)
 		if not os.path.exists(toolpath):
 			return ('error', '文件[%s]不存在' % jarname)
 		if not os.path.exists(filepath):
-			return ('error', '文件[%s]不存在' % filename)
+			return ('error', '文件[%s]不存在' % filepath)
 		
 		decryptresult = ''
 		if filename.endswith('rd'):
@@ -78,7 +78,14 @@ class SpaceMeta(object):
 			p = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE,
 			                     stdout=subprocess.PIPE)
 			p.wait()
-			decryptresult = p.communicate()[0].decode('GBK')
+
+			decryptresult = ''
+			try:
+				decryptresult=p.communicate()[0].decode('GBK','ignore')
+			except:
+				logger.info('解码指令:',command)
+				logger.error(traceback.format_exc())
+				return ('error','GBK编码异常')
 		
 		logger.info('==获得文件[%s]内容:\n%s' % (filename, decryptresult))
 		

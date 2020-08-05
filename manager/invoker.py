@@ -390,6 +390,7 @@ def runplan(callername, taskid, planid, runkind, startnodeid=None):
     logger.info('startnodeid:', startnodeid)
     L = _get_final_run_node_id(startnodeid)
     logger.info('准备传入的L:', L)
+    logger.info('runkind:',runkind)
     starttime = time.time()
     groupskip = []
     username = callername
@@ -571,7 +572,7 @@ def _step_process_check(callername, taskid, order ,proxy):
             
             logger.info('关联id=>', step.related_id)
             res, msg = _callfunction(user, step.related_id, step.body, paraminfo, taskid=taskid)
-            viewcache(taskid, "函数执行结果=>%s" % res)
+            viewcache(taskid, "函数执行结果=>%s 报错信息:%s" % (res,msg))
             
             # logger.info('fjdajfd=>',res,msg)
             if res is not 'success':
@@ -932,7 +933,7 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
     builtin = (methodname in builtinmethods)
 
     try:
-        logme.warn('获取自定义函数id %s' % functionid)
+        logme.warn('获取自定义函数id %s isbuiltin:%s' % (functionid,builtin))
         f = Function.objects.get(id=functionid)
         logme.warn('获取自定义函数%s' % f.__str__())
     except:

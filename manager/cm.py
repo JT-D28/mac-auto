@@ -18,6 +18,7 @@ from .core import gettaskid,get_params,EncryptUtils
 from manager.context import Me2Log as logger
 from .operate.dataMove import DataMove
 from tools.R import R
+from tools.test import TreeUtil
 
 
 # addproduct
@@ -299,7 +300,7 @@ def run(request):
     callername = request.session.get('username')
     runid = request.POST.get('ids')
     logger.info('runid:',runid)
-    runkind = request.POST.get('runkind')
+    runkind = request.POST.get('runkind') or '2'
     planid = get_run_node_plan_id(runid)
     logger.info('获取待运行节点计划ID:',planid)
     taskid = gettaskid(planid)
@@ -1557,7 +1558,8 @@ def get_search_match(searchvalue):
        3.无匹配结果
     '''
     import time
-    nodes = get_full_tree()
+    #nodes = get_full_tree()
+    nodes=TreeUtil().get_tree_data_fast()
     for node in nodes:
         if searchvalue in node.get('name'):
             # node['name']="<s>%s</s>"%node['name']

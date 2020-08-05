@@ -1068,8 +1068,8 @@ class Fu:
 							return res
 					
 					except:
-						print(traceback.format_exc())
-						return ('error', "非法表达式[%s]" % call_str)
+						logger.error(traceback.format_exc())
+						return ('error', "分割表达式异常[%s]" % call_str)
 			
 			else:
 				##外部调用

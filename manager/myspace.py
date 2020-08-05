@@ -67,7 +67,7 @@ class SpaceMeta(object):
 		if not os.path.exists(toolpath):
 			return ('error', '文件[%s]不存在' % jarname)
 		if not os.path.exists(filepath):
-			return ('error', '文件[%s]不存在' % filename)
+			return ('error', '文件[%s]不存在' % filepath)
 		
 		decryptresult = ''
 		if filename.endswith('rd'):

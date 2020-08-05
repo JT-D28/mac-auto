@@ -390,6 +390,7 @@ def runplan(callername, taskid, planid, runkind, startnodeid=None):
     logger.info('startnodeid:', startnodeid)
     L = _get_final_run_node_id(startnodeid)
     logger.info('准备传入的L:', L)
+    logger.info('runkind:',runkind)
     starttime = time.time()
     groupskip = []
     username = callername

@@ -572,7 +572,7 @@ def _step_process_check(callername, taskid, order ,proxy):
             
             logger.info('关联id=>', step.related_id)
             res, msg = _callfunction(user, step.related_id, step.body, paraminfo, taskid=taskid)
-            viewcache(taskid, "函数执行结果=>%s" % res)
+            viewcache(taskid, "函数执行结果=>%s 报错信息:%s" % (res,msg))
             
             # logger.info('fjdajfd=>',res,msg)
             if res is not 'success':

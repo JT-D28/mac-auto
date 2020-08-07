@@ -124,7 +124,7 @@ def check_user_task():
                     runplan(planid)
 
 
-def _get_down_case_leaf_id(caseids, cur=None,ignore=False):
+def _get_down_case_leaf_id(caseids,final,cur=None,ignore=False):
   
     '''
     获取指定case节点最下游caseID
@@ -134,9 +134,13 @@ def _get_down_case_leaf_id(caseids, cur=None,ignore=False):
     for caseid in caseids:
         e = Order.objects.filter(kind='case_case', main_id=caseid,isdelete=0)
         if e.exists() and not ignore:
-            _get_down_case_leaf_id([x.follow_id for x in e], cur)
+            _get_down_case_leaf_id([x.follow_id for x in e],final, cur)
         else:
             cur.add(caseid)
+
+        for o in Order.objects.filter(kind='case_step', main_id=caseid, isdelete=0):
+            for i in Order.objects.filter(kind='step_business', main_id=o.follow_id, isdelete=0):
+                final.add(i.follow_id)
 
 
 def _get_upper_case_leaf_id(caseid):
@@ -171,7 +175,7 @@ def _get_final_run_node_id(startnodeid,ignore=False):
             for o in ol:
                 caseid = o.follow_id
                 down_ids = set()
-                _get_down_case_leaf_id(caseid, down_ids)
+                _get_down_case_leaf_id(caseid, final,down_ids)
                 for cid in down_ids:
                     stepids = [x.follow_id for x in Order.objects.filter(kind='case_step', main_id=cid,isdelete=0)]
                     for stepid in stepids:
@@ -197,7 +201,7 @@ def _get_final_run_node_id(startnodeid,ignore=False):
             ##case-case
             if not ignore:
                 final_leaf_case_ids = set()
-                _get_down_case_leaf_id([nid], final_leaf_case_ids)
+                _get_down_case_leaf_id([nid],final ,final_leaf_case_ids)
                 logger.info('节点[%s]获取最终case子节点待运行:'%nid, final_leaf_case_ids)
                 for caseid in final_leaf_case_ids:
                     final=final|_get_final_run_node_id('case_%s'%caseid,ignore=True)
@@ -268,7 +272,7 @@ def _runcase(username, taskid, case0, plan, planresult, runkind, startnodeid=Non
     if subflag:
         viewcache(taskid, "开始执行用例[<span id='case_%s' style='color:#FF3399'>%s</span>]" %(case0.id,case0.description))
     steporderlist = ordered(list(Order.objects.filter(Q(kind='case_step') | Q(kind='case_case'), main_id=case0.id)))
-    
+
     ##case执行次数
     casecount = int(case0.count) if case0.count is not None else 1
     color_res = {
@@ -289,7 +293,7 @@ def _runcase(username, taskid, case0, plan, planresult, runkind, startnodeid=Non
             try:
                 step = Step.objects.get(id=stepid)
                 stepcount = step.count
-                
+
                 if stepcount > 0:
                     # 步骤执行次数>0
                     for ldx in range(0, stepcount):
@@ -713,7 +717,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
     """
 
     # url data headers过滤
-    viewcache(taskid, "执行接口请求=>")
+    viewcache(taskid, "执行[%s]请求=>"%method)
 
     viewcache(taskid, "<span style='color:#009999;'>content_type=>%s</span>" % content_type)
     viewcache(taskid, "<span style='color:#009999;'>原始url=>%s</span>" % url)
@@ -828,87 +832,28 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
     else:
         raise NotImplementedError("content_type=%s没实现" % content_type)
 
-    # logger.info("method=>",method)
-    rps = None
-    if method == "get":
-        session = get_task_session('%s_%s' % (taskid, user.name))
+    session = get_task_session('%s_%s' % (taskid, user.name))
+    params = None
+    data = None
+    files = None
 
-        if body:
-            if isinstance(body, (dict, list, bytes)):
-                try:
-                    rps = session.get(url, params=body, headers={**default, **headers}, timeout=timeout,proxies=proxy)
-                except:
-                    err = traceback.format_exc()
-                    if 'requests.exceptions.ConnectTimeout' in err:
-                        msg = '请求超时 已设置超时时间%ss' % timeout
-                        return ({}, msg, 200, "")
-                    else:
-                        msg = '请求异常:%s' % err
-                        return ('', '', '', msg)
-            else:
-                return ('', '', '', '参数类型不支持[dict,list of tuples,bytes]')
-        else:
-            try:
-                rps = session.get(url, headers={**default, **headers}, timeout=timeout,proxies=proxy)
-            except:
-                err = traceback.format_exc()
-                if 'requests.exceptions.ConnectTimeout' in err:
-                    msg = '请求超时 已设置超时时间%ss' % timeout
-                    return ({}, msg, 200, "")
-                else:
-                    msg = '请求异常:%s' % err
-                    return ('', '', '', msg)
-
-    elif method == 'post':
-        session = get_task_session('%s_%s' % (taskid, user.name))
-
-        if content_type == 'formdata':
-            try:
-                viewcache(taskid, '---formdata请求---')
-                rps = session.post(url, files=body, headers={**default, **headers}, timeout=timeout,proxies=proxy)
-            except:
-                err = traceback.format_exc()
-                if 'requests.exceptions.ReadTimeout' in err:
-                    msg = '请求超时 已设置超时时间%ss' % timeout
-                    return ({}, msg, 200, "")
-                else:
-                    msg = '请求异常:%s' % err
-                    return ('', '', '', msg)
-
-
-        elif body:
-            if isinstance(body, (dict, list, bytes)):
-                try:
-                    rps = session.post(url, data=body, headers={**default, **headers}, timeout=timeout,proxies=proxy)
-                except:
-                    err = traceback.format_exc()
-                    print('是否超时 %s' % 'requests.exceptions.ReadTimeout' in err)
-                    if 'requests.exceptions.ReadTimeout' in err:
-                        msg = '请求超时 已设置超时时间%ss' % timeout
-                        return ({}, msg, 200, "")
-                    else:
-                        msg = '请求异常:%s' % err
-                        return ('', '', '', msg)
-
-            else:
-                return ('', '', '', '参数类型不支持[dict,list of tuples,bytes]')
-        else:
-            try:
-                rps = session.post(url, headers={**default, **headers}, timeout=timeout,proxies=proxy)
-            except:
-                err = traceback.format_exc()
-                if 'requests.exceptions.ReadTimeout' in err:
-                    msg = '请求超时 已设置超时时间%ss' % timeout
-                    return ({}, msg, 200, "")
-                else:
-                    msg = '请求异常:%s' % err
-                    return ('', '', '', msg)
-
-    # logger.info("textfdafda=>",rps.text)
+    if method == 'get':
+        params = body
+    elif content_type == 'formdata':
+        files = body
     else:
-        return ('', '', '', "请求方法[%s]暂不支持.." % method)
+        data = body
+    try:
+        rps = session.request(method, url, headers={**default, **headers}, params=params, data=data,files=files,timeout=timeout,proxies=proxy)
+    except:
+        err = traceback.format_exc()
+        if 'requests.exceptions.ConnectTimeout' in err:
+            msg = '请求超时 已设置超时时间%ss' % timeout
+            return ({}, msg, 200, "")
+        else:
+            msg = '请求异常:%s' % err
+            return ('', '', '', msg)
 
-    ###响应报文中props处理
     status, err = _find_and_save_property(taskid,user, props, rps.text)
 
     if status is not 'success':

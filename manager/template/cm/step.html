@@ -89,9 +89,9 @@
         <label class="layui-form-label">content-type</label>
         <div class="layui-input-block"
              style="border: 1px solid #e6e6e6;background-color: rgba(252,252,252,1);padding: 0 14px;">
-            <input type="radio" name="content-type" value="formdata" title="form-data" checked
+            <input type="radio" name="content-type" value="formdata" title="form-data"
                    lay-filter='content_type'>
-            <input type="radio" name="content-type" value="urlencode" title="urlencode"
+            <input type="radio" name="content-type" value="urlencode" title="urlencode" checked
                    lay-filter='content_type'>
             <input type="radio" name="content-type" value='json' title="json" lay-filter='content_type'>
             <input type="radio" name="content-type" value='xml' title="xml" lay-filter='content_type'>
@@ -110,6 +110,8 @@
              style="border: 1px solid #e6e6e6;background-color: rgba(252,252,252,1);padding: 0 14px;">
             <input type="radio" name="method" value="get" title="GET">
             <input type="radio" name="method" value='post' title="POST" checked>
+            <input type="radio" name="method" value='put' title="PUT">
+            <input type="radio" name="method" value='delete' title="DELETE">
         </div>
     </div>
 

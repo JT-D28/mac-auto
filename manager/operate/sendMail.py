@@ -27,9 +27,9 @@ def processSendReport(taskid, config_id, callername):
 		user = User.objects.get(name=callername)
 		mail_res = MainSender.send(taskid, user, mail_config)
 		dingding_res = MainSender.dingding(taskid, user, mail_config)
-		logger.info("发送邮件 结果[%s]" % mail_res)
+		# logger.info("发送邮件 结果[%s]" % mail_res)
 		viewcache(taskid,mail_res)
-		logger.info("发送钉钉通知 结果[%s]" % dingding_res)
+		# logger.info("发送钉钉通知 结果[%s]" % dingding_res)
 		viewcache(taskid, dingding_res)
 
 
@@ -72,7 +72,6 @@ def _save_builtin_property(taskid, username):
 
 
 def gettaskresult(taskid):
-	logger.info("==gettaskresult==")
 	##区分迭代次数
 	bset = set()
 	bmap = {}
@@ -141,7 +140,7 @@ def gettaskresult(taskid):
 			# for rb in rblist:
 			businessobj = {}
 			business = x.businessdata
-			logger.info('c=>%s'%business.id)
+			# logger.info('c=>%s'%business.id)
 			status, step = BusinessData.gettestdatastep(business.id)
 			# logger.info('a=>%s b=>%s'%(case.id,step.id))
 			if isinstance(step, (str,)): continue;
@@ -241,9 +240,7 @@ def gettaskresult(taskid):
 		detail['success_rate'] = '-1'
 	detail["reporttime"] = time.strftime("%m-%d %H:%M", time.localtime())
 
-	##
-	logger.info('报告数据=>', detail)
-
+	logger.info("==报告数据生成成功==")
 	Mongo.taskreport().insert_one(detail)
 
 

@@ -482,8 +482,6 @@ def _step_process_check(callername, taskid, order ,proxy):
         # logger.info('bbid=>',businessdata.id)
         status1, step = BusinessData.gettestdatastep(businessdata.id)
         
-        username = callername
-        
         if status is not 'success':
             return (status, paraminfo)
         if status1 is not 'success':
@@ -567,22 +565,18 @@ def _step_process_check(callername, taskid, order ,proxy):
 
         elif step.step_type == "function":
             viewcache(taskid, "数据校验配置=>%s" % db_check)
-            
-            # methodname=re.findall("(.*?)\(.*?\)", step.body.strip())[0]
-            # builtinmethods=[x.name for x in getbuiltin() ]
-            # builtin=(methodname in builtinmethods)
-            
+
             viewcache(taskid, "调用函数=>%s" % step.body)
             
             logger.info('关联id=>', step.related_id)
             res, msg = _callfunction(user, step.related_id, step.body, paraminfo, taskid=taskid)
-            viewcache(taskid, "函数执行结果=>%s 报错信息:%s" % (res,msg))
+            viewcache(taskid, "函数执行结果=>%s" %res)
             
-            # logger.info('fjdajfd=>',res,msg)
             if res is not 'success':
+                viewcache(taskid, "函数执行报错信息:%s" %msg)
                 return res, msg
             
-            status, res = _call_extra(user, postplist, taskid=taskid, kind='后置操作')  ###????
+            status, res = _call_extra(user, postplist, taskid=taskid, kind='后置操作')
             if status is not 'success':
                 return (status, res)
             
@@ -1673,17 +1667,17 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
                     v = _gain_compute(user, gain, src=src, taskid=taskid)
                     logger.info('变量获取结果：', v[1])
                     if v[0] is not 'success':
-                        # logger.info(11999)
                         return v
                     else:
-                        v = v[1]
-                    
-                    # if v is None:
-                    #   return ('error','')
+                        if v[1]:
+                            v = v[1]
+                            viewcache(taskid, '替换变量 {{%s}}=>%s' % (varname, v))
+                        else:
+                            v = '-9999999999'
+                            viewcache(taskid, '替换变量 {{%s}}=>%s (无结果，特殊默认值)' % (varname, v))
                     old = old.replace('{{%s}}' % varname, str(v), 1)
-                    viewcache(taskid, '替换变量 {{%s}}=>%s' % (varname, v))
-        
         return ('success', old)
+
     except Exception as e:
         logger.info(traceback.format_exc())
         return ('error', '字符串[%s]变量替换异常[%s] 请检查包含变量是否已配置' % (str_, traceback.format_exc()))
@@ -1803,7 +1797,7 @@ def _gain_compute(user, gain_str, src=1, taskid=None):
                 return ('error', '没查到匹配函数请先定义[%s,%s]' % (gain_str, flag))
             else:
                 logger.info('functionid=>', functionid)
-            # return _callfunction(user, functionid, gain_str)
+
             return _callfunction(user, functionid, call_method_name, call_method_params, taskid=taskid)
         
         
@@ -1821,9 +1815,9 @@ def _gain_compute(user, gain_str, src=1, taskid=None):
             gain_str = gain_str_rv[1]
             if src == 1:
                 if ';' in gain_str:
-                    return op.db_execute2(gain_str, taskid=taskid, callername=user.name)
+                    return op.db_execute2(gain_str, taskid=taskid)
                 else:
-                    return op.db_execute(gain_str, taskid=taskid, callername=user.name)
+                    return op.db_execute(gain_str, taskid=taskid)
             else:
                 return ('success', '"%s"' % gain_str.strip())
     
@@ -1922,9 +1916,7 @@ def save_data(username, d, k, v):
             d[username] = {}
 
         d[username][k] = v
-
-        logger.info('存属性==')
-        logger.info(username, k, v)
+        # logger.info('存属性==',username, k, v)
 
     except:
         raise RuntimeError("存property失败=>%s" % k)

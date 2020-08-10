@@ -240,7 +240,7 @@ def setRunningInfo(planid, taskid, runkind, dbscheme='全局'):
 
     Mongo.taskid().update({"planid": planid}, {"$set": updatestr})
 
-    print("储存运行信息", Mongo.taskid().find_one({"planid": planid}))
+    Me2Log.info("储存运行信息", Mongo.taskid().find_one({"planid": planid}))
 
 
 def getRunningInfo(planid='', type='isrunning'):

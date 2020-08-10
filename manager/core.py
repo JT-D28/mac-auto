@@ -232,105 +232,6 @@ def testfunc(functionstr):
 		return False
 
 
-# def runstep(step):
-# 	type_=step.step_type
-# 	if type_=='function':
-# 		try:
-# 			eval(step.body)
-# 			return True
-# 		except Exception as e:
-# 			print(e)
-# 			return False
-
-# 	elif type_=='interface':
-
-# 		try:
-# 			url=step.interface.url
-# 			body=step.body
-# 			method=step.interface.method
-# 			print("接口地址=>"%url)
-# 			print("请求方式=>"%method)
-# 			print("请求参数=>"%body)
-# 			#requests.post(url,data=body)
-# 			response=eval('requests.%s(url,data=body)'%method)
-# 			d=eval(_responsefilter(response.text))
-# 			db_check_items=step.db_check.split("||")
-# 			itf_check_items=step.itf_check.split("||")
-
-# 			##验证过程....
-
-# 			#####
-
-# 			return True
-# 		except Exception as e:
-# 			print(e)
-# 			return False
-
-# 	else:
-# 		warnings.warn("不能识别的测试步骤类型=>%s"%type_)
-
-# 	return False
-
-
-# def _is_sql_call(str_):
-# 	s=str_.strip()
-# 	res=len(re.findall('|'.join(__sql_key),s))
-# 	#print(res)
-# 	if res>0:
-# 		return True
-# 	else:
-# 		return False
-
-
-# def _eval(str_):
-# 	"""
-# 	执行有意义的函数 or sql字符串
-# 	"""
-
-# 	if _is_sql_call(str_):
-# 		return op().db_execute(str_)
-# 	else:
-# 		return eval(str_)
-
-
-# def _responsefilter(msg):
-# 	msg=msg.replace('true','True').replace('false','False').replace('null','None')
-# 	return msg
-
-# def _responsecheck(response,wait_check_list=None):
-# 	'''
-# 	可能的情况
-# 	{{x}}=1 
-# 	code=3
-# 	list[0].text=1111
-# 	'''
-# 	if wait_check_list is None:
-# 		warnings.warn("校验列表为空，默认通过..")
-# 		return True
-
-# 	#存储所有校验项的执行结果
-# 	res=[]
-# 	operator='='
-# 	for item in wait_check_list:
-# 		operator=_getoperator(item)
-# 		if operator is None:
-# 			warnings.warn('校验表达式无法解析=>%s'%item)
-# 			return True
-
-# 		left=item.split(operator)[0]
-# 		right=item.split(operator)[1]
-
-
-# def _getoperator(str_):
-# 	"""
-# 	获取操作符
-# 	"""
-
-# 	for x in __compare_word:
-# 		if x in str_:
-# 			return x
-
-# 	return None
 
 def packagemenu(list_):
 	root = None
@@ -1002,8 +903,6 @@ class Fu:
 	
 	@classmethod
 	def call(cls, funcobj, call_str, builtin=False, username=None, taskid=None):
-		# print("内置=>",builtin)
-		# print('调用=》',call_str)
 		try:
 			res = None
 			if builtin is True:

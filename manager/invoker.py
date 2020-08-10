@@ -309,18 +309,22 @@ def _runcase(username, taskid, case0, plan, planresult, runkind, startnodeid=Non
                             if order.follow_id not in L:
                                 continue
                             if groupid not in groupskip:
-                                result, error = _step_process_check(username, taskid, order ,proxy)
+                                for i in range(0,businessdata.count):
+                                    result, error = _step_process_check(username, taskid, order ,proxy)
+                                    if result not in ('success', 'omit') and not result.startswith('db_'):
+                                        groupskip.append(groupid)
+                                        break
                                 spend = int((time.time() - start) * 1000)
-                                
-                                if result not in ('success', 'omit'):
-                                    groupskip.append(groupid)
+
                             else:
 
                                 if businessdata.count == 0:
                                     result, error = 'omit', "测试点[%s]执行次数=0 略过." % businessdata.businessname
                                 else:
                                     result, error = 'skip', 'skip'
-                            
+                            if result.startswith('db_'):
+                                # 测试步骤执行sql处理失败时，不中断后续内容
+                                result = result[3:]
                             # 保存结果
                             try:
                                 logger.info("准备保存结果===")
@@ -574,7 +578,7 @@ def _step_process_check(callername, taskid, order ,proxy):
             
             if res is not 'success':
                 viewcache(taskid, "函数执行报错信息:%s" %msg)
-                return res, msg
+                return 'db_%s'%res, msg
             
             status, res = _call_extra(user, postplist, taskid=taskid, kind='后置操作')
             if status is not 'success':
@@ -1669,13 +1673,8 @@ def _replace_variable(user, str_, src=1, taskid=None, responsetext=None):
                     if v[0] is not 'success':
                         return v
                     else:
-                        if v[1]:
-                            v = v[1]
-                            viewcache(taskid, '替换变量 {{%s}}=>%s' % (varname, v))
-                        else:
-                            v = '-9999999999'
-                            viewcache(taskid, '替换变量 {{%s}}=>%s (无结果，特殊默认值)' % (varname, v))
-                    old = old.replace('{{%s}}' % varname, str(v), 1)
+                        viewcache(taskid, '替换变量 {{%s}}=>%s' % (varname, v[1]))
+                    old = old.replace('{{%s}}' % varname, str(v[1]), 1)
         return ('success', old)
 
     except Exception as e:

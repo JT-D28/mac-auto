@@ -173,9 +173,9 @@ class Mysqloper:
 			viewcache(taskid, msg)
 			return ('success', sqlresult)
 		
-		except:
+		except Exception as e:
 			print(traceback.format_exc())
-			return ('error', "数据库[%s]执行sql[%s]发生异常:\n[%s]" % (conname, sql, traceback.format_exc()))
+			return ('error', "数据库[%s]执行sql[%s]发生异常:\n[%s]" % (conname, sql, e))
 		
 		finally:
 			try:

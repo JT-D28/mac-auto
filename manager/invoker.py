@@ -309,6 +309,7 @@ def _runcase(username, taskid, case0, plan, planresult, runkind, startnodeid=Non
                             if order.follow_id not in L:
                                 continue
                             if groupid not in groupskip:
+                                result,error ='omit', 'omit'
                                 for i in range(0,businessdata.count):
                                     result, error = _step_process_check(username, taskid, order ,proxy)
                                     if result not in ('success', 'omit') and not result.startswith('db_'):

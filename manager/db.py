@@ -144,7 +144,7 @@ class Mysqloper:
 					return (msg, self.conn)
 			
 			cur = self.conn.cursor()  # 获取一个游标
-			sql = sql.replace(chr(13), '').replace(chr(10), '').strip().lower()
+			sql = sql.replace(chr(13), '').replace(chr(10), '').strip()
 			cur.execute(sql)
 			if sql.startswith("select"):
 				data = list(cur.fetchall())
@@ -196,7 +196,7 @@ class Mysqloper:
 			sql = sql.replace(chr(13), '').replace(chr(10), '').strip()
 			cur.execute(str(sql))
 			data = list(cur.fetchall())
-			print("sql[%s]执行结果=>%s" % (sql.lower(), data))
+			print("sql[%s]执行结果=>%s" % (sql, data))
 			state,sqlresult = 'fail',''
 			msg = '%s----查询无结果'%sql
 			if data:

@@ -118,7 +118,7 @@ class Mysqloper:
 		sql查询返回结果
 		非查询返回影响条数
 		"""
-		logger.info('传入taskid:{} ,sql:{}'.format(taskid,sql))
+		logger.info('db_execute传入taskid:{} ,sql:{}'.format(taskid,sql))
 		sqlresult, error = None, ''
 		conname = None
 		# 判断当前连接是否正常
@@ -146,7 +146,7 @@ class Mysqloper:
 			cur = self.conn.cursor()  # 获取一个游标
 			sql = sql.replace(chr(13), '').replace(chr(10), '').strip()
 			cur.execute(sql)
-			if sql.startswith("select"):
+			if sql.lower().startswith("select"):
 				data = list(cur.fetchall())
 				cur.close()
 				print("sql[%s]执行结果=>%s" % (sql, data))

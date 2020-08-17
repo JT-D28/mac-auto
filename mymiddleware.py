@@ -76,11 +76,12 @@ class Interceptor(MiddlewareMixin):
 					callstr = "list(models.Function.objects.filter(name='%s'))" % \
 					          re.findall('def (.*?)\(.*?\)', request.POST.get('body'))[0]
 				if mkey == 'DBCon':
-					schemevalue=request.POST.get('schemevalue')
+					schemevalue=request.POST.get('scheme')
 					description=request.POST.get('description')
 					callstr = "list(models.DBCon.objects.filter(description='%s',scheme='%s'))" % \
 					          (description,schemevalue)
 					qssize = len(eval(callstr))
+					print("aaaaaaaa",qssize)
 					if qssize == 0:
 						return 'success', ''
 					else:
@@ -105,7 +106,7 @@ class Interceptor(MiddlewareMixin):
 				if mkey:
 					logger.info('==[编辑]字段重复校验====')
 					if mkey == 'DBCon':
-						schemevalue = request.POST.get('schemevalue')
+						schemevalue = request.POST.get('scheme')
 						description = request.POST.get('description')
 						id=request.POST.get('id')
 						oldcon = models.DBCon.objects.filter(~Q(id=id) & Q(description=description, scheme=schemevalue))

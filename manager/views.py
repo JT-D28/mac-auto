@@ -365,11 +365,11 @@ def editcon(request):
         con.kind = request.POST.get('kind')
         con.description = request.POST.get('description')
         con.dbname = request.POST.get('dbname')
-        con.username = request.POST.get('accountname')
+        con.username = request.POST.get('username')
         con.password = request.POST.get('password')
         con.host = request.POST.get('host')
         con.port = request.POST.get('port')
-        con.scheme = request.POST.get('schemevalue')
+        con.scheme = request.POST.get('scheme')
         con.save()
 
         msg = '编辑成功'
@@ -497,7 +497,7 @@ def querydblistdefault(request):
 @csrf_exempt
 def copyDbCon(request):
     action = request.POST.get('action')
-    dbids = request.POST.getlist('dbids[]')
+    dbids = request.POST.get('dbids').split(',')
     copyschemevalue = request.POST.get('copyschemevalue')
     s = dbconRepeatCheck(dbids, copyschemevalue, action)
     code = 1

@@ -258,7 +258,7 @@
                 }
                 _post_nl('/manager/copyDbCon/', {
                     action: action,
-                    dbids: dbids,
+                    dbids: dbids.join(),
                     copyschemevalue: app.schemevalue
                 }, function (data) {
                     if (data.code == 1) {
@@ -544,9 +544,9 @@
                                 'dbname': dbname,
                                 'host': host,
                                 'port': port,
-                                'accountname': accountname,
+                                'username': accountname,
                                 'password': password,
-                                'schemevalue': schemevalue
+                                'scheme': schemevalue
                             }, success)
                         }
                     });

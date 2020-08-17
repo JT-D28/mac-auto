@@ -311,8 +311,8 @@ def addcon(request):
         dbname = request.POST.get('dbname')
         host = request.POST.get('host')
         port = request.POST.get('port')
-        schemevalue = request.POST.get('schemevalue')
-        username = request.POST.get('accountname')
+        schemevalue = request.POST.get('scheme')
+        username = request.POST.get('username')
         callername = request.session.get('username', None)
         password = request.POST.get('password')
 

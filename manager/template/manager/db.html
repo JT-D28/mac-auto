@@ -451,10 +451,10 @@
                         'host': host,
                         'port': port,
                         'dbname': dbname,
-                        'accountname': accountname,
+                        'username': accountname,
                         'password': password,
                         'kind': kind,
-                        'schemevalue': schemevalue
+                        'scheme': schemevalue
                     };
                     console.log('添加db', data);
                     _post('/manager/adddbcon/', data, success)

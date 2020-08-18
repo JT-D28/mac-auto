@@ -208,7 +208,7 @@
 
         $("#importbusiness").click(function () {
             if ($("[name='description']").val() != '') {
-                layer.prompt({title: '请先输入测试点描述，并确认', formType: 3}, function (bussiness_des, index) {
+                layer.prompt({title: '请先输入测试点描述，并确认', formType: 3}, function (business_des, index) {
                     layer.close(index);
                     layer.prompt({
                         title: '粘贴请求', formType: 2, area: ['500px', '300px'],
@@ -219,7 +219,7 @@
                             'uid': uid,
                             'pid': pid,
                             'description': $("[name='description']").val(),
-                            'bussiness_des': bussiness_des,
+                            'business_des': business_des,
                             'fetchtest': text
                         }, function (e) {
                             if (e.code === 0) {

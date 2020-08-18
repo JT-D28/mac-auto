@@ -1248,8 +1248,8 @@ def delfunc(request):
     ids = id_.split(",")
     try:
         for i in ids:
-            Function.objects.get(id=i).delete()
-
+            if i !='NaN':
+                Function.objects.get(id=i).delete()
         msg = '删除成功'
     except:
         code = 1
@@ -2113,7 +2113,7 @@ def getParamfromFetchData(request):
     step_des = request.POST.get('description')
     pid = request.POST.get('pid').split('_')[1] if request.POST.get('pid') != 'false' else 'false'
     uid = request.POST.get('uid').split('_')[1] if request.POST.get('uid') != 'false' else 'false'
-    bussiness_des = request.POST.get('bussiness_des')
+    business_des = request.POST.get('business_des')
     code = 0
     data = ''
     rq = '{%s}' % text.split('fetch(')[1].rstrip(');').replace('\n', '').replace(',', ':', 1)
@@ -2163,7 +2163,7 @@ def getParamfromFetchData(request):
         step.save()
         addrelation('case_step', request.session.get('username'), pid, step.id)
         b = BusinessData()
-        b.businessname = bussiness_des
+        b.businessname = business_des
         b.itf_check = ''
         b.db_check = ''
         b.params = parsed_result
@@ -2189,7 +2189,7 @@ def getParamfromFetchData(request):
             if int(difflib.SequenceMatcher(None, step.url.split('/')[-1], k.split('/')[-1]).ratio()) < 0.9:
                 return JsonResponse({'code': 1, 'data': '两个接口可能不一样，请检查'})
             b = BusinessData()
-            b.businessname = bussiness_des
+            b.businessname = business_des
             b.itf_check = ''
             b.db_check = ''
             b.params = parsed_result
@@ -2204,7 +2204,7 @@ def getParamfromFetchData(request):
             returndata = {
                 'id': 'business_%s' % b.id,
                 'pId': 'step_%s' % uid,
-                'name': bussiness_des,
+                'name': business_des,
                 'type': 'business',
                 'textIcon': 'fa icon-fa-leaf',
             }

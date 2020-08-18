@@ -97,7 +97,7 @@ def get_business_info(stepid, data, taskid):
 				binfo = Mongo.logsplit(taskid).find_one({"businessid": str(bid)})
 				state = binfo['result']
 				data['step_%s' % stepid].append(
-					{'id': 'business_%s' % bid, 'name': binfo['bussinessdes'], 'hasChildren': False,
+					{'id': 'business_%s' % bid, 'name': binfo['businessdes'], 'hasChildren': False,
 					 'type': 'business',
 					 'icon': 'fa icon-fa-leaf', 'state': state})
 			except:
@@ -137,29 +137,29 @@ async def dealDeBuginfo(taskid):
 	               ''.join(list))
 	bmatchs = re.findall(r"开始执行步骤.*?步骤.*?执行结果.*?</span>.*?<br>", temp2,flags=re.S)
 	for b in bmatchs:
-		await insertBussinessInfo(b, taskid)
+		await insertBusinessInfo(b, taskid)
 	for i in list:
 		failbmatch = re.findall(
 			r"步骤\[<span style='color:#FF3399' id='step_.*?</span>]=>测试点\[<span style='color:#FF3399' id='business_.*?</span>]=>执行结果<span id=.*? class='layui-bg-orange'>skip</span>      原因=>skip<br>",
 			i)
 		if failbmatch:
 			b = failbmatch[0]
-			await insertBussinessInfo(b, taskid)
+			await insertBusinessInfo(b, taskid)
 
 
-async def insertBussinessInfo(str, taskid):
+async def insertBusinessInfo(str, taskid):
 	caseid = re.findall("caseid='(.*?)'", str)[0]
 	casedes = re.findall("casedes='(.*?)'", str)[0]
 	stepid = re.findall("id='step_(.*?)'", str)[0]
 	stepdes = re.findall("id='step_.*?'>(.*?)</span>", str)[0]
-	bussinessid = re.findall("id='business_(.*?)'>", str)[0]
-	bussinessdes = re.findall("id='business_.*?'>(.*?)</span>]", str)[0]
+	businessid = re.findall("id='business_(.*?)'>", str)[0]
+	businessdes = re.findall("id='business_.*?'>(.*?)</span>]", str)[0]
 	result = re.findall("=>执行结果.*?class='layui-bg.*?>(.*?)</span>", str)[0]
 	error = re.findall("原因=>(.*?)<br>",str)
 	error = error[0] if error else ''
 	Mongo.logsplit(taskid).insert_one(
-		{'caseid': caseid, 'casedes': casedes, 'stepid': stepid, 'stepdes': stepdes, 'businessid': bussinessid,
-		 'bussinessdes': bussinessdes,
+		{'caseid': caseid, 'casedes': casedes, 'stepid': stepid, 'stepdes': stepdes, 'businessid': businessid,
+		 'businessdes': businessdes,
 		 'result': result, 'info': str,'error':error})
 
 

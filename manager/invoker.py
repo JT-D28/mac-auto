@@ -806,7 +806,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
                 print('vbody:',body)
                 body = parse.urlencode(ast.literal_eval(body))
 
-            body = body.encode('UTF-8')
+            # body = body.encode('UTF-8')
 
 
         except:
@@ -843,6 +843,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
             return ({}, msg, 200, "")
         else:
             msg = '请求异常:%s' % err
+            print(msg)
             return ('', '', '', msg)
 
     status, err = _find_and_save_property(taskid,user, props, rps.text)

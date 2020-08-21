@@ -176,5 +176,6 @@ urlpatterns = [
     path('recyclenode/', views.recyclenode),
 
     path('link/', views.link),
+    path('test/',views.test)
 
 ]

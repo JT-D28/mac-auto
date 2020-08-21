@@ -2912,3 +2912,7 @@ def recyclenodes(type, id):
 
     except:
         print(traceback.format_exc())
+
+
+def test(request):
+    return render(request,'manager/test.html')

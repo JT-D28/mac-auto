@@ -22,6 +22,7 @@ from tools.test import TreeUtil
 
 
 # addproduct
+@cache_sync
 @monitor(action='添加产品')
 def addproduct(request):
     product = None
@@ -47,7 +48,7 @@ def addproduct(request):
             'status': 'error',
             'msg': '新增[%s]异常' % product.description
         }
-
+@cache_sync
 @monitor(action='删除产品')
 def delproduct(request):
     p = None
@@ -77,6 +78,7 @@ def delproduct(request):
             'msg': '删除[%s]异常' % p.description
         }
 
+@cache_sync
 @monitor(action='编辑产品')
 def editproduct(request):
     uid = request.POST.get('uid')
@@ -108,6 +110,7 @@ def editproduct(request):
 
 
 # plan
+@cache_sync
 @monitor(action='新建计划')
 def addplan(request):
     msg = ''
@@ -157,7 +160,7 @@ def addplan(request):
             'msg': '新增失败[%s]' % traceback.format_exc()
         }
 
-
+@cache_sync
 @monitor(action='删除计划')
 def delplan(request):
     id_ = request.POST.get('ids')
@@ -204,7 +207,7 @@ def handlebindplans(olddescription, newdescription, id_):
             edittag.save()
             logger.info(str(edittag.id) + '更新完成')
 
-
+@cache_sync
 @monitor(action='编辑计划')
 def editplan(request):
     id_ = request.POST.get('uid').split('_')[1]
@@ -340,6 +343,7 @@ def importplan(request):
 
 
 ##
+@cache_sync
 @monitor(action='新建用例')
 def addcase(request):
     msg = ''
@@ -357,7 +361,7 @@ def addcase(request):
             'msg': '新增成功',
             'data': {
                 'id': 'case_%s' % case.id,
-                'pid': 'plan_%s' % pid,
+                'pId': 'plan_%s' % pid,
                 'name': case.description,
                 'type': 'case',
                 'textIcon': 'fa icon-fa-folder'
@@ -370,7 +374,7 @@ def addcase(request):
             'msg': '新增失败[%s]' % traceback.format_exc()
         }
 
-
+@cache_sync
 @monitor(action='编辑用例')
 def editcase(request):
     id_ = request.POST.get('uid').split('_')[1]
@@ -404,6 +408,7 @@ def editcase(request):
     except:
         return {'status': 'error', 'msg': '编辑失败[%s]' % traceback.format_exc()}
 
+@cache_sync
 @monitor(action='删除用例')
 def delcase(request):
     id_ = request.POST.get('ids')
@@ -434,6 +439,7 @@ def delcase(request):
 
 
 ##
+@cache_sync
 @monitor(action='新加步骤')
 def addstep(request):
     from .core import getbuiltin
@@ -473,7 +479,7 @@ def addstep(request):
                 
                 'data': {
                     'id': 'case_%s' % case.id,
-                    'pid': 'case_%s' % pid,
+                    'pId': 'case_%s' % pid,
                     'name': case.description,
                     'type': 'case',
                     'textIcon': 'fa icon-fa-folder',
@@ -535,7 +541,7 @@ def addstep(request):
             'msg': '新增测试步骤',
             'data': {
                 'id': 'step_%s' % step.id,
-                'pid': 'case_%s' % pid,
+                'pId': 'case_%s' % pid,
                 'name': step.description,
                 'type': 'step',
                 'textIcon': 'fa icon-fa-file-o',
@@ -548,6 +554,7 @@ def addstep(request):
             'msg': "添加失败[%s]" % traceback.format_exc()
         }
 
+@cache_sync
 @monitor(action='编辑步骤')
 def editstep(request):
     id_ = request.POST.get('uid').split('_')[1]
@@ -617,6 +624,7 @@ def editstep(request):
             'msg': '编辑失败[%s]' % traceback.format_exc()
         }
 
+@cache_sync
 @monitor(action='删除步骤')
 def delstep(request):
     id_ = request.POST.get('ids')
@@ -662,6 +670,7 @@ def _check_params(param_value):
 
 
 ##
+@cache_sync
 @monitor(action='新建测试点')
 def addbusiness(request):
     from .core import getbuiltin, Fu
@@ -761,7 +770,7 @@ def addbusiness(request):
             'msg': '添加测试数据异常[%s]' % traceback.format_exc()
         }
 
-
+@cache_sync
 @monitor(action='编辑测试点')
 def editbusiness(request):
     from .core import getbuiltin, Fu
@@ -849,7 +858,7 @@ def editbusiness(request):
             'msg': '编辑业务数据异常[%s]' % traceback.format_exc()
         }
 
-
+@cache_sync
 @monitor(action='删除测试点')
 def delbusiness(request):
     try:
@@ -1106,7 +1115,11 @@ def getchild(kind, main_id):
     elif kind == 'plan_case':
         for order in orderlist:
             #logger.info('case class=>', mm.Case)
-            child.append(mm.Case.objects.get(id=order.follow_id))
+            print('hid:',order.follow_id)
+            try:
+                child.append(mm.Case.objects.get(id=order.follow_id))
+            except:
+                pass
     elif kind == 'case_step':
         for order in orderlist:
             #logger.info('main=>%s follow=>%s v=%s' % (order.main_id, order.follow_id, order.value))
@@ -1558,10 +1571,11 @@ def get_search_match(searchvalue):
        3.无匹配结果
     '''
     import time
-    #nodes = get_full_tree()
-    nodes=TreeUtil().get_tree_data_fast()
+    #nodes = get_full_tree_two()
+    nodes=TreeUtil.get_tree_data_fast()
+    logger.info('当前树数据：{}'.format(nodes))
     for node in nodes:
-        if searchvalue in node.get('name'):
+        if node and searchvalue in node.get('name'):
             # node['name']="<s>%s</s>"%node['name']
             # node['name']="<span style='color:red;'>%s</span>"%node['name']
             _expand_parent(node, nodes)
@@ -1710,7 +1724,7 @@ def _get_all_case_child_id(casenodeid,all_):
     cases=getchild('case_case', caseid)
     for case in cases:
         all_.append(case.id)
-        _get_all_case_child_id('case_{}'.format(case.id), all_)
+        _get_all_case_child_id('case_{}'.fomat(case.id), all_)
 
 def get_full_tree_new():
     async  def _add_node(classname,nodes):
@@ -1745,6 +1759,176 @@ def get_full_tree_new():
     l.close()
 
     return nodes
+
+def get_full_tree_three():
+    def _get_top_level_name(tid):
+        node_id = tid.split('_')[1]
+        node_type = tid.split('_')[0]
+        while 1:
+            of=mm.Order.objects.filter(Q(kind__icontains='_{}'.format(node_type))&Q(follow_id=node_id))
+            if of.count()==1:
+                node_type=of[0].kind.split('_')[0]
+                node_id=of[0].main_id
+            elif of.count()==0:
+                return node_type
+    tree=[]
+    #
+    products=mm.Product.objects.all()
+    for product in products:
+        tree.append({
+            'id': 'product_%s' % product.id,
+            'pId': -1,
+            'name': product.description,
+            'type': 'product',
+            'textIcon': icon_map.get('product')
+        })
+
+    plans=mm.Plan.objects.all()
+    for plan in plans:
+        pid=None
+        tree.append({
+            'id': 'plan_%s' % plan.id,
+            'pId': pid,
+            'name': plan.description,
+            'type': 'plan',
+            'textIcon': icon_map.get('plan')
+        })
+
+    cases=mm.Case.objects.all()
+    for case in cases:
+        kind,pi=_get_node_parent_info('case',case.id)
+        if kind is None:
+            continue
+        pid='{}_{}'.format(kind,pi)
+        if _get_top_level_name('case_{}'.format(case.id))=='product':
+            tree.append({
+                'id': 'case_%s' % case.id,
+                'pId': pid,
+                'name': case.description,
+                'type': 'case',
+                'textIcon': icon_map.get('case')
+            })
+
+    steps=mm.Step.objects.all()
+    for step in steps:
+        kind,pi=_get_node_parent_info('step',step.id)
+        if kind is None:
+            continue
+        pid='{}_{}'.format(kind,pi)
+        if _get_top_level_name('step_{}'.format(step.id))=='product':
+            tree.append({
+                'id': 'step_%s' % step.id,
+                'pId': pid,
+                'name': step.description,
+                'type': 'step',
+                'textIcon': icon_map.get('step')
+            })
+
+    businesses=mm.BusinessData.objects.all()
+    for business in businesses:
+        kind,pi=_get_node_parent_info('business',business.id)
+        if kind is None:
+            continue
+        pid='{}_{}'.format(kind,pi)
+        if _get_top_level_name('business_{}'.format(business.id))=='product':
+            tree.append({
+                'id': 'business_%s' % business.id,
+                'pId': pid,
+                'name': business.businessname,
+                'type': 'business',
+                'textIcon': icon_map.get('business')
+            })
+
+    root={'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
+    tree.append(root)
+    return tree
+
+def get_full_tree_two():
+    def _get_top_level_name(tid):
+        node_id = tid.split('_')[1]
+        node_type = tid.split('_')[0]
+        while 1:
+            of=mm.Order.objects.filter(Q(kind__icontains='_{}'.format(node_type))&Q(follow_id=node_id))
+            if of.count()==1:
+                node_type=of[0].kind.split('_')[0]
+                node_id=of[0].main_id
+            elif of.count()==0:
+                return node_type
+    tree=[]
+    #
+    products=mm.Product.objects.all()
+    for product in products:
+        tree.append({
+            'id': 'product_%s' % product.id,
+            'pId': -1,
+            'name': product.description,
+            'type': 'product',
+            'textIcon': icon_map.get('product')
+        })
+
+    plans=mm.Plan.objects.all()
+    for plan in plans:
+        kind,pi=_get_node_parent_info('plan',plan.id)
+        if kind is None:
+            continue
+        pid='{}_{}'.format(kind,pi)
+        if _get_top_level_name('plan_{}'.format(plan.id))=='product':
+            tree.append({
+                'id': 'plan_%s' % plan.id,
+                'pId': pid,
+                'name': plan.description,
+                'type': 'plan',
+                'textIcon': icon_map.get('plan')
+            })
+
+    cases=mm.Case.objects.all()
+    for case in cases:
+        kind,pi=_get_node_parent_info('case',case.id)
+        if kind is None:
+            continue
+        pid='{}_{}'.format(kind,pi)
+        if _get_top_level_name('case_{}'.format(case.id))=='product':
+            tree.append({
+                'id': 'case_%s' % case.id,
+                'pId': pid,
+                'name': case.description,
+                'type': 'case',
+                'textIcon': icon_map.get('case')
+            })
+
+    steps=mm.Step.objects.all()
+    for step in steps:
+        kind,pi=_get_node_parent_info('step',step.id)
+        if kind is None:
+            continue
+        pid='{}_{}'.format(kind,pi)
+        if _get_top_level_name('step_{}'.format(step.id))=='product':
+            tree.append({
+                'id': 'step_%s' % step.id,
+                'pId': pid,
+                'name': step.description,
+                'type': 'step',
+                'textIcon': icon_map.get('step')
+            })
+
+    businesses=mm.BusinessData.objects.all()
+    for business in businesses:
+        kind,pi=_get_node_parent_info('business',business.id)
+        if kind is None:
+            continue
+        pid='{}_{}'.format(kind,pi)
+        if _get_top_level_name('business_{}'.format(business.id))=='product':
+            tree.append({
+                'id': 'business_%s' % business.id,
+                'pId': pid,
+                'name': business.businessname,
+                'type': 'business',
+                'textIcon': icon_map.get('business')
+            })
+
+    root={'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
+    tree.append(root)
+    return tree
 
 
 
@@ -2029,14 +2213,23 @@ def _get_node_parent_info(node_type, node_id):
             node_type = 'business'
         
         kindlike = '_%s' % node_type
-        o = mm.Order.objects.get(Q(kind__contains=kindlike) & Q(follow_id=node_id),isdelete=0)
+        print('kindlike:',kindlike)
+        print(node_id)
+        try:
+            o = mm.Order.objects.get(Q(kind__contains=kindlike) & Q(follow_id=node_id),isdelete=0)
+        except:
+            return (None,None)
         return (o.kind.split('_')[0], o.main_id)
 
 
 def _get_case_parent_info(case_id):
     # logger.info('del case id=>',case_id)
     case_desp = mm.Case.objects.get(id=case_id).description
-    o = list(mm.Order.objects.filter(Q(kind__contains='_case') & Q(follow_id=case_id),isdelete=0))[0]
+    o=[]
+    try:
+        o = list(mm.Order.objects.filter(Q(kind__contains='_case') & Q(follow_id=case_id),isdelete=0))[0]
+    except:
+        return (None,None)
     # logger.info('order=>',o)
     kind = o.kind.split('_')[0]
     # logger.info('获得文件夹[%s]上层节点类型=>%s'%(case_desp,kind))
@@ -2730,16 +2923,7 @@ def _update_object(target,diff):
             if oldvalue==diff[attrname][0]:
                 setattr(target, attrname, diff[attrname][1])
                 logger.info('==调整属性{} {}->{}'.format(attrname,diff[attrname][0],diff[attrname][1]))
-            # else:
-            #     try:
-            #         d=difflib.Differ()
-            #         difflist=list(d.compare(diff[attrname][0], diff[attrname][1]))
-            #         attrvalue=_compute_attribute(difflist,getattr(target,attrname))
-            #         setattr(target, attrname,attrvalue)
-            #         logger.info('==调整属性{} {}->{}'.format(attrname,oldvalue,attrvalue))
-            #     except:
-            #         #get_next_by_create_time
-            #         logger.info('忽略更新属性{} :\n{}'.format(attrname,traceback.format_exc()))
+
 
     target.save()
     logger.info('==调整结束==')

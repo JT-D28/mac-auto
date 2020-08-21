@@ -14,7 +14,6 @@ from ME2.configs import confs
 def timedTask():
 	print(datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3])
 
-
 def main():
 	os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ME2.settings')
 	try:

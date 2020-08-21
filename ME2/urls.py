@@ -48,7 +48,9 @@ if DEBUG:
 
 try:
 	from manager.operate.cron import Cron
+	from tools.test import TreeUtil
 	Cron.recovertask()
+	TreeUtil.clear_cache()
 except:
 	pass
 

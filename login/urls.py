@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path
 from . import views
@@ -29,5 +30,6 @@ urlpatterns = [
 	path('addaccount/', views.addaccount),
 	path('delaccount/', views.delaccount),
 	path('editaccount/', views.editaccount),
+	url(r'^getbusinessnum/(?P<id>.*?)/(?P<total>.*?)$',views.getbusinessnum),
 
 ]

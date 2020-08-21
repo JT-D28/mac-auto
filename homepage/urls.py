@@ -5,7 +5,7 @@ urlpatterns = [
 	path('', views.homepage),
 	path('queryproduct/', views.queryproduct),
 	path('queryplan/', views.queryplan),
-	path('queryplanlist/',views.queryplanlist),
+	path('queryplanlist/', views.queryplanlist),
 	path('queryallplan/', views.queryallplan),
 	path('querytaskid/', views.querytaskid),
 	path('globalsetting/', views.globalsetting),
@@ -37,10 +37,11 @@ urlpatterns = [
 	path('planreport/', views.planreport),
 	path('planrunnum/', views.planrunnum),
 	path('planpassrate/', views.planpassrate),
-	path('planRunChart/',views.planRunChart),
-	path('planBusinessNum/',views.planBusinessNum),
-	path('HasJacoco/',views.HasJacoco),
-	path('queryCoveryInfo/',views.queryCoveryInfo),
-	path('queryGitCommit/',views.queryGitCommit),
-	path('queryJenkinsUpdatetimes/',views.queryJenkinsUpdatetimes)
+	path('planRunChart/', views.planRunChart),
+	path('planBusinessNum/', views.planBusinessNum),
+	path('HasJacoco/', views.HasJacoco),
+	path('HasGit/', views.HasGit),
+	path('queryCoveryInfo/', views.queryCoveryInfo),
+	path('queryGitCommit/', views.queryGitCommit),
+	path('queryJenkinsUpdatetimes/', views.queryJenkinsUpdatetimes)
 ]

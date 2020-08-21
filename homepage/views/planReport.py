@@ -16,7 +16,7 @@ from manager.operate.mongoUtil import Mongo
 from numpy import *
 
 def planreport(request):
-	return render(request, 'planreport.html')
+	return render(request, 'planreport1.html')
 
 
 @csrf_exempt
@@ -103,6 +103,21 @@ def HasJacoco(request):
 	except:
 		return JsonResponse({'has':'0'})
 
+
+@csrf_exempt
+def HasGit(request):
+	productid = request.POST.get('productid')
+	try:
+		service=[]
+		gitset = Jenkins.objects.get(productid=productid)
+		if gitset.gitlaburl and gitset.gitlabtoken and gitset.gitpath:
+			return JsonResponse({'hasGit': '1'})
+		else:
+			return JsonResponse({'hasGit': '0'})
+	except:
+		return JsonResponse({'hasGit':'0'})
+
+
 @csrf_exempt
 def queryCoveryInfo(request):
 	productid = request.POST.get('productid')
@@ -132,29 +147,33 @@ def queryCoveryInfo(request):
 			cursor.execute(sql,[i])
 			desc = cursor.description
 			maps[i] = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-	print(maps)
 	for jobname,temp in maps.items():
-		data = json.loads(temp[0]['coverydata'].replace("'", '"'))
-		for j in jobmap[jobname]:
-			jsond = data[j]
-			for m in coveragelist:
-				for k in items:
-					if k in ['percentage', 'percentagefloat']:
-						jsond[m][k] = round(res[m][k] + jsond[m][k] / jobnum, 2)
-					else:
-						jsond[m][k] = res[m][k] + jsond[m][k]
-			res = jsond.copy()
-
-		data1 = json.loads(temp[1]['coverydata'].replace("'", '"'))
-		for j in jobmap[jobname]:
-			jsond1 = data1[j]
-			for m in coveragelist:
-				for k in items:
-					if k in ['percentage', 'percentagefloat']:
-						jsond1[m][k] = round(lastres[m][k] + jsond1[m][k] / jobnum, 2)
-					else:
-						jsond1[m][k] = lastres[m][k] + jsond1[m][k]
-			lastres = jsond1.copy()
+		try:
+			data = json.loads(temp[0]['coverydata'].replace("'", '"'))
+			for j in jobmap[jobname]:
+				jsond = data[j]
+				for m in coveragelist:
+					for k in items:
+						if k in ['percentage', 'percentagefloat']:
+							jsond[m][k] = round(res[m][k] + jsond[m][k] / jobnum, 2)
+						else:
+							jsond[m][k] = res[m][k] + jsond[m][k]
+				res = jsond.copy()
+		except:
+			pass
+		try:
+			data1 = json.loads(temp[1]['coverydata'].replace("'", '"'))
+			for j in jobmap[jobname]:
+				jsond1 = data1[j]
+				for m in coveragelist:
+					for k in items:
+						if k in ['percentage', 'percentagefloat']:
+							jsond1[m][k] = round(lastres[m][k] + jsond1[m][k] / jobnum, 2)
+						else:
+							jsond1[m][k] = lastres[m][k] + jsond1[m][k]
+				lastres = jsond1.copy()
+		except:
+			pass
 	timelist = [int(i[0]['time']) if i[0]['time'] not in [None,''] else 0 for i in maps.values()]
 	time = max(timelist)
 	timelist = [int(i[1]['time']) if i[1]['time'] not in [None,''] else 0 for i in maps.values()]
@@ -204,15 +223,19 @@ def queryJenkinsUpdatetimes(request):
 			pass
 	planidlist = list(Order.objects.values_list('follow_id',flat=True).filter(main_id=productid,kind='product_plan',isdelete=0))
 	jobcovertimes = 0
-	timeSpent= 0
+	aspend =[]
+	totalcount = 0
 	for id in planidlist:
+		timeSpent = 0
 		query = {'planid': int(id),'info.runkind': {'$in':['1','3']}, 'timestamp': {'$lt': endtime, '$gt': starttime}}
 		jobcovertimes += Mongo.taskinfo().find(query).count()
 		ms = Mongo.taskinfo().find(query)
 		for m in ms:
-			timeSpent += m['info']['spend']
-	print(jobcovertimes,"jobcovertimes")
-	averageTimeSpent = round(timeSpent/(60*jobcovertimes))
+			print(m['info']['spend']/60)
+			timeSpent += m['info']['spend']/60
+		totalcount+=ms.count()
+		aspend.append(timeSpent*ms.count())
+	averageTimeSpent = round(sum(aspend)/totalcount,2)
 	return JsonResponse({'jenkinsUpdatetimes': 1,'jobcovertimes':jobcovertimes,'averageTimeSpent':averageTimeSpent})
 
 

@@ -18,96 +18,68 @@ os.environ['NLS_LANG'] = 'SIMPLIFIED CHINESE_CHINA.UTF8'
 
 
 class Mysqloper:
-	_pool = {}
-	
-	def __init__(self):
-		
-		self.sqlmax = 499
-		self.sqlcount = 0
-	
-	def db_connect(self, configname, scheme):
-		conname = configname
+
+	def db_connect(self, conname, scheme):
 		if conname is None:
 			raise RuntimeError('传入配置错误 未知数据库连接名！')
 		
-		logger.info('===查询和使用配置方案[%s]数据库[%s]的配置信息' % (scheme, configname))
-		
-		# c=Mysqloper._pool.get(str(conname),None)
-		c = None
-		if c is not None:
-			
-			print("=>从连接池获取到一个可用配置 =>")
-			conn = c
-			return ('success', conn)
-		
-		else:
-			
-			try:
+		logger.info('===查询和使用配置方案[%s]数据库[%s]的配置信息' % (scheme, conname))
+
+		try:
+			logger.info('查询DBCON description={} scheme={}'.format(conname.strip(),scheme))
+			dbcon = models.DBCon.objects.get(description=conname.strip(), scheme=scheme)
+			self.dbtype = dbcon.kind
+			self.dbname = dbcon.dbname
+			# oracle不需要这两项
+			self.host = dbcon.host
+			self.port = dbcon.port
+			self.user = dbcon.username
+			self.pwd = dbcon.password
+
+			logger.info("数据库配置所属方案=>", dbcon.scheme)
+			logger.info("数据库类型=>", self.dbtype)
+			logger.info("数据库名(服务名|SID)=>", self.dbname)
+			logger.info("数据库地址=>", self.host, self.port)
+			logger.info("数据库账号=>", self.user, self.pwd)
 				
-				# print(len(conname),len(conname.strip()))
-				logger.info('查询DBCON description={} scheme={}'.format(conname.strip(),scheme))
-				dbcon = models.DBCon.objects.get(description=conname.strip(), scheme=scheme)
-				
-				self.dbtype = dbcon.kind
-				self.dbname = dbcon.dbname
-				# oracle不需要这两项
-				self.host = dbcon.host
-				self.port = dbcon.port
-				#
-				self.user = dbcon.username
-				self.pwd = dbcon.password
-				
-				# print("=>没查到可用配置,准备新配一个")
-				logger.info("数据库配置所属方案=>", dbcon.scheme)
-				logger.info("数据库类型=>", self.dbtype)
-				logger.info("数据库名(服务名|SID)=>", self.dbname)
-				logger.info("数据库地址=>", self.host, self.port)
-				logger.info("数据库账号=>", self.user, self.pwd)
-				
-				if self.dbtype.lower() == 'mysql':
-					import pymysql
-					
-					conn = pymysql.connect(db=self.dbname, host=self.host,
+			if self.dbtype.lower() == 'mysql':
+				import pymysql
+				conn = pymysql.connect(db=self.dbname, host=self.host,
 					                       port=int(self.port),
 					                       user=self.user,
 					                       password=self.pwd,
 					                       charset='utf8mb4',connect_timeout=1000)
-				
-				
-				elif self.dbtype.lower() == 'oracle_servicename':
-					import cx_Oracle
-					
-					dsn = cx_Oracle.makedsn(self.host, int(self.port), service_name=self.dbname)
-					conn = cx_Oracle.connect(self.user, self.pwd, dsn)
-				
-				elif self.dbtype.lower() == 'oracle_sid':
-					import cx_Oracle
-					dsn = cx_Oracle.makedsn(self.host, int(self.port), sid=self.dbname)
-					conn = cx_Oracle.connect(self.user, self.pwd, dsn)
-				
-				elif self.dbtype.lower() == 'db2':
-					import ibm_db_dbi
-					conn = ibm_db_dbi.connect("PORT=" + str(self.port) + ";PROTOCOL=TCPIP;",
+
+			elif self.dbtype.lower() == 'oracle_servicename':
+				import cx_Oracle
+				dsn = cx_Oracle.makedsn(self.host, int(self.port), service_name=self.dbname)
+				conn = cx_Oracle.connect(self.user, self.pwd, dsn)
+
+			elif self.dbtype.lower() == 'oracle_sid':
+				import cx_Oracle
+				dsn = cx_Oracle.makedsn(self.host, int(self.port), sid=self.dbname)
+				conn = cx_Oracle.connect(self.user, self.pwd, dsn)
+
+			elif self.dbtype.lower() == 'db2':
+				import ibm_db_dbi
+				conn = ibm_db_dbi.connect("PORT=" + str(self.port) + ";PROTOCOL=TCPIP;",
 					                          user=self.user,
 					                          password=self.pwd,
 					                          host=self.host,
 					                          database=self.dbname)
 				
-				elif self.dbtype.lower() == 'pgsql':
-					import psycopg2 as pg2
-					conn = pg2.connect(database=self.dbname, user=self.user, password=self.pwd, host=self.host,
+			elif self.dbtype.lower() == 'pgsql':
+				import psycopg2 as pg2
+				conn = pg2.connect(database=self.dbname, user=self.user, password=self.pwd, host=self.host,
 					                   port=int(self.port))
 				
-				print("连接成功！")
-				#:
-				Mysqloper._pool[str(conname)] = conn
-				
-				return ('success', conn)
-			except Exception as e:
-				print("数据库配置名=>", conname, scheme)
-				error = traceback.format_exc()
-				print(error)
-				return ('error', ("数据库连接失败 请检查配置方案[%s]下的数据库[%s]是否正确配置" % (scheme, configname)))
+			print("连接成功！")
+			return 'success', conn
+
+		except Exception as e:
+			error = traceback.format_exc()
+			print("数据库配置名=>", conname, scheme,error)
+			return 'error', ("数据库连接失败 请检查配置方案[%s]下的数据库[%s]是否正确配置" % (scheme, conname))
 	
 	def db_commit(self):
 		try:
@@ -116,18 +88,10 @@ class Mysqloper:
 		except:
 			pass
 	
-	def db_close(self):
-		try:
-			[con.close() for con in Mysqloper._pool.values()]
-		
-		except  Exception as ee:
-			return ('关闭数据库连接出现异常，请确认')
-	
-	def db_execute2(self, sql, taskid=None, callername=None):
+	def db_execute2(self, sql, taskid=None):
 		logger.info('='*200)
-		logger.info('dbexecute2 传入taskid:{} callername:{},sql:{}'.format(taskid,callername,sql))
+		logger.info('dbexecute2 传入taskid:{} sql:{}'.format(taskid,sql))
 		self.taskid =taskid
-		self.callername = callername
 		reslist = []
 		print('db_execute2执行：'+sql)
 		print('##' * 100)
@@ -137,7 +101,7 @@ class Mysqloper:
 			for sql in sqls:
 				# print(type(sql),sql)
 				# print(type(conname),conname)
-				res, msg = self.db_execute("%s@%s" % (sql, conname), taskid=taskid, callername=callername)
+				res, msg = self.db_execute("%s@%s" % (sql, conname), taskid=taskid)
 				# print(sql)
 				reslist.append(msg)
 				if res is not 'success':
@@ -148,14 +112,13 @@ class Mysqloper:
 			print(traceback.format_exc())
 			return ('error', 'sql[%s]执行报错[%s]@' % (sql, traceback.format_exc()))
 	
-	def db_execute(self, sql, taskid=None, callername=None):
-		
+	def db_execute(self, sql, taskid=None):
 		"""
 		返回(sucess/fail/error,结果/消息)
 		sql查询返回结果
 		非查询返回影响条数
 		"""
-		logger.info('传入taskid:{} callername:{},sql:{}'.format(taskid,callername,sql))
+		logger.info('db_execute传入taskid:{} ,sql:{}'.format(taskid,sql))
 		sqlresult, error = None, ''
 		conname = None
 		# 判断当前连接是否正常
@@ -180,36 +143,26 @@ class Mysqloper:
 				if msg is not 'success':
 					return (msg, self.conn)
 			
-			# self.db_commit()
 			cur = self.conn.cursor()  # 获取一个游标
 			sql = sql.replace(chr(13), '').replace(chr(10), '').strip()
-			self.sqlcount += 1
-			print('sqlfda=>',sql,len(sql),len(sql.strip()))
-			cur.execute(str(sql))
-			# 查询sql时候
-			if re.match(r'(select).*(from).+(where){0,1}.*', sql.lower()) or re.match(r'(select).*(curdate).*',sql.lower()):
-				data = cur.fetchall()
+			cur.execute(sql)
+			if sql.lower().startswith("select"):
+				data = list(cur.fetchall())
 				cur.close()
-				data = list(data)
-				print("sql[%s]执行结果=>%s" % (sql.lower(), data))
+				print("sql[%s]执行结果=>%s" % (sql, data))
 				if data and len(data) > 0:
-					l1 = len(data)
-					l2 = len(data[0])
 					# 单组数据单字段
-					if l1 == 1 and l2 == 1:
+					if len(data) == 1 and len(data[0]) == 1:
 						sqlresult = str(data[0][0])
 					# 多字段 or 多组数据
 					else:
-						logger.error('查询[%s]重复字段:',data)
-						return ('error', "sql[%s]查询结果为%s存在多组数据或多个字段 不支持" % (sql,data))
-				elif sqlresult == None:
-					viewcache(taskid, "sql <span style='color:#009999;'>%s</span> 查询无结果"%(sql))
-					return ('success', '')
-				
+						logger.error('查询[%s]多字段:',data)
+						return ('error', "sql[%s]查询结果为%s存在多组数据或多个字段,请修改" % (sql,data))
 				else:
-					return ('fail', '查询结果为空[%s]' % sql)
-			
-			##非查询sql
+					viewcache(taskid, "sql <span style='color:#009999;'>%s</span> 查询无结果" % (sql))
+					# 没有结果时设个默认值，减少执行后面的语句报错
+					return ('success', '')
+			#非查询sql
 			else:
 				sqlresult = cur.rowcount
 				self.db_commit()
@@ -217,22 +170,19 @@ class Mysqloper:
 			
 			msg = "[<span style='color:#009999;'>%s</span>]执行sql <span style='color:#009999;'>%s</span> 结果为 <span style='color:#009999;'>%s</span>" % (
 				conname, sql, sqlresult)
-			# print(msg)
 			viewcache(taskid, msg)
-			
 			return ('success', sqlresult)
 		
-		except Exception as ee:
-			# traceback.print_exc()
-			# return RuntimeError('执行sql[%s],发生未知错误[%s].'%(sql,str(ee)))
+		except Exception as e:
 			print(traceback.format_exc())
-			return ('error', "数据库[%s]执行sql[%s]发生异常:\n[%s]" % (conname, sql, traceback.format_exc()))
+			return ('error', "数据库[%s]执行sql[%s]发生异常:\n[%s]" % (conname, sql, e))
 		
 		finally:
 			try:
 				self.conn.close()
 			except:
 				pass
+
 	def db_exec_test(self,sql,scheme):
 		logger.info('传入sql:{},数据连接方案:{}'.format(sql, scheme))
 		try:
@@ -244,10 +194,9 @@ class Mysqloper:
 				return (msg, self.conn)
 			cur = self.conn.cursor()  # 获取一个游标
 			sql = sql.replace(chr(13), '').replace(chr(10), '').strip()
-			self.sqlcount += 1
 			cur.execute(str(sql))
 			data = list(cur.fetchall())
-			print("sql[%s]执行结果=>%s" % (sql.lower(), data))
+			print("sql[%s]执行结果=>%s" % (sql, data))
 			state,sqlresult = 'fail',''
 			msg = '%s----查询无结果'%sql
 			if data:

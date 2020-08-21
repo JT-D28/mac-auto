@@ -24,7 +24,7 @@ def queryplanlist(request):
 		try:
 			description = Plan.objects.get(id=planid).description
 			planlist.append({
-				'id': planid,
+				'id': str(planid),
 				'name': description,
 			})
 		except:

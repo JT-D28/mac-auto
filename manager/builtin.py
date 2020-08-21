@@ -70,7 +70,6 @@ def dbexecute(sql, **kws):
 
     """
     taskid=kws['taskid']
-    callername=kws['callername']
 
     if taskid is None:
         return 'error', 'taskid为空'
@@ -80,10 +79,10 @@ def dbexecute(sql, **kws):
         sql = sql.split(";")[:-1] if sql.endswith(";") else sql.split(";")[0]
         dbnamecache = get_top_common_config(taskid)
         print("调用内置函数=>dbexecute \nsql=>", sql)
-        return op.db_execute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
+        return op.db_execute("%s@%s" % (sql, dbnamecache), taskid=taskid)
     else:
         print("调用内置函数=>dbexecute \nsql=>", sql)
-        return op.db_execute(sql, taskid=taskid, callername=callername)
+        return op.db_execute(sql, taskid=taskid)
 
 
 def dbexecute2(sql, **kws):
@@ -93,7 +92,6 @@ def dbexecute2(sql, **kws):
     否则返回'success'
     """
     taskid=kws['taskid']
-    callername=kws['callername']
 
     if taskid is None:
         return 'error', 'taskid为空'
@@ -119,7 +117,7 @@ def dbexecute2(sql, **kws):
                     conname = sql.split('@')[1]
                     for sql in sqls:
                         if sql!='':
-                            res, msg = dbexecute("%s@%s" % (sql, conname), taskid=taskid, callername=callername)
+                            res, msg = dbexecute("%s@%s" % (sql, conname), taskid=taskid)
                             print('执行结果=>', (res, msg))
                             if res != 'success':
                                 return res, msg
@@ -129,7 +127,7 @@ def dbexecute2(sql, **kws):
                     dbnamecache = get_top_common_config(taskid)
                     for sql in sqls:
                         if sql != '':
-                            res, msg = dbexecute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
+                            res, msg = dbexecute("%s@%s" % (sql, dbnamecache), taskid=taskid)
                             print('执行结果=>', (res, msg))
                             if res != 'success':
                                 return res, msg
@@ -140,7 +138,7 @@ def dbexecute2(sql, **kws):
             dbnamecache = get_top_common_config(taskid)
             for sql in sqls2:
                 if sql != '':
-                    res, msg = dbexecute("%s@%s" % (sql, dbnamecache), taskid=taskid, callername=callername)
+                    res, msg = dbexecute("%s@%s" % (sql, dbnamecache), taskid=taskid)
                     print('执行结果=>', (res, msg))
                     if res != 'success':
                         return res, msg

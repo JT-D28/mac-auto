@@ -1595,7 +1595,7 @@ def get_link_left_tree(nid):
     if history.exists():
         logger.info('有历史数据')
         datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True,'checked':True})
-        productlist = list(mm.Product.objects.all().exclude(isdelete=1))
+        productlist = list(mm.Product.objects.exclude(isdelete=1))
         for product in productlist:
             if str(product.id)==str(parent_product_id):
                 #mm.Product.objects.get(id=parent_product_id).description
@@ -1611,7 +1611,7 @@ def get_link_left_tree(nid):
     else:
         logger.info('无历史数据')
         datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True})
-        productlist = list(mm.Product.objects.all().exclude(isdelete=1))
+        productlist = list(mm.Product.objects.exclude(isdelete=1))
         # logger.info('productlist:',productlist)
         for product in productlist:
             if str(product.id) == str(parent_product_id):
@@ -1645,7 +1645,7 @@ def get_link_right_tree(nid):
     if history.exists():
         logger.info('有历史数据')
         datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True,'checked':True})
-        productlist = list(mm.Product.objects.all().exclude(isdelete=1))
+        productlist = list(mm.Product.objects.exclude(isdelete=1))
         # logger.info('productlist:',productlist)
         for product in productlist:
             datanode.append({
@@ -1661,7 +1661,7 @@ def get_link_right_tree(nid):
     else:
         logger.info('无历史数据')
         datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True})
-        productlist = list(mm.Product.objects.all().exclude(isdelete=1))
+        productlist = list(mm.Product.objects.exclude(isdelete=1))
         # logger.info('productlist:',productlist)
         for product in productlist:
             datanode.append({
@@ -1773,68 +1773,68 @@ def get_full_tree_three():
                 return node_type
     tree=[]
     #
-    products=mm.Product.objects.all()
+    products=mm.Product.objects.values('id','description')
     for product in products:
         tree.append({
-            'id': 'product_%s' % product.id,
+            'id': 'product_%s' % product['id'],
             'pId': -1,
-            'name': product.description,
+            'name': product['description'],
             'type': 'product',
             'textIcon': icon_map.get('product')
         })
 
-    plans=mm.Plan.objects.all()
+    plans=mm.Plan.objects.values('id','description')
     for plan in plans:
         pid=None
         tree.append({
-            'id': 'plan_%s' % plan.id,
+            'id': 'plan_%s' % plan['id'],
             'pId': pid,
-            'name': plan.description,
+            'name': plan['description'],
             'type': 'plan',
             'textIcon': icon_map.get('plan')
         })
 
-    cases=mm.Case.objects.all()
+    cases=mm.Case.objects.values('id','description')
     for case in cases:
-        kind,pi=_get_node_parent_info('case',case.id)
+        kind,pi=_get_node_parent_info('case',case['id'])
         if kind is None:
             continue
         pid='{}_{}'.format(kind,pi)
-        if _get_top_level_name('case_{}'.format(case.id))=='product':
+        if _get_top_level_name('case_{}'.format(case['id']))=='product':
             tree.append({
-                'id': 'case_%s' % case.id,
+                'id': 'case_%s' % case['id'],
                 'pId': pid,
-                'name': case.description,
+                'name': case['description'],
                 'type': 'case',
                 'textIcon': icon_map.get('case')
             })
 
-    steps=mm.Step.objects.all()
+    steps=mm.Step.objects.values('id','description')
     for step in steps:
-        kind,pi=_get_node_parent_info('step',step.id)
+        kind,pi=_get_node_parent_info('step',step['id'])
         if kind is None:
             continue
         pid='{}_{}'.format(kind,pi)
-        if _get_top_level_name('step_{}'.format(step.id))=='product':
+        if _get_top_level_name('step_{}'.format(step['id']))=='product':
             tree.append({
-                'id': 'step_%s' % step.id,
+                'id': 'step_%s' % step['id'],
                 'pId': pid,
-                'name': step.description,
+                'name': step['description'],
                 'type': 'step',
                 'textIcon': icon_map.get('step')
             })
 
-    businesses=mm.BusinessData.objects.all()
+    businesses=mm.BusinessData.objects.values('id','businessname')
     for business in businesses:
-        kind,pi=_get_node_parent_info('business',business.id)
+        kind,pi=_get_node_parent_info('business',business['id'])
         if kind is None:
             continue
         pid='{}_{}'.format(kind,pi)
-        if _get_top_level_name('business_{}'.format(business.id))=='product':
+        if _get_top_level_name('business_{}'.format(business['id']))=='product':
             tree.append({
-                'id': 'business_%s' % business.id,
+                'id': 'business_%s' % business['id'],
                 'pId': pid,
-                'name': business.businessname,
+                'name': business['businessname'],
                 'type': 'business',
                 'textIcon': icon_map.get('business')
             })
@@ -1856,72 +1856,72 @@ def get_full_tree_two():
                 return node_type
     tree=[]
     #
-    products=mm.Product.objects.all()
+    products=mm.Product.objects.values('id','description')
     for product in products:
         tree.append({
-            'id': 'product_%s' % product.id,
+            'id': 'product_%s' % product['id'],
             'pId': -1,
-            'name': product.description,
+            'name': product['description'],
             'type': 'product',
             'textIcon': icon_map.get('product')
         })
 
-    plans=mm.Plan.objects.all()
+    plans=mm.Plan.objects.values('id','description')
     for plan in plans:
-        kind,pi=_get_node_parent_info('plan',plan.id)
+        kind,pi=_get_node_parent_info('plan',plan['id'])
         if kind is None:
             continue
         pid='{}_{}'.format(kind,pi)
-        if _get_top_level_name('plan_{}'.format(plan.id))=='product':
+        if _get_top_level_name('plan_{}'.format(plan['id']))=='product':
             tree.append({
-                'id': 'plan_%s' % plan.id,
+                'id': 'plan_%s' % plan['id'],
                 'pId': pid,
-                'name': plan.description,
+                'name': plan['description'],
                 'type': 'plan',
                 'textIcon': icon_map.get('plan')
             })
 
-    cases=mm.Case.objects.all()
+    cases=mm.Case.objects.values('id','description')
     for case in cases:
-        kind,pi=_get_node_parent_info('case',case.id)
+        kind,pi=_get_node_parent_info('case',case['id'])
         if kind is None:
             continue
         pid='{}_{}'.format(kind,pi)
-        if _get_top_level_name('case_{}'.format(case.id))=='product':
+        if _get_top_level_name('case_{}'.format(case['id']))=='product':
             tree.append({
-                'id': 'case_%s' % case.id,
+                'id': 'case_%s' % case['id'],
                 'pId': pid,
-                'name': case.description,
+                'name': case['description'],
                 'type': 'case',
                 'textIcon': icon_map.get('case')
             })
 
-    steps=mm.Step.objects.all()
+    steps=mm.Step.objects.values('id','description')
     for step in steps:
-        kind,pi=_get_node_parent_info('step',step.id)
+        kind,pi=_get_node_parent_info('step',step['id'])
         if kind is None:
             continue
         pid='{}_{}'.format(kind,pi)
-        if _get_top_level_name('step_{}'.format(step.id))=='product':
+        if _get_top_level_name('step_{}'.format(step['id']))=='product':
             tree.append({
-                'id': 'step_%s' % step.id,
+                'id': 'step_%s' % step['id'],
                 'pId': pid,
-                'name': step.description,
+                'name': step['description'],
                 'type': 'step',
                 'textIcon': icon_map.get('step')
             })
 
-    businesses=mm.BusinessData.objects.all()
+    businesses=mm.BusinessData.objects.values('id','businessname')
     for business in businesses:
-        kind,pi=_get_node_parent_info('business',business.id)
+        kind,pi=_get_node_parent_info('business',business['id'])
         if kind is None:
             continue
         pid='{}_{}'.format(kind,pi)
-        if _get_top_level_name('business_{}'.format(business.id))=='product':
+        if _get_top_level_name('business_{}'.format(business['id']))=='product':
             tree.append({
-                'id': 'business_%s' % business.id,
+                'id': 'business_%s' % business['id'],
                 'pId': pid,
-                'name': business.businessname,
+                'name': business['businessname'],
                 'type': 'business',
                 'textIcon': icon_map.get('business')
             })
@@ -2377,30 +2377,30 @@ def queryplanlink(request):
         for link in links:
             if link.p2 in set([x for x in right]):
                 continue;
-            de=mm.Plan.objects.get(id=link.p2).description
+            # de=mm.Plan.objects.get(id=link.p2).description
             right.append('plan_{}'.format(link.p2))
 
-        plans=mm.Plan.objects.all()
+        plans=mm.Plan.objects.values('id','description')
         for plan in plans:
             # logger.info('indexid:{}'.format(plan.id))
-            if str(plan.id)==curid:
+            if str(plan['id'])==curid:
                 logger.info('左数据忽略 {}'.format(curid))
                 continue;
             left.append({
-                    'description':plan.description,
-                    'nid':'plan_{}'.format(plan.id)
+                    'description':plan['description'],
+                    'nid':'plan_{}'.format(plan['id'])
                 })
 
     else:
-        plans=mm.Plan.objects.all()
+        plans=mm.Plan.objects.values('id','description')
         for plan in plans:
-            if str(plan.id)==curid:
+            if str(plan['id'])==curid:
                 logger.info('左数据忽略 {}'.format(curid))
                 continue;
 
             left.append({
-                    'description':plan.description,
-                    'nid':'plan_{}'.format(plan.id)
+                    'description':plan['description'],
+                    'nid':'plan_{}'.format(plan['id'])
                 })
 
         right=[]

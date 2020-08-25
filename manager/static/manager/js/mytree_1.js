@@ -600,7 +600,7 @@ var tree = {
     _beforeClick: function (treeId, treeNode, clickFlag) {
         if (clickFlag === 2 || clickFlag === 0) {
             if (treeNode.type !== 'product' || treeNode.type !== 'root') {
-                var treeObj = $.fn.zTree.getZTreeObj(this.id);
+                var treeObj = $.fn.zTree.getZTreeObj(treeId);
                 flag = 0;
                 var selectnodes = treeObj.getSelectedNodes();
                 if (selectnodes.length == 1 && selectnodes[0].type !== treeNode.type) {

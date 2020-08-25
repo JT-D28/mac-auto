@@ -370,7 +370,7 @@ class ItfEncoder(XJsonEncoder):
 class CaseEncoder(XJsonEncoder):
 	def __init__(self, **args):
 		super(CaseEncoder, self).__init__(
-			['id', 'author', 'priority', 'description', 'steps', 'createtime', 'updatetime', 'db_id', 'count'], **args)
+			['id', 'author', 'description', 'createtime', 'updatetime', 'db_id', 'count'], **args)
 	
 	def encode(self, obj):
 		L = eval(super(XJsonEncoder, self).encode(obj))
@@ -407,7 +407,7 @@ class CaseEncoder(XJsonEncoder):
 class PlanEncoder(XJsonEncoder):
 	def __init__(self, **args):
 		super(PlanEncoder, self).__init__(
-			['id', 'author', 'last', 'description', 'cases', 'createtime', 'updatetime', 'run_type', 'run_value',
+			['id', 'author', 'last', 'description', 'createtime', 'updatetime', 'run_type',
 			 'mail_config_id', 'db_id', 'is_send_dingding', 'is_send_mail', 'schemename','before_plan','proxy'], **args)
 	
 	def encode(self, obj):
@@ -471,8 +471,8 @@ class FunctionEncoder(XJsonEncoder):
 class StepEncoder(XJsonEncoder):
 	def __init__(self, **args):
 		super(StepEncoder, self).__init__(
-			['id', 'businesstitle', 'author', 'priority', 'interface', 'description', 'headers', 'body', 'db_check',
-			 'itf_check', 'step_type', 'createtime', 'updatetime', 'tag_id', 'temp', 'url', 'content_type', 'method',
+			['id', 'author','description', 'headers', 'body',
+			  'step_type', 'createtime', 'updatetime', 'temp', 'url', 'content_type', 'method',
 			 'db_id', 'count'], **args)
 	
 	def encode(self, obj):
@@ -492,12 +492,6 @@ class StepEncoder(XJsonEncoder):
 			except:
 				print(traceback.format_exc())
 				x['weight'] = '未知'
-			
-			try:
-				tagname = models.Tag.objects.get(id=tag_id.strip()).name
-				x['tagname'] = tagname
-			except:
-				x['tagname'] = ''
 
 		return {
 			"code": 0,

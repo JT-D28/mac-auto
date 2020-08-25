@@ -2915,4 +2915,4 @@ def recyclenodes(type, id):
 
 
 def test(request):
-    return render(request,'manager/test.html')
+    return render(request, 'manager/test.html')

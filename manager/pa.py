@@ -233,10 +233,10 @@ class MessageParser(object):
 				'code': 0,
 				'msg': '',
 				'data': [{
-					'name': x.name,
-					'value': x.id
+					'name': x.get('name'),
+					'value': x.get('id')
 					
-				} for x in list(Template.objects.all())]
+				} for x in list(Template.objects.values('name','id'))]
 			}
 		
 		except:

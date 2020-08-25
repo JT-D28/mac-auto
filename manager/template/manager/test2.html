@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html >
+<html lang="en" style="height: 100%">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+    <title>抓包</title>
+    <style type="text/css">
+
+    #grab-view td:hover{
+        cursor: pointer;
+    }
+    </style>
+</head>
+<body style="height:calc(100% - 40px);padding: 20px">
+<div style="margin-left:100px;">
+    <button id="start" class="layui-btn layui-btn-sm">开始录制</button>
+    <button id="stop" class="layui-btn layui-btn-sm">停止录制</button>
+</div>
+
+    <table id="grab-view" class="layui-table" style="float:left;width:400px!important;margin-right: 20px;">
+        <thead>
+        <td>序号</td>
+        <td>url</td>
+        </thead>
+        <tbody>
+        <tr>
+            <td>1</td>
+            <td keys="a=1&b=2&c=3">http://www.baidu.com/?fa=11</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td keys="a=2&b=3&c=4">http://www.baidu.com/?fa=12</td>
+        </tr>
+                <tr>
+            <td>1</td>
+            <td keys="a=3&b=4&c=5">http://www.baidu.com/?fa=13</td>
+        </tr>
+        </tbody>
+    </table>
+    <table id="key-view" class="layui-table" style="width:200px!important;">
+        <thead>
+        <td>key</td>
+        <td>value</td>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+</body>
+
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+
+<script type="text/javascript">
+
+    layui.use(['jquery'], function () {
+        var $ = layui.jquery;
+        tmp = "<tr><td>#key#</td><td>#value#</td></tr>"
+        {#alert($('[keys]').length)#}
+        $('[keys]').each(function () {
+            $(this).click(function () {
+                console.log('click');
+                try {
+                    $('#key-view tbody').empty();
+                    keys = $(this).attr('keys').split('&');
+
+                    d = {}
+                    for (var i = 0; i < keys.length; i++) {
+                        k = keys[i].split('=')[0]
+                        v = keys[i].split('=')[1]
+                        console.log(k, v)
+                        tmp1 = tmp.replace('#key#', k).replace('#value#', v)
+                        $('#key-view tbody').append(tmp1)
+
+                    }
+                } catch (e) {
+                    $('#key-view tbody').append('')
+
+                }
+
+
+            });
+
+        });
+
+    });
+</script>
+
+
+</html>

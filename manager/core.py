@@ -540,9 +540,9 @@ class BusinessDataEncoder(XJsonEncoder):
 		L = eval(super(XJsonEncoder, self).encode(obj))
 		if not isinstance(L, (list)):
 			L = [L]
-		
-		steps = models.Step.objects.all()
-		
+
+		# steps = models.Step.objects.all()
+		#
 		for x in L:
 			try:
 				
@@ -695,7 +695,7 @@ def getpagedata(data, page, limit):
 	'''
 	返回分页数据与元数据大小
 	'''
-	print('page=>%s limit=>%s' % (page, limit))
+	# print('page=>%s limit=>%s' % (page, limit))
 	if page is None or limit is None:
 		return data, len(data)
 	

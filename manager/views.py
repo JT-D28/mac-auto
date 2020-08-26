@@ -1809,7 +1809,7 @@ def querytreelist(request):
 
     else:
         datanode.append({'id': -1, 'name': '产品池', 'type': 'root', 'textIcon': 'fa fa-pinterest-p33', 'open': True})
-        productlist = list(Product.objects.all().exclude(isdelete=1))
+        productlist = list(Product.objects.exclude(isdelete=1))
         # logger.info('productlist:',productlist)
         for product in productlist:
             datanode.append({
@@ -1845,7 +1845,8 @@ def addtag(request):
     t = Tag()
     try:
 
-        all_name = [_.name for _ in list(Tag.objects.all())]
+        # all_name = [_.name for _ in list(Tag.objects.all())]
+        all_name=Tag.objects.values_list('name',flat=True)
         t.name = request.POST.get('name')
         if t.name in all_name:
             return JsonResponse(pkg(code=3, msg='标签[%s]已存在' % t.name))
@@ -2530,7 +2531,7 @@ def query_transfer_data(request):
     try:
         roleid = request.POST.get('roleid')
         if roleid:
-            olddata = User.objects.all().values('id', 'name')
+            olddata = User.objects.values('id', 'name')
             role = Role.objects.get(id=roleid)
 
             # lfdata=[x for x in olddata if x['id'] not in[user['id'] for user in role.users]]
@@ -2540,7 +2541,7 @@ def query_transfer_data(request):
 
         else:
 
-            lfdata = list(User.objects.all().values('id', 'name'))
+            lfdata = list(User.objects.values('id', 'name'))
 
         logger.info(type(lfdata))
 

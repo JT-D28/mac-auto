@@ -161,10 +161,9 @@ class RoleData():
     def queryuserrole(cls,userid):
         '''查询用户角色ID
         '''
-        for r in Role.objects.all():
-            u=User.objects.get(id=userid)
-            if u in r.users.all():
-                return r.id
+        u=User.objects.get(id=userid)
+        return u.role_set.values_list('id',flat=True)
+
             
 
 class Grant(object):
@@ -201,11 +200,7 @@ class Grant(object):
 
         user=User.objects.get(name=username)
         user_id=user.id
-        user_role_ids=[]
-
-        for r in Role.objects.all():
-            if user in r.users.all():
-                user_role_ids.append(r.id)
+        user_role_ids=user.role_set.values_list('id',flat=True)
 
         logger.info('用户[%s]ID[%s]'%(username,User.objects.get(name=username).id))
         logger.info('用户[%s]角色ID:%s'%(username,user_role_ids))

@@ -10,6 +10,7 @@ from django.db.models import Q
 from manager import models as mm
 from django.db import connection
 from ME2.settings import logme
+from concurrent.futures import  ThreadPoolExecutor,wait
 
 from login import models as lm
 from .context import *
@@ -1571,15 +1572,64 @@ def get_search_match(searchvalue):
        3.无匹配结果
     '''
     import time
-    #nodes = get_full_tree_two()
-    nodes=TreeUtil.get_tree_data_fast()
-    logger.info('当前树数据：{}'.format(nodes))
-    for node in nodes:
-        if node and searchvalue in node.get('name'):
-            # node['name']="<s>%s</s>"%node['name']
-            # node['name']="<span style='color:red;'>%s</span>"%node['name']
-            _expand_parent(node, nodes)
-    return nodes
+    # nodes = get_full_tree()
+    #     # #nodes=TreeUtil.get_tree_data_fast()
+    #     # logger.info('当前树数据：{}'.format(nodes))
+    #     # for node in nodes:
+    #     #     if node and searchvalue in node.get('name'):
+    #     #         # node['name']="<s>%s</s>"%node['name']
+    #     #         # node['name']="<span style='color:red;'>%s</span>"%node['name']
+    #     #         _expand_parent(node, nodes)
+    #     # return nodes
+    root={'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
+    match_nodes=[]
+    plans=mm.Plan.objects.exclude(isdelete=1).values()
+    cases=mm.Case.objects.exclude(isdelete=1).values()
+    steps=mm.Step.objects.exclude(isdelete=1).values()
+    businesses=mm.BusinessData.objects.values()
+    for x in plans:
+        if x.get('description').__contains__(searchvalue):
+            x['type']='plan'
+            match_nodes.append(x)
+    for x in cases:
+        if x.get('description').__contains__(searchvalue):
+            x['type']='case'
+            match_nodes.append(x)
+    for x in steps:
+        if x.get('description').__contains__(searchvalue):
+            x['type']='step'
+            match_nodes.append(x)
+    for x in businesses:
+        if x.get('businessname').__contains__(searchvalue):
+            x['type']='business'
+            match_nodes.append(x)
+    ##
+
+    show_nodes=[root]
+    for product in mm.Product.objects.all():
+        show_nodes.append({
+            'id': 'product_%s' % product.id,
+            'pId': -1,
+            'name': product.description,
+            'type': 'product',
+            'textIcon': 'fa icon-fa-home'
+        })
+
+    logger.info('match nodes:',match_nodes)
+    exclude=set()
+    pkg=[]
+    for m in match_nodes:
+        _get_node_parent_route_chain(m['type'], m['id'], pkg, exclude)
+
+    if pkg:
+        for x in show_nodes:
+            x['open']=True
+    show_nodes.extend(pkg)
+
+    logger.info('前端返回node:',show_nodes)
+    return show_nodes
+
+
 
 
 def get_link_left_tree(nid):
@@ -1682,40 +1732,41 @@ icon_map = {
     'business': 'fa icon-fa-leaf'
 }
 
+def _get_model_obj(node_type,node_id):
+    node_class=node_type.capitalize()
+    node_class='BusinessData' if node_class=='Business' else node_class
+    obj=eval('mm.{}.objects.get(id={})'.format(node_class,node_id))
+    return obj
 
-def _get_all_parent_node_id(nodeid):
-    curparentinfo=_get_node_parent_info(nodeid.split('_')[0], nodeid.split('_')[1])
+def _get_node_parent_route_chain(node_type,node_id,set_=None,exclude=None,open=False):
+    if node_type is None:return
+    o=_get_model_obj(node_type,node_id)
+    logger.info('获取model对象:',o)
 
-# def _get_all_child_node_id(plannodeid):
-#
-#     wait_del=[]
-#
-#     planid=plannodeid.split('_')[1]
-#     wait_del.append(plannodeid)
-#     cases=getchild('plan_case', planid)
-#     for case in cases:
-#         wait_del.append('case_{}'.format(case.id))
-#         steps=getchild('case_step',case.id)
-#         for step in steps:
-#             wait_del.append('step_{}'.format(step.id))
-#             businesses=getchild('step_business',step.id)
-#             for b in businesses:
-#                 wait_del.append('business_{}'.format(b.id))
-#
-#         ##case-case
-#         caseids=[]
-#         _get_all_case_child_id('case_{}'.format(case.id), caseids)
-#
-#         for caseid in caseids:
-#             wait_del.append('case_{}'.format(caseid))
-#             steps0=getchild('case_step', caseid)
-#             for step0 in steps0:
-#                 wait_del.append('step_{}'.format(step0.id))
-#                 businesses0=getchild('step_business', step0.id)
-#                 for bs in businesses0:
-#                     wait_del.append('business_{}'.format(bs.id))
-#
-#     return list(set(wait_del))
+    kind,pid=_get_node_parent_info(node_type, node_id)
+    if kind is None:
+        return
+    logger.info('父节点:{} {}'.format(kind,pid))
+    if kind=='root':
+        return ;
+
+    id_='{}_{}'.format(node_type,node_id)
+    icon_text=icon_map.get(node_type)
+    logger.info('icon_text=>',icon_text)
+    if id_ not in exclude:
+
+        set_.append({
+            'textIcon': icon_text,
+            'type': node_type,
+            'id': id_,
+            'pId':'{}_{}'.format(kind,pid),
+            'open':open,
+            'name': getattr(o,'description') or getattr(o,'businessname')
+        })
+
+        exclude.add(id_)
+    _get_node_parent_route_chain(kind,pid,set_,exclude,open=True)
+
 
 
 def _get_all_case_child_id(casenodeid,all_):
@@ -1760,179 +1811,180 @@ def get_full_tree_new():
 
     return nodes
 
-def get_full_tree_three():
-    def _get_top_level_name(tid):
-        node_id = tid.split('_')[1]
-        node_type = tid.split('_')[0]
-        while 1:
-            of=mm.Order.objects.filter(Q(kind__icontains='_{}'.format(node_type))&Q(follow_id=node_id))
-            if of.count()==1:
-                node_type=of[0].kind.split('_')[0]
-                node_id=of[0].main_id
-            elif of.count()==0:
-                return node_type
-    tree=[]
-    #
-    products=mm.Product.objects.values('id','description')
-    for product in products:
-        tree.append({
-            'id': 'product_%s' % product['id'],
-            'pId': -1,
-            'name': product['description'],
-            'type': 'product',
-            'textIcon': icon_map.get('product')
-        })
+# def get_full_tree_three():
+#     def _get_top_level_name(tid):
+#         node_id = tid.split('_')[1]
+#         node_type = tid.split('_')[0]
+#         while 1:
+#             of=mm.Order.objects.filter(Q(kind__icontains='_{}'.format(node_type))&Q(follow_id=node_id))
+#             if of.count()==1:
+#                 node_type=of[0].kind.split('_')[0]
+#                 node_id=of[0].main_id
+#             elif of.count()==0:
+#                 return node_type
+#     tree=[]
+#     #
+#     products=mm.Product.objects.values('id','description')
+#     for product in products:
+#         tree.append({
+#             'id': 'product_%s' % product['id'],
+#             'pId': -1,
+#             'name': product['description'],
+#             'type': 'product',
+#             'textIcon': icon_map.get('product')
+#         })
+#
+#     plans=mm.Plan.objects.values('id','description')
+#     for plan in plans:
+#         pid=None
+#         tree.append({
+#             'id': 'plan_%s' % plan['id'],
+#             'pId': pid,
+#             'name': plan['description'],
+#             'type': 'plan',
+#             'textIcon': icon_map.get('plan')
+#         })
+#
+#     cases=mm.Case.objects.values('id','description')
+#     for case in cases:
+#         kind,pi=_get_node_parent_info('case',case['id'])
+#         if kind is None:
+#             continue
+#         pid='{}_{}'.format(kind,pi)
+#         if _get_top_level_name('case_{}'.format(case['id']))=='product':
+#             tree.append({
+#                 'id': 'case_%s' % case['id'],
+#                 'pId': pid,
+#                 'name': case['description'],
+#                 'type': 'case',
+#                 'textIcon': icon_map.get('case')
+#             })
+#
+#     steps=mm.Step.objects.values('id','description')
+#     for step in steps:
+#         kind,pi=_get_node_parent_info('step',step['id'])
+#         if kind is None:
+#             continue
+#         pid='{}_{}'.format(kind,pi)
+#         if _get_top_level_name('step_{}'.format(step['id']))=='product':
+#             tree.append({
+#                 'id': 'step_%s' % step['id'],
+#                 'pId': pid,
+#                 'name': step['description'],
+#                 'type': 'step',
+#                 'textIcon': icon_map.get('step')
+#             })
+#
+#     businesses=mm.BusinessData.objects.values('id','businessname')
+#     for business in businesses:
+#         kind,pi=_get_node_parent_info('business',business['id'])
+#         if kind is None:
+#             continue
+#         pid='{}_{}'.format(kind,pi)
+#         if _get_top_level_name('business_{}'.format(business['id']))=='product':
+#             tree.append({
+#                 'id': 'business_%s' % business['id'],
+#                 'pId': pid,
+#                 'name': business['businessname'],
+#                 'type': 'business',
+#                 'textIcon': icon_map.get('business')
+#             })
+#
+#     root={'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
+#     tree.append(root)
+#     return tree
 
-    plans=mm.Plan.objects.values('id','description')
-    for plan in plans:
-        pid=None
-        tree.append({
-            'id': 'plan_%s' % plan['id'],
-            'pId': pid,
-            'name': plan['description'],
-            'type': 'plan',
-            'textIcon': icon_map.get('plan')
-        })
-
-    cases=mm.Case.objects.values('id','description')
-    for case in cases:
-        kind,pi=_get_node_parent_info('case',case['id'])
-        if kind is None:
-            continue
-        pid='{}_{}'.format(kind,pi)
-        if _get_top_level_name('case_{}'.format(case['id']))=='product':
-            tree.append({
-                'id': 'case_%s' % case['id'],
-                'pId': pid,
-                'name': case['description'],
-                'type': 'case',
-                'textIcon': icon_map.get('case')
-            })
-
-    steps=mm.Step.objects.values('id','description')
-    for step in steps:
-        kind,pi=_get_node_parent_info('step',step['id'])
-        if kind is None:
-            continue
-        pid='{}_{}'.format(kind,pi)
-        if _get_top_level_name('step_{}'.format(step['id']))=='product':
-            tree.append({
-                'id': 'step_%s' % step['id'],
-                'pId': pid,
-                'name': step['description'],
-                'type': 'step',
-                'textIcon': icon_map.get('step')
-            })
-
-    businesses=mm.BusinessData.objects.values('id','businessname')
-    for business in businesses:
-        kind,pi=_get_node_parent_info('business',business['id'])
-        if kind is None:
-            continue
-        pid='{}_{}'.format(kind,pi)
-        if _get_top_level_name('business_{}'.format(business['id']))=='product':
-            tree.append({
-                'id': 'business_%s' % business['id'],
-                'pId': pid,
-                'name': business['businessname'],
-                'type': 'business',
-                'textIcon': icon_map.get('business')
-            })
-
-    root={'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
-    tree.append(root)
-    return tree
-
-def get_full_tree_two():
-    def _get_top_level_name(tid):
-        node_id = tid.split('_')[1]
-        node_type = tid.split('_')[0]
-        while 1:
-            of=mm.Order.objects.filter(Q(kind__icontains='_{}'.format(node_type))&Q(follow_id=node_id))
-            if of.count()==1:
-                node_type=of[0].kind.split('_')[0]
-                node_id=of[0].main_id
-            elif of.count()==0:
-                return node_type
-    tree=[]
-    #
-    products=mm.Product.objects.values('id','description')
-    for product in products:
-        tree.append({
-            'id': 'product_%s' % product['id'],
-            'pId': -1,
-            'name': product['description'],
-            'type': 'product',
-            'textIcon': icon_map.get('product')
-        })
-
-    plans=mm.Plan.objects.values('id','description')
-    for plan in plans:
-        kind,pi=_get_node_parent_info('plan',plan['id'])
-        if kind is None:
-            continue
-        pid='{}_{}'.format(kind,pi)
-        if _get_top_level_name('plan_{}'.format(plan['id']))=='product':
-            tree.append({
-                'id': 'plan_%s' % plan['id'],
-                'pId': pid,
-                'name': plan['description'],
-                'type': 'plan',
-                'textIcon': icon_map.get('plan')
-            })
-
-    cases=mm.Case.objects.values('id','description')
-    for case in cases:
-        kind,pi=_get_node_parent_info('case',case['id'])
-        if kind is None:
-            continue
-        pid='{}_{}'.format(kind,pi)
-        if _get_top_level_name('case_{}'.format(case['id']))=='product':
-            tree.append({
-                'id': 'case_%s' % case['id'],
-                'pId': pid,
-                'name': case['description'],
-                'type': 'case',
-                'textIcon': icon_map.get('case')
-            })
-
-    steps=mm.Step.objects.values('id','description')
-    for step in steps:
-        kind,pi=_get_node_parent_info('step',step['id'])
-        if kind is None:
-            continue
-        pid='{}_{}'.format(kind,pi)
-        if _get_top_level_name('step_{}'.format(step['id']))=='product':
-            tree.append({
-                'id': 'step_%s' % step['id'],
-                'pId': pid,
-                'name': step['description'],
-                'type': 'step',
-                'textIcon': icon_map.get('step')
-            })
-
-    businesses=mm.BusinessData.objects.values('id','businessname')
-    for business in businesses:
-        kind,pi=_get_node_parent_info('business',business['id'])
-        if kind is None:
-            continue
-        pid='{}_{}'.format(kind,pi)
-        if _get_top_level_name('business_{}'.format(business['id']))=='product':
-            tree.append({
-                'id': 'business_%s' % business['id'],
-                'pId': pid,
-                'name': business['businessname'],
-                'type': 'business',
-                'textIcon': icon_map.get('business')
-            })
-
-    root={'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
-    tree.append(root)
-    return tree
+# def get_full_tree_two():
+#     def _get_top_level_name(tid):
+#         node_id = tid.split('_')[1]
+#         node_type = tid.split('_')[0]
+#         while 1:
+#             of=mm.Order.objects.filter(Q(kind__icontains='_{}'.format(node_type))&Q(follow_id=node_id))
+#             if of.count()==1:
+#                 node_type=of[0].kind.split('_')[0]
+#                 node_id=of[0].main_id
+#             elif of.count()==0:
+#                 return node_type
+#     tree=[]
+#     #
+#     products=mm.Product.objects.values('id','description')
+#     for product in products:
+#         tree.append({
+#             'id': 'product_%s' % product['id'],
+#             'pId': -1,
+#             'name': product['description'],
+#             'type': 'product',
+#             'textIcon': icon_map.get('product')
+#         })
+#
+#     plans=mm.Plan.objects.values('id','description')
+#     for plan in plans:
+#         kind,pi=_get_node_parent_info('plan',plan['id'])
+#         if kind is None:
+#             continue
+#         pid='{}_{}'.format(kind,pi)
+#         if _get_top_level_name('plan_{}'.format(plan['id']))=='product':
+#             tree.append({
+#                 'id': 'plan_%s' % plan['id'],
+#                 'pId': pid,
+#                 'name': plan['description'],
+#                 'type': 'plan',
+#                 'textIcon': icon_map.get('plan')
+#             })
+#
+#     cases=mm.Case.objects.values('id','description')
+#     for case in cases:
+#         kind,pi=_get_node_parent_info('case',case['id'])
+#         if kind is None:
+#             continue
+#         pid='{}_{}'.format(kind,pi)
+#         if _get_top_level_name('case_{}'.format(case['id']))=='product':
+#             tree.append({
+#                 'id': 'case_%s' % case['id'],
+#                 'pId': pid,
+#                 'name': case['description'],
+#                 'type': 'case',
+#                 'textIcon': icon_map.get('case')
+#             })
+#
+#     steps=mm.Step.objects.values('id','description')
+#     for step in steps:
+#         kind,pi=_get_node_parent_info('step',step['id'])
+#         if kind is None:
+#             continue
+#         pid='{}_{}'.format(kind,pi)
+#         if _get_top_level_name('step_{}'.format(step['id']))=='product':
+#             tree.append({
+#                 'id': 'step_%s' % step['id'],
+#                 'pId': pid,
+#                 'name': step['description'],
+#                 'type': 'step',
+#                 'textIcon': icon_map.get('step')
+#             })
+#
+#     businesses=mm.BusinessData.objects.values('id','businessname')
+#     for business in businesses:
+#         kind,pi=_get_node_parent_info('business',business['id'])
+#         if kind is None:
+#             continue
+#         pid='{}_{}'.format(kind,pi)
+#         if _get_top_level_name('business_{}'.format(business['id']))=='product':
+#             tree.append({
+#                 'id': 'business_%s' % business['id'],
+#                 'pId': pid,
+#                 'name': business['businessname'],
+#                 'type': 'business',
+#                 'textIcon': icon_map.get('business')
+#             })
+#
+#     root={'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
+#     tree.append(root)
+#     return tree
 
 
 
 def get_full_tree():
+    logger.info('[获取所有树节点数据]start')
     starttime=time.time()
     nodes = []
     root = {'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
@@ -1993,7 +2045,8 @@ def get_full_tree():
                 case_order_list.sort(key=lambda e: e.get('value'))
 
             # logger.info('case_order_list=>', case_order_list, len(case_order_list))
-            
+            tasks = []
+            e = ThreadPoolExecutor()
             for order in case_order_list:
                 # case = mm.Case.objects.get(id=order.follow_id)
                 query_case_sql = 'select * from manager_case where id=%s and isdelete=0'
@@ -2011,20 +2064,24 @@ def get_full_tree():
                         'textIcon': icon_map.get('case')
                     }
                     nodes.append(caseobj)
-                _add_next_case_node(plan, case, nodes)
+
+                tasks.append(e.submit(_add_next_case_node,plan,case,nodes))
+            wait(tasks)
     
     nodes.append(root)
 
-    logger.info('[花费]{}s'.format(time.time()-starttime))
+    logger.info('[获取所有树节点]结束 spend：{}s'.format(time.time()-starttime))
     return nodes
 
 
 def _add_next_case_node(parent, case, nodes):
     ##处理所属单节点
+    logger.info('size:',len(nodes))
     # step_order_list = ordered(list(mm.Order.objects.filter(kind='case_step', main_id=case['id'])))
     step_order_list=[]
     query_step_order_sql = 'select * from manager_order where kind=%s and main_id=%s and isdelete=0'
     with connection.cursor() as cursor:
+        #logger.info("[执行sql]select * from manager_order where kind='case_step' and main_id={} and isdelete=0{}".format(case['id']))
         cursor.execute(query_step_order_sql, ['case_step', case['id']])
         step_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
         step_order_list.sort(key=lambda e: e.get('value'))
@@ -2204,6 +2261,7 @@ def del_node_force(request):
 
 
 def _get_node_parent_info(node_type, node_id):
+    logger.info('[查询节点父节点信息]id={}'.format(node_id))
     if node_type == 'case':
         return _get_case_parent_info(node_id)
     elif node_type == 'product':
@@ -2211,29 +2269,30 @@ def _get_node_parent_info(node_type, node_id):
     else:
         if node_type in ('businessdata'):
             node_type = 'business'
-        
         kindlike = '_%s' % node_type
-        print('kindlike:',kindlike)
-        print(node_id)
+        ptype,pid=None,None
         try:
             o = mm.Order.objects.get(Q(kind__contains=kindlike) & Q(follow_id=node_id),isdelete=0)
+            ptype,pid=o.kind.split('_')[0], o.main_id
+            logger.info('[查到父节点信息]ptype={} pid={}'.format(ptype,pid))
+            return (ptype,pid)
         except:
             return (None,None)
-        return (o.kind.split('_')[0], o.main_id)
+
 
 
 def _get_case_parent_info(case_id):
     # logger.info('del case id=>',case_id)
     case_desp = mm.Case.objects.get(id=case_id).description
-    o=[]
+    o=None
     try:
-        o = list(mm.Order.objects.filter(Q(kind__contains='_case') & Q(follow_id=case_id),isdelete=0))[0]
+        o = mm.Order.objects.filter(Q(kind__contains='_case') & Q(follow_id=case_id),isdelete=0)[0]
+        kind = o.kind.split('_')[0]
+        logger.info('获得文件夹[%s]上层节点类型=>%s'%(case_desp,kind))
+        return (kind, o.main_id)
     except:
         return (None,None)
-    # logger.info('order=>',o)
-    kind = o.kind.split('_')[0]
-    # logger.info('获得文件夹[%s]上层节点类型=>%s'%(case_desp,kind))
-    return (kind, o.main_id)
+
 
 
 def _del_product_force(product_id):

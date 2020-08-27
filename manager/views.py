@@ -600,6 +600,8 @@ def queryvar(request):
     searchvalue = '%' + searchvalue + '%'
     userid = request.POST.get('userid')
     tags = request.POST.getlist('tags[]')
+    if not tags:
+        tags = request.POST.get('tags').split(',')
     strtag = '%'
     for i in tags:
         if i == '0':
@@ -683,7 +685,7 @@ def editvar(request):
     description = request.POST.get('description')
     gain = request.POST.get('gain')
     value = request.POST.get('value')
-    tags = request.POST.get('tag') if request.POST.get('tag') != ';' else ''
+    tags = request.POST.get('tag','') if request.POST.get('tag') != ';' else ''
     is_cache = request.POST.get('is_cache')
     try:
         if is_valid_where_sql(gain) is False:
@@ -697,10 +699,8 @@ def editvar(request):
         var.description = description
         var.gain = gain
         var.key = key
-        var.is_cache = is_cache
-        var.is_cache = True if var.is_cache is 'ON' else False
+        var.is_cache = True if is_cache == 'ON' else False
         var.save()
-
         tag = Tag.objects.get(var=var)
         tag.planids = bindplans
         tag.customize = tags
@@ -812,7 +812,7 @@ def addvar(request):
         value = request.POST.get('value')
         gain = request.POST.get("gain").replace("\n", "")  # 修复前端联想bug
         is_cache = request.POST.get('is_cache')
-        tags = request.POST.get('tag') if request.POST.get('tag') != ';' else ''
+        tags = request.POST.get('tag','') if request.POST.get('tag') != ';' else ''
         author = User.objects.get(name=request.session.get('username', None))
         # gain为sql时格式验证
         if is_valid_where_sql(gain) is False:
@@ -833,7 +833,7 @@ def addvar(request):
 
         tag = Tag()
         tag.planids = bindplans
-        tag.customize = tags
+        tag.customize = '' if tags is None else tags
         tag.isglobal = 1 if bindplans == '{}' else 0
         tag.var = var
         tag.save()
@@ -850,6 +850,8 @@ def copyVar(request):
     code = 0
     msg = ''
     varids = request.POST.getlist('varids[]')
+    if not varids:
+        varids = request.POST.get('varids',[]).split(',')
     bindplans = request.POST.get('bindplans')
     action = request.POST.get('action')
     tags = request.POST.get('tags')
@@ -1248,8 +1250,8 @@ def delfunc(request):
     ids = id_.split(",")
     try:
         for i in ids:
-            Function.objects.get(id=i).delete()
-
+            if i !='NaN':
+                Function.objects.get(id=i).delete()
         msg = '删除成功'
     except:
         code = 1
@@ -1559,8 +1561,8 @@ def queryonebusiness(request):
         # logger.info('business=>', business)
         # jsonstr = json.dumps(business, cls=BusinessDataEncoder)
         sql = '''
-        SELECT b.id,count,businessname,b.timeout,itf_check,db_check,params,preposition,postposition,value as weight,parser_id,parser_check,description
-        FROM manager_businessdata b, manager_order o WHERE b.id=%s and o.follow_id=b.id
+        SELECT b.id,count,businessname,b.timeout,itf_check,db_check,queryparams,params,preposition,postposition,value as weight,description,bodytype
+        FROM manager_businessdata b, manager_order o WHERE b.id=%s and o.follow_id=b.id and o.kind='step_business' and o.isdelete=0 and b.isdelete=0
         '''
         with connection.cursor() as cursor:
             cursor.execute(sql, [request.POST.get('vid').split('_')[1]])
@@ -1573,6 +1575,19 @@ def queryonebusiness(request):
         code = 4
         msg = '查询异常[%s]' % traceback.format_exc()
         return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+
+@csrf_exempt
+def editStepByExtract(request):
+    stepid = request.POST.get('stepid').split("_")[1]
+    extract = request.POST.get('extract')
+    step = Step.objects.filter(id=stepid).first()
+    if step:
+        step.temp = extract
+        step.save()
+        code = 0
+    else:
+        code = 1
+    return JsonResponse({'code':code})
 
 
 # @csrf_exempt
@@ -2114,7 +2129,7 @@ def getParamfromFetchData(request):
     step_des = request.POST.get('description')
     pid = request.POST.get('pid').split('_')[1] if request.POST.get('pid') != 'false' else 'false'
     uid = request.POST.get('uid').split('_')[1] if request.POST.get('uid') != 'false' else 'false'
-    bussiness_des = request.POST.get('bussiness_des')
+    business_des = request.POST.get('business_des')
     code = 0
     data = ''
     rq = '{%s}' % text.split('fetch(')[1].rstrip(');').replace('\n', '').replace(',', ':', 1)
@@ -2164,7 +2179,7 @@ def getParamfromFetchData(request):
         step.save()
         addrelation('case_step', request.session.get('username'), pid, step.id)
         b = BusinessData()
-        b.businessname = bussiness_des
+        b.businessname = business_des
         b.itf_check = ''
         b.db_check = ''
         b.params = parsed_result
@@ -2190,7 +2205,7 @@ def getParamfromFetchData(request):
             if int(difflib.SequenceMatcher(None, step.url.split('/')[-1], k.split('/')[-1]).ratio()) < 0.9:
                 return JsonResponse({'code': 1, 'data': '两个接口可能不一样，请检查'})
             b = BusinessData()
-            b.businessname = bussiness_des
+            b.businessname = business_des
             b.itf_check = ''
             b.db_check = ''
             b.params = parsed_result
@@ -2205,7 +2220,7 @@ def getParamfromFetchData(request):
             returndata = {
                 'id': 'business_%s' % b.id,
                 'pId': 'step_%s' % uid,
-                'name': bussiness_des,
+                'name': business_des,
                 'type': 'business',
                 'textIcon': 'fa icon-fa-leaf',
             }
@@ -2914,6 +2929,13 @@ def recyclenodes(type, id):
     except:
         print(traceback.format_exc())
 
+
+
+@csrf_exempt
+def getStepKind(request):
+    id = request.POST.get('id')
+    step_type = Step.objects.filter(id = id).first().step_type
+    return JsonResponse({'code': 0, 'data': '操作成功', 'type': step_type})
 
 def test(request):
     return render(request, 'manager/test.html')

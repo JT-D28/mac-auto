@@ -73,8 +73,11 @@ class Interceptor(MiddlewareMixin):
 				actionV = request.POST.get(_meta[mkey])
 				callstr = "list(models.%s.objects.filter(%s='%s'))" % (mkey, _meta[mkey], actionV)
 				if mkey == 'Function':
-					callstr = "list(models.Function.objects.filter(name='%s'))" % \
-					          re.findall('def (.*?)\(.*?\)', request.POST.get('body'))[0]
+					try:
+						callstr = "list(models.Function.objects.filter(name='%s'))" % \
+						          re.findall('def (.*?)\(.*?\)', request.POST.get('body'))[0]
+					except:
+						return 'error', "函数内容错误"
 				if mkey == 'DBCon':
 					schemevalue=request.POST.get('scheme')
 					description=request.POST.get('description')

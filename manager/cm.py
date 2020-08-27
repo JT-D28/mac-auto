@@ -684,12 +684,14 @@ def addbusiness(request):
         bname = b.businessname
         b.itf_check = request.POST.get('itf_check')
         b.db_check = request.POST.get('db_check')
+        b.queryparams = request.POST.get('queryparams')
         b.params = request.POST.get('params')
+        b.bodytype = request.POST.get('bodytype',"")
         b.parser_check = request.POST.get('parser_check')
         b.parser_id = request.POST.get('parser_id')
         b.description=request.POST.get('description')
-        b.timeout=request.POST.get('timeout')
-        
+        timeout=request.POST.get('timeout')
+        b.timeout = timeout if timeout else 60
         # check_result=_check_params(b.params)
         # logger.info('nn=>',check_result)
         # if not check_result:
@@ -784,6 +786,8 @@ def editbusiness(request):
         bname = b.businessname
         b.itf_check = request.POST.get('itf_check')
         b.db_check = request.POST.get('db_check')
+        b.queryparams = request.POST.get('queryparams')
+        b.bodytype = request.POST.get('bodytype')
         b.params = request.POST.get('params')
         b.postposition = request.POST.get('postposition')
         b.preposition = request.POST.get('preposition')

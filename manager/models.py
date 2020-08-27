@@ -72,8 +72,9 @@ class BusinessData(Model):
 	description=TextField(blank=True,null=True)
 	itf_check = TextField(null=True)
 	db_check = TextField(null=True)
-	# params=ManyToManyField(Param,blank=True)
+	queryparams = TextField(blank=True)
 	params = TextField(blank=True, null=True)
+	bodytype = CharField(max_length=128, blank='')
 	preposition = TextField(blank=True, null=True)
 	postposition = TextField(blank=True, null=True)
 	
@@ -96,25 +97,26 @@ class BusinessData(Model):
 			data = businessdatainst.params
 			
 			if step.step_type == 'interface':
-				if step.content_type in['json','formdata']:
+				return ('success', data)
+				# if step.content_type in['json','formdata']:
 					# data = data.replace('null', 'None').replace('true', 'True').replace('false', 'False')
-					if len(re.findall('\$\[(.*?)\((.*?)\)\]', data)) > 0:
-						##是函数调用
-						pass
-					else:
-						try:
-							print(json.loads(data))
-							return ('success', data)
-						except:
-							data = data.replace('null', 'None').replace('true', 'True').replace('false', 'False')
-							return ('success', json.dumps(eval(data)))
-						# data=eval(data)
-						# data = json.dumps(eval(data))
-					
-					return ('success', data)
-				else:
-					return ('success', data)
-			
+					# if len(re.findall('\$\[(.*?)\((.*?)\)\]', data)) > 0:
+					# 	##是函数调用
+					# 	pass
+					# else:
+					# 	try:
+					# 		print(json.loads(data))
+					# 		return ('success', data)
+					# 	except:
+					# 		data = data.replace('null', 'None').replace('true', 'True').replace('false', 'False')
+					# 		return ('success', json.dumps(eval(data)))
+					# 	# data=eval(data)
+					# 	# data = json.dumps(eval(data))
+					#
+				# 	return ('success', data)
+				# else:
+				# 	return ('success', data)
+				#
 			elif step.step_type == 'function':
 				return ('success', businessdatainst.params.split(','))
 		except:

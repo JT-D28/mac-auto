@@ -142,7 +142,7 @@ class DataMove:
             except:
                 logger.info('库中没找到变量 略过=>', key)
 
-    def _get_bussiness_id(self):
+    def _get_business_id(self):
         return '%s_%s' % ('vid', EncryptUtils.md5_encrypt(str(datetime.datetime.now())))
 
     def _add_case_relation_data(self, case):
@@ -750,7 +750,7 @@ class DataMove:
                 stepo.author = authoro
                 stepo.save()
 
-        ##bussiness
+        ##business
         for businessdata in businessdatas:
             bd = BusinessData()
             _cache['business_%s' % businessdata.get('id')] = bd

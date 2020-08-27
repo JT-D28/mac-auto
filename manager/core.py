@@ -509,12 +509,6 @@ class StepEncoder(XJsonEncoder):
 			except:
 				print(traceback.format_exc())
 				x['weight'] = '未知'
-			
-			try:
-				tagname = models.Tag.objects.get(id=tag_id.strip()).name
-				x['tagname'] = tagname
-			except:
-				x['tagname'] = ''
 
 		return {
 			"code": 0,
@@ -695,7 +689,7 @@ def getpagedata(data, page, limit):
 	'''
 	返回分页数据与元数据大小
 	'''
-	# print('page=>%s limit=>%s' % (page, limit))
+	print('page=>%s limit=>%s' % (page, limit))
 	if page is None or limit is None:
 		return data, len(data)
 	

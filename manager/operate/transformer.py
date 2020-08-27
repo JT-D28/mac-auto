@@ -700,7 +700,7 @@ class Transformer(object):
                                 logger.info('--成功获取业务id=>%s' % b)
 
                                 self.add_step_business_relation(step.id, b.id)
-                        # self.add_step_bussiness_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
+                        # self.add_step_business_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
                         # self.add_case_business_relation2(case.id, self.data_workbook[k],rowdata['参数值'])
 
                         # 单条
@@ -796,7 +796,7 @@ class Transformer(object):
                             business_id = BusinessData.objects.get(
                                 businessname='%s_I0_%s_%s' % (bkname, lineindex, self.transform_id)).id
                             self.add_step_business_relation(step.id, business_id)
-                    # self.add_step_bussiness_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
+                    # self.add_step_business_relation2(step.id, self.data_workbook[k],rowdata['参数值'])
                     # self.add_case_business_relation2(case.id, self.data_workbook[k],rowdata['参数值'])
 
                     else:
@@ -1014,7 +1014,7 @@ class Transformer(object):
 
     # step.businessdatainfo.add(business)
 
-    def add_step_bussiness_relation2(self, step_id, workbook, paramfieldvalue):
+    def add_step_business_relation2(self, step_id, workbook, paramfieldvalue):
         '''
         通过参数列定位业务数据
 

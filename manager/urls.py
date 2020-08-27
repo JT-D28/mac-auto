@@ -157,6 +157,7 @@ urlpatterns = [
     path('simpletest/', views.simpletest),
     path('querysimpletest/', views.querysimpletest),
     path('querysteptype/', views.querysteptype),
+    path('getStepKind/',views.getStepKind),
     path('regentest/', views.regentest),
     path('updatesimpletest/', views.updatesimpletest),
     path('opensimpletest/', views.opensimpletest),
@@ -176,6 +177,7 @@ urlpatterns = [
     path('recyclenode/', views.recyclenode),
 
     path('link/', views.link),
+    path('editStepByExtract/',views.editStepByExtract),
     path('test/',views.test)
 
 ]

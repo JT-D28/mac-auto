@@ -939,7 +939,6 @@
     //method of operate ztree dom
     view = {
       addNodes: function (setting, parentNode, index, newNodes, isSilent) {
-        console.log('addd nodes')
         var isParent = data.nodeIsParent(setting, parentNode);
         if (setting.data.keep.leaf && parentNode && !isParent) {
           return;

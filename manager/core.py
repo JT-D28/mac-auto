@@ -342,24 +342,30 @@ class XJsonEncoder(json.JSONEncoder):
 
 class ProductEncoder(XJsonEncoder):
 	def __init__(self, **args):
-		super(ProductEncoder, self).__init__(['id', 'description', 'createtime', 'updatetime', 'author'], **args)
-
+		#super(ProductEncoder, self).__init__(['id', 'description', 'createtime', 'updatetime', 'author'], **args)
+		field_name_list=[f.name for f  in models.Product._meta.fields]
+		super(ProductEncoder, self).__init__(field_name_list,**args)
 
 class VarEncoder(XJsonEncoder):
 	def __init__(self, **args):
-		super(VarEncoder, self).__init__(
-			['id', 'description', 'key', 'gain', 'value', 'createtime', 'updatetime', 'is_cache', 'tag', 'author'],
-			**args)
+		#super(VarEncoder, self).__init__(
+			#['id', 'description', 'key', 'gain', 'value', 'createtime', 'updatetime', 'is_cache', 'tag', 'author'],
+			#**args)
+		field_name_list = [f.name for f in models.Variable._meta.fields]
+		super(VarEncoder,self).__init__(field_name_list,**args)
 
 
 class UserEncoder(XJsonEncoder):
 	def __init__(self, **args):
-		super(UserEncoder, self).__init__(['id', 'createtime', 'updatetime', 'name', 'password'], **args)
-
+		#super(UserEncoder, self).__init__(['id', 'createtime', 'updatetime', 'name', 'password'], **args)
+		field_name_list = [f.name for f in models.User._meta.fields]
+		super(UserEncoder,self).__init__(field_name_list,**args)
 
 class RoleEncoder(XJsonEncoder):
 	def __init__(self, **args):
-		super(RoleEncoder, self).__init__(['id', 'createtime', 'updatetime', 'name', 'description','author','user'], **args)
+		#super(RoleEncoder, self).__init__(['id', 'createtime', 'updatetime', 'name', 'description','author','user'], **args)
+		field_name_list = [f.name for f in models.Role._meta.fields]
+		super(RoleEncoder,self).__init__(field_name_list,**args)
 
 class ItfEncoder(XJsonEncoder):
 	def __init__(self, **args):
@@ -369,9 +375,12 @@ class ItfEncoder(XJsonEncoder):
 
 class CaseEncoder(XJsonEncoder):
 	def __init__(self, **args):
-		super(CaseEncoder, self).__init__(
-			['id', 'author', 'description', 'createtime', 'updatetime', 'db_id', 'count'], **args)
-	
+		# super(CaseEncoder, self).__init__(
+		# 	['id', 'author', 'priority', 'description', 'steps', 'createtime', 'updatetime', 'db_id', 'count'], **args)
+
+		field_name_list = [f.name for f in models.Case._meta.fields]
+		super(CaseEncoder,self).__init__(field_name_list,**args)
+
 	def encode(self, obj):
 		L = eval(super(XJsonEncoder, self).encode(obj))
 		if not isinstance(L, (list)):
@@ -406,10 +415,14 @@ class CaseEncoder(XJsonEncoder):
 
 class PlanEncoder(XJsonEncoder):
 	def __init__(self, **args):
-		super(PlanEncoder, self).__init__(
-			['id', 'author', 'last', 'description', 'createtime', 'updatetime', 'run_type',
-			 'mail_config_id', 'db_id', 'is_send_dingding', 'is_send_mail', 'schemename','before_plan','proxy'], **args)
-	
+		# super(PlanEncoder, self).__init__(
+		# 	['id', 'author', 'last', 'description', 'cases', 'createtime', 'updatetime', 'run_type', 'run_value',
+		# 	 'mail_config_id', 'db_id', 'is_send_dingding', 'is_send_mail', 'schemename','before_plan','proxy'], **args)
+		#
+		field_name_list = [f.name for f in models.Plan._meta.fields]
+		super(PlanEncoder,self).__init__(field_name_list,**args)
+
+
 	def encode(self, obj):
 		# print('hhhh'*100)
 		L = eval(super(XJsonEncoder, self).encode(obj))
@@ -451,29 +464,33 @@ class PlanEncoder(XJsonEncoder):
 		}
 
 
-class ResultEncoder(XJsonEncoder):
-	def __init__(self, **args):
-		super(ResultEncoder, self).__init__(
-			['id', 'author', 'case', 'success', 'skip', 'fail', 'updatetime', 'createtime'], **args)
+# class ResultEncoder(XJsonEncoder):
+# 	def __init__(self, **args):
+		#super(ResultEncoder, self).__init__(
+			#['id', 'author', 'case', 'success', 'skip', 'fail', 'updatetime', 'createtime'], **args)
 
 
 class ResultDetailEncoder(XJsonEncoder):
 	def __init__(self, **args):
-		super(ResultDetailEncoder, self).__init__(['id', 'case', 'step', 'result', 'createtime', 'updatetime'], **args)
-
+		#super(ResultDetailEncoder, self).__init__(['id', 'case', 'step', 'result', 'createtime', 'updatetime'], **args)
+		field_name_list = [f.name for f in models.ResultDetail._meta.fields]
+		super(ResultDetailEncoder,self).__init__(field_name_list)
 
 class FunctionEncoder(XJsonEncoder):
 	def __init__(self, **args):
-		super(FunctionEncoder, self).__init__(
-			['id', 'kind', 'author', 'name', 'description', 'flag', 'body', 'createtime', 'updatetime'], **args)
-
+		#super(FunctionEncoder, self).__init__(
+			#['id', 'kind', 'author', 'name', 'description', 'flag', 'body', 'createtime', 'updatetime'], **args)
+		field_name_list = [f.name for f in models.Function._meta.fields]
+		super(FunctionEncoder, self).__init__(field_name_list,**args)
 
 class StepEncoder(XJsonEncoder):
 	def __init__(self, **args):
-		super(StepEncoder, self).__init__(
-			['id', 'author','description', 'headers', 'body',
-			  'step_type', 'createtime', 'updatetime', 'temp', 'url', 'content_type', 'method',
-			 'db_id', 'count'], **args)
+		# super(StepEncoder, self).__init__(
+	# 		# 	['id', 'businesstitle', 'author', 'priority', 'interface', 'description', 'headers', 'body', 'db_check',
+	# 		# 	 'itf_check', 'step_type', 'createtime', 'updatetime', 'tag_id', 'temp', 'url', 'content_type', 'method',
+	# 		# 	 'db_id', 'count'], **args)
+		field_name_list = [f.name for f in models.Step._meta.fields]
+		super(StepEncoder,self).__init__(field_name_list,**args)
 	
 	def encode(self, obj):
 		L = eval(super(XJsonEncoder, self).encode(obj))
@@ -506,18 +523,20 @@ class StepEncoder(XJsonEncoder):
 class BusinessDataEncoder(XJsonEncoder):
 	
 	def __init__(self, **args):
-		super(BusinessDataEncoder, self).__init__(
-			['id', 'businessname', 'db_check', 'itf_check', 'params', 'postposition', 'preposition', 'count',
-			 'parser_id', 'parser_check','description'], **args)
-	
+		# super(BusinessDataEncoder, self).__init__(
+		# 	['id', 'businessname', 'db_check', 'itf_check', 'params', 'postposition', 'preposition', 'count',
+		# 	 'parser_id', 'parser_check','description'], **args)
+		field_name_list = [f.name for f in models.BusinessData._meta.fields]
+		super(BusinessDataEncoder,self).__init__(field_name_list,**args)
+
 	def encode(self, obj):
 		from .cm import getchild
 		L = eval(super(XJsonEncoder, self).encode(obj))
 		if not isinstance(L, (list)):
 			L = [L]
-		
-		steps = models.Step.objects.all()
-		
+
+		# steps = models.Step.objects.all()
+		#
 		for x in L:
 			try:
 				
@@ -537,8 +556,8 @@ class BusinessDataEncoder(XJsonEncoder):
 			try:
 				##找关联step
 				stepinst = None
-				for step in list(models.Step.objects.all()):
-					businessids = [sb.id for sb in getchild('step_business', step.id)]
+				for step in list(models.Step.objects.values('id')):
+					businessids = [sb.id for sb in getchild('step_business', step['id'])]
 					# print(businessids)
 					idd = x.get('id')
 					try:
@@ -578,42 +597,53 @@ class BusinessDataEncoder(XJsonEncoder):
 
 class TagEncoder(XJsonEncoder):
 	def __init__(self, **args):
-		super(TagEncoder, self).__init__(['id', 'author', 'name', 'createtime', 'updatetime'], **args)
-
+		#super(TagEncoder, self).__init__(['id', 'author', 'name', 'createtime', 'updatetime'], **args)
+		field_name_list = [f.name for f in models.Tag._meta.fields]
+		super(TagEncoder,self).__init__(field_name_list,**args)
 
 class MailConfigEncoder(XJsonEncoder):
 	def __init__(self, **args):
-		super(MailConfigEncoder, self).__init__(
-			['id', 'author', 'smtp_host', 'smtp_port', 'sender_name', 'sender_nick', 'sender_pass', 'is_send_mail',
-			 'createtime', 'updatetime', 'description', 'to_receive', 'cc_receive', 'color_scheme', 'rich_text',
-			 'dingdingtoken'], **args)
+		# super(MailConfigEncoder, self).__init__(
+
+
+# 		# 	['id', 'author', 'smtp_host', 'smtp_port', 'sender_name', 'sender_nick', 'sender_pass', 'is_send_mail',
+# 		# 	 'createtime', 'updatetime', 'description', 'to_receive', 'cc_receive', 'color_scheme', 'rich_text',
+# 		# 	 'dingdingtoken'], **args)
+		field_name_list = [f.name for f in models.MailConfig._meta.fields]
+		super(MailConfigEncoder,self).__init__(field_name_list,**args)
 
 
 class OrderEncoder(XJsonEncoder):
 	def __init__(self, **args):
-		super(OrderEncoder, self).__init__(
-			['id', 'main_id', 'follow_id', 'value', 'kind', 'updatetime', 'createtime', 'author'], **args)
-
+		# super(OrderEncoder, self).__init__(
+		# 	['id', 'main_id', 'follow_id', 'value', 'kind', 'updatetime', 'createtime', 'author'], **args)
+		field_name_list = [f.name for f in models.Order._meta.fields]
+		super(OrderEncoder,self).__init__(field_name_list,**args)
 
 class DBEncoder(XJsonEncoder):
 	def __init__(self, **args):
-		super(DBEncoder, self).__init__(
-			['id', 'kind', 'dbname', 'host', 'port', 'username', 'password', 'description', 'author', 'scheme',
-			 'createtime',
-			 'updatetime'], **args)
+		# super(DBEncoder, self).__init__(
+		# 	['id', 'kind', 'dbname', 'host', 'port', 'username', 'password', 'description', 'author', 'scheme',
+		# 	 'createtime',
+		# 	 'updatetime'], **args)
+		field_name_list = [f.name for f in models.DBCon._meta.fields]
+		super(DBEncoder,self).__init__(field_name_list,**args)
 
 
 class TemplateEncoder(XJsonEncoder):
 	
 	def __init__(self, **args):
-		super(TemplateEncoder, self).__init__(
-			['id', 'kind', 'name', 'description', 'author', 'createtime', 'updatetime'], **args)
-
+		#super(TemplateEncoder, self).__init__(
+			#['id', 'kind', 'name', 'description', 'author', 'createtime', 'updatetime'], **args)
+		field_name_list = [f.name for f in models.Template._meta.fields]
+		super(TemplateEncoder,self).__init__(field_name_list,**args)
 
 class TemplateFieldEncoder(XJsonEncoder):
 	def __init__(self, **args):
-		super(TemplateFieldEncoder, self).__init__(
-			['id', 'fieldcode', 'description', 'start', 'end', 'index', 'template','length','kind'], **args)
+		# super(TemplateFieldEncoder, self).__init__(
+		# 	['id', 'fieldcode', 'description', 'start', 'end', 'index', 'template','length','kind'], **args)
+		field_name_list = [f.name for f in models.TemplateField._meta.fields]
+		super(TemplateFieldEncoder,self).__init__(field_name_list,**args)
 
 
 def simplejson(code=0, msg='', **kw):
@@ -807,12 +837,12 @@ class Fu:
 		print("开始更新本地函数信息..")
 		
 		try:
-			list_ = list(models.Function.objects.all())
+			list_ = list(models.Function.objects.values('author','flag','body','name'))
 			for x in list_:
 				
-				author = str(x.author)
-				filename = "func_%s" % x.flag
-				body = x.body
+				author = str(x.get('author'))
+				filename = "func_%s" % x.get('flag')
+				body = x.get('body')
 				# path = os.path.join(os.path.dirname(__file__), 'Function', author)
 				path = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'Function', author)
 				print(path)
@@ -832,7 +862,7 @@ class Fu:
 					a = base64.b64decode(body).decode(encoding='utf-8')
 					# print(a)
 					f.write(a)
-					print("更新函数:%s 完毕." % x.name)
+					print("更新函数:%s 完毕." % x.get('name'))
 
 				# if id_ is not None and id_ == x.id:
 				# 	print("*" * 20)

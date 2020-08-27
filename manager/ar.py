@@ -128,13 +128,13 @@ class RoleData():
         try:
             role_id=kws['uid']
             role=Role.objects.get(id=role_id)
-            all_users=User.objects.all()
-            all_users_data=[ {'id':y.id,'name':y.name}for y in all_users]
+            all_users=User.objects.values('id','name')
+            all_users_data=[ {'id':y['id'],'name':y['name']}for y in all_users]
 
             logger.info(all_users_data)
             selected=[]
-            for user in role.users.all():
-                selected.append(user.id)
+            for user in role.users.values('id'):
+                selected.append(user['id'])
 
             logger.info('已选择：',selected)
 
@@ -161,10 +161,9 @@ class RoleData():
     def queryuserrole(cls,userid):
         '''查询用户角色ID
         '''
-        for r in Role.objects.all():
-            u=User.objects.get(id=userid)
-            if u in r.users.all():
-                return r.id
+        u=User.objects.get(id=userid)
+        return u.role_set.values_list('id',flat=True)
+
             
 
 class Grant(object):
@@ -201,11 +200,7 @@ class Grant(object):
 
         user=User.objects.get(name=username)
         user_id=user.id
-        user_role_ids=[]
-
-        for r in Role.objects.all():
-            if user in r.users.all():
-                user_role_ids.append(r.id)
+        user_role_ids=user.role_set.values_list('id',flat=True)
 
         logger.info('用户[%s]ID[%s]'%(username,User.objects.get(name=username).id))
         logger.info('用户[%s]角色ID:%s'%(username,user_role_ids))
@@ -383,7 +378,7 @@ class Grant(object):
                 uicall = list(
                     UIControl.objects.filter(Q(code__icontains=searchvalue) | Q(description__icontains=searchvalue)))
             else:
-                uicall = UIControl.objects.all()
+                uicall = UIControl.objects.values('id','code','author','description','isopen')
             for x in uicall:
                 datax = dict()
                 datax['id']=x.id
@@ -413,18 +408,18 @@ class Grant(object):
 
         '''
         res=list()
-        users=User.objects.all()
-        roles=Role.objects.all()
+        users=User.objects.values('id','name')
+        roles=Role.objects.values('id','name')
         for user in  users:
             res.append({
-                'id':'_'.join(['USER',str(user.id)]),
-                'name':user.name
+                'id':'_'.join(['USER',str(user['id'])]),
+                'name':user['name']
                 })
 
         for role in roles:
             res.append({
-                'id':'_'.join(['ROLE',str(role.id)]),
-                'name':role.name
+                'id':'_'.join(['ROLE',str(role['id'])]),
+                'name':role['name']
                 })
 
         return {

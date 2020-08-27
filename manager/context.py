@@ -10,11 +10,11 @@ from ME2.settings import logme, BASE_DIR
 from manager.models import *
 from manager.models import Case as Case0
 from login.models import *
-from functools import update_wrapper
-
 from manager.operate.mongoUtil import Mongo
 from manager.operate.redisUtils import RedisUtils
 from functools import update_wrapper
+
+
 
 '''
 
@@ -660,6 +660,27 @@ class monitor(object):
             return result
 
         return update_wrapper(_wrap,args1[0])
+def cache_sync(f):
+    from tools.test import TreeUtil
+    def _wrap(*args,**kws):
+        Me2Log.info('-------cache----------')
+        Me2Log.info(args[0].__class__.__name__=='AsgiRequest')
+        Me2Log.info(kws)
+        ret=None
+        try:
+            ret=f(*args,**kws)
+            if f.__name__.startswith('add'):
+                TreeUtil.update_tree_cache(**{'action':'add','data':ret['data']})
+
+            elif f.__name__.startswith('edit'):
+                TreeUtil.update_tree_cache(**{'action':'edit','name':ret['data']['name']})
+            # elif f.__name__.startswith('del'):
+            #     if args[0].__class__.__name__ == 'AsgiRequest':
+            #         TreeUtil.update_tree_cache(**{'action':'del',id:'step_xx'})
+        except:
+            print(traceback.format_exc())
+        return ret
+    return update_wrapper(_wrap,f)
 
 
 

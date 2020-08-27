@@ -1,2 +1,3 @@
 class Relation(object):
+    pass
     

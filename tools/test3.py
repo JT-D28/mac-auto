@@ -1,10 +1,22 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# @Date    : 2020/7/20 9:39
-# @Author  : Blackstone
-# @to      :
-def te(a,*msg):
-    print(''.join([str(x) for x in msg]))
+import json
+from django.db.models import Model,CharField
+
+class AFC():
+    f1=1
+
+class MyEncoder(json.JSONEncoder):
+    def __init__(self):
+        pass
+
+    def encode(self, o):
+        e=super(MyEncoder,self).encode()
+
+        return e
+
+class AS(MyEncoder):
+    def __init__(self,*attr,**kws):
+        super(AS,self).__init__()
 
 
-te(1,'1',None)
+afc=AFC()
+print(json.dumps(afc,cls=None))

@@ -45,5 +45,7 @@ def query_third_call(request):
 def gettaskidplan(request):
 	planid= request.POST.get('planid')
 	runkind = request.POST.getlist('runkind[]')
+	if not runkind:
+		runkind = request.POST.get('runkind').split(',')
 	res = list(Mongo.taskinfo().find({'planid':int(planid),'info.runkind': {'$in':runkind}},{'time':1,'taskid':1,'_id':0}).sort('timestamp',-1).limit(10))
 	return JsonResponse({'code':0,'taskids':res})

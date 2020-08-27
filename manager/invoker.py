@@ -31,6 +31,7 @@ import re, traceback, time, threading, json, warnings, datetime, socket
 import copy, base64,os
 
 from .operate.generateReport import dealDeBuginfo, dealruninfo
+from .operate.getIp import get_host_ip
 from .operate.mongoUtil import Mongo
 from .operate.sendMail import processSendReport
 
@@ -395,6 +396,7 @@ def runplan(callername, taskid, planid, runkind, startnodeid=None):
     dbscheme = plan.schemename
     setRunningInfo(planid, taskid, runkind, dbscheme)
     viewcache(taskid, "=======正在初始化任务中=======")
+    viewcache(taskid, "在主机ip："+get_host_ip()+"上执行")
     logger.info('开始执行计划：', plan)
     logger.info('startnodeid:', startnodeid)
     L = _get_final_run_node_id(startnodeid)
@@ -1671,12 +1673,12 @@ def _find_and_save_property(taskid,user, dict_str, responsetext):
             logger.info('================_find_and_save_property==========')
 
             v1 = p.getValue(v)
-            
-            if not v1:
+            if v1!=0 and not v1:
                 # return ('fail','通过[%s]获取属性值失败,请检查'%v)
                 v1 = v
 
             save_data(user.name, _tempinfo, k, v1)
+            
         return ('success', '')
     
     except Exception as e:

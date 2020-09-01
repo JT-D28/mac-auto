@@ -66,17 +66,17 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
+    # 'django.contrib.staticfiles',
     'login',
     'manager',
     'homepage',
     'corsheaders',
-    'debug_toolbar.apps.DebugToolbarConfig',
+    # 'debug_toolbar.apps.DebugToolbarConfig',
     # 'pympler',
     # 'django_crontab',
 ]
 
-MIDDLEWARE_O = [
+MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -89,7 +89,7 @@ MIDDLEWARE_O = [
 
 ]
 
-MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware'] + MIDDLEWARE_O if DEBUG_TOOLS_ON else MIDDLEWARE_O
+# MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware'] + MIDDLEWARE_O if DEBUG_TOOLS_ON else MIDDLEWARE_O
 
 # 指定ASGI的路由地址
 ASGI_APPLICATION = 'manager.routing.application'
@@ -214,8 +214,7 @@ LOGGING = {
 }
 logme = logging.getLogger("django")
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.2/howto/static-files/
+
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')

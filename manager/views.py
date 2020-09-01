@@ -145,7 +145,7 @@ def upload(request):
         productid = request.POST.get('productid').split('_')[1]
         d = DataMove()
         for f in filemap:
-            if f.endswith('.ME2'):
+            if f.endswith('.json'):
                 res = d.import_plan(productid, filemap.values(), request.session.get('username'))
             elif f.endswith('.har'):
                 res = d.har_import(productid, filemap.values(), request.session.get('username'))
@@ -1078,12 +1078,15 @@ def queryplaninfo(request):
 
     return JsonResponse(res, safe=False)
 
-
+@csrf_exempt
 def querytaskdetail(request):
     detail = {}
     taskid = request.GET.get('taskid')
-
     detail = Mongo.taskreport().find_one({"taskid":taskid})
+    if request.POST.get('taskid'):
+        detail = Mongo.taskreport().find_one({"taskid":request.POST.get('taskid')},{ '_id': 0})
+        print(detail)
+        return JsonResponse({'data':json.dumps(detail)})
 
     # logger.info(detail)
 

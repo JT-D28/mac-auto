@@ -133,7 +133,7 @@ def clearRedisforUser(username):
 
 
 
-@csrf_exempt
+# @csrf_exempt
 def login(request):
 	# threading.Thread(target=initDataupdate, args=()).start()
 	if configs.IS_CREATE_SUPERUSER:
@@ -170,6 +170,8 @@ def login(request):
 def logout(request):
 	print('用户【{}】退出登录'.format(request.session.get('username', None)))
 	request.session.flush()
+	if request.method=='POST':
+		return JsonResponse({'code':0,'msg':'退出成功'})
 	return redirect("/account/login/")
 
 
@@ -481,3 +483,9 @@ def getstep(steplist,id,total):
 			if total=='0' and step['count'] not in ['1',1]:
 				continue
 			steplist.append(o.follow_id)
+
+
+def getCsrfToken(request):
+	from django.middleware.csrf import get_token
+	token = get_token(request)
+	return JsonResponse({'code': 0,'data': {'csrf_token': token}})

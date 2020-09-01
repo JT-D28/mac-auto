@@ -258,14 +258,16 @@ class MessageParser(object):
 			with connection.cursor() as cursor:
 				if t.kind == 'length':
 					cursor.execute("""SELECT id,fieldcode,description,(END-START+1) AS length FROM `manager_templatefield` t 
-					WHERE id IN (SELECT templatefield_id FROM manager_template_fieldinfo WHERE template_id=%s) and t.description like %s  """, [tid,"%{}%".format(searchvalue)])
+					WHERE id IN (SELECT templatefield_id FROM manager_template_fieldinfo WHERE template_id=%s) and
+					(t.description like %s  or t.fieldcode like %s) """, [tid,"%{}%".format(searchvalue),"%{}%".format(searchvalue)])
 					desc = cursor.description
 					res = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
 					for i,j in enumerate(res):
 						j['index']=i+1
 				elif t.kind == 'sepator':
 					cursor.execute("""SELECT id,fieldcode,description, `index` FROM `manager_templatefield` t 
-					WHERE id IN (SELECT templatefield_id FROM manager_template_fieldinfo WHERE template_id=%s) and t.description like %s   """, [tid,"%{}%".format(searchvalue)])
+					WHERE id IN (SELECT templatefield_id FROM manager_template_fieldinfo WHERE template_id=%s) and
+					(t.description like %s  or t.fieldcode like %s) """, [tid,"%{}%".format(searchvalue),"%{}%".format(searchvalue)])
 					desc = cursor.description
 					res = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
 

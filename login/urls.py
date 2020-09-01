@@ -30,6 +30,7 @@ urlpatterns = [
 	path('addaccount/', views.addaccount),
 	path('delaccount/', views.delaccount),
 	path('editaccount/', views.editaccount),
+	path('getCsrfToken/',views.getCsrfToken),
 	url(r'^getbusinessnum/(?P<id>.*?)/(?P<total>.*?)$',views.getbusinessnum),
 
 ]

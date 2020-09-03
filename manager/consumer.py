@@ -279,11 +279,11 @@ class ContinuousConsumer(WebsocketConsumer):
 		con = RedisUtils()
 		channel_name = con.get(user)
 		con.close()
-		
-		async_to_sync(get_channel_layer().send)(
-			channel_name,
-			{
-				"type": "send.message",
-				"message": message
-			}
-		)
+		if channel_name:
+			async_to_sync(get_channel_layer().send)(
+				channel_name,
+				{
+					"type": "send.message",
+					"message": message
+				}
+			)

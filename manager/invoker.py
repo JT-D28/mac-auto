@@ -729,20 +729,22 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
         return ('', '', '', url)
     url = urlmap.getmenhu(url, taskid, user.name)
     viewcache(taskid, "<span style='color:#009999;'>url=>%s</span>" % url)
+
+    params = None
+    if queryparams:
+        viewcache(taskid, "<span style='color:#009999;'>原始查询参数=><xmp style='color:#009999;'>%s</xmp></span>" % queryparams)
+        r, params = ParameterSubstitution(queryparams, user, taskid)
+        if r == 1:
+            return ('', '', '', params)
+        viewcache(taskid, "<span style='color:#009999;'>变量替换后查询参数=><xmp style='color:#009999;'>%s</xmp></span>" % params)
     
-    viewcache(taskid, "<span style='color:#009999;'>原始查询参数=><xmp style='color:#009999;'>%s</xmp></span>" % queryparams)
-    r, params = ParameterSubstitution(queryparams, user, taskid)
-    if r == 1:
-        return ('', '', '', params)
-    viewcache(taskid, "<span style='color:#009999;'>变量替换后查询参数=><xmp style='color:#009999;'>%s</xmp></span>" % params)
-    
-    
+
     viewcache(taskid, "<span style='color:#009999;'>原始参数=><xmp style='color:#009999;'>%s</xmp></span>" % body)
     r, body = ParameterSubstitution(body, user, taskid)
     if r == 1:
         return ('', '', '', body)
     viewcache(taskid, "<span style='color:#009999;'>变量替换后参数=><xmp style='color:#009999;'>%s</xmp></span>" % body)
-    
+
 
     viewcache(taskid, "<span style='color:#009999;'>用户定义请求头=>%s</span>" % (headers))
     headers = '{}' if headers is None or len(headers.strip()) == 0 else headers
@@ -753,22 +755,19 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
     headers['User-Agent'] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36"
     viewcache(taskid, "<span style='color:#009999;'>headers=>%s</span>" % headers)
     
-
     if 'json' in content_type:
         headers["Content-Type"] = 'application/json;charset=UTF-8'
         body=body.replace("'null'",'null').replace('"null"','null')
-        body = json.dumps(ast.literal_eval(body))
-
+        body = json.dumps(ast.literal_eval(body),ensure_ascii=False)
     elif 'xml' in content_type :
         headers["Content-Type"] = 'application/xml'
-        body = body.encode('utf-8')
     elif 'urlencode' in content_type :
         headers["Content-Type"] = 'application/x-www-form-urlencoded;charset=UTF-8'
         try:
             if body.startswith("{") and not body.startswith("{{"):
                 body = body.replace('\r', '').replace('\n', '').replace('\t', '')
                 body = parse.urlencode(ast.literal_eval(body))
-            body = body.encode('utf-8')
+            # body = body.encode('utf-8')
 
         except:
             logger.info('参数转化异常：', traceback.format_exc())
@@ -790,7 +789,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
         files = body
     
     try:
-        rps = session.request(method, url, headers=headers, params=params, data=body,files=files,timeout=timeout,proxies=proxy)
+        rps = session.request(method, url, headers=headers, params=params, data=body.encode('utf-8'),files=files,timeout=timeout,proxies=proxy)
     except:
         err = traceback.format_exc()
         if 'requests.exceptions.ConnectTimeout' in err:

@@ -22,6 +22,7 @@ from . import cm
 import json, xlrd, base64, traceback
 
 from .invoker import _is_function_call
+from .operate.DesktopNotification import notification
 from .operate.dataMove import DataMove
 from .operate.transformer import Transformer
 from .pa import MessageParser
@@ -56,21 +57,6 @@ def help(request):
     me2url = request.get_raw_uri().replace(request.path, '')
     return redirect("%s/static/PDF.js/web/viewer.html?file=%s/static/PDF.js/ME2.pdf" % (me2url, me2url))
 
-
-# @csrf_exempt
-# def testjson(request):
-#   return HttpResponse("{'a':1}")
-
-
-# @csrf_exempt
-# def recvdata(request):
-#   data = request.POST
-#   logger.info(data)
-#   # case=json.loads(jsonstr)
-#   # proxy.Q.push(case)
-#   logger.info('入队列=>')
-#   logger.info(data)
-#   logger.info("*" * 100)
 
 
 """
@@ -180,37 +166,10 @@ def upload(request):
         return JsonResponse(simplejson(code=4, msg='kind错误'), safe=False)
 
 
-def querymovedata(request):
-    return JsonResponse(simplejson(code=0, msg=''), safe=False)
 
 
-def dataimport(request):
-    return JsonResponse(simplejson(code=0, msg=''), safe=False)
 
 
-def dataexport(request):
-    flag = str(datetime.datetime.now()).split('.')[0]
-    version = request.GET.get('version')
-    planid = request.GET.get('planid')
-    m = DataMove()
-    res = m.export_plan(planid, flag, version=int(version))
-    # logger.info('res[0]=>',res[0])
-    if res[0] is 'success':
-        # logger.info('equals')
-
-        response = HttpResponse(str(res[1]))
-        response['content-type'] = 'application/json'
-        response['Content-Disposition'] = 'attachment;filename=plan_%s.ME2' % flag
-        # response.write(str(res[1]))
-        # response=FileResponse(res[1],as_attachment=True,filename='plan_%s.json'%flag)
-        return response
-    else:
-        logger.info('导出失败:', res[1])
-        return JsonResponse(simplejson(code=2, msg='导出失败[%s]' % res[1]), safe=False)
-
-
-def datamovnin(request):
-    return JsonResponse(simplejson(code=0, msg=''), safe=False)
 
 
 """
@@ -1008,24 +967,6 @@ def plan(request):
     return render(request, 'manager/plan.html')
 
 
-@csrf_exempt
-def mailcontrol(request):
-    code = 0
-    msg = ''
-    try:
-        plan = Plan.objects.get(id=request.POST.get('planid'))
-        is_send_mail = request.POST.get('is_send_mail')
-        config = MailConfig.objects.get(id=plan.mail_config_id)
-        config.is_send_mail = is_send_mail
-        config.save()
-        msg = "[%s]发送邮件功能" % is_send_mail
-    except:
-        logger.info(traceback.format_exc())
-        code = 2
-        msg = '操作失败[%s]' % traceback.format_exc()
-
-    finally:
-        return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
 @csrf_exempt
@@ -1045,38 +986,9 @@ def queryoneplan(request):
         return JsonResponse(jsonstr, safe=False)
 
 
-@csrf_exempt
-def queryplantaskid(request):
-    """
-    查询计划关联任务id 包含定时任务
-    按时间降序返回
-    """
-    code = 0
-    msg = ''
-    taskids = None
-    try:
-        planid = request.POST.get('planid')
-        plan = Plan.objects.get(id=planid)
-        detail = list(ResultDetail.objects.filter(plan=plan).order_by('-createtime'))
-        taskids = [x for x in set([x.taskid for x in detail])]
-    except Exception as e:
-        code = 1
-        msg = str(e)
-
-    return JsonResponse(simplejson(code=code, msg=msg, data=taskids), safe=False)
 
 
-@csrf_exempt
-def queryplaninfo(request):
-    res = []
-    all_ = Plan.objects.all()
-    for item in all_:
-        res.append({
-            'nid': item.id,
-            'description': item.description
-        })
 
-    return JsonResponse(res, safe=False)
 
 @csrf_exempt
 def querytaskdetail(request):
@@ -1124,44 +1036,11 @@ def runtask(request):
     return JsonResponse(simplejson(code=0, msg="你的任务开始运行", taskid=taskid), safe=False)
 
 
-@csrf_exempt
-def resultdetail(request):
-    return render(request, 'manager/resultdetail.html')
 
 
-@csrf_exempt
-def queryresultdetail(request):
-    searchvalue = request.GET.get('searchvalue')
-    logger.info("searchvalue=>", searchvalue)
-    res = None
-    if searchvalue:
-        logger.info("变量查询条件=>")
-        res = list(ResultDetail.objects.filter(
-            Q(description__icontains=searchvalue) | Q(key__icontains=searchvalue) | Q(value__icontains=searchvalue)))
-    else:
-        res = list(ResultDetail.objects.all())
-
-    limit = request.GET.get('limit')
-    page = request.GET.get('page')
-    res, total = getpagedata(res, page, limit)
-
-    jsonstr = json.dumps(res, cls=ResultDetailEncoder, total=total)
-    return JsonResponse(jsonstr, safe=False)
 
 
-@csrf_exempt
-def delresultdetail(request):
-    id_ = request.POST.get('id')
-    code = 0
-    msg = ''
-    try:
-        ResultDetail.objects.get(id=id_).delete()
-    except:
-        code = 1
-        msg = "删除失败"
 
-    finally:
-        return JsonResponse(simplejson(code=code, msg=""))
 
 
 """
@@ -1840,6 +1719,7 @@ def querytreelist(request):
 
 
     logger.info('tree查询返回节点大小:{}'.format(len(datanode)))
+
     return JsonResponse(simplejson(code=0, data=datanode), safe=False)
 
 
@@ -2062,11 +1942,6 @@ def queryfielddetail(request):
     return JsonResponse(MessageParser.query_field_detail(request.POST.get('tid')), safe=False)
 
 
-def getfulltree(request):
-    data = cm.get_full_tree()
-    logger.info(len(data))
-
-    return JsonResponse(pkg(data=data))
 
 
 @csrf_exempt

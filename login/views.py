@@ -120,14 +120,11 @@ def initDataupdate():
 	print('步骤的dbid更新完成')
 	print('旧数据更新结束')
 
-def clearRedisforUser(username):
-	con = RedisUtils()
+def clearRedisforUser(key):
 	try:
-		keys = con.keys("console.msg::%s::*" % (username))
-		print('清理用户【{}】redis缓存'.format(username))
-		for elem in con.keys():
-			con.delete(elem)
-			con.close()
+		con = RedisUtils()
+		con.delete(key)
+		con.close()
 	except:
 		print('redis没有正常连接')
 
@@ -148,8 +145,8 @@ def login(request):
 				request.session.set_expiry(14400)
 				request.session['is_login'] = True
 				request.session['username'] = username
-				print('用户登录成功：{}\t{}'.format(user.name, user.password))
-				clearRedisforUser(username)
+				# print('用户登录成功：{}\t{}'.format(user.name, user.password))
+				# clearRedisforUser(username)
 				return JsonResponse({'code':0,'msg':'登录成功'})
 			else:
 				message = '密码错误'
@@ -168,7 +165,9 @@ def login(request):
 
 
 def logout(request):
-	print('用户【{}】退出登录'.format(request.session.get('username', None)))
+	username = request.session.get('username', '')
+	print('用户【{}】退出登录'.format(username))
+	clearRedisforUser(username)
 	request.session.flush()
 	if request.method=='POST':
 		return JsonResponse({'code':0,'msg':'退出成功'})

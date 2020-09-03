@@ -30,6 +30,7 @@ from .context import set_top_common_config, viewcache, get_task_session, \
 import re, traceback, time, threading, json, warnings, datetime, socket
 import copy, base64,os
 
+from .operate.DesktopNotification import notification
 from .operate.generateReport import dealDeBuginfo, dealruninfo
 from .operate.getIp import get_host_ip
 from .operate.mongoUtil import Mongo
@@ -463,6 +464,7 @@ def runplan(callername, taskid, planid, runkind, startnodeid=None):
         setRunningInfo(planid, taskid, '0', dbscheme)
         processSendReport(taskid, plan.mail_config_id, callername)
         clear_data(callername, _tempinfo)
+        notification(callername, "计划【%s】%s任务运行结束，前往查看"%(plan.description,{"1": "验证", "2": "调试", "3": "定时"}[runkind]))
 
 
 def _step_process_check(callername, taskid, order ,proxy):
@@ -550,10 +552,10 @@ def _step_process_check(callername, taskid, order ,proxy):
 
                 checkformulas = [db_check,itf_check]
                 for formula in checkformulas:
-                    res, error = _compute(taskid, user, formula, target=text, parse_type=parse_type,
-                                          rps_header=headers)
-                    if res is not 'success':
-                        return 'fail', error
+                    if formula:
+                        res, error = _compute(taskid, user, formula, target=text, parse_type=parse_type,rps_header=headers)
+                        if res is not 'success':
+                            return 'fail', error
                 return 'success', ''
 
             else:

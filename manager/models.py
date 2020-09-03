@@ -407,7 +407,7 @@ class Recover(Model):
 	'''
 	batchid=TextField()#操作批次
 	nodeid=CharField(max_length=50)
-	field=CharField(max_length=6)
+	field=CharField(max_length=128)
 	old=CharField(max_length=60)
 	exp=CharField(max_length=60)
 	createtime=DateTimeField(auto_now_add=True)

@@ -190,22 +190,11 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose'
-        },
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR + '/monitor.log',
-            'formatter': 'verbose'
-        },
-        'email': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler',
-            'include_html': True,
         }
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file', 'email'],
+            'handlers': ['console'],
             'level': 'INFO',
             'propagate': 0,
         },

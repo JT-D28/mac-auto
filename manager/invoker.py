@@ -754,12 +754,10 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
     viewcache(taskid, "<span style='color:#009999;'>headers=>%s</span>" % headers)
     
 
-
     if 'json' in content_type:
         headers["Content-Type"] = 'application/json;charset=UTF-8'
         body=body.replace("'null'",'null').replace('"null"','null')
-        body = body.encode('utf-8')
-    # body = json.dumps(eval(body))
+        body = json.dumps(ast.literal_eval(body))
 
     elif 'xml' in content_type :
         headers["Content-Type"] = 'application/xml'
@@ -790,7 +788,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
     if content_type == 'formdata':
         body = None
         files = body
-
+    
     try:
         rps = session.request(method, url, headers=headers, params=params, data=body,files=files,timeout=timeout,proxies=proxy)
     except:

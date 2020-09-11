@@ -2,7 +2,8 @@ var $, tab, dataStr, layer;
 layui.config({
     base: "/static/manager/js/"
 }).extend({
-    "bodyTab": "bodyTab"
+    "bodyTab": "bodyTab",
+    "grabView":"grabView"
 })
 layui.use(['bodyTab', 'form', 'element', 'layer', 'jquery'], function () {
     var form = layui.form,

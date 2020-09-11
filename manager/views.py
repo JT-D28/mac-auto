@@ -2939,3 +2939,22 @@ def getStepKind(request):
 
 def test(request):
     return render(request, 'manager/test.html')
+
+def _f(x):
+    while True:
+        print(x)
+def test_process(request):
+    import  time
+    from concurrent.futures import  ProcessPoolExecutor,wait
+
+    #
+    p=ProcessPoolExecutor()
+    tasks=[]
+    for i in range(4):
+        tasks.append(p.submit(_f,1))
+    wait(tasks)
+
+    return JsonResponse(pkg(code=0))
+
+
+

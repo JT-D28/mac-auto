@@ -65,7 +65,9 @@ class PkgSaveConsumer(WebsocketConsumer):
         print('receive connect...')
         self.accept()
         pool = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0, decode_responses=True)
-        self.con = redis.Redis(connection_pool=pool)
+        #self.con = redis.Redis(connection_pool=pool)
+        self.con=redis.Redis(host=settings.REDIS_HOST,port=settings.REDIS_PORT,decode_responses=True)
+        logger.info('con状态:',self.con.ping())
         # threading.Thread(target=self.save).start()
 
 
@@ -81,16 +83,21 @@ class PkgSaveConsumer(WebsocketConsumer):
         try:
             if text_data.startswith('mclient::ready'):
                 self.username=text_data.split('::')[2]
+                ##清除账户历史数据
+                key = 'pkg::save::%s' % self.username
+                self.con.delete(key)
+                logger.info('用户{}清除历史录制数据'.format(self.username))
+
             else:
                 key='pkg::save::%s'%self.username
                 self.con.lpush(key, text_data)
-                # logger.info('<redis存入>',key,'=>',text_data)
+                logger.info('<redis存入>{} => {}'.format(key,text_data))
+                logger.info('cur queue size:',self.con.llen(key))
         except:
             logger.error('receive异常:',traceback.format_exc())
 
 
 class PkgReadConsumer(WebsocketConsumer):
-
     '''
     包读取
     '''
@@ -107,10 +114,19 @@ class PkgReadConsumer(WebsocketConsumer):
             return
         key='pkg::save::%s'%self.username
         while True:
-            msg=self.con.rpop(key)
-            # logger.info('<redis读>',msg)
-            if msg:
-                self.send(msg)
+            if self._flag:
+                logger.info(' PkgReadConsumer结束发送消息')
+                break;
+            key_value_size=self.con.llen(key)
+
+            if key_value_size>0:
+                msg=self.con.rpop(key)
+                #msg=None
+                if msg:
+                    logger.info('<redis读>', msg)
+                    self.send(msg)
+            # else:
+            #     logger.info('<redis读>key_value_size=0')
             time.sleep(0.03)
 
     def connect(self):
@@ -120,10 +136,10 @@ class PkgReadConsumer(WebsocketConsumer):
 
     def disconnect(self,code):
         self.teminate()
-
+        logger.info('PkgReadConsumer服务端断连 code={}=='.format(code))
 
     def receive(self,text_data=None, bytes_data=None):
-        logger.info('pkg receive ...')
+        logger.info('PkgReadConsumer receive ...')
         if text_data.startswith('pkg::read'):
             self.username=text_data.split('::')[2]
 

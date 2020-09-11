@@ -178,6 +178,7 @@ urlpatterns = [
 
     path('link/', views.link),
     path('editStepByExtract/',views.editStepByExtract),
-    path('test/',views.test)
+    path('test/',views.test),
+    path('test_process/',views.test_process)
 
 ]

@@ -14,6 +14,9 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView
 #######创建主窗口
 ################################################
 class MainWindow(QMainWindow):
+	'''
+	fadfddaf
+	'''
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.setWindowTitle('My Browser')
@@ -28,6 +31,9 @@ class MainWindow(QMainWindow):
 #######创建浏览器
 ################################################
 class WebEngineView(QWebEngineView):
+	'''
+
+	'''
 	windowList = []
 	
 	# 重写createwindow()

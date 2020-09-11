@@ -1,0 +1,74 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/css/gbv.css' %}">
+    <style>
+
+    </style>
+</head>
+<body>
+<div id="test1"></div>
+<button class="layui-btn layui-btn-sm" id="btn">c</button>
+<script src="{% static 'manager/layui/layui.js' %}"></script>
+<script src="{% static 'manager/js/index.js' %}"></script>
+<script src="{% static 'manager/js/utils.js' %}"></script>
+<script>
+    layui.use(['jquery','grabView'], function () {
+        var $ = layui.jquery;
+        var gbv=layui.grabView;
+
+        //
+        config = {}
+        data = [{
+            'title': 'www.baidu.com',
+            'children': [{
+                'title': '/afdaf?act=1',
+                'url': "urla",
+                'params': 'paramsa',
+                'content-type':'application/json'
+            },
+                {
+                    'title': '/afdaf?act=2',
+                    'url': "urla",
+                    'params': 'paramsa',
+                    'content-type':'application/json'
+                }, {
+                    'title': '/afdaf?act=3',
+                    'url': "urla",
+                    'params': 'paramsa',
+                    'content-type':'application/json'
+                }]
+        }, {
+            'title': 'sina.cn',
+            'children': [{
+                'title': 'aaaa',
+                'url': 'url1',
+                'content-type':'application/json'
+            }, {
+                'title': 'bbbb',
+                'url': 'url2',
+                'content-type':'application/json'
+            }]
+        }]
+        config['only-xhr']=true;
+        config['data'] = data;
+        config['elem'] = '#test1';
+        config['dblclick'] =function (e) {
+            alert(e.attr('content-type'));
+
+        };
+
+        gbv.render(config);
+
+
+    });
+
+
+</script>
+</body>
+</html>

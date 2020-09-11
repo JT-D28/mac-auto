@@ -11,6 +11,7 @@ from manager import models as mm
 from django.db import connection
 from ME2.settings import logme
 from concurrent.futures import  ThreadPoolExecutor,wait
+import queue
 
 from login import models as lm
 from .StartPlan import RunPlan
@@ -21,6 +22,25 @@ from manager.context import Me2Log as logger
 from .operate.dataMove import DataMove
 from tools.R import R
 from tools.test import TreeUtil
+
+def update_record_status(request):
+    v=request.GET.get('v')
+    try:
+        request.session['record_status']=v
+        logger.info('{}重置录制状态为{}'.format(request.session['username'],v))
+        return {
+            'status': 'success',
+            'msg': '操作成功',
+            'data': {
+                'flag': v
+            }
+        }
+    except:
+        logger.error('重置录制状态异常:',traceback.format_exc())
+        return {
+            'status': 'error',
+            'msg': '操作异常',
+        }
 
 
 # addproduct
@@ -131,7 +151,7 @@ def addplan(request):
         mail_config.save()
         
         plan = mm.Plan(description=description, db_id=db_id, schemename=schemename, author=author,
-                       run_type=run_type, mail_config_id=mail_config.id,before_plan=before_plan,proxy=proxy)
+                       run_type=run_type, mail_config_id=mail_config.id,before_plan=before_plan,proxy='')
         plan.save()
         addrelation('product_plan', author, pid, plan.id)
         extmsg=''
@@ -1572,23 +1592,11 @@ def _resort(orderlist, movetype, src_uid, target_uid):
         orderlist.insert(indexb + 1, a)
     
     return orderlist
-
-
 def get_search_match(searchvalue):
     '''1.匹配的是父节点
        2.匹配的是子节点
        3.无匹配结果
     '''
-    import time
-    # nodes = get_full_tree()
-    #     # #nodes=TreeUtil.get_tree_data_fast()
-    #     # logger.info('当前树数据：{}'.format(nodes))
-    #     # for node in nodes:
-    #     #     if node and searchvalue in node.get('name'):
-    #     #         # node['name']="<s>%s</s>"%node['name']
-    #     #         # node['name']="<span style='color:red;'>%s</span>"%node['name']
-    #     #         _expand_parent(node, nodes)
-    #     # return nodes
     root={'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
     match_nodes=[]
     plans=mm.Plan.objects.exclude(isdelete=1).values()
@@ -1626,6 +1634,7 @@ def get_search_match(searchvalue):
     logger.info('match nodes:',match_nodes)
     exclude=set()
     pkg=[]
+
     for m in match_nodes:
         _get_node_parent_route_chain(m['type'], m['id'], pkg, exclude)
 
@@ -1636,8 +1645,6 @@ def get_search_match(searchvalue):
 
     logger.info('前端返回node:',show_nodes)
     return show_nodes
-
-
 
 
 def get_link_left_tree(nid):
@@ -1687,7 +1694,6 @@ def get_link_left_tree(nid):
 def set_node_checkflag(node,checkflag,nodes):
     for node in nodes:
         pass
-
 
 
 def get_link_right_tree(nid):
@@ -1743,13 +1749,16 @@ icon_map = {
 def _get_model_obj(node_type,node_id):
     node_class=node_type.capitalize()
     node_class='BusinessData' if node_class=='Business' else node_class
-    obj=eval('mm.{}.objects.get(id={})'.format(node_class,node_id))
-    return obj
+    obj=eval('mm.{}.objects.filter(id={})'.format(node_class,node_id))
+
+    return obj[0] if obj.exists() else None
 
 def _get_node_parent_route_chain(node_type,node_id,set_=None,exclude=None,open=False):
     if node_type is None:return
     o=_get_model_obj(node_type,node_id)
     logger.info('获取model对象:',o)
+    if o is None:
+        return
 
     kind,pid=_get_node_parent_info(node_type, node_id)
     if kind is None:
@@ -1785,301 +1794,96 @@ def _get_all_case_child_id(casenodeid,all_):
         all_.append(case.id)
         _get_all_case_child_id('case_{}'.fomat(case.id), all_)
 
-def get_full_tree_new():
-    async  def _add_node(classname,nodes):
-        oldclassname=classname
-        classname=classname.capitalize()
-        logger.info('this classname:',classname)
-        if classname=='Business':
-            classname='BusinessData'
-        nodeobjs=eval('mm.{}.objects.filter(isdelete=0)'.format(classname))
-        for nodeobj in nodeobjs:
-            try:
-                nodename=nodeobj.businessname if oldclassname=='business' else nodeobj.description
-                res=_get_node_parent_info(oldclassname,nodeobj.id)
-                nodepid=-1 if oldclassname=='product' else '{}_{}'.format(res[0],res[1])
-                nodes.append({
-                'id': '%s_%s' % (oldclassname,nodeobj.id),
-                'pId': nodepid,
-                'name': nodename,
-                'type': oldclassname,
-                'textIcon': icon_map.get(oldclassname)
-                })
-            except:
-                logger.error('添加节点异常 {}_{}'.format(oldclassname,nodeobj.id))
 
-    root = {'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
-    nodes=[]
-    nodes.append(root)
-    tasks=[_add_node('product',nodes),_add_node('plan',nodes),_add_node('case',nodes),_add_node('Step',nodes),_add_node('business',nodes)]
-    l=asyncio.new_event_loop()
-    asyncio.set_event_loop(l)
-    l.run_until_complete(asyncio.gather(*tasks))
-    l.close()
-
-    return nodes
-
-# def get_full_tree_three():
-#     def _get_top_level_name(tid):
-#         node_id = tid.split('_')[1]
-#         node_type = tid.split('_')[0]
-#         while 1:
-#             of=mm.Order.objects.filter(Q(kind__icontains='_{}'.format(node_type))&Q(follow_id=node_id))
-#             if of.count()==1:
-#                 node_type=of[0].kind.split('_')[0]
-#                 node_id=of[0].main_id
-#             elif of.count()==0:
-#                 return node_type
-#     tree=[]
-#     #
-#     products=mm.Product.objects.values('id','description')
+# def get_full_tree():
+#     logger.info('[获取所有树节点数据]start')
+#     starttime=time.time()
+#     nodes = []
+#     root = {'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
+#     # products = list(mm.Product.objects.all())
+#     query_product_sql = 'select description,author_id,id from manager_product where isdelete=0'
+#     with connection.cursor() as cursor:
+#         cursor.execute(query_product_sql)
+#         products = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+#     # logger.info('products=>',products)
 #     for product in products:
-#         tree.append({
+#         productname = product['description']
+#         productobj = {
 #             'id': 'product_%s' % product['id'],
 #             'pId': -1,
-#             'name': product['description'],
+#             'name': productname,
 #             'type': 'product',
 #             'textIcon': icon_map.get('product')
-#         })
+#         }
 #
-#     plans=mm.Plan.objects.values('id','description')
-#     for plan in plans:
-#         pid=None
-#         tree.append({
-#             'id': 'plan_%s' % plan['id'],
-#             'pId': pid,
-#             'name': plan['description'],
-#             'type': 'plan',
-#             'textIcon': icon_map.get('plan')
-#         })
+#         nodes.append(productobj)
+#         # plan_order_list = list(mm.Order.objects.filter(kind='product_plan', main_id=product['id']))
 #
-#     cases=mm.Case.objects.values('id','description')
-#     for case in cases:
-#         kind,pi=_get_node_parent_info('case',case['id'])
-#         if kind is None:
-#             continue
-#         pid='{}_{}'.format(kind,pi)
-#         if _get_top_level_name('case_{}'.format(case['id']))=='product':
-#             tree.append({
-#                 'id': 'case_%s' % case['id'],
-#                 'pId': pid,
-#                 'name': case['description'],
-#                 'type': 'case',
-#                 'textIcon': icon_map.get('case')
-#             })
+#         query_plan_order_list = "select * from manager_order where kind='product_plan' and main_id=%s and isdelete=0"
+#         with connection.cursor() as cursor:
+#             cursor.execute(query_plan_order_list, [product['id']])
+#             plan_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
 #
-#     steps=mm.Step.objects.values('id','description')
-#     for step in steps:
-#         kind,pi=_get_node_parent_info('step',step['id'])
-#         if kind is None:
-#             continue
-#         pid='{}_{}'.format(kind,pi)
-#         if _get_top_level_name('step_{}'.format(step['id']))=='product':
-#             tree.append({
-#                 'id': 'step_%s' % step['id'],
-#                 'pId': pid,
-#                 'name': step['description'],
-#                 'type': 'step',
-#                 'textIcon': icon_map.get('step')
-#             })
+#         # logger.info('$' * 200)
+#         logger.info('plan_order_list=>', plan_order_list, len(plan_order_list))
+#         for order in plan_order_list:
+#             try:
+#                 # plan = mm.Plan.objects.get(id=int(order.follow_id))
+#                 query_plan_sql = 'select * from manager_plan where id=%s and isdelete=0'
+#                 with connection.cursor() as cursor:
+#                     cursor.execute(query_plan_sql, [order['follow_id']])
+#                     plan = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()][0]
 #
-#     businesses=mm.BusinessData.objects.values('id','businessname')
-#     for business in businesses:
-#         kind,pi=_get_node_parent_info('business',business['id'])
-#         if kind is None:
-#             continue
-#         pid='{}_{}'.format(kind,pi)
-#         if _get_top_level_name('business_{}'.format(business['id']))=='product':
-#             tree.append({
-#                 'id': 'business_%s' % business['id'],
-#                 'pId': pid,
-#                 'name': business['businessname'],
-#                 'type': 'business',
-#                 'textIcon': icon_map.get('business')
-#             })
+#                 planname = plan['description']
+#                 planobj = {
+#                     'id': 'plan_%s' % plan['id'],
+#                     'pId': 'product_%s' % product['id'],
+#                     'name': planname,
+#                     'type': 'plan',
+#                     'textIcon': icon_map.get('plan')
+#                 }
 #
-#     root={'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
-#     tree.append(root)
-#     return tree
-
-# def get_full_tree_two():
-#     def _get_top_level_name(tid):
-#         node_id = tid.split('_')[1]
-#         node_type = tid.split('_')[0]
-#         while 1:
-#             of=mm.Order.objects.filter(Q(kind__icontains='_{}'.format(node_type))&Q(follow_id=node_id))
-#             if of.count()==1:
-#                 node_type=of[0].kind.split('_')[0]
-#                 node_id=of[0].main_id
-#             elif of.count()==0:
-#                 return node_type
-#     tree=[]
-#     #
-#     products=mm.Product.objects.values('id','description')
-#     for product in products:
-#         tree.append({
-#             'id': 'product_%s' % product['id'],
-#             'pId': -1,
-#             'name': product['description'],
-#             'type': 'product',
-#             'textIcon': icon_map.get('product')
-#         })
+#                 nodes.append(planobj)
+#             except:
+#                 # logger.info('异常查询 planid=>', order['follow_id'])
+#                 continue;
 #
-#     plans=mm.Plan.objects.values('id','description')
-#     for plan in plans:
-#         kind,pi=_get_node_parent_info('plan',plan['id'])
-#         if kind is None:
-#             continue
-#         pid='{}_{}'.format(kind,pi)
-#         if _get_top_level_name('plan_{}'.format(plan['id']))=='product':
-#             tree.append({
-#                 'id': 'plan_%s' % plan['id'],
-#                 'pId': pid,
-#                 'name': plan['description'],
-#                 'type': 'plan',
-#                 'textIcon': icon_map.get('plan')
-#             })
+#             # case_order_list = ordered(list(mm.Order.objects.filter(kind='plan_case', main_id=plan['id'])))
 #
-#     cases=mm.Case.objects.values('id','description')
-#     for case in cases:
-#         kind,pi=_get_node_parent_info('case',case['id'])
-#         if kind is None:
-#             continue
-#         pid='{}_{}'.format(kind,pi)
-#         if _get_top_level_name('case_{}'.format(case['id']))=='product':
-#             tree.append({
-#                 'id': 'case_%s' % case['id'],
-#                 'pId': pid,
-#                 'name': case['description'],
-#                 'type': 'case',
-#                 'textIcon': icon_map.get('case')
-#             })
+#             query_case_order_list_sql = "select * from manager_order where kind='plan_case' and main_id=%s and isdelete=0"
+#             with connection.cursor() as cursor:
+#                 cursor.execute(query_case_order_list_sql, [plan['id']])
+#                 case_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+#                 case_order_list.sort(key=lambda e: e.get('value'))
 #
-#     steps=mm.Step.objects.values('id','description')
-#     for step in steps:
-#         kind,pi=_get_node_parent_info('step',step['id'])
-#         if kind is None:
-#             continue
-#         pid='{}_{}'.format(kind,pi)
-#         if _get_top_level_name('step_{}'.format(step['id']))=='product':
-#             tree.append({
-#                 'id': 'step_%s' % step['id'],
-#                 'pId': pid,
-#                 'name': step['description'],
-#                 'type': 'step',
-#                 'textIcon': icon_map.get('step')
-#             })
+#             # logger.info('case_order_list=>', case_order_list, len(case_order_list))
+#             tasks = []
+#             e = ThreadPoolExecutor()
+#             for order in case_order_list:
+#                 # case = mm.Case.objects.get(id=order.follow_id)
+#                 query_case_sql = 'select * from manager_case where id=%s and isdelete=0'
+#                 with connection.cursor() as cursor:
+#                     cursor.execute(query_case_sql, [order['follow_id']])
+#                     caselist = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+#                 if len(caselist) > 0:
+#                     case = caselist[0]
+#                     casename = case['description']
+#                     caseobj = {
+#                         'id': 'case_%s' % case['id'],
+#                         'pId': 'plan_%s' % plan['id'],
+#                         'name': case['description'],
+#                         'type': 'case',
+#                         'textIcon': icon_map.get('case')
+#                     }
+#                     nodes.append(caseobj)
 #
-#     businesses=mm.BusinessData.objects.values('id','businessname')
-#     for business in businesses:
-#         kind,pi=_get_node_parent_info('business',business['id'])
-#         if kind is None:
-#             continue
-#         pid='{}_{}'.format(kind,pi)
-#         if _get_top_level_name('business_{}'.format(business['id']))=='product':
-#             tree.append({
-#                 'id': 'business_%s' % business['id'],
-#                 'pId': pid,
-#                 'name': business['businessname'],
-#                 'type': 'business',
-#                 'textIcon': icon_map.get('business')
-#             })
+#                 tasks.append(e.submit(_add_next_case_node,plan,case,nodes))
+#             wait(tasks)
 #
-#     root={'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
-#     tree.append(root)
-#     return tree
-
-
-
-def get_full_tree():
-    logger.info('[获取所有树节点数据]start')
-    starttime=time.time()
-    nodes = []
-    root = {'id': -1, 'name': '产品线', 'type': 'root', 'textIcon': 'fa fa-pinterest-p', 'open': True}
-    # products = list(mm.Product.objects.all())
-    query_product_sql = 'select description,author_id,id from manager_product where isdelete=0'
-    with connection.cursor() as cursor:
-        cursor.execute(query_product_sql)
-        products = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-    # logger.info('products=>',products)
-    for product in products:
-        productname = product['description']
-        productobj = {
-            'id': 'product_%s' % product['id'],
-            'pId': -1,
-            'name': productname,
-            'type': 'product',
-            'textIcon': icon_map.get('product')
-        }
-        
-        nodes.append(productobj)
-        # plan_order_list = list(mm.Order.objects.filter(kind='product_plan', main_id=product['id']))
-        
-        query_plan_order_list = "select * from manager_order where kind='product_plan' and main_id=%s and isdelete=0"
-        with connection.cursor() as cursor:
-            cursor.execute(query_plan_order_list, [product['id']])
-            plan_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-        
-        # logger.info('$' * 200)
-        logger.info('plan_order_list=>', plan_order_list, len(plan_order_list))
-        for order in plan_order_list:
-            try:
-                # plan = mm.Plan.objects.get(id=int(order.follow_id))
-                query_plan_sql = 'select * from manager_plan where id=%s and isdelete=0'
-                with connection.cursor() as cursor:
-                    cursor.execute(query_plan_sql, [order['follow_id']])
-                    plan = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()][0]
-                
-                planname = plan['description']
-                planobj = {
-                    'id': 'plan_%s' % plan['id'],
-                    'pId': 'product_%s' % product['id'],
-                    'name': planname,
-                    'type': 'plan',
-                    'textIcon': icon_map.get('plan')
-                }
-                
-                nodes.append(planobj)
-            except:
-                # logger.info('异常查询 planid=>', order['follow_id'])
-                continue;
-            
-            # case_order_list = ordered(list(mm.Order.objects.filter(kind='plan_case', main_id=plan['id'])))
-            
-            query_case_order_list_sql = "select * from manager_order where kind='plan_case' and main_id=%s and isdelete=0"
-            with connection.cursor() as cursor:
-                cursor.execute(query_case_order_list_sql, [plan['id']])
-                case_order_list = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-                case_order_list.sort(key=lambda e: e.get('value'))
-
-            # logger.info('case_order_list=>', case_order_list, len(case_order_list))
-            tasks = []
-            e = ThreadPoolExecutor()
-            for order in case_order_list:
-                # case = mm.Case.objects.get(id=order.follow_id)
-                query_case_sql = 'select * from manager_case where id=%s and isdelete=0'
-                with connection.cursor() as cursor:
-                    cursor.execute(query_case_sql, [order['follow_id']])
-                    caselist = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-                if len(caselist) > 0:
-                    case = caselist[0]
-                    casename = case['description']
-                    caseobj = {
-                        'id': 'case_%s' % case['id'],
-                        'pId': 'plan_%s' % plan['id'],
-                        'name': case['description'],
-                        'type': 'case',
-                        'textIcon': icon_map.get('case')
-                    }
-                    nodes.append(caseobj)
-
-                tasks.append(e.submit(_add_next_case_node,plan,case,nodes))
-            wait(tasks)
-    
-    nodes.append(root)
-
-    logger.info('[获取所有树节点]结束 spend：{}s'.format(time.time()-starttime))
-    return nodes
+#     nodes.append(root)
+#
+#     logger.info('[获取所有树节点]结束 spend：{}s'.format(time.time()-starttime))
+#     return nodes
 
 
 def _add_next_case_node(parent, case, nodes):
@@ -2428,6 +2232,125 @@ def replacerecover(request):
     uid=request.POST.get('uid')
     logger.info('开始节点文本恢复 uid=',uid)
     return R(request.session.get('username')).recover(uid)
+
+def add_record_step(request):
+    def _params_dict(params):
+        d={}
+        if params:
+            for sep in params.split(';'):
+                d[sep.split('=')[0]]=sep.split('=')[1]
+        return d
+    def _content_type(input):
+        choice=('formdata','json','urlencode','multipart/form-data')
+        for c in choice:
+            if c in input:
+                return c
+        return ''
+
+
+    params=get_params(request)
+    product,plan,case,step,business=None,None,None,None,None
+    try:
+        product=mm.Product.objects.get(description='临时录制',isdelete=0)
+        logger.info('{}已存在'.format(product))
+    except:
+        product=mm.Product()
+        product.description='临时录制'
+        product.author=params['user']
+        product.save()
+        logger.info('创建{}'.format(product))
+
+    try:
+        plan=mm.Plan.objects.get(description='录制步骤',isdelete=0)
+    except:
+        plan=mm.Plan(description='录制步骤', db_id=None, schemename=None, author=params['user'],
+                       run_type='手动运行', mail_config_id=None,before_plan=None,proxy='')
+        plan.save()
+
+    try:
+        case=mm.Case.objects.get(description='@{}'.format(params['user'].name),author=params['user'],isdelete=0)
+    except:
+        logger.error('case create error:',traceback.format_exc())
+        case=mm.Case(description='@{}'.format(params['user'].name),author=params['user'])
+        case.save()
+
+    ###挂在录制数据
+    try:
+        protocol='http' if params['is_https']=='false' else 'https'
+
+        url='{}{}'.format(params['host'],params['url'])
+        if not url.startswith('{{'):
+            url='{}://'.format(protocol)+url
+
+        headers=params.get('request_headers')
+        step=mm.Step(description=params['url'],
+                     step_type='interface',
+                     headers=headers,
+                     url=url,
+                     method=params['method'].lower(),
+                     content_type=_content_type(params['content_type']),
+                     count=1,
+                     author=params['user'],
+                     db_id=None,
+                     temp='',
+                     isdelete = 0
+                     )
+        step.save()
+    except:
+        logger.error(traceback.format_exc())
+    try:
+        business=mm.BusinessData(businessname='成功',
+                          count=1,
+                          itf_check='',
+                          db_check='',
+                          params=params['params'],
+                          preposition='',
+                          postposition='',
+                          isdelete = 0
+                          )
+        business.save()
+
+    except:
+        pass
+
+    try:
+        o=mm.Order.objects.filter(kind='product_plan',main_id=product.id,follow_id=plan.id,isdelete=0)
+        if not o.exists():
+            mm.Order(kind='product_plan',
+                     main_id=product.id,
+                     follow_id=plan.id,
+                     value=getnextvalue('product_plan',product.id),
+                     author=params['user']
+                     ).save()
+
+        o=mm.Order.objects.filter(kind='plan_case',main_id=plan.id,follow_id=case.id,isdelete=0)
+        if not o.exists():
+            mm.Order(kind='plan_case',main_id=plan.id,follow_id=case.id,
+                     value=getnextvalue('plan_case',plan.id),
+                     author=params['user']).save()
+
+        o=mm.Order.objects.filter(kind='case_step',main_id=case.id,follow_id=step.id,isdelete=0)
+        if not o.exists():
+            mm.Order(kind='case_step',main_id=case.id,follow_id=step.id,
+                     value=getnextvalue('case_step',case.id),
+                     author=params['user']).save()
+
+        o=mm.Order.objects.filter(kind='step_business',main_id=step.id,follow_id=business.id,isdelete=0)
+        if not o.exists():
+            mm.Order(kind='step_business',main_id=step.id,follow_id=business.id,
+                     value=getnextvalue('step_business',step.id),
+                     author=params['user']).save()
+    except:
+        logger.error(traceback.format_exc())
+    return {
+        'status':'success',
+        'msg':"添加成功"
+    }
+
+
+
+
+
 
 
 '''

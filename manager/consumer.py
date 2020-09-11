@@ -50,86 +50,107 @@ class PkgSaveConsumer(WebsocketConsumer):
 	'''
     包存入
     '''
-	
-	def __init__(self, args):
-		super(PkgSaveConsumer, self).__init__(args)
-		self._flag = False
-	
-	def teminate(self):
-		pass
-	
-	def save(self):
-		while 1:
-			self.send('live')
-			time.sleep(5)
-	
-	def connect(self):
-		print('receive connect...')
-		self.accept()
-		pool = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0, decode_responses=True)
-		self.con = redis.Redis(connection_pool=pool)
-	
-	# threading.Thread(target=self.save).start()
-	
-	def disconnect(self, code):
-		self.teminate()
-		logger.info('PkgSaveConsumer服务端断连 code={}=='.format(code))
-	
-	def receive(self, text_data=None, bytes_data=None):
-		# logger.info('$$'*2000)
-		
-		logger.info('PkgSaveConsumer receive==')
-		try:
-			if text_data.startswith('mclient::ready'):
-				self.username = text_data.split('::')[2]
-			else:
-				key = 'pkg::save::%s' % self.username
-				self.con.lpush(key, text_data)
-		# logger.info('<redis存入>',key,'=>',text_data)
-		except:
-			logger.error('receive异常:', traceback.format_exc())
+
+    def __init__(self,args):
+        super(PkgSaveConsumer, self).__init__(args)
+        self._flag = False
+
+    def teminate(self):
+        pass
+
+    def save(self):
+        while 1:
+            self.send('live')
+            time.sleep(5)
+
+    def connect(self):
+        print('receive connect...')
+        self.accept()
+        pool = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0, decode_responses=True)
+        self.con = redis.Redis(connection_pool=pool)
+        logger.info('con状态:',self.con.ping())
+        # threading.Thread(target=self.save).start()
+
+
+    def disconnect(self,code):
+        self.teminate()
+        logger.info('PkgSaveConsumer服务端断连 code={}=='.format(code))
+
+
+    def receive(self,text_data=None, bytes_data=None):
+        # logger.info('$$'*2000)
+
+        logger.info('PkgSaveConsumer receive==')
+        try:
+            if text_data.startswith('mclient::ready'):
+                self.username=text_data.split('::')[2]
+                ##清除账户历史数据
+                key = 'pkg::save::%s' % self.username
+                self.con.delete(key)
+                logger.info('用户{}清除历史录制数据'.format(self.username))
+
+            else:
+                key='pkg::save::%s'%self.username
+                self.con.lpush(key, text_data)
+                logger.info('<redis存入>{} => {}'.format(key,text_data))
+                logger.info('cur queue size:',self.con.llen(key))
+        except:
+            logger.error('receive异常:',traceback.format_exc())
 
 
 class PkgReadConsumer(WebsocketConsumer):
-	'''
+    '''
     包读取
     '''
-	
-	def __init__(self, args):
-		super(PkgReadConsumer, self).__init__(args)
-		self._flag = False
-		self.username = None
-	
-	def teminate(self):
-		self._flag = True
-	
-	def sendmsg(self):
-		if self.username is None:
-			return
-		key = 'pkg::save::%s' % self.username
-		while True:
-			msg = self.con.rpop(key)
-			# logger.info('<redis读>',msg)
-			if msg:
-				self.send(msg)
-			time.sleep(0.03)
-	
-	def connect(self):
-		self.accept()
-		pool = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0, decode_responses=True)
-		self.con = redis.Redis(connection_pool=pool)
-	
-	def disconnect(self, code):
-		self.teminate()
-	
-	def receive(self, text_data=None, bytes_data=None):
-		logger.info('pkg receive ...')
-		if text_data.startswith('pkg::read'):
-			self.username = text_data.split('::')[2]
-		
-		self.thread = threading.Thread(target=self.sendmsg)
-		self.thread.setDaemon(True)
-		self.thread.start()
+    def __init__(self,args):
+        super(PkgReadConsumer, self).__init__(args)
+        self._flag = False
+        self.username=None
+
+    def teminate(self):
+        self._flag = True
+
+    def sendmsg(self):
+        if self.username is None:
+            return
+        key='pkg::save::%s'%self.username
+        while True:
+            if self._flag:
+                logger.info(' PkgReadConsumer结束发送消息')
+                break;
+            key_value_size=self.con.llen(key)
+
+            if key_value_size>0:
+                msg=self.con.rpop(key)
+                #msg=None
+                if msg:
+                    logger.info('<redis读>', msg)
+                    self.send(msg)
+            # else:
+            #     logger.info('<redis读>key_value_size=0')
+            time.sleep(0.03)
+
+    def connect(self):
+        self.accept()
+        pool = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0, decode_responses=True)
+        self.con = redis.Redis(connection_pool=pool)
+
+    def disconnect(self,code):
+        self.teminate()
+        logger.info('PkgReadConsumer服务端断连 code={}=='.format(code))
+
+    def receive(self,text_data=None, bytes_data=None):
+        logger.info('PkgReadConsumer receive ...')
+        if text_data.startswith('pkg::read'):
+            self.username=text_data.split('::')[2]
+
+        self.thread = threading.Thread(target=self.sendmsg)
+        self.thread.setDaemon(True)
+        self.thread.start()
+
+
+
+
 
 
 class ConsoleConsumer(WebsocketConsumer):

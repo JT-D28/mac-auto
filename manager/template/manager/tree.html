@@ -17,18 +17,26 @@
 
     <link rel="stylesheet" type="text/css" href="{% static 'manager/layui/css/layui.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'manager/css/rightMenu.css' %}">
-        <!-- 引入样式 -->
+    <!-- 引入样式 -->
     <link rel="stylesheet" href="{% static 'homepage/eleui/theme-chalk/index.css' %}">
- 
+    <link rel="stylesheet" type="text/css" href="{% static 'manager/css/gbv.css' %}">
+
 
     <style type="text/css">
+
+        .element::-webkit-scrollbar {
+            display: none
+        }
+
         .el-select-dropdown {
             z-index: 20000000;
         }
+
         .el-input__inner, .el-input__icon {
             height: 34px;
             line-height: 34px;
         }
+
         .layui-input {
             padding: 0 14px;
             background-color: rgb(252, 252, 252);
@@ -138,12 +146,37 @@
             color: #FFCC66;
         }
 
-        #start-record:hover{
+        #start-record:hover {
             cursor: pointer;
 
         }
-        #end-record:hover{
+
+        #end-record:hover {
             cursor: pointer;
+        }
+
+        #record {
+            margin: 5px;
+        }
+
+        #record a:hover {
+            text-decoration: none;
+        }
+
+        #record a:visited {
+            text-decoration: none;
+        }
+
+        #record a:link {
+            text-decoration: none;
+        }
+
+        #record a:focus {
+            text-decoration: none;
+        }
+
+        #record a:active {
+            text-decoration: none;
         }
 
 
@@ -155,7 +188,7 @@
 
     function changeFrameHeight() {
         var ifm = document.getElementById("tree-content");
-        ifm.maxHeight = ifm.height = document.documentElement.clientHeight-3;
+        ifm.maxHeight = ifm.height = document.documentElement.clientHeight - 3;
     }
 
     window.onresize = function () {
@@ -165,19 +198,19 @@
 </script>
 
 <form id='rform' hidden style="padding:10px;" class="layui-form">
-  <div class="layui-form-item">
-    <label class="layui-form-label">作用于</label>
-    <div class="layui-input-block">
-      <input type="checkbox" name="planname" title="计划名" lay-skin="primary" checked>
-      <input type="checkbox" name="casename" title="用例名" lay-skin="primary" checked>
-      <input type="checkbox" name="stepname" title="步骤名" lay-skin="primary" checked>
-      <input type="checkbox" name="stepurl" title="步骤url" lay-skin="primary" checked>
-      <input type="checkbox" name="header" title="请求头" lay-skin="primary" checked>
-      <input type="checkbox" name="property" title="属性" lay-skin="primary" checked>
-      <input type="checkbox" name="businessname" title="测试点名" lay-skin="primary" checked>
-    <input type="checkbox" name="params" title="测试参数" lay-skin="primary" checked>
+    <div class="layui-form-item">
+        <label class="layui-form-label">作用于</label>
+        <div class="layui-input-block">
+            <input type="checkbox" name="planname" title="计划名" lay-skin="primary" checked>
+            <input type="checkbox" name="casename" title="用例名" lay-skin="primary" checked>
+            <input type="checkbox" name="stepname" title="步骤名" lay-skin="primary" checked>
+            <input type="checkbox" name="stepurl" title="步骤url" lay-skin="primary" checked>
+            <input type="checkbox" name="header" title="请求头" lay-skin="primary" checked>
+            <input type="checkbox" name="property" title="属性" lay-skin="primary" checked>
+            <input type="checkbox" name="businessname" title="测试点名" lay-skin="primary" checked>
+            <input type="checkbox" name="params" title="测试参数" lay-skin="primary" checked>
+        </div>
     </div>
-  </div>
     <div class="layui-form-item">
         <label class="layui-form-label">待替换</label>
         <div class="layui-input-block">
@@ -194,22 +227,40 @@
                       style="min-height:38px!important;height: 38px;line-height: 1.6;background:rgb(252, 252, 252)"></textarea>
         </div>
     </div>
-
-
 </form>
+<div id="grab-view">
+    <div id="grab-msg"></div>
+    {#    <div>#}
+    {#        <button class="layui-btn layui-btn-sm">xhr</button>#}
+    {#    </div>#}
+    {#    <ul id="grab-msg">#}
+    {#        <li>http://www.bafafdadfa.ocmfdafdafasfasd</li>#}
+    {#        <li>http://www.bafafdadfa.ocmfdafdafasfasd</li>#}
+    {#        <li>http://www.bafafdadfa.ocmfdafdafasfasd</li>#}
+    {#        <li>http://www.bafafdadfa.ocmfdafdafasfasd</li>#}
+    {#        <li>http://www.bafafdadfa.ocmfdafdafasfasd</li>#}
+    {#    </ul>#}
+</div>
 <div id='treelist' class="layui-col-md5 " style="max-height:100%;overflow-y:auto;padding: 20px;height: 100%">
     <div class="layui-inline">
         <input type="input" name="" placeholder="search"
                style='padding:0 14px;width:280px;height:34px;background:rgba(255,255,255,1);border-radius:2px;border:1px solid rgba(220,222,224,1);'
-               id='search' autocomplete="off"><button id='searchbtn' class="layui-btn" style="vertical-align:revert;height: 34px;line-height: 34px">
-        <span class='btn-text'>查询</span></button>
+               id='search' autocomplete="off">
+        <button id='searchbtn' class="layui-btn" style="vertical-align:revert;height: 34px;line-height: 34px">
+            <span class='btn-text'>查询</span></button>
         <br/>
         {% if request.session.username == 'hujj' %}
-        <i id="start-record">开始录制</i><i id="end-record">结束录制</i>
+            {#            <a href='myapp://start:username:{{ request.session.username }}' id='start' style="font-size:10px;">开始录制</a>#}
+            {#            <a href='myapp://stop' id='stop' style="font-size: 10px;">停止录制</a>#}
+            <div id="record">
+                {#            {{ request.session.record_status }}#}
+                <a class='layui-icon layui-icon-pause' href='myapp://stop' id='stop'
+                   style="text-decoration: none;font-size: 10px;" hidden>停止录制</a>
+                <a class="layui-icon layui-icon-play" href='myapp://start:username:{{ request.session.username }}'
+                   id='start' style="text-decoration: none;font-size:10px;">开始录制</a>
+            </div>
         {% endif %}
-{#        <i id="link-btn">关联用例</i>#}
-
-
+        {#        <i id="link-btn">关联用例</i>#}
     </div>
     <ul class="contextmenu" id="contextmenu"></ul>
     <ul id="case-manager" class="ztree" style="margin-bottom: 20px;padding:10px 0 0 15px "></ul>
@@ -221,15 +272,10 @@
     <div id='transfer'></div>
 </div>
 
-
-
-
 <div class="layui-col-md7" style="min-height:100%;overflow-y:auto;">
     <iframe id='tree-content' name='tree-content' title="test" scrolling="yes" frameborder="0" src=""
             style="overflow-y:auto;width:100%;" onload="changeFrameHeight()"></iframe>
-
 </div>
-
 
 <div id="test" hidden class="layui-row" style="height: 100%;">
     <div class="layui-col-md2 " style="height:100%;border-right:4px solid #f6f6f6;overflow-y:auto;">
@@ -272,8 +318,8 @@
 </div>
 
 
-
 <script src="{% static 'manager/layui/layui.js' %}"></script>
+<script src="{% static 'manager/js/index.js' %}"></script>
 <script src="{% static 'manager/js/jquery.min.js' %}"></script>
 <script src="{% static 'manager/js/utils.js' %}"></script>
 <script src="{% static 'manager/ztree/jquery.ztree.all.min.js' %}"></script>
@@ -283,7 +329,7 @@
 <script src="{% static 'manager/ztree/jquery.ztree.exedit.js' %}"></script>
 <script src="{% static 'manager/js/mytree_1.js' %}"></script>
 <script src="{% static 'homepage/vue.js' %}"></script>
-   <!-- 引入组件库 -->
+<!-- 引入组件库 -->
 <script src="{% static 'homepage/eleui/index.js' %}"></script>
 
 <script type="text/javascript">
@@ -297,112 +343,176 @@
         document.documentElement.style.overflow = 'hidden';
     };
 
-    layui.use(['element','layer','table','form','transfer'],function(){
-
-
+    layui.use(['element', 'layer', 'table', 'form', 'transfer', 'tree', 'grabView'], function () {
         var element = layui.element;
-        var table=layui.table;
-        var form=layui.form
-        var transfer=layui.transfer;
-
-
+        var table = layui.table;
+        var form = layui.form;
+        var grabView = layui.grabView;
+        var transfer = layui.transfer;
+        var tree = layui.tree;
+        var layer = layui.layer;
         //
-        $('#start-record').click(function(e){
+        begin_grab = function () {
+            record_data = [];
+            //
+            config = {
+                'only-xhr': true,
+                'elem': '#grab-msg',
+                'data': record_data,
+                'click': function (e) {
+                    alert(e.html());
+                    return false;
 
-            layer.msg('开始录制..')
-            record_page='http://'+host+'/manager/grab/'
-            window.open(record_page,'_blank')
+                },
+                'dblclick': function (e) {
+                    alias_text = e.parent().find('.alias:eq(0)').text().trim();
+                    host_text = e.parent().find('host:eq(0)').text().trim();
+                    text = alias_text == '[alias]' ? host_text : '\{\{' + alias_text + '\}\}';
+                    var params = {
+                        'time': e.attr('time'),
+                        'host': text,
+                        'is_https': e.attr('is-https'),
+                        'url': e.attr('url'),
+                        'method': e.attr('method'),
+                        'params': e.attr('params'),
+                        'content_type': e.attr('c1'),
+                        'request_headers': e.attr('headers'),
+
+                    }
+                    _post('/manager/treecontrol/?action=add_record_step', params, function (e) {
+                        layer.msg(e.msg);
+                    })
+
+                }
+            }
+            grabView.render(config);
+
+            var username = '{{request.session.username }}';
+            host=window.localStorage.getItem('real-host');
+            consoleSocket = new WebSocket("ws://" + host + "/ws/pkgread/");
+            console.log(username,'创建新会话:',consoleSocket);
+            consoleSocket.onerror = function (e) {
+                console.error('会话异常:',e)
+
+            }
+            consoleSocket.onopen = function (e) {
+                console.log("[" + username + "]开始显示抓取到的接口信息")
+                consoleSocket.send('pkg::read::' + username)
+            };
+
+            consoleSocket.onmessage = function (e) {
+                //console.log('读取数据：',e.data);
+                grabView.reload({
+                    data: e.data
+                });
+            }
+
+            consoleSocket.onclose = function () {
+                console.log(username,"主动结束会话..")
+            }
+
+
+        }
+
+        let consoleSocket=null;
+        $('#start').click(function () {
+            $(this).hide();
+            $('#stop').show();
+            begin_grab();
 
         });
+        $('#stop').click(function () {
+            $(this).hide();
+            $('#start').show();
+            if(consoleSocket)
+                consoleSocket.close();
+                consoleSocket=null;
+        });
 
-
-        treeobj=$.fn.zTree.getZTreeObj('case-manager')
-        document.onkeydown = function()  
-        {  
-            selectnodes=treeobj.getSelectedNodes()
-            var oEvent = window.event;  
+        treeobj = $.fn.zTree.getZTreeObj('case-manager')
+        document.onkeydown = function () {
+            selectnodes = treeobj.getSelectedNodes()
+            var oEvent = window.event;
             //ctrl+d
-            if (oEvent.keyCode==81&&oEvent.ctrlKey&&selectnodes.length==1){
-                nodetype=selectnodes[0]['id'].split('_')[0]
+            if (oEvent.keyCode == 81 && oEvent.ctrlKey && selectnodes.length == 1) {
+                nodetype = selectnodes[0]['id'].split('_')[0]
 
-                if(nodetype!='plan')
+                if (nodetype != 'plan')
                     return
 
+                success = function (e) {
 
-                success=function(e){
-                    
-                    render_transfer(transfer,e.data[0],e.data[1]);
-                    var o= layer.open({
+                    render_transfer(transfer, e.data[0], e.data[1]);
+                    var o = layer.open({
 
-                        type:1,
-                        title:'配置关联',
-                        content:$('#addhtml'),
-                        area:['600px','350px'],
-                        btn:['确认','取消'],
-                        yes:function(index,layero){
+                        type: 1,
+                        title: '配置关联',
+                        content: $('#addhtml'),
+                        area: ['600px', '350px'],
+                        btn: ['确认', '取消'],
+                        yes: function (index, layero) {
 
                             layer.close(index)
-                            
 
-                            var getData = transfer.getData('demo1'); 
-                            planids=[]
-                            for(var i=0;i<getData.length;i++){
+
+                            var getData = transfer.getData('demo1');
+                            planids = []
+                            for (var i = 0; i < getData.length; i++) {
                                 planids.splice(0, 0, getData[i]['value'])
                             }
 
-                            _post('/manager/treecontrol/',{'action':'editplanlink','uid':selectnodes[0].id,'planids':planids.join()},function(e){
-                                layer.alert(e.msg,{icon:1})
+                            _post('/manager/treecontrol/', {
+                                'action': 'editplanlink',
+                                'uid': selectnodes[0].id,
+                                'planids': planids.join()
+                            }, function (e) {
+                                layer.alert(e.msg, {icon: 1})
 
                             })
 
                         }
                     });
 
-                   layer.full(o);
+                    layer.full(o);
                 };
 
-                _post('/manager/treecontrol/',{'action':'queryplanlink','curid':selectnodes[0].id},success)
+                _post('/manager/treecontrol/', {'action': 'queryplanlink', 'curid': selectnodes[0].id}, success)
 
-                }
-            }  
-    
+            }
+        }
+
 
     })
 
 
+    function render_transfer(tr, leftdata, rightdata) {
+
+        console.log('开始渲染穿梭数据.')
+        console.log('left：' + leftdata)
+        console.log('right:' + rightdata)
+
+        tr.render({
+            elem: '#transfer',  //绑定元素
+            showSearch: true,
+            width: 300,
+            title: ['可选计划', '已选计划'],
+            id: 'demo1', //定义索引
+            data: leftdata,
+            value: rightdata,
+            parseData: function (res) {
+                return {
+                    'title': res.description,
+                    'value': res.nid,
+                    'checked': false,
+                    'disabled': false,
+                }
+
+            }
+
+        });
 
 
-function render_transfer(tr,leftdata,rightdata){
-
-    console.log('开始渲染穿梭数据.')
-    console.log('left：'+leftdata)
-    console.log('right:'+rightdata)
-
-    tr.render({
-      elem: '#transfer',  //绑定元素
-      showSearch:true,
-      width:300,
-      title:['可选计划','已选计划'],
-      id: 'demo1', //定义索引
-      data:leftdata,
-      value:rightdata,
-      parseData:function(res){
-        return{
-            'title':res.description,
-            'value':res.nid,
-            'checked':false,
-            'disabled':false,
-        }
-
-      }
-
-    });
-    
-
-
-
-}
-
+    }
 
 
 </script>

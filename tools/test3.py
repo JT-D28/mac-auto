@@ -1,22 +1,13 @@
-import json
-from django.db.models import Model,CharField
+import gc
+import sys
+gc.set_debug(gc.DEBUG_LEAK)
+a=[]
+b=[]
+a.append(b)
+b.append(a)
+print('a refcount:',sys.getrefcount(a))
+print('b refcount:',sys.getrefcount(b))
 
-class AFC():
-    f1=1
-
-class MyEncoder(json.JSONEncoder):
-    def __init__(self):
-        pass
-
-    def encode(self, o):
-        e=super(MyEncoder,self).encode()
-
-        return e
-
-class AS(MyEncoder):
-    def __init__(self,*attr,**kws):
-        super(AS,self).__init__()
-
-
-afc=AFC()
-print(json.dumps(afc,cls=None))
+del a
+del b
+print(gc.collect())

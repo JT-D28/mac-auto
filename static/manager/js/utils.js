@@ -11,6 +11,7 @@
 // var host='10.60.45.63:8000'
 var host = window.location.host
 // console.log(host)
+window.localStorage.setItem('real-host',host);
 
 var http_base = 'http://' + host
 

@@ -249,3 +249,16 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+
+SESSION_PERMISSION_URL_KEY = 'cool'
+SESSION_MENU_KEY = 'awesome'
+ALL_MENU_KEY = 'k1'
+PERMISSION_MENU_KEY = 'k2'
+# 配置url权限白名单
+SAFE_URL = [
+    '/account/login/',
+    '/account/userRoute/',
+    '/account/logout/',
+]
+REGEX_URL = r'^{url}$'  # url作严格匹配

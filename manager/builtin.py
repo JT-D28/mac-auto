@@ -17,7 +17,6 @@ def cout(*msg, **kws):
     关键字参数level={DEBUG,INFO,WARN,ERROR}
     '''
     taskid=kws['taskid']
-    callername=kws['callername']
     level=kws.get('level','DEBUG')
     _colormap={
         'DEBUG':'#339999',

@@ -20,6 +20,7 @@
     <script src="{% static 'homepage/echartsTheme.js' %}" charset="utf-8"></script>
     <script src="{% static 'homepage/layui/layui.js' %}" charset="utf-8"></script>
     <script src="{% static 'manager/js/jquery.min.js' %}"></script>
+    <script src="{% static 'homepage/html2canvas.min.js' %}"></script>
     <title></title>
 </head>
 
@@ -201,6 +202,9 @@
                         :default-time="['00:00:00', '23:59:59']"
                         :picker-options="pickerOptions">
                 </el-date-picker>
+                <el-row>
+                    <el-button type="success" icon="el-icon-check" circle @click="downloadImage"></el-button>
+                </el-row>
                 <hr>
                 <el-checkbox-group v-model="plansCheckBox" style="padding-top:15px">
                     <el-checkbox v-for="plan in plans" :label="plan" :key="plan.id" border
@@ -209,7 +213,7 @@
                 </el-checkbox-group>
 
             </el-aside>
-            <el-main>
+            <el-main id="mainreport" >
 
                 <el-row :gutter="20">
                     <el-col :span="12" v-if="jacocoVisible">
@@ -286,7 +290,7 @@
 <script>
     Vue.component('planbox', {
         template: '#planbox',
-        props: ['querytime', 'planid', 'productid','planname'],
+        props: ['querytime', 'planid', 'productid', 'planname'],
         delimiters: ['${', '}'],
         data: function () {
             return {

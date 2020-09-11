@@ -141,46 +141,6 @@ class Interceptor(MiddlewareMixin):
 		
 		else:
 			return ('success', '')
-	
-	def _session_check(self, request):
-		'''
-		session校验
-		'''
-		if request.path.startswith('/manager'):
-			if request.session.get('username', None):
-				return True
-			else:
-				logger.info('session校验不通过 跳到登录页面')
-				return False
-
-		return True
-
-
-	def _log_operation(self,request):
-		'''操作日志记录
-		'''
-		opcode=''
-		url=request.path
-		params={**dict(request.GET),**dict(request.POST)}
-		for ok in params:
-			params[ok]=params.get(ok)[0]
-
-		##tree操作
-		if url.__contains__('treecontrol'):
-			# if params.get('action') in ['view','loadpage']:
-			# 	return;
-
-			opcode=params.get('action')
-			ol=models.OperateLog()
-			ol.opcode=opcode
-			ol.opname=get_operate_name(opcode)
-			ol.description=''
-			ol.author=lm.User.objects.get(name=request.session.get('username'))
-			ol.save()
-			logger.info('==记录树操作 %s'%ol)
-		
-
-
 
 	def _print_info_call_msg(self,request):
 		if not request.path.startswith('/static'):
@@ -193,20 +153,10 @@ class Interceptor(MiddlewareMixin):
 		if o:
 			logger.warn('请求参数:'+str(o))
 			pass
-		
 	
 	def process_request(self, request):
-
 		self._print_info_call_msg(request)
-
-		# self._log_operation(request)
-		
-		session_check_result = self._session_check(request)
 		repeat_check_result = self._repeat_check(request)
-		# field_common_check_result=self._field_common_check(request)
-		username = request.session.get('username')
-		if session_check_result == False:
-			return HttpResponseRedirect('/account/login/')
 		
 		if repeat_check_result[0] is not 'success':
 			return JsonResponse(simplejson(code=101, msg=repeat_check_result[1]), safe=False)

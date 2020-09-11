@@ -1,20 +1,12 @@
 from django.db.models import *
-from ME2.settings import logme
 
-# Create your models here.
 
 class User(Model):
-	gender = (
-		('male', "男"),
-		('female', "女"),
-	)
-	
 	name = CharField(max_length=128, unique=True)
 	password = CharField(max_length=256)
-	email = EmailField(blank=True)
-	sex = CharField(max_length=32, choices=gender, default="男")
 	createtime = DateTimeField(auto_now_add=True, null=True)
 	updatetime = DateTimeField(auto_now=True, null=True)
+	roles = ManyToManyField("Role")
 	
 	def __str__(self):
 		return self.name
@@ -40,47 +32,56 @@ class User(Model):
 		verbose_name_plural = "用户"
 
 
-class Role(Model):
-	'''角色表
-	'''
-	name = CharField(max_length=16)
-	description = TextField()
-	users = ManyToManyField(User, blank=True,related_name='users')
-	author = ForeignKey(User, on_delete=CASCADE)
-	createtime = DateTimeField(auto_now_add=True, null=True)
-	updatetime = DateTimeField(auto_now=True, null=True)
-
+class Menu(Model):
+	"""
+	菜单
+	"""
+	title = CharField(max_length=32, unique=True)
+	parent = ForeignKey("Menu", null=True, blank=True, on_delete=True)
+	
+	# 定义菜单间的自引用关系
+	# 权限url 在 菜单下；菜单可以有父级菜单；还要支持用户创建菜单，因此需要定义parent字段（parent_id）
+	# blank=True 意味着在后台管理中填写可以为空，根菜单没有父级菜单
+	
 	def __str__(self):
-		return '%s'%(self.name)
+		# 显示层级菜单
+		title_list = [self.title]
+		p = self.parent
+		while p:
+			title_list.insert(0, p.title)
+			p = p.parent
+		# print(title_list)
+		return '-'.join(title_list)
+	
+	def getId(self):
+		# 显示层级菜单
+		title_id = [self.id]
+		p = self.parent
+		while p:
+			title_id.insert(0, p.id)
+			p = p.parent
+		# print("aaaaaa", title_id)
+		return title_id
 
 
-class UIControl(Model):
-	'''
-	ui控制
-	'''
-	code = CharField(max_length=24)
-	description = TextField(blank=True)
-	is_open=IntegerField(default=0)
-	# is_valid=IntegerField(default=0)
-	author = ForeignKey(User, on_delete=CASCADE)
-	createtime = DateTimeField(auto_now_add=True, null=True)
-	updatetime = DateTimeField(auto_now=True, null=True)
+class Permission(Model):
+	"""
+	权限
+	"""
+	title = CharField(max_length=32, unique=True)
+	url = CharField(max_length=128)
+	type = CharField(max_length=64, null=False)
+	menu = ForeignKey("Menu", null=True, blank=True, on_delete=True)
+	
+	def __str__(self):
+		# 显示带菜单前缀的权限
+		return '{menu}---{permission}'.format(menu=self.menu, permission=self.title)
 
 
-class User_UIControl(Model):
-	'''用户UI关联表
-	'''
-	kind = CharField(max_length=12,default='USER')  # USER|ROLE
-	user_id = IntegerField()
-	uc_id = IntegerField()
-	createtime = DateTimeField(auto_now_add=True, null=True)
-	updatetime = DateTimeField(auto_now=True, null=True)
-	author = ForeignKey(User, on_delete=CASCADE)
-
-
-class URLControl(Model):
-	pass
-
-
-class BuiltinControl(Model):
-	pass
+class Role(Model):
+	"""
+	角色：绑定权限
+	"""
+	title = CharField(max_length=32, unique=True)
+	
+	permissions = ManyToManyField("Permission")

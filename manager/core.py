@@ -959,12 +959,11 @@ class Fu:
 					try:
 						methodname = call_str.split('(')[0]
 						print('methodname=>', methodname)
-						
+						print(call_str)
 						s1 = re.findall('\((.*?),taskid=', call_str)[0]  # sql
-						s2 = re.findall('taskid=(.*?),', call_str)[0]  # taskid
-						s3 = re.findall('callername=(.*?)\)', call_str)[0]  # callername
+						s2 = re.findall("taskid='(.*?)'", call_str)[0]  # taskid
 						
-						print('s1=%s\ns2=%s\ns3=%s' % (s1, s2, s3))
+						print('s1=%s\ns2=%s\n' % (s1, s2))
 						
 						argstr = re.findall('\((.*)\)', call_str)[0]
 						# arglist=argstr.split(',')
@@ -975,10 +974,10 @@ class Fu:
 						call_str = ''
 						if argstr.strip():
 							if methodname.startswith('db'):
-								call_str = '%s("""%s""",taskid=%s,callername=%s)' % (methodname, s1, s2, s3)
+								call_str = '%s("""%s""",taskid="%s")' % (methodname, s1, s2)
 							# print('参数加双引号后表达式=>', call_str)
 							else:
-								call_str = '%s(%s,taskid=%s,callername=%s)' % (methodname, s1, s2, s3)
+								call_str = "%s(%s,taskid='%s')" % (methodname, s1, s2)
 						
 						else:
 							call_str = '%s()' % (methodname,)

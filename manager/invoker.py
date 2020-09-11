@@ -118,12 +118,7 @@ def db_connect(config, timeout=5):
 
 
 
-def check_user_task():
-    def run():
-        for username, tasks in _taskmap.items():
-            for taskid, plans in tasks.items():
-                for planid in plans:
-                    runplan(planid)
+
 
 
 def _get_down_case_leaf_id(caseids,final,cur=None,ignore=False):
@@ -268,7 +263,7 @@ def _runcase(username, taskid, case0, plan, planresult, runkind, startnodeid=Non
     
     case_run_nodes=_get_final_run_node_id('case_%s'%case0.id)
     subflag=True if set(case_run_nodes).issubset(L) else False
-
+    print("aaaaaaaaaaaaaaaaaaaaaa,",subflag,case_run_nodes,L)
     logger.info('节点[%s]下有测试点ID：%s'%(case0.description,case_run_nodes))
     # logger.info('传入的最终执行测试点ID：%s'%L)
     if subflag:
@@ -622,7 +617,7 @@ def _callsocket(taskid, user, url, body=None, timeout=1024):
         url_rv = _replace_variable(user, url, taskid=taskid)
         if url_rv[0] is not 'success':
             return ('', '', url_rv[1])
-        url_rp = _replace_property(user, url_rv[1], taskid=taskid)
+        url_rp = _replace_property(taskid, url_rv[1])
         if url_rp[0] is not 'success':
             return ('', '', url_rp[1])
         
@@ -632,7 +627,7 @@ def _callsocket(taskid, user, url, body=None, timeout=1024):
         body_rv = _replace_variable(user, body, taskid=taskid);
         if body_rv[0] is not 'success':
             return ('', '', body_rv[1])
-        body_rp = _replace_property(user, body_rv[1], taskid=taskid)
+        body_rp = _replace_property(taskid, body_rv[1])
         if body_rp[0] is not 'success':
             return ('', '', body_rp[1])
         
@@ -701,7 +696,7 @@ def _getfiledict(paraminfo):
 
 def ParameterSubstitution(original, user, taskid):
     # 替换属性
-    r, str = _replace_property(user, original)
+    r, str = _replace_property(taskid, original)
     if r is not 'success':
         return 1,str
     r, str = _replace_variable(user, str, taskid=taskid)
@@ -789,6 +784,7 @@ def _callinterface(taskid, user, url, body=None, method=None, headers=None, cont
         files = body
     
     try:
+        body = body.encode('utf-8') if body else None
         rps = session.request(method, url, headers=headers, params=params, data=body.encode('utf-8'),files=files,timeout=timeout,proxies=proxy)
     except:
         err = traceback.format_exc()
@@ -833,7 +829,6 @@ def _callfunction(user, functionid, call_method_name, call_method_params, taskid
     logger.info('params:{}'.format(call_method_params))
     call_method_params.append("taskid='%s'" % taskid)
     call_method_params.append("callername='%s'" % user.name)
-    # call_method_params.append("location='%s'"%get_space_dir(user.name))
     call_method_params = [x for x in call_method_params if x]
 
     call_str = '%s(%s)' % (call_method_name, ','.join(call_method_params))
@@ -1050,7 +1045,7 @@ def _eval_expression(user, ourexpression, data=None,taskid=None,parse_type='json
     接口验证时 direction=left ,临时变量设置时 为right
     """
     try:
-        exp_rp = _replace_property(user, ourexpression)
+        exp_rp = _replace_property(taskid, ourexpression)
         if exp_rp[0] is not 'success':
             return exp_rp
 
@@ -1186,7 +1181,7 @@ def _replace_function(user, str_, taskid=None):
         repstr = '%s(%s)' % (fname, call_str[1])
 
         status, res = Fu.call(f, invstr, builtin=(lambda: True if fname in builtinmethods else False)())
-        viewcache(taskid, '计算函数表达式:<br/>%s <br/>结果:<br/>%s' % (invstr, res))
+        viewcache(taskid, '计算函数表达式:<br/>%s <br/>结果:<br/>%s' % (invstr, res if res else '成功'))
         resultlist.append((status, res))
 
         if status is 'success':
@@ -1275,7 +1270,8 @@ def _get_step_params(paraminfo, taskid, callername):
         try:
             dl = dict()
             for s1 in ps.split('&'):
-                p1 = s1.split('=')[0]
+                # a=1&b=2
+                p1 = s1.split('=')[0] #a
                 p2 = '='.join(s1.split('=')[1:])
                 if p1.__contains__('?'):
                     p1 = p1.split('?')[1]
@@ -1534,7 +1530,7 @@ def _gain_compute(user, gain_str, src=1, taskid=None):
         else:
             # 是sql
             op = Mysqloper()
-            gain_str_rp = _replace_property(user, gain_str)
+            gain_str_rp = _replace_property(taskid, gain_str)
             if gain_str_rp[0] is not 'success':
                 return gain_str_rp
             
@@ -1557,7 +1553,7 @@ def _gain_compute(user, gain_str, src=1, taskid=None):
         return ('error', traceback.format_exc())
 
 
-def _replace_property(user, str_, taskid=None):
+def _replace_property(taskid,str_):
     """
     属性右替换
     返回(success,替换后新值)
@@ -1567,21 +1563,16 @@ def _replace_property(user, str_, taskid=None):
     cur = None
     try:
         old = str_
-        username = user.name
-        # username=user.name
-        # a=re.findall("\$(.*)=", str_)
         
         logger.info('str_=>', str_)
         b = re.findall("\$\{(.*?)\}", str_)
-        # c=a+b
         c = b
         for it in c:
-            # logger.info('tmp==>',it)
             cur = it
             
             logger.info("取属性==")
-            logger.info(_tempinfo, username, it)
-            v = _tempinfo.get(username).get(it)
+            logger.info(_tempinfo, taskid, it)
+            v = _tempinfo.get(taskid).get(it)
             
             if v is None:
                 # raise RuntimeError('没有定义属性$%s 请先定义'%it)

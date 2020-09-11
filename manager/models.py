@@ -86,6 +86,9 @@ class BusinessData(Model):
 	def __str__(self):
 		return '[%s]%s' % (self.id, self.businessname)
 	
+	def toJSON(self):
+		return json.dumps(dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]]),ensure_ascii=False)
+	
 	@classmethod
 	def gettestdataparams(cls, businessdata_id):
 		try:
@@ -98,25 +101,6 @@ class BusinessData(Model):
 			
 			if step.step_type == 'interface':
 				return ('success', data)
-				# if step.content_type in['json','formdata']:
-					# data = data.replace('null', 'None').replace('true', 'True').replace('false', 'False')
-					# if len(re.findall('\$\[(.*?)\((.*?)\)\]', data)) > 0:
-					# 	##是函数调用
-					# 	pass
-					# else:
-					# 	try:
-					# 		print(json.loads(data))
-					# 		return ('success', data)
-					# 	except:
-					# 		data = data.replace('null', 'None').replace('true', 'True').replace('false', 'False')
-					# 		return ('success', json.dumps(eval(data)))
-					# 	# data=eval(data)
-					# 	# data = json.dumps(eval(data))
-					#
-				# 	return ('success', data)
-				# else:
-				# 	return ('success', data)
-				#
 			elif step.step_type == 'function':
 				return ('success', businessdatainst.params.split(','))
 		except:
@@ -161,7 +145,6 @@ class Step(Model):
 	##临时变量等 |分隔  可以是token
 	temp = CharField(max_length=128, blank=True, null=True)
 	# tag_id=CharField(max_length=32,blank=True)
-	businessdatainfo = ManyToManyField(BusinessData, blank=True)
 	# businesstitle=CharField(max_length=1000,blank=True)
 	db_id = CharField(max_length=64, blank=True, null=True)
 	is_mock_open=IntegerField(default=0)
@@ -182,8 +165,6 @@ class Case(Model):
 	author = ForeignKey(User, on_delete=CASCADE)
 	# priority=CharField(max_length=32)
 	description = CharField(max_length=128)
-	businessdatainfo = ManyToManyField(BusinessData, blank=True)
-	# steps=ManyToManyField(Step,blank=True)
 	db_id = CharField(max_length=64, blank=True, null=True)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
@@ -272,13 +253,6 @@ class Order(Model):
 		return 'kind=%s,main=%s,follow=%s,value=%s' % (self.kind, self.main_id, self.follow_id, self.value)
 
 
-class Menu(Model):
-	text = CharField(max_length=32)
-	url = CharField(max_length=64)
-	icon = CharField(max_length=64)
-	parentid = CharField(max_length=128)
-
-
 class DBCon(Model):
 	kind = CharField(choices=(('oracle', 'Oracle'), ('mysql', "Mysql"), ('db2', 'DB2')), max_length=32)
 	dbname = CharField(max_length=64)
@@ -329,7 +303,6 @@ class Product(Model):
 	'''
 	产品表
 	'''
-	# plans=ManyToManyField(Plan,blank=True)
 	description = CharField(max_length=64)
 	author = ForeignKey(User, on_delete=CASCADE)
 	createtime = DateTimeField(auto_now_add=True)

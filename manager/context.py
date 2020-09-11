@@ -35,6 +35,7 @@ class Me2Log(object):
     @classmethod
     def info(cls,*msg):
         logme.info(' '.join([str(x) for x in msg]))
+    
 
     @classmethod
     def warn(cls,*msg):

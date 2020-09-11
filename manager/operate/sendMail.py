@@ -363,7 +363,7 @@ class MainSender:
 			sender_pass = configs.EMAIL_HOST_PASSWORD
 			to_receive = mail_config.to_receive
 
-			rich_text_rp = _replace_property(user, mail_config.rich_text)
+			rich_text_rp = _replace_property(taskid, mail_config.rich_text)
 			rich_text = ''
 			if rich_text_rp[0] is 'success':
 				rich_text_rv = _replace_variable(user, rich_text_rp[1], taskid=taskid)
@@ -380,7 +380,7 @@ class MainSender:
 			smtp_port = configs.EMAIL_PORT  # 465
 			subject = ''
 			description = mail_config.description
-			description_rp = _replace_property(user, description)
+			description_rp = _replace_property(taskid, description)
 			if description_rp[0] is 'success':
 				description_rv = _replace_variable(user, description_rp[1], taskid=taskid)
 				if description_rv[0] is 'success':

@@ -13,6 +13,7 @@ from ME2.settings import logme
 from concurrent.futures import  ThreadPoolExecutor,wait
 
 from login import models as lm
+from .StartPlan import RunPlan
 from .context import *
 from .invoker import runplan,get_run_node_plan_id
 from .core import gettaskid,get_params,EncryptUtils
@@ -318,8 +319,12 @@ def run(request):
             'msg': '计划正在运行[%s]任务，稍后再试！'%msg
         }
     logger.info('runidd:',runid)
-    t=threading.Thread(target=runplan,args=(callername, taskid, planid, runkind,runid))
-    t.start()
+
+    x = RunPlan(taskid,planid,runkind,callername,startNodeId=runid)
+    threading.Thread(target=x.start).start()
+
+    # t=threading.Thread(target=runplan,args=(callername, taskid, planid, runkind,runid))
+    # t.start()
     request.session['console_taskid'] = taskid
     return {'status': 'success','msg': taskid,'data':planid}
 
@@ -456,7 +461,7 @@ def addstep(request):
         method = request.POST.get('method')
         content_type = request.POST.get('content_type')
         count = request.POST.get('count')
-        tmp = request.POST.get('tmp')
+        tmp = request.POST.get('extract')
         author = request.session.get('username')
         logger.info("author=>", author)
         businessdata = request.POST.get('business_data')
@@ -571,7 +576,7 @@ def editstep(request):
         method = request.POST.get('method')
         content_type = request.POST.get('content_type')
         
-        tmp = request.POST.get('tmp')
+        tmp = request.POST.get('extract')
         username = request.session.get('username')
         author = lm.User.objects.get(name=username)
         
@@ -593,7 +598,6 @@ def editstep(request):
         step.url = url
         step.method = method
         step.content_type = content_type
-        
         step.temp = tmp
         step.db_id = dbid
         step.save()

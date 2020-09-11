@@ -1230,22 +1230,17 @@ def queryfunclist(request):
 
 @csrf_exempt
 def queryonestep(request):
-    code = 0
-    msg = ''
+    code,msg = (0,'查询成功')
     urid = request.POST.get('id').split('_')[1]
+    step = None
     try:
-
-        if urid is None:
-            return JsonResponse(simplejson(code=2, msg='查询urid异常'), safe=False)
-
-        step = Step.objects.get(id=urid)
-        jsonstr = json.dumps(step, cls=StepEncoder)
-        return JsonResponse(jsonstr, safe=True)
-
-
+        step = Step.objects.values().get(id=urid)
     except:
         logger.info(traceback.format_exc())
-        return JsonResponse(simplejson(code=3, msg='查询异常'), safe=False)
+        code, msg = (1,'查询失败%s'%traceback.format_exc())
+    return JsonResponse({'code':code,'msg':msg,'data':step})
+
+
 
 
 """邮件配置相关
@@ -1434,23 +1429,15 @@ def hasread(request):
 
 @csrf_exempt
 def queryonebusiness(request):
-    code = 0
-    msg = ''
+    code,msg = (0,'')
+    id = request.POST.get('vid').split('_')[1]
     try:
-        callername = request.session.get('username')
-        # vid = request.POST.get('vid').split('_')[1]
-        # business = BusinessData.objects.get(id=vid)
-        # logger.info('business=>', business)
-        # jsonstr = json.dumps(business, cls=BusinessDataEncoder)
-        sql = '''
-        SELECT b.id,count,businessname,b.timeout,itf_check,db_check,queryparams,params,preposition,postposition,value as weight,description,bodytype
-        FROM manager_businessdata b, manager_order o WHERE b.id=%s and o.follow_id=b.id and o.kind='step_business' and o.isdelete=0 and b.isdelete=0
-        '''
+        sql = '''SELECT id,count,businessname,params as body,preposition,postposition,description,timeout,queryparams as params ,bodytype,
+        CONCAT_WS('|',itf_check,db_check) as dataCheck FROM manager_businessdata where id =%s and isdelete=0'''
         with connection.cursor() as cursor:
-            cursor.execute(sql, [request.POST.get('vid').split('_')[1]])
-            desc = cursor.description
-            row = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-            row[0]['timeout'] = 60 if row[0]['timeout'] is None else row[0]['timeout']
+            cursor.execute(sql, [id])
+            row = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()][0]
+            row['timeout'] = 60 if row['timeout'] is None else row['timeout']
         return JsonResponse({'code': 0, 'data': row})
     # return JsonResponse(jsonstr, safe=False)
     except:

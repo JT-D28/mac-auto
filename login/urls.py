@@ -21,10 +21,15 @@ from manager import views as mv
 
 urlpatterns = [
 	path('login/', views.login),
+	path('getCsrfToken/', views.getCsrfToken),
+	path('logout/', views.logout),
+
+
+
+	
 	path('index/', views.index),
 	path('user/', views.account),
     path('role/', views.role),
-	path('logout/', views.logout),
 	path('queryaccount/', views.queryaccount),
 	path('queryoneaccount/', views.queryoneaccount),
 	path('addaccount/', views.addaccount),

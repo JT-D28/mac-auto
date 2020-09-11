@@ -73,8 +73,13 @@ def badresult(request):
 @csrf_exempt
 def jacocoreport(request):
 	code, msg = 0, ''
-	jacocoset = Jenkins.objects.get(productid=request.POST.get('productid'))
+	try:
+		jacocoset = Jenkins.objects.get(productid=request.POST.get('productid'))
+	except:
+		return JsonResponse({'code':1,'msg':'没有配置'})
 	jobs = request.POST.getlist('jobname[]')
+	if not jobs:
+		jobs = request.POST.get('jobname').split(',')
 	jobmap = {}
 	if jobs!=['0']:
 		jobnum = len(jobs)

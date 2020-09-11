@@ -30,6 +30,7 @@ from .context import set_top_common_config, viewcache, get_task_session, \
 import re, traceback, time, threading, json, warnings, datetime, socket
 import copy, base64,os
 
+from .operate.DesktopNotification import notification
 from .operate.generateReport import dealDeBuginfo, dealruninfo
 from .operate.getIp import get_host_ip
 from .operate.mongoUtil import Mongo
@@ -299,10 +300,8 @@ def _runcase(username, taskid, case0, plan, planresult, runkind, startnodeid=Non
                     # 步骤执行次数>0
                     for ldx in range(0, stepcount):
                         businessorderlist = ordered(list(Order.objects.filter(kind='step_business', main_id=stepid,isdelete=0)))
-                        # logger.info('bbb=>',businessorderlist)
                         for order in businessorderlist:
                             groupid = order.value.split(".")[0]
-                            # step=Step.objects.get(id=order.follow_id)
                             start = time.time()
                             spend = 0
 
@@ -453,7 +452,6 @@ def runplan(callername, taskid, planid, runkind, startnodeid=None):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(dealruninfo(planid,taskid,{'spend':spendtime,'dbscheme':dbscheme,'planname':plan.description,
                                                            'user':username,'runkind':runkind},startnodeid))
-        # 清除请求session
 
     except Exception as e:
         logger.error('执行计划未知异常：', traceback.format_exc())
@@ -466,6 +464,7 @@ def runplan(callername, taskid, planid, runkind, startnodeid=None):
         setRunningInfo(planid, taskid, '0', dbscheme)
         processSendReport(taskid, plan.mail_config_id, callername)
         clear_data(callername, _tempinfo)
+        notification(callername, "计划【%s】%s任务运行结束，前往查看"%(plan.description,{"1": "验证", "2": "调试", "3": "定时"}[runkind]))
 
 
 def _step_process_check(callername, taskid, order ,proxy):
@@ -482,9 +481,10 @@ def _step_process_check(callername, taskid, order ,proxy):
             return ('omit', "测试点[%s]执行次数=0 略过." % businessdata.businessname)
         preplist = businessdata.preposition.split("|") if businessdata.preposition is not None else ''
         postplist = businessdata.postposition.split("|") if businessdata.postposition is not None else ''
-        db_check = businessdata.db_check
-        itf_check = businessdata.itf_check
+        db_check = businessdata.db_check if businessdata.db_check is not None else ''
+        itf_check = businessdata.itf_check if businessdata.itf_check is not None else ''
         status, paraminfo = BusinessData.gettestdataparams(order.follow_id)
+        queryparams = '' if businessdata.queryparams  is None else businessdata.queryparams
         
         # logger.info('bbid=>',businessdata.id)
         status1, step = BusinessData.gettestdatastep(businessdata.id)
@@ -510,13 +510,10 @@ def _step_process_check(callername, taskid, order ,proxy):
             return (status, res)
         
         if step.step_type == "interface":
-            viewcache(taskid, "数据校验配置=>%s" % db_check)
-            viewcache(taskid, "接口校验配置=>%s" % itf_check)
-            headers = []
+            viewcache(taskid, "校验配置=>%s" % db_check+' '+itf_check)
+            headers, text, statuscode, itf_msg = [], '', -1, ''
             
-            text, statuscode, itf_msg = '', -1, ''
-            
-            if step.content_type == 'xml':
+            if 'xml' in step.content_type:
                 if re.search('webservice', step.url):
                     headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), 'post',
                                                                         None, 'xml', step.temp, timeout,proxy)
@@ -530,10 +527,9 @@ def _step_process_check(callername, taskid, order ,proxy):
                 else:
                     text, statuscode, itf_msg = _callsocket(taskid, user, step.url, body=str(paraminfo))
             else:
-                
                 headers, text, statuscode, itf_msg = _callinterface(taskid, user, step.url, str(paraminfo), step.method,
                                                                     step.headers, step.content_type, step.temp,
-                                                                    timeout,proxy)
+                                                                    timeout,proxy,queryparams=queryparams)
             if text.lstrip().startswith('<!DOCTYPE html>'):
                 viewcache(taskid,"<span style='color:#009999;'>请求响应=><xmp style='color:#009999;'>内容为HTML，不显示</xmp></span>")
             else:
@@ -549,17 +545,17 @@ def _step_process_check(callername, taskid, order ,proxy):
                     return (status, res)
 
 
-                if step.content_type in ('json', 'urlencode','formdata'):
-                    parse_type = 'json'
-                else:
+                if 'xml' in step.content_type:
                     parse_type = 'xml'
+                else:
+                    parse_type = 'json'
 
                 checkformulas = [db_check,itf_check]
                 for formula in checkformulas:
-                    res, error = _compute(taskid, user, formula, target=text, parse_type=parse_type,
-                                          rps_header=headers)
-                    if res is not 'success':
-                        return 'fail', error
+                    if formula:
+                        res, error = _compute(taskid, user, formula, target=text, parse_type=parse_type,rps_header=headers)
+                        if res is not 'success':
+                            return 'fail', error
                 return 'success', ''
 
             else:
@@ -703,141 +699,97 @@ def _getfiledict(paraminfo):
     return 'success', pdict
 
 
+def ParameterSubstitution(original, user, taskid):
+    # 替换属性
+    r, str = _replace_property(user, original)
+    if r is not 'success':
+        return 1,str
+    r, str = _replace_variable(user, str, taskid=taskid)
+    if r is not 'success':
+        return 1,str
+    r, str = _replace_function(user, str, taskid=taskid)
+    if r is not 'success':
+        return 1,str
+    return 0,str
+    
+
 def _callinterface(taskid, user, url, body=None, method=None, headers=None, content_type=None, props=None,
-                   timeout=None,proxy={}):
+                   timeout=None,proxy={},queryparams=''):
     """
     返回(rps.text,rps.status_code,msg)
     """
 
     # url data headers过滤
     viewcache(taskid, "执行[%s]请求=>"%method)
-
     viewcache(taskid, "<span style='color:#009999;'>content_type=>%s</span>" % content_type)
+    
     viewcache(taskid, "<span style='color:#009999;'>原始url=>%s</span>" % url)
-
-
-    url_rp = _replace_property(user, url)
-    if url_rp[0] is not 'success':
-        return ('', '', '', url_rp[1])
-    url_rv = _replace_variable(user, url_rp[1], taskid=taskid)
-    if url_rv[0] is not 'success':
-        return ('', '', '', url_rv[1])
-
-    url_rf = ''
-    if len(url_rv[1].split('?')) > 1:
-        # logger.info('$' * 1000)
-        url_params = url_rv[1].split('?')[1]
-        logger.info('url_params=>', url_params)
-        sep = _replace_function(user, url_params, taskid=taskid)
-        if sep[0] is not 'success':
-            return ('', '', '', sep[1])
-
-        url_rf = ('success', url_rv[1].split('?')[0] + '?' + sep[1])
-
-
-
-    else:
-        url_rf = _replace_function(user, url_rv[1], taskid=taskid)
-    if url_rf[0] is not 'success':
-        return ('', '', '', url_rf[1])
-
-    url = url_rf[1]
+    r,url = ParameterSubstitution(url,user,taskid)
+    if r == 1:
+        return ('', '', '', url)
     url = urlmap.getmenhu(url, taskid, user.name)
     viewcache(taskid, "<span style='color:#009999;'>url=>%s</span>" % url)
 
-    viewcache(taskid,
-              "<span style='color:#009999;'>原始参数=><xmp style='color:#009999;'>%s</xmp></span>" % body)
-    data_rp = _replace_property(user, body)
-    if data_rp[0] is not 'success':
-        return ('', '', '', data_rp[1])
-    data_rv = _replace_variable(user, data_rp[1], taskid=taskid)
-    if data_rv[0] is not 'success':
-        return ('', '', '', data_rv[1])
+    params = None
+    if queryparams:
+        viewcache(taskid, "<span style='color:#009999;'>原始查询参数=><xmp style='color:#009999;'>%s</xmp></span>" % queryparams)
+        r, params = ParameterSubstitution(queryparams, user, taskid)
+        if r == 1:
+            return ('', '', '', params)
+        viewcache(taskid, "<span style='color:#009999;'>变量替换后查询参数=><xmp style='color:#009999;'>%s</xmp></span>" % params)
+    
 
-    data_rf = _replace_function(user, data_rv[1], taskid=taskid)
-    if data_rf[0] is not 'success':
-        return ('', '', '', data_rf[1])
+    viewcache(taskid, "<span style='color:#009999;'>原始参数=><xmp style='color:#009999;'>%s</xmp></span>" % body)
+    r, body = ParameterSubstitution(body, user, taskid)
+    if r == 1:
+        return ('', '', '', body)
+    viewcache(taskid, "<span style='color:#009999;'>变量替换后参数=><xmp style='color:#009999;'>%s</xmp></span>" % body)
 
-    body = data_rf[1]
 
-    viewcache(taskid,
-              "<span style='color:#009999;'>变量替换后参数=><xmp style='color:#009999;'>%s</xmp></span>" % body)
-
-    # body=json.loads(body)
-
-    # logger.info(type(headers))
     viewcache(taskid, "<span style='color:#009999;'>用户定义请求头=>%s</span>" % (headers))
-    if headers is None or len(headers.strip()) == 0:
-        headers = {}
-
-    headers_rp = _replace_property(user, str(headers))
-
-    if headers_rp[0] is not 'success':
-        return ('', '', '', headers_rp[1])
-    headers_rv = _replace_variable(user, headers_rp[1], taskid=taskid)
-    if headers_rv[0] is not 'success':
-        return ('', '', '', headers_rv[1])
-
-    try:
-        headers = eval(headers_rv[1])
-    except:
-        return ('', '', '', '接口请求头格式不对 请检查')
-
-    ##
-    default = {
-        'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36"}
-    viewcache(taskid, "<span style='color:#009999;'>headers=>%s</span>" % {**default, **headers})
-    viewcache(taskid, "<span style='color:#009999;'>method=>%s</span>" % method)
-
-    if content_type == 'json':
-
-        default["Content-Type"] = 'application/json;charset=UTF-8'
+    headers = '{}' if headers is None or len(headers.strip()) == 0 else headers
+    r, headers = ParameterSubstitution(headers, user, taskid)
+    if r == 1:
+        return ('', '', '', headers)
+    headers = eval(headers)
+    headers['User-Agent'] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.109 Safari/537.36"
+    viewcache(taskid, "<span style='color:#009999;'>headers=>%s</span>" % headers)
+    
+    if 'json' in content_type:
+        headers["Content-Type"] = 'application/json;charset=UTF-8'
         body=body.replace("'null'",'null').replace('"null"','null')
-        body = body.encode('utf-8')
-    # body = json.dumps(eval(body))
-
-    elif content_type == 'xml':
-        default["Content-Type"] = 'application/xml'
-        body = body.encode('utf-8')
-    elif content_type == 'urlencode':
-        default["Content-Type"] = 'application/x-www-form-urlencoded;charset=UTF-8'
+        body = json.dumps(ast.literal_eval(body),ensure_ascii=False)
+    elif 'xml' in content_type :
+        headers["Content-Type"] = 'application/xml'
+    elif 'urlencode' in content_type :
+        headers["Content-Type"] = 'application/x-www-form-urlencoded;charset=UTF-8'
         try:
             if body.startswith("{") and not body.startswith("{{"):
                 body = body.replace('\r', '').replace('\n', '').replace('\t', '')
-                # old=old.replace('"null"','null').replace("'null'",'null')
-                print('vbody:',body)
                 body = parse.urlencode(ast.literal_eval(body))
-
-            # body = body.encode('UTF-8')
-
+            # body = body.encode('utf-8')
 
         except:
             logger.info('参数转化异常：', traceback.format_exc())
             return ('', '', '', 'urlencode接口参数格式不对 请检查..')
 
-    elif content_type == 'xml':
-        isxml = 0
-    elif content_type == 'formdata':
+    elif 'formdata' in content_type:
         state, body = _getfiledict(str(body))
         if state == 'fail':
             viewcache(taskid, "<span style='color:#009999;'>%s</span>" % "上传文件不存在，请检查")
             return ('', '', '', '上传文件不存在，请检查')
     else:
-        raise NotImplementedError("content_type=%s没实现" % content_type)
+        headers["Content-Type"] = content_type
 
     session = get_task_session('%s_%s' % (taskid, user.name))
-    params = None
-    data = None
+    
     files = None
-
-    if method == 'get':
-        params = body
-    elif content_type == 'formdata':
+    if content_type == 'formdata':
+        body = None
         files = body
-    else:
-        data = body
+    
     try:
-        rps = session.request(method, url, headers={**default, **headers}, params=params, data=data,files=files,timeout=timeout,proxies=proxy)
+        rps = session.request(method, url, headers=headers, params=params, data=body.encode('utf-8'),files=files,timeout=timeout,proxies=proxy)
     except:
         err = traceback.format_exc()
         if 'requests.exceptions.ConnectTimeout' in err:

@@ -158,32 +158,32 @@ class RunPlan:
 		print("bbb", case_run_nodes, self.finalNode)
 		subFlag = True if set(case_run_nodes).issubset(self.finalNode) else False
 		logger.info('用例[%s]下有测试点ID：%s' % (case.description, case_run_nodes))
-		print("bbb", subFlag)
-		if subFlag:
+		caseCount = 0 if case.count in [0, '0', '', None] else int(case.count)
+
+		if subFlag and caseCount!=0:
 			self.log("开始执行用例[<span id='case_%s' style='color:#FF3399'>%s</span>]" % (case.id, case.description))
 		# 获取用例的子节点（有用例和步骤两种情况，需要按照正常顺序）
 		subList = ordered(list(Order.objects.filter(Q(kind='case_step') | Q(kind='case_case'), main_id=case.id)))
-		caseCount = 0 if case.count in [0, '0', '', None] else int(case.count)
 		for i in range(caseCount):
 			self.setDbUse(case.db_id, 'case')
 		
 			for subNode in subList:
-				if subNode.kind == 'case_case':
-					subCase = Case.objects.get(id=subNode.follow_id)
-					self.runCase(subCase)
-				elif subNode.kind == 'case_step':
-					stepId = subNode.follow_id
-					step = Step.objects.get(id=stepId)
-					stepCount = 0 if step.count in [0, '0', '', None] else int(step.count)
-					for i in range(stepCount):
-						try:
+				try:
+					if subNode.kind == 'case_case':
+						subCase = Case.objects.get(id=subNode.follow_id)
+						self.runCase(subCase)
+					elif subNode.kind == 'case_step':
+						stepId = subNode.follow_id
+						step = Step.objects.get(id=stepId)
+						stepCount = 0 if step.count in [0, '0', '', None] else int(step.count)
+						for i in range(stepCount):
 							self.setDbUse(case.db_id, 'step')
 							if not self.runStep(step, case.id,groupSkip):
 								caseSuccess = False
-						except:
-							print(traceback.format_exc())
-							continue
-		if subFlag:
+				except:
+					print(traceback.format_exc())
+					continue
+		if subFlag and caseCount!=0:
 			color, succss = ('green', 'success') if caseSuccess else ('red', 'fail')
 			self.log("结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-%s'>%s</span>" % (
 				case.description, color, succss))
@@ -250,7 +250,7 @@ class RunPlan:
 	def process_process(self, point, stepId):
 		# 预处理测试点数据
 		# 1. 超时时间
-		timeout = 60.0 if not point.timeout else float(point.timeout)
+		timeout = 10.0 if not point.timeout else float(point.timeout)
 		# 2. 前置、后置操作列表
 		prepPosition_List = point.preposition.split("|") if point.preposition is not None else ''
 		postPosition_List = point.postposition.split("|") if point.postposition is not None else ''
@@ -465,7 +465,6 @@ class RunPlan:
 			else:
 				info = 'error'
 				msg = '请求异常:%s' % traceback.format_exc()
-			print("mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm")
 			return info, msg
 		return 'success', rps
 	

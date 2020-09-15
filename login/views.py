@@ -3,6 +3,7 @@ import threading
 import redis
 from django.conf import settings
 from django.core import serializers
+from django.shortcuts import render
 from django.utils.encoding import escape_uri_path
 
 from ME2 import configs
@@ -96,6 +97,8 @@ def initDataupdate():
 
 
 def login(request):
+	if request.method=='GET':
+		return render(request, 'login/login.html', locals())
 	if configs.IS_CREATE_SUPERUSER:
 		User.create_superuser(EncryptUtils.md5_encrypt(configs.SUPERUSER_PWD))
 	
@@ -142,21 +145,21 @@ def init_permission(request, user_obj):
 			        "menu_id": item["permissions__menu_id"], 'type': item['permissions__type']}
 			permission_menu_list.append(temp)
 	
-	menu_list = list(Menu.objects.values('id', 'title', 'parent_id'))
+	permission_list = list(Permission.objects.values_list('url',flat=True).exclude(url=''))
 	
 	from django.conf import settings
 	
 	# 保存 权限菜单 和所有 菜单
 	request.session[settings.SESSION_MENU_KEY] = {
-		settings.ALL_MENU_KEY: menu_list,
+		settings.ALL_PERMISSION_KEY: permission_list,
 		settings.PERMISSION_MENU_KEY: permission_menu_list,
 	}
 	# 保存用户允许的接口权限列表
 	request.session[settings.SESSION_PERMISSION_URL_KEY] = permission_url_list
 	
-	# print('permission_url_list ------------------- ', permission_url_list)
-	# print('permission_menu_list ------------------- ', permission_menu_list)
-	# print('menu_list ------------------- ', menu_list)
+	print('permission_url_list ------------------- ', permission_url_list)
+	print('permission_menu_list ------------------- ', permission_menu_list)
+	print('permission_list ------------------- ', permission_list)
 
 
 def logout(request):
@@ -369,9 +372,19 @@ def queryRoles(request):
 	
 	rolesSerializer = serializers.serialize('json', rolesList)
 	rolesList = []
+	
+	permissionmap = {}
+	permission = Permission.objects.all()
+	for i in permission:
+		permissionmap[i.id] = i.title
+	
 	for role in json.loads(rolesSerializer):
 		one = role['fields']
 		one['id'] = role['pk']
+		permissions = []
+		for permissionId in role['fields']['permissions']:
+			permissions.append({'id':permissionId,'title':permissionmap[permissionId]})
+		one['permissions'] = permissions
 		rolesList.append(one)
 	return JsonResponse({'code': 0, 'data': rolesList, 'total': total})
 

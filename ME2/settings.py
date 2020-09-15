@@ -85,6 +85,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'login.rbac.RbacMiddleware',
     'mymiddleware.Interceptor'
 
 ]
@@ -107,8 +108,7 @@ TEMPLATES = [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'login.views.global_setting',
+                'django.contrib.messages.context_processors.messages'
             ],
         },
     },
@@ -251,10 +251,10 @@ CHANNEL_LAYERS = {
 }
 
 
-SESSION_PERMISSION_URL_KEY = 'cool'
-SESSION_MENU_KEY = 'awesome'
-ALL_MENU_KEY = 'k1'
-PERMISSION_MENU_KEY = 'k2'
+SESSION_PERMISSION_URL_KEY = 'k1'
+SESSION_MENU_KEY = 'k2'
+ALL_PERMISSION_KEY = 'k3'
+PERMISSION_MENU_KEY = 'k4'
 # 配置url权限白名单
 SAFE_URL = [
     '/account/login/',

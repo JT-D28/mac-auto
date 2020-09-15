@@ -70,7 +70,7 @@ class Permission(Model):
 	"""
 	title = CharField(max_length=32, unique=True)
 	url = CharField(max_length=128)
-	type = CharField(max_length=64, null=False)
+	type = CharField(max_length=64, null=False,default='api')
 	menu = ForeignKey("Menu", null=True, blank=True, on_delete=True)
 	
 	def __str__(self):

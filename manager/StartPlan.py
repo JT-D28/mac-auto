@@ -171,7 +171,8 @@ class RunPlan:
 				try:
 					if subNode.kind == 'case_case':
 						subCase = Case.objects.get(id=subNode.follow_id)
-						self.runCase(subCase)
+						if not self.runCase(subCase):
+							caseSuccess = False
 					elif subNode.kind == 'case_step':
 						stepId = subNode.follow_id
 						step = Step.objects.get(id=stepId)

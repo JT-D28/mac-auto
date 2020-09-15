@@ -257,7 +257,7 @@ ALL_PERMISSION_KEY = 'k3'
 PERMISSION_MENU_KEY = 'k4'
 # 配置url权限白名单
 SAFE_URL = [
-    '/account/getCsrfToken/'
+    '/account/getCsrfToken/',
     '/account/login/',
     '/account/userRoute/',
     '/account/logout/',

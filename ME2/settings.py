@@ -19,9 +19,8 @@ DEBUG_TOOLS_ON = False
 
 BASE_URL = 'http://' + configs.ME2_URL
 
-
-FILE_UPLOAD_MAX_MEMORY_SIZE = 26214400  #上传文件大小，改成25M
-DATA_UPLOAD_MAX_MEMORY_SIZE = 26214400  #上传数据大小，也改成了25M
+FILE_UPLOAD_MAX_MEMORY_SIZE = 26214400  # 上传文件大小，改成25M
+DATA_UPLOAD_MAX_MEMORY_SIZE = 26214400  # 上传数据大小，也改成了25M
 
 ##Redis配置
 REDIS_HOST = configs.REDIS_HOST
@@ -30,8 +29,6 @@ REDIS_PORT = configs.REDIS_PORT
 ##mongodb配置
 MONGO_HOST = configs.MONGO_HOST
 MONGO_PORT = configs.MONGO_PORT
-
-
 
 # 环境
 env_id = ''
@@ -46,47 +43,47 @@ SECRET_KEY = 'd6yqlb(u%mxu!t$4evtz@3#5zqo@zy8db09cj1pi2r38^6fi*y'
 
 INTERNAL_IPS = ("127.0.0.1",)
 DEBUG_TOOLBAR_PANELS = [
-    'ddt_request_history.panels.request_history.RequestHistoryPanel',
-    'debug_toolbar.panels.timer.TimerPanel',
-    'debug_toolbar.panels.settings.SettingsPanel',
-    'debug_toolbar.panels.request.RequestPanel',
-    'debug_toolbar.panels.sql.SQLPanel',
-    'debug_toolbar.panels.staticfiles.StaticFilesPanel',
-    'debug_toolbar.panels.templates.TemplatesPanel',
-    # 'pympler.panels.MemoryPanel',
+	'ddt_request_history.panels.request_history.RequestHistoryPanel',
+	'debug_toolbar.panels.timer.TimerPanel',
+	'debug_toolbar.panels.settings.SettingsPanel',
+	'debug_toolbar.panels.request.RequestPanel',
+	'debug_toolbar.panels.sql.SQLPanel',
+	'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+	'debug_toolbar.panels.templates.TemplatesPanel',
+	# 'pympler.panels.MemoryPanel',
 ]
 
 ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
-    'channels',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    # 'django.contrib.staticfiles',
-    'login',
-    'manager',
-    'homepage',
-    'corsheaders',
-    # 'debug_toolbar.apps.DebugToolbarConfig',
-    # 'pympler',
-    # 'django_crontab',
+	'channels',
+	'django.contrib.admin',
+	'django.contrib.auth',
+	'django.contrib.contenttypes',
+	'django.contrib.sessions',
+	'django.contrib.messages',
+	# 'django.contrib.staticfiles',
+	'login',
+	'manager',
+	'homepage',
+	'corsheaders',
+	# 'debug_toolbar.apps.DebugToolbarConfig',
+	# 'pympler',
+	# 'django_crontab',
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'login.rbac.RbacMiddleware',
-    'mymiddleware.Interceptor'
+	'django.middleware.security.SecurityMiddleware',
+	'django.contrib.sessions.middleware.SessionMiddleware',
+	'corsheaders.middleware.CorsMiddleware',
+	'django.middleware.common.CommonMiddleware',
+	'django.middleware.csrf.CsrfViewMiddleware',
+	'django.contrib.auth.middleware.AuthenticationMiddleware',
+	'django.contrib.messages.middleware.MessageMiddleware',
+	'django.middleware.clickjacking.XFrameOptionsMiddleware',
+	'login.rbac.RbacMiddleware',
+	'mymiddleware.Interceptor'
 
 ]
 
@@ -98,20 +95,20 @@ ASGI_APPLICATION = 'manager.routing.application'
 ROOT_URLCONF = 'ME2.urls'
 
 TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'login/template'), os.path.join(BASE_DIR, 'manager/template'),
-                 os.path.join(BASE_DIR, 'homepage/template')],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages'
-            ],
-        },
-    },
+	{
+		'BACKEND': 'django.template.backends.django.DjangoTemplates',
+		'DIRS': [os.path.join(BASE_DIR, 'login/template'), os.path.join(BASE_DIR, 'manager/template'),
+		         os.path.join(BASE_DIR, 'homepage/template')],
+		'APP_DIRS': True,
+		'OPTIONS': {
+			'context_processors': [
+				'django.template.context_processors.debug',
+				'django.template.context_processors.request',
+				'django.contrib.auth.context_processors.auth',
+				'django.contrib.messages.context_processors.messages'
+			],
+		},
+	},
 ]
 
 WSGI_APPLICATION = 'ME2.wsgi.application'
@@ -121,44 +118,44 @@ WSGI_APPLICATION = 'ME2.wsgi.application'
 
 
 if configs.dbtype == 'sqlite3':
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-            'OPTIONS': {
-                'timeout': 20
-            }
-        }
-    }
+	DATABASES = {
+		'default': {
+			'ENGINE': 'django.db.backends.sqlite3',
+			'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+			'OPTIONS': {
+				'timeout': 20
+			}
+		}
+	}
 
 else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': configs.DATABASES_NAME,  # 新建数据库名
-            'USER': configs.DATABASES_USER,  # 数据库登录名
-            'PASSWORD': configs.DATABASES_PWD,  # 数据库登录密码
-            'HOST': configs.DATABASES_HOST,  # 数据库所在服务器ip地址
-            'PORT': configs.DATABASES_PORT,  # 监听端口 默认3306即可
-        }
-    }
+	DATABASES = {
+		'default': {
+			'ENGINE': 'django.db.backends.mysql',
+			'NAME': configs.DATABASES_NAME,  # 新建数据库名
+			'USER': configs.DATABASES_USER,  # 数据库登录名
+			'PASSWORD': configs.DATABASES_PWD,  # 数据库登录密码
+			'HOST': configs.DATABASES_HOST,  # 数据库所在服务器ip地址
+			'PORT': configs.DATABASES_PORT,  # 监听端口 默认3306即可
+		}
+	}
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+	{
+		'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+	},
+	{
+		'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+	},
+	{
+		'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+	},
+	{
+		'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+	},
 ]
 
 # Internationalization
@@ -177,79 +174,73 @@ USE_TZ = False
 ###############################
 
 LOGGING = {
-
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '[%(asctime)s] [%(levelname)s] %(message)s'
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose'
-        }
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': 0,
-        },
-    },
-
+	
+	'version': 1,
+	'disable_existing_loggers': False,
+	'formatters': {
+		'verbose': {
+			'format': '[%(asctime)s] [%(levelname)s] %(message)s'
+		},
+	},
+	'handlers': {
+		'console': {
+			'level': 'INFO',
+			'class': 'logging.StreamHandler',
+			'formatter': 'verbose'
+		}
+	},
+	'loggers': {
+		'django': {
+			'handlers': ['console'],
+			'level': 'INFO',
+			'propagate': 0,
+		},
+	},
+	
 }
 logme = logging.getLogger("django")
 
-
-
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
-
 
 # 配置解决跨域问题
 # 跨域增加忽略
 CORS_ALLOW_CREDENTIALS = True
 # CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_WHITELIST = (
-    'http://localhost:8000', 'http://127.0.0.1:8000'
+	'http://localhost:8000', 'http://127.0.0.1:8000'
 )
 # ALLOWED_HOSTS = ['*']
 CORS_ALLOW_METHODS = (
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-    'VIEW',
+	'DELETE',
+	'GET',
+	'OPTIONS',
+	'PATCH',
+	'POST',
+	'PUT',
+	'VIEW',
 )
 CORS_ALLOW_HEADERS = (
-    'XMLHttpRequest',
-    'X_FILENAME',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
+	'XMLHttpRequest',
+	'X_FILENAME',
+	'accept-encoding',
+	'authorization',
+	'content-type',
+	'dnt',
+	'origin',
+	'user-agent',
+	'x-csrftoken',
+	'x-requested-with',
 )
 
-
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [(REDIS_HOST, REDIS_PORT)],
-        },
-    },
+	'default': {
+		'BACKEND': 'channels_redis.core.RedisChannelLayer',
+		'CONFIG': {
+			"hosts": [(REDIS_HOST, REDIS_PORT)],
+		},
+	},
 }
-
 
 SESSION_PERMISSION_URL_KEY = 'k1'
 SESSION_MENU_KEY = 'k2'
@@ -257,9 +248,10 @@ ALL_PERMISSION_KEY = 'k3'
 PERMISSION_MENU_KEY = 'k4'
 # 配置url权限白名单
 SAFE_URL = [
-    '/account/getCsrfToken/',
-    '/account/login/',
-    '/account/userRoute/',
-    '/account/logout/',
+	'/account/getCsrfToken/',
+	'/account/login/',
+	'/account/userRoute/',
+	'/account/logout/',
+	'/file'
 ]
-REGEX_URL = r'^{url}$'  # url作严格匹配
+REGEX_URL = r'^{url}'  # url不作严格匹配  严格匹配 r'^{url}$'

@@ -95,7 +95,7 @@ def initDataupdate():
 	print('步骤的dbid更新完成')
 	print('旧数据更新结束')
 
-
+@csrf_exempt
 def login(request):
 	if request.method=='GET':
 		return render(request, 'login/login.html', locals())

@@ -29,15 +29,12 @@ def querytaskid(request):  # 查询验证任务最新id
 
 @csrf_exempt
 def query_third_call(request):
-	me2url = request.get_raw_uri().replace(request.path,'')
 	planid = request.POST.get('planid')
 	dbscheme = request.POST.get('dbscheme')
-	callername = Plan.objects.get(id=planid).author.name
-	mwstr = 'callername=%s&taskid=%s' % (callername, planid)
-	is_verify_url = '%s/manager/third_party_call/?v=%s&is_verify=%s&planid=%s&scheme=%s' % (
-		me2url, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 1, planid, dbscheme)
-	debug_url = '%s/manager/third_party_call/?v=%s&is_verify=%s&planid=%s&scheme=%s' % (
-		settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), 0, planid, dbscheme)
+	is_verify_url = '%s/manager/third_party_call/?is_verify=%s&planid=%s&scheme=%s' % (
+		settings.BASE_URL, 1, planid, dbscheme)
+	debug_url = '%s/manager/third_party_call/?is_verify=%s&planid=%s&scheme=%s' % (
+		settings.BASE_URL,0, planid, dbscheme)
 	return JsonResponse({'is_verify_url': is_verify_url, 'debug_url': debug_url})
 
 

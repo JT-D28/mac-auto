@@ -5,6 +5,7 @@
 # @to      :定时任务调度
 import traceback
 
+from manager.StartPlan import RunPlan
 from manager.models import Crontab, Plan
 from manager.invoker import runplan
 from manager.core import gettaskid
@@ -13,8 +14,8 @@ import threading
 
 def cronRun(planid):
     taskid = gettaskid(planid)
-    threading.Thread(target=runplan, args=('定时任务', taskid, planid, '3', 'plan_' + str(planid))).start()
-
+    x = RunPlan(taskid,planid,'3','定时任务',startNodeId='plan_' + str(planid))
+    threading.Thread(target=x.start).start()
 
 class Cron(object):
     __cronmanager = None

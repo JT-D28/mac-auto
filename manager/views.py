@@ -14,6 +14,7 @@ from manager.models import *
 from manager.db import Mysqloper
 from django.conf import settings
 from login.models import *
+from .StartPlan import RunPlan
 from .cm import addrelation, _get_node_parent_info, querynodelink
 from .core import *
 from manager.operate.cron import Cron
@@ -26,56 +27,13 @@ from .operate.DesktopNotification import notification
 from .operate.dataMove import DataMove
 from .operate.transformer import Transformer
 from .pa import MessageParser
-from .ar import Grant, RoleData
 
 from manager.context import Me2Log as logger
 from tools.mock import TestMind
 from manager.cm import getchild
 
 
-# # Create your views here.
-
-@csrf_exempt
-def index(request):
-    if request.session.get('is_login', None):
-        userid = userid = User.objects.get(name=request.session.get('username')).id
-        username = request.session.get('username')
-        UI_MENU_YHGL = Grant.is_ui_display('UI_MENU_YHGL', username)
-        UI_MENU_QXGL = Grant.is_ui_display('UI_MENU_QXGL', username)
-        UI_MENU_JSGL = Grant.is_ui_display('UI_MENU_JSGL', username)
-        UI_MENU_BWMB = Grant.is_ui_display('UI_MENU_BWMB', username)
-        UI_CONFIG_GLOBAL_SET = Grant.is_ui_display('UI_CONFIG_GLOBAL_SET', username)
-        user_news_status = 'layui-badge-dot' if News.has_no_read_msg(userid) else ''
-        logger.info('组件显示结果:', locals())
-        return render(request, 'manager/start.html', locals())
-
-    else:
-        return redirect("/account/login/")
-
-
-def help(request):
-    me2url = request.get_raw_uri().replace(request.path, '')
-    return redirect("%s/static/PDF.js/web/viewer.html?file=%s/static/PDF.js/ME2.pdf" % (me2url, me2url))
-
-
-
-"""
-数据迁移
-"""
-
-
-@csrf_exempt
-def datamove(request):
-    kind = 'datamovein'
-    return render(request, 'manager/datamove.html', locals())
-
-
-@csrf_exempt
-def uploadfile(request):
-    kind = 'persionfile'
-    return render(request, 'manager/filespace.html', locals())
-
-
+# 文件空间上传前检查文件名重复
 @csrf_exempt
 def checkfilename(request):
     filename = request.POST.get('filename')
@@ -91,7 +49,7 @@ def isfile_exists(filename):
     else:
         return False
 
-
+# 文件上传
 @csrf_exempt
 def upload(request):
     filemap = dict()
@@ -112,19 +70,12 @@ def upload(request):
     content_type = request.POST.get('content_type')
 
     if kind == 'datamovein':
-
         taskid = EncryptUtils.md5_encrypt(str(datetime.datetime.now()))
-
         t = Transformer(callername, filemap.values(), content_type, taskid)
-
         res = t.transform()
-        # logger.info('res=>',res)
-
         if res[0] == 'success':
-            # logger.info('flag1_1')
             return JsonResponse(simplejson(code=0, msg='excel数据迁移完成 迁移ID=%s' % taskid), safe=False)
         else:
-            # logger.info('flag1_2')
             return JsonResponse(simplejson(code=2, msg='excel数据迁移失败[%s] 迁移ID=%s' % (res[1], taskid)), safe=False)
 
     elif kind == 'dataimport':
@@ -166,21 +117,11 @@ def upload(request):
         return JsonResponse(simplejson(code=4, msg='kind错误'), safe=False)
 
 
-
-
-
-
-
-
 """
 DB相关
 """
 
-
-def dbcon(request):
-    return render(request, 'manager/db.html')
-
-
+# 数据连接测试
 @csrf_exempt
 def testdbcon(request):
     description = request.POST.get('description'),
@@ -216,7 +157,7 @@ def testdbcon(request):
     else:
         return JsonResponse(simplejson(code=4, msg=msg), safe=False)
 
-
+# 查询一个数据连接
 @csrf_exempt
 def queryonedb(request):
     code = 0
@@ -232,7 +173,7 @@ def queryonedb(request):
         jsonstr = json.dumps(res, cls=DBEncoder)
         return JsonResponse(jsonstr, safe=False)
 
-
+#查询数据连接列表
 @csrf_exempt
 def querydb(request):
     searchvalue = request.GET.get('searchvalue')
@@ -241,15 +182,6 @@ def querydb(request):
     queryschemevalue = request.GET.get('querySchemeValue')
     queryschemevalue = queryschemevalue if queryschemevalue not in [None, ''] else ''
     logger.info("SchemeValue=>", queryschemevalue)
-    res = None
-    # if searchvalue:
-    #   logger.info("变量查询条件=>")
-    #   res = list(DBCon.objects.filter((Q(description__icontains=searchvalue) | Q(dbname__icontains=searchvalue) | Q(
-    #       host__icontains=searchvalue) | Q(port__icontains=searchvalue) | Q(kind__icontains=searchvalue)) & Q(
-    #       scheme=queryschemevalue)))
-    # else:
-    #   res = list(DBCon.objects.filter(Q(scheme__contains=queryschemevalue)))
-    #
     res = list(DBCon.objects.filter((Q(description__icontains=searchvalue) | Q(dbname__icontains=searchvalue) | Q(
         host__icontains=searchvalue) | Q(port__icontains=searchvalue) | Q(kind__icontains=searchvalue)) & Q(
         scheme__contains=queryschemevalue)))
@@ -260,67 +192,45 @@ def querydb(request):
     jsonstr = json.dumps(res, cls=DBEncoder, total=total)
     return JsonResponse(jsonstr, safe=False)
 
-
+# 新增数据连接
 @csrf_exempt
 def addcon(request):
-    code, msg = 0, ''
+    code, msg = (0, '添加成功')
     try:
         description = request.POST.get('description')
         kind = request.POST.get('kind')
         dbname = request.POST.get('dbname')
         host = request.POST.get('host')
         port = request.POST.get('port')
-        schemevalue = request.POST.get('scheme')
+        scheme = request.POST.get('scheme')
         username = request.POST.get('username')
-        callername = request.session.get('username', None)
         password = request.POST.get('password')
-
-        con = DBCon()
-        con.kind = kind
-        con.dbname = dbname
-        con.host = host
-        con.port = port
-        con.username = username
-        con.password = password
-        con.description = description
-        con.scheme = schemevalue
-        con.author = User.objects.get(name=callername)
-        con.save()
-        msg = '添加成功'
+        DBCon(kind=kind,dbname=dbname,host = host,port = port,username = username,password = password,description = description,scheme = scheme).save()
     except:
         logger.info(traceback.format_exc())
-        code = 1
-        msg = '添加异常'
-    return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+        code, msg =(1,'添加异常%s'%traceback.format_exc())
+    return JsonResponse({'code':code,'msg':msg})
 
-
+# 删除数据连接
 @csrf_exempt
 def delcon(request):
-    id_ = request.POST.get('ids')
-    # logger.info('ids=>',id_)
-    ids = id_.split(',')
-    code = 0
-    msg = ''
+    ids = request.POST.get('ids').split(',')
+    code, msg = (0, '删除成功')
     try:
-        for i in ids:
-            DBCon.objects.get(id=i).delete()
-        msg = '删除成功'
+        for id in ids:
+            DBCon.objects.get(id=id).delete()
     except:
-        code = 1
-        msg = "删除失败[%s]" % traceback.format_exc()
+        code, msg = (1, "删除失败[%s]" % traceback.format_exc())
+    
+    return JsonResponse({'code': code, 'msg': msg})
 
-    finally:
-        return JsonResponse(simplejson(code=code, msg=msg), safe=False)
-
-
+# 编辑数据连接
 @csrf_exempt
 def editcon(request):
-    code = 0
-    msg = ''
-    id_ = request.POST.get('id')
+    code,msg = (0,'编辑成功')
+    id = request.POST.get('id')
     try:
-        logger.info("id=>", id_)
-        con = DBCon.objects.get(id=id_)
+        con = DBCon.objects.get(id=id)
         con.kind = request.POST.get('kind')
         con.description = request.POST.get('description')
         con.dbname = request.POST.get('dbname')
@@ -330,46 +240,14 @@ def editcon(request):
         con.port = request.POST.get('port')
         con.scheme = request.POST.get('scheme')
         con.save()
-
-        msg = '编辑成功'
-
     except:
-        msg = '编辑异常[%s]' % traceback.format_exc()
+        code, msg =(1,'添加异常%s'%traceback.format_exc())
         logger.error(msg)
-        code = 1
-    finally:
-        return JsonResponse(simplejson(code=code, msg=msg), safe=False)
+    
+    return JsonResponse({'code':code,'msg':msg})
 
 
-@csrf_exempt
-def editmultidbcon(request):
-    code = 0
-    msg = '修改成功'
-    try:
-        datas = eval(request.POST.get('datas'))
-        for data in datas:
-            oldcon = DBCon.objects.filter(~Q(id=data['id']) & Q(description=data['description'], scheme=data['scheme']))
-            if len(oldcon) != 0:
-                msg = "配置方案【%s】下已存在描述为【%s】的数据连接" % (data['scheme'], data['description'])
-                break
-            con = DBCon.objects.get(id=data['id'])
-            con.kind = data['kind']
-            con.description = data['description']
-            con.dbname = data['dbname']
-            con.username = data['username']
-            con.password = data['password']
-            con.host = data['host']
-            con.port = data['port']
-            con.scheme = data['scheme']
-            con.save()
-    except:
-        logger.error(traceback.format_exc())
-        msg = traceback.format_exc()
-        code = 1
-    finally:
-        return JsonResponse(simplejson(code=code, msg=msg), safe=False)
-
-
+# 获取用例节点对应的db方案名
 def getplan(id, kind):
     logger.info('get', id, kind)
     if kind == 'case':
@@ -387,7 +265,7 @@ def getplan(id, kind):
         schemename = Plan.objects.get(id=id).schemename
         return schemename
 
-
+# 数据管理页面查询 和 用例管理页面查询数据连接列表
 @csrf_exempt
 def querydblist(request):
     code, msg = 0, ''
@@ -420,47 +298,15 @@ def querydblist(request):
             return JsonResponse(simplejson(code=code, msg=msg), safe=False)
     return JsonResponse(simplejson(code=0, msg='操作成功', data=res), safe=False)
 
-
-@csrf_exempt
-def querydblistdefault(request):
-    code, msg = 0, ''
-    kind = None
-    uid = None
-    dbname = ''
-    try:
-        kind = request.POST.get('kind')
-        uid = request.POST.get('uid')
-
-        if kind == 'step':
-            dbid = Step.objects.get(id=uid).db_id
-            if dbid:
-                dbname = DBCon.objects.get(id=dbid).description
-
-        elif kind == 'case':
-            dbid = Case.objects.get(id=uid).db_id
-            if dbid:
-                dbname = DBCon.objects.get(id=dbid).description
-        elif kind == 'plan':
-            dbid = Plan.objects.get(id=uid).db_id
-            if dbid:
-                dbname = DBCon.objects.get(id=dbid).description
-
-        return JsonResponse(simplejson(code=0, msg='查询成功', data=dbname), safe=False)
-
-    except:
-        error = traceback.format_exc()
-        logger.info(error)
-        return JsonResponse(simplejson(code=4, msg='库名下拉列表默认值返回异常'), safe=False)
-
-
+# 复制数据连接
 @csrf_exempt
 def copyDbCon(request):
     action = request.POST.get('action')
     dbids = request.POST.get('dbids').split(',')
     copyschemevalue = request.POST.get('copyschemevalue')
-    s = dbconRepeatCheck(dbids, copyschemevalue, action)
+    msg = dbconRepeatCheck(dbids, copyschemevalue, action)
     code = 1
-    if s == '':
+    if msg == '':
         try:
             code = 0
             if action == '1':
@@ -477,23 +323,23 @@ def copyDbCon(request):
                     newdbcon.author = User.objects.get(name=request.session.get('username'))
                     newdbcon.scheme = copyschemevalue
                     newdbcon.save()
-                s = '复制成功'
+                msg = '复制成功'
             elif action == '0':
                 for id in dbids:
                     dbcon = DBCon.objects.get(id=id)
                     dbcon.scheme = copyschemevalue
                     dbcon.save()
-                s = '修改成功'
+                msg = '修改成功'
         except:
             code = 1
-            s = traceback.format_exc()
-            logger.info(s)
-    return JsonResponse({'code': code, 'msg': s})
+            msg = traceback.format_exc()
+            logger.info(msg)
+    return JsonResponse({'code': code, 'msg': msg})
 
-
+# 数据连接重复检查 action=0 复制  1 仅仅修改
 def dbconRepeatCheck(dbids, copyschemevalue, action):
     logger.info(dbids, copyschemevalue, action)
-    s = ''
+    msg = ''
     # 一个方案下面描述名不能重复
     if action == '1':
         for id in dbids:
@@ -502,7 +348,7 @@ def dbconRepeatCheck(dbids, copyschemevalue, action):
             if len(dbcon) == 0:
                 continue
             else:
-                s += "<div class='copyerror'>配置方案【%s】下已存在描述为【%s】的数据连接<br></div>" % (copyschemevalue, description)
+                msg += "<div class='copyerror'>配置方案【%s】下已存在描述为【%s】的数据连接<br></div>" % (copyschemevalue, description)
     elif action == '0':
         for id in dbids:
             description = DBCon.objects.get(id=id).description
@@ -510,21 +356,15 @@ def dbconRepeatCheck(dbids, copyschemevalue, action):
             if len(oldcon) == 0:
                 continue
             else:
-                s += "<div class='copyerror'>配置方案【%s】下已存在描述为【%s】的数据连接<br></div>" % (
+                msg += "<div class='copyerror'>配置方案【%s】下已存在描述为【%s】的数据连接<br></div>" % (
                     copyschemevalue,
                     description) if copyschemevalue != '' else "<div class='copyerror'>已存在描述名为【%s】的全局数据连接配置<br></div>" % description
-    return s
+    return msg
 
 
 """
 变量相关接口
 """
-
-
-def var(request):
-    return render(request, 'manager/var.html')
-
-
 @csrf_exempt
 def queryonevar(request):
     code = 0
@@ -554,8 +394,12 @@ def queryonevar(request):
 
 @csrf_exempt
 def queryvar(request):
-    logger.info('fdaldalfdj')
-    searchvalue = request.POST.get('searchvalue')
+    searchvalue = request.POST.get('searchvalue').strip()
+    limit = request.POST.get('limit')
+    page = request.POST.get('page')
+    if searchvalue:
+        page=1
+    
     searchvalue = '%' + searchvalue + '%'
     userid = request.POST.get('userid')
     tags = request.POST.getlist('tags[]')
@@ -578,6 +422,7 @@ def queryvar(request):
         sql = '''SELECT t.customize ,t.planids,v.id,description,`key`,gain,value,is_cache,u.name as author FROM `manager_variable` v,login_user u
                     ,manager_tag t where (description like %s or `key` like %s or gain like %s)
                     and t.customize like %s and v.author_id=u.id AND t.var_id=v.id  and planids like %s '''
+        
         if userid != '-1':
             sql += 'and v.author_id=%s'
             cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag, bindstr, userid])
@@ -599,8 +444,7 @@ def queryvar(request):
                 n += "<span class='layui-badge layui-bg-green' id=" + v[
                     1] + " onclick=planSpanClick(this) style='cursor:pointer;'>" + k + "</span> "
             i['planids'] = n
-        limit = request.POST.get('limit')
-        page = request.POST.get('page')
+
         res, total = getpagedata(rows, page, limit)
         jsonstr = json.dumps(res, cls=VarEncoder, total=total)
     return JsonResponse(jsonstr, safe=False)
@@ -843,7 +687,7 @@ def copyVar(request):
                 copyvar.save()
                 tag.var = copyvar
                 tag.isglobal = 1 if bindplans == '{}' else 0
-                tag.customize = Tag.objects.get(var=var).customize if tags == '' else tag
+                tag.customize = Tag.objects.get(var=var).customize if tags == '' else tags
                 tag.planids = bindplans
                 tag.save()
             except:
@@ -934,7 +778,7 @@ def transform(request):
             return JsonResponse(simplejson(code=101, msg='转换需要配置文件(Config.xlsx)和用例文件 实际上传%s个文件' % FILE_COUNT),
                                 safe=False)
 
-        t = T.Transformer(config_wb, data_wb)
+        t = Transformer(config_wb, data_wb)
         t.transform()
 
         return JsonResponse(simplejson(code=0, msg='转换成功..'), safe=False)
@@ -945,71 +789,68 @@ def transform(request):
 
 
 def third_party_call(request):
-    res = decrypt_third_invoke_url_params(request.GET.get('v'))
     planid = request.GET.get('planid')
     taskid = gettaskid(planid)
     dbscheme = request.GET.get('scheme')
-    clear_task_before(taskid)
-    callername = res['callername']
-
+    runkind = request.GET.get('is_verify')
     if getRunningInfo(planid, 'isrunning') != '0':
         return JsonResponse(simplejson(code=1, msg="调用失败，任务正在运行中，稍后再试！"), safe=False)
 
-    logger.info('调用方=>', callername)
     logger.info('调用计划=>', planid)
     logger.info('调用数据连接方案=>', dbscheme)
-    threading.Thread(target=runplan, args=(callername, taskid, planid, '1', 'plan_' + str(planid))).start()
+    x = RunPlan(taskid,planid,runkind,'定时任务',startNodeId='plan_' + str(planid))
+    threading.Thread(target=x.start).start()
     return JsonResponse(simplejson(code=0, msg="调用成功,使用DB配置:[%s]" % dbscheme, taskid=taskid), safe=False)
-
-
-@xframe_options_exempt
-def plan(request):
-    return render(request, 'manager/plan.html')
-
 
 
 
 @csrf_exempt
 def queryoneplan(request):
-    code, res, cron, msg = 0, None, None, ''
+    code, data, msg,dingding,mail,cron =( 0, {},'','close','close', {})
     planid = request.POST.get('id').split('_')[1]
+    plan = Plan.objects.get(id=planid)
     try:
-        res = Plan.objects.get(id=planid)
-        cron = Crontab.objects.values('status', 'value').get(plan_id=planid)
-
+        mailconfig = MailConfig.objects.get(id=plan.mail_config_id)
+        dingding = mailconfig.is_send_dingding
+        mail = mailconfig.is_send_mail
     except:
-        code = 1
-        msg = '查询异常[%s]' % traceback.format_exc()
-    finally:
-        jsonstr = json.dumps(res, cls=PlanEncoder)
-        jsonstr['cron'] = cron
-        return JsonResponse(jsonstr, safe=False)
+        pass
+    try:
+        mailconfig = MailConfig.objects.get(id=plan.mail_config_id)
+        dingding = mailconfig.is_send_dingding
+        mail = mailconfig.is_send_mail
+    except:
+        pass
+    
+    try:
+        crontab = Crontab.objects.values('status', 'value').filter(plan_id=planid)
+        if crontab:
+            crontab = crontab.first()
+            cron={
+                'status':crontab['status'],
+                'value':crontab['value']
+            }
+    except:
+        print(traceback.format_exc())
+        pass
+
+    data = {
+        'id': planid,
+        'description': plan.description,
+        'db_id': plan.db_id,
+        'schemename': plan.schemename,
+        'before_plan': plan.before_plan,
+        'proxy': plan.proxy,
+        'run_type': plan.run_type,
+        'is_send_mail': mail,
+        'is_send_dingding': dingding,
+        'cron':cron
+    }
+        
+    return JsonResponse({'code':code,'data':data})
 
 
 
-
-
-
-@csrf_exempt
-def querytaskdetail(request):
-    detail = {}
-    taskid = request.GET.get('taskid')
-    detail = Mongo.taskreport().find_one({"taskid":taskid})
-    if request.POST.get('taskid'):
-        detail = Mongo.taskreport().find_one({"taskid":request.POST.get('taskid')},{ '_id': 0})
-        print(detail)
-        return JsonResponse({'data':json.dumps(detail)})
-
-    # logger.info(detail)
-
-    # import json
-    # jsonstr=json.dumps(detail)
-    # return JsonResponse(jsonstr,safe=False)
-    return render(request, 'manager/taskdetail.html', locals())
-
-
-# def rendertaskdetail(request):
-#   return render(request, 'manager/taskdetail.html',locals())
 
 """
 任务相关
@@ -1030,63 +871,18 @@ def runtask(request):
         msg = {"1":"验证","2":"调试","3":"定时"}[state_running]
         return JsonResponse(simplejson(code=1, msg='计划正在运行[%s]任务，稍后再试！' % msg), safe=False)
 
-    t = threading.Thread(target=runplan, args=(callername, taskid, planid, runkind, 'plan_%s' % planid))
-    t.start()
+    x = RunPlan(taskid,planid,runkind,callername,startNodeId='plan_%s' % planid)
+    threading.Thread(target=x.start).start()
+    
     request.session['console_taskid'] = taskid
     return JsonResponse(simplejson(code=0, msg="你的任务开始运行", taskid=taskid), safe=False)
 
-
-
-
-
-
-
-
-
-"""
-远端日志相关
-"""
-
-
-def logconfig(request):
-    return render(request, "manager/logconfig.html")
-
-
-def queryonelogconfig(request):
-    pass
-
-
-def querylogconfig(request):
-    pass
-
-
-def addlogconfig(request):
-    pass
-
-
-def editlogconfig(request):
-    pass
-
-
-def dellogconfig(request):
-    pass
-
-
-def remote_log_recv(request):
-    pass
-    linemsg = request.POST.get('linemsg')
-    key = '#host#logfile'
 
 
 """
 
 函数相关
 """
-
-
-def func(request):
-    return render(request, "manager/func.html")
-
 
 @csrf_exempt
 def queryonefunc(request):
@@ -1172,15 +968,11 @@ def addfunc(request):
     msg = ''
     try:
         f = Function()
-        f.author = User.objects.get(name=request.session.get('username', None))
         f.description = request.POST.get("description")
         # base64 str 存储
         tbody = request.POST.get("body")
         f.name = Fu.getfuncname(tbody)[0]
-        # logger.info("函数名称=>",f.name)
-        # logger.info("tbody=>",tbody)
         f.body = base64.b64encode(tbody.encode('utf-8')).decode()
-        # f.flag=Fu.flag(f.body)
         f.flag = Fu.tzm_compute(tbody, "def\s+(.*?)\((.*?)\):")
         f.save()
         msg = '添加成功'
@@ -1243,10 +1035,9 @@ def queryonestep(request):
 
 
 
-"""邮件配置相关
-"""
 
 
+# 查询计划邮件配置
 @csrf_exempt
 def queryonemailconfig(request):
     try:
@@ -1299,8 +1090,6 @@ def editmailconfig(request):
             config.description = description
             config.dingdingtoken = dingdingtoken
             config.rich_text = rich_text
-            author = User.objects.get(name=request.session.get('username'))
-            config.author = author
             config.save()
             plan.mail_config_id = config.id
             plan.save()
@@ -1333,8 +1122,6 @@ def queryoneproduct(request):
 
 @csrf_exempt
 def treecontrol(request):
-    '''
-    '''
     def _add_link_task(request):
         cm.addeditlink(request)
     action = request.GET.get('action') or request.POST.get('action', '')
@@ -1389,10 +1176,6 @@ def treecontrol(request):
 
 def record(request):
     response = render(request, 'manager/record.html', locals())
-    # response["Access-Control-Allow-Origin"] = "*"
-    # response["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
-    # response["Access-Control-Max-Age"] = "1000"
-    # response["Access-Control-Allow-Headers"] = "*"
     return response
 
 
@@ -1445,65 +1228,9 @@ def queryonebusiness(request):
         msg = '查询异常[%s]' % traceback.format_exc()
         return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
-@csrf_exempt
-def editStepByExtract(request):
-    stepid = request.POST.get('stepid').split("_")[1]
-    extract = request.POST.get('extract')
-    step = Step.objects.filter(id=stepid).first()
-    if step:
-        step.temp = extract
-        step.save()
-        code = 0
-    else:
-        code = 1
-    return JsonResponse({'code':code})
 
-
-# @csrf_exempt
-# def queryonebusinessdata(request):
-#   code = 0
-#   msg = ''
-#   res = None
-#   try:
-#       callername = request.session.get('username')
-#       stepid = request.POST.get('stepid')
-#       vid = request.POST.get('vid')
-#       res = querytestdata(callername, stepid, trigger='detail')
-#       t = [r for r in res if str(r.id) == str(vid)]
-#       if len(t) > 0:
-#           t = t[0]
-#       else:
-#           return JsonResponse(simplejson(code=3, msg='查询失败 缓存里没找到id=%s对应测试数据' % vid), safe=False)
-
-#       jsonstr = json.dumps(t, cls=BusinessDataEncoder)
-#       return JsonResponse(jsonstr, safe=False)
-#   except:
-#       code = 1
-#       msg = '查询异常[%s]' % traceback.format_exc()
-#       return JsonResponse(simplejson(code=4, msg=msg), safe=False)
-
-
-@csrf_exempt
-def querybusinessdatalist(request):
-    code, msg = 0, ''
-    try:
-        res = list(BusinessData.objects.all())
-
-        jsonstr = json.dumps(res, cls=BusinessDataEncoder)
-        # logger.info('json=>',jsonstr)
-        return JsonResponse(jsonstr, safe=False)
-    except:
-        err = (traceback.format_exc())
-        logger.info(err)
-        return JsonResponse(simplejson(code=4, msg='查询异常[%s]' % err))
-
-        
-def link(request):
-    return render(request, 'cm/link.html')
- 
 @csrf_exempt
 def querytreelist(request):
-
     from .cm import getchild, get_search_match,get_link_left_tree,get_link_right_tree
     datanode = []
     
@@ -1567,6 +1294,7 @@ def querytreelist(request):
             #orders = Order.objects.filter(kind__contains='case_', main_id=idx,isdelete=0).extra(
                 #select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
             orders =list(Order.objects.filter(kind__contains='case_', main_id=idx,isdelete=0))
+            print("aaaaaaaaaaa",orders,idx)
             orders.sort(key=lambda a:int(a.value.split('.')[1]))
 
             for order in orders:
@@ -1664,7 +1392,7 @@ def querytreelist(request):
 
     if id_:
         datanode = _get_pid_data(id_, type_, datanode,srcid=nid,checkflag=checkflag,flag=flag)
-
+        print("aaaaaaaaaaa",datanode)
         if  get_params(request).get('flag')=='1':
             for node in datanode:
                 if node['id']==get_params(request).get('srcid'):
@@ -1710,55 +1438,6 @@ def querytreelist(request):
     return JsonResponse(simplejson(code=0, data=datanode), safe=False)
 
 
-
-@csrf_exempt
-def treetest(request):
-    return render(request, 'manager/tree.html')
-
-
-"""
-标签管理
-"""
-
-
-def tag(request):
-    return render(request, 'manager/tag.html')
-
-
-@csrf_exempt
-def addtag(request):
-    t = Tag()
-    try:
-
-        # all_name = [_.name for _ in list(Tag.objects.all())]
-        all_name=Tag.objects.values_list('name',flat=True)
-        t.name = request.POST.get('name')
-        if t.name in all_name:
-            return JsonResponse(pkg(code=3, msg='标签[%s]已存在' % t.name))
-        t.author = User.objects.get(name=request.session.get('username'))
-        t.save()
-        return JsonResponse(pkg(code=0, msg='添加标签[%s]' % t.name, data={'id': t.id, 'name': t.name}))
-    except:
-        return JsonResponse(pkg(code=4, msg='添加标签[%s]异常' % t.name))
-
-
-@csrf_exempt
-def deltag(request):
-    try:
-
-        ids = [int(_) for _ in request.POST.get('ids').split(',')]
-        for id_ in ids:
-            Tag.objects.get(id=id_).delete()
-
-        return JsonResponse(pkg(code=0, msg='删除成功.'))
-    except:
-        return JsonResponse(pkg(code=4, msg='删除标签异常'))
-
-
-def edittag(request):
-    pass
-
-
 @csrf_exempt
 def querytaglist(request):
     namelist = []
@@ -1790,7 +1469,6 @@ def querytaglist(request):
     finally:
         return JsonResponse(pkg(code=0, data=data))
 
-
 @csrf_exempt
 def querytags(request):
     data = []
@@ -1820,30 +1498,10 @@ def querytag(request):
     return JsonResponse({'code': 0, 'data': varhis['tag'].split(';')[:-1]})
 
 
-@csrf_exempt
-def varBatchEdit(request):
-    ids = request.POST.getlist('ids[]')
-    tags = request.POST.get('tags')
-    logger.info(ids)
-    logger.info(tags)
-    for id in ids:
-        try:
-            var = Variable.objects.get(id=id)
-            var.tag = tags
-            var.save()
-        except:
-            return JsonResponse({'code': 1, 'msg': '变量' + var.description + '标签更改失败！'})
-    return JsonResponse({'code': 0, 'msg': 'success'})
-
-
 '''
 报文模板
-
 '''
 
-
-def template(request):
-    return render(request, 'manager/template.html')
 
 
 @csrf_exempt
@@ -1860,7 +1518,6 @@ def querytemplatelist(request):
 @csrf_exempt
 def addtemplate(request):
     pa = get_params(request)
-    pa['author'] = User.objects.get(name=request.session.get('username'))
     p = MessageParser.add_template(**pa)
     return JsonResponse(p, safe=False)
 
@@ -1930,7 +1587,7 @@ def queryfielddetail(request):
 
 
 
-
+# 变量页面查询用户
 @csrf_exempt
 def queryUser(request):
     name = request.session.get('username')
@@ -1986,113 +1643,6 @@ def queryDbSchemebyVar(request):
         code = 1
         msg = '@的库名没有在任何方案下找到'
     return JsonResponse({'code': code, 'msg': msg, 'data': dbs, 'plans': plans})
-
-
-@csrf_exempt
-def getParamfromFetchData(request):
-    text = request.POST.get('fetchtest')
-    step_des = request.POST.get('description')
-    pid = request.POST.get('pid').split('_')[1] if request.POST.get('pid') != 'false' else 'false'
-    uid = request.POST.get('uid').split('_')[1] if request.POST.get('uid') != 'false' else 'false'
-    business_des = request.POST.get('business_des')
-    code = 0
-    data = ''
-    rq = '{%s}' % text.split('fetch(')[1].rstrip(');').replace('\n', '').replace(',', ':', 1)
-    try:
-        x = json.loads(rq)
-        for (k, v) in x.items():
-            print('url', k)
-            print('content-type', v.get('headers', '').get('Content-Type', ''))
-            headers = v.get('headers', {})
-            headers['Referer'] = v.get('referrer', '')
-            print('headers', headers)
-            print('method', v.get('method'))
-            contenttype = v.get('headers', '').get('Content-Type', '')
-            if contenttype == '':
-                contenttype = v.get('headers', '').get('content-type', '')
-            if 'urlencoded' in contenttype:
-                contenttype = 'urlencode'
-                parsed_result = {}
-                pairs = parse.parse_qsl(v.get('body'), True)
-                for name, value in pairs:
-                    parsed_result[name] = value
-                print('body', parsed_result)
-            elif 'json' in contenttype:
-                contenttype = 'json'
-                parsed_result = v.get('body')
-                print(parsed_result)
-            else:
-                return JsonResponse({'code': 1, 'data': '只支持urlencode/json'})
-    except:
-        print(traceback.format_exc())
-        return JsonResponse({'code': 1, 'data': '解析失败，检查内容'})
-
-    if uid == 'false':
-        # 增加步骤
-        step = Step()
-        step.step_type = 'interface'
-        step.description = step_des
-        step.headers = headers
-        step.body = 'sleep'
-        step.url = k
-        step.method = v.get('method').lower()
-        step.content_type = contenttype
-        step.temp = ''
-        step.count = '1'
-        step.author = User.objects.get(name=request.session.get('username'))
-        step.db_id = ''
-        step.save()
-        addrelation('case_step', request.session.get('username'), pid, step.id)
-        b = BusinessData()
-        b.businessname = business_des
-        b.itf_check = ''
-        b.db_check = ''
-        b.params = parsed_result
-        b.parser_check = ''
-        b.parser_id = ''
-        b.description = ''
-        b.postposition = ''
-        b.preposition = ''
-        b.count = 1
-        b.save()
-        addrelation('step_business', request.session.get('username'), step.id, b.id)
-        returndata = {
-            'id': 'step_%s' % step.id,
-            'pid': 'case_%s' % pid,
-            'name': step_des,
-            'type': 'step',
-            'textIcon': 'fa icon-fa-file-o',
-        }
-
-    if pid == 'false':
-        try:
-            step = Step.objects.get(id=uid)
-            if int(difflib.SequenceMatcher(None, step.url.split('/')[-1], k.split('/')[-1]).ratio()) < 0.9:
-                return JsonResponse({'code': 1, 'data': '两个接口可能不一样，请检查'})
-            b = BusinessData()
-            b.businessname = business_des
-            b.itf_check = ''
-            b.db_check = ''
-            b.params = parsed_result
-            b.parser_check = ''
-            b.parser_id = ''
-            b.description = ''
-            b.postposition = ''
-            b.preposition = ''
-            b.count = 1
-            b.save()
-            addrelation('step_business', request.session.get('username'), uid, b.id)
-            returndata = {
-                'id': 'business_%s' % b.id,
-                'pId': 'step_%s' % uid,
-                'name': business_des,
-                'type': 'business',
-                'textIcon': 'fa icon-fa-leaf',
-            }
-        except:
-            print(traceback.format_exc())
-
-    return JsonResponse({'code': code, 'data': returndata})
 
 
 '''
@@ -2299,167 +1849,6 @@ def delfile(request):
     return JsonResponse({'code': code, 'info': info})
 
 
-@csrf_exempt
-def queryuserfile(request):
-    '''
-    返回个人文件列表
-    '''
-    searchvalue = request.GET.get('searchvalue')
-    mfiles = list()
-    dir = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File')
-    # dir_ = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File',request.session.get('username'))
-    if not os.path.exists(dir):
-        os.makedirs(dir)
-    files = os.listdir(dir)
-    logger.info('files=>', files)
-    for f in files:
-        if searchvalue and not f.__contains__(searchvalue):
-            continue;
-        mfiles.append({
-            'filename': f,
-            'size': _getDocSize(os.path.join(dir, f)),
-            'createtime': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getctime(os.path.join(dir, f))))
-        })
-
-    mfiles.sort(key=lambda e: e.get('createtime'), reverse=True)
-    page = request.GET.get('page')
-    limit = request.GET.get('limit')
-    res, total = getpagedata(mfiles, page, limit)
-
-    return JsonResponse({'code': 0, 'data': res, 'count': total}, safe=False)
-
-
-@csrf_exempt
-def delfiles(request):
-    block_files = []
-    filenames = request.POST.get('filenames', '')
-    logger.info('filenames=>', filenames)
-    filenamelist = filenames.split(',')
-    for filename in filenamelist:
-        filepath = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File',
-                                request.session.get('username'), filename)
-        try:
-            os.remove(filepath)
-        except:
-            block_files.append(filename)
-            logger.info(traceback.format_exc())
-
-    if len(block_files) == 0:
-        return JsonResponse(pkg(code=0, msg='删除成功.'), safe=False)
-    else:
-        return JsonResponse(pkg(code=4, msg='删除失败[%s].' % (',').join(block_files)), safe=False)
-
-
-'''
-权限控制相关
-'''
-
-
-@csrf_exempt
-def authcontrol(request):
-    return render(request, 'manager/authcontrol.html', locals())
-
-
-@csrf_exempt
-def queryuicontrol(request):
-    res = Grant.query_ui_grant_table(**get_params(request))
-    logger.info('获得UI权限表:', res)
-    return JsonResponse(res, safe=False)
-
-
-@csrf_exempt
-def queryoneuicontrol(request):
-    return JsonResponse(Grant.query_one_ui_control(request.POST.get('uid')), safe=False)
-
-
-@csrf_exempt
-def queryalluicontrolusers(request):
-    return JsonResponse(Grant.queryalluicontrolusers(), safe=False)
-
-
-@csrf_exempt
-def adduicontrol(request):
-    return JsonResponse(Grant.add_ui_control(**get_params(request)), safe=False)
-
-
-@csrf_exempt
-def deluicontrol(request):
-    res = Grant.del_ui_control(**get_params(request))
-    return JsonResponse(res, safe=False)
-
-
-@csrf_exempt
-def updateuicontrol(request):
-    return JsonResponse(Grant.edit_ui_control(**get_params(request)), safe=False)
-
-
-@csrf_exempt
-def updateuicontrolstatus(request):
-    return JsonResponse(Grant.updateuicontrolstatus(**get_params(request)), safe=False)
-
-
-@csrf_exempt
-def queryrole(request):
-    res = RoleData.queryroletable(**get_params(request))
-    return JsonResponse(res, safe=False)
-
-
-@csrf_exempt
-def query_transfer_data(request):
-    lfdata = []
-    rgdata = []
-    try:
-        roleid = request.POST.get('roleid')
-        if roleid:
-            olddata = User.objects.values('id', 'name')
-            role = Role.objects.get(id=roleid)
-
-            # lfdata=[x for x in olddata if x['id'] not in[user['id'] for user in role.users]]
-            lfdata = list(olddata)
-            rgdata = [user.id for user in role.users]
-
-
-        else:
-
-            lfdata = list(User.objects.values('id', 'name'))
-
-        logger.info(type(lfdata))
-
-        return JsonResponse(pkg(code=0,
-                                msg='计算穿梭框数据成功',
-                                data=[lfdata, rgdata]
-                                ), safe=False)
-
-    except:
-        logger.error(traceback.format_exc())
-
-        return JsonResponse(pkg(code=0,
-                                msg='计算穿梭框异常',
-                                ), safe=False)
-
-
-@csrf_exempt
-def addrole(request):
-    return JsonResponse(RoleData.addrole(**get_params(request)), safe=False)
-
-
-@csrf_exempt
-def delrole(request):
-    return JsonResponse(RoleData.delrole(**get_params(request)), safe=False)
-
-
-@csrf_exempt
-def updaterole(request):
-    return JsonResponse(RoleData.updaterole(**get_params(request)), safe=False)
-
-
-@csrf_exempt
-def queryonerole(request):
-    res = RoleData.queryonerole(**get_params(request))
-    logger.info('角色明细结果:', res)
-    return JsonResponse(res, safe=False)
-
-
 '''
 MOCK替换测试
 '''
@@ -2573,105 +1962,6 @@ def changemode(request):
             f.write(''.join(lines))
 
     return JsonResponse(pkg(code=0, msg=msg), safe=False)
-
-
-@csrf_exempt
-def varSqltest(request):
-    print(request.POST)
-    scheme = request.POST.get('scheme')
-    scheme = '全局' if scheme == '' else scheme
-    sql = request.POST.get('sql')
-    plan = request.POST.get('plan')
-    if plan == '' or plan is None:
-        plan = '{}'
-    state, data, msg = simple_compute(sql, plan, scheme)
-    code = 1 if state != 'success' else 0
-    return JsonResponse({'code': code, 'msg': msg})
-
-
-def simple_replace_var(str_, plan, scheme):
-    print('替换', str_, plan, scheme)
-    try:
-        old = str_
-        varnames = re.findall('{{(.*?)}}', str_)
-        for varname in varnames:
-            try:
-                with connection.cursor() as cursor:
-                    sql = '''SELECT v.gain,v.`value` FROM `manager_tag` t , manager_variable v
-                    where  v.`key`='%s' and v.id = t.var_id  and planids like '%s' ''' % (varname, '%{}%'.format(plan))
-                    logger.info('变量查询sql=>', sql)
-                    cursor.execute(sql)
-                    rows = cursor.fetchall()
-                    if len(rows) > 1:
-                        raise Exception('变量[%s]替换异常,可能该计划下有多个相同的变量键名，请检查' % varname)
-                    elif len(rows) == 0:
-                        raise Exception('该计划下没有匹配到变量[%s],请检查' % varname)
-                    else:
-                        gain = rows[0][0]
-                        value = rows[0][1]
-                        print(value, gain)
-                        if len(gain) == 0:
-                            info = '变量{},{}'.format(varname, value)
-                            state, res = simple_replace_var(value, plan, scheme)
-                        elif len(value) == 0:
-                            state, res, msg = simple_compute(gain, plan, scheme)
-                        if state != 'success':
-                            return state, msg
-            except Exception as e:
-                logger.error(e)
-                state = 'fail'
-                return 'fail', str(e)
-            old = old.replace('{{%s}}' % varname, str(res), 1)
-        return ('success', old)
-    except Exception as e:
-        logger.info(traceback.format_exc())
-        return ('error', '字符串[%s]变量替换异常[%s] 请检查包含变量是否已配置' % (str_, traceback.format_exc()))
-
-
-def simple_compute(gain, plan, scheme):
-    if _is_function_call(gain):
-        return 'fail', '', '变量获取暂时支持sql方式'
-    # flag = Fu.tzm_compute(gain, '(.*?)\((.*?)\)')
-    # ms = list(Function.objects.filter(flag=flag))
-    # functionid = None
-    # if len(ms) == 0:
-    #   pass
-    # elif len(ms) == 1:
-    #   functionid = ms[0].id
-    # else:
-    #   functionid = ms[0].id
-    # a = re.findall('(.*?)\((.*?)\)', gain)
-    # methodname = a[0][0]
-    # call_method_params = a[0][1].split(',')
-    # if functionid is None:
-    #   state = 'fail'
-    #   msg = '没查到匹配函数请先定义[%s,%s]' % (gain, flag)
-    # else:
-    #   f = None
-    #   builtinmethods = [x.name for x in getbuiltin()]
-    #   builtin = (methodname in builtinmethods)
-    #
-    #   try:
-    #       f = Function.objects.get(id=functionid)
-    #   except:
-    #       pass
-    #   call_method_params = [x for x in call_method_params if x]
-    #   call_str = '%s(%s)' % (methodname, ','.join(call_method_params))
-    #   state, res = simple_replace_var(call_str,plan,scheme)
-    #   if state is not 'success':
-    #       return state,'',res
-    #   state,res =Fu.call(f, call_str, builtin=builtin)
-    #   return state,res,'' if state == 'success' else state,'',res
-    else:
-        state, gain = simple_replace_var(gain, plan, scheme)
-        if state != 'success':
-            return state, '', gain
-        op = Mysqloper()
-        return op.db_exec_test(gain, scheme)
-
-
-def recycle(request):
-    return render(request, 'manager/recycle.html', locals())
 
 
 @csrf_exempt
@@ -2801,25 +2091,4 @@ def getStepKind(request):
     id = request.POST.get('id')
     step_type = Step.objects.filter(id = id).first().step_type
     return JsonResponse({'code': 0, 'data': '操作成功', 'type': step_type})
-
-def test(request):
-    return render(request, 'manager/test.html')
-
-def _f(x):
-    while True:
-        print(x)
-def test_process(request):
-    import  time
-    from concurrent.futures import  ProcessPoolExecutor,wait
-
-    #
-    p=ProcessPoolExecutor()
-    tasks=[]
-    for i in range(4):
-        tasks.append(p.submit(_f,1))
-    wait(tasks)
-
-    return JsonResponse(pkg(code=0))
-
-
 

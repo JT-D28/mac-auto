@@ -44,8 +44,7 @@ def clear_task_before(taskid):
 
 def gen_third_invoke_url(planid):
 	taskid = planid
-	callername = models.Plan.objects.get(id=planid).author.name
-	mwstr = 'callername=%s&taskid=%s' % (callername, taskid)
+	mwstr = 'taskid=%s' %taskid
 	return '%s/manager/third_party_call/?v=%s&planid=%s' % (
 		settings.BASE_URL, EncryptUtils.base64_encrypt(EncryptUtils.des_encrypt(mwstr)), planid)
 
@@ -412,62 +411,6 @@ class CaseEncoder(XJsonEncoder):
 			"data": L
 		}
 
-
-class PlanEncoder(XJsonEncoder):
-	def __init__(self, **args):
-		# super(PlanEncoder, self).__init__(
-		# 	['id', 'author', 'last', 'description', 'cases', 'createtime', 'updatetime', 'run_type', 'run_value',
-		# 	 'mail_config_id', 'db_id', 'is_send_dingding', 'is_send_mail', 'schemename','before_plan','proxy'], **args)
-		#
-		field_name_list = [f.name for f in models.Plan._meta.fields]
-		super(PlanEncoder,self).__init__(field_name_list,**args)
-
-
-	def encode(self, obj):
-		# print('hhhh'*100)
-		L = eval(super(XJsonEncoder, self).encode(obj))
-		code = 0
-		if not isinstance(L, (list)):
-			L = [L]
-		
-		# print('UU'*100)
-		# print(L)
-		
-		for x in L:
-			
-			try:
-				invoke_url = gen_third_invoke_url(x['id'])
-				x['invoke_url'] = invoke_url
-				
-				config_id = x.get('mail_config_id')
-				is_send_mail = models.MailConfig.objects.get(id=config_id).is_send_mail
-				is_send_dingding = models.MailConfig.objects.get(id=config_id).is_send_dingding
-				x['is_send_mail'] = is_send_mail
-				x['is_send_dingding'] = is_send_dingding
-			# print("uuuuuuuuuu=>",x)
-			
-			except:
-				
-				msg = '计划未关联邮件'
-				x['is_send_mail'] = 'disabled'
-				pass
-		
-		print(L)
-		
-		return {
-			"code": 0,
-			"msg": '操作成功',
-			# "count":len(L),
-			"count": self._total,
-			# "data":[{'key':'host','value':'2.2.34.3'}],
-			"data": L
-		}
-
-
-# class ResultEncoder(XJsonEncoder):
-# 	def __init__(self, **args):
-		#super(ResultEncoder, self).__init__(
-			#['id', 'author', 'case', 'success', 'skip', 'fail', 'updatetime', 'createtime'], **args)
 
 
 class ResultDetailEncoder(XJsonEncoder):
@@ -837,14 +780,13 @@ class Fu:
 		print("开始更新本地函数信息..")
 		
 		try:
-			list_ = list(models.Function.objects.values('author','flag','body','name'))
+			list_ = list(models.Function.objects.values('flag','body','name'))
 			for x in list_:
 				
-				author = str(x.get('author'))
 				filename = "func_%s" % x.get('flag')
 				body = x.get('body')
 				# path = os.path.join(os.path.dirname(__file__), 'Function', author)
-				path = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'Function', author)
+				path = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'Function')
 				print(path)
 				if not os.path.exists(path):
 					os.makedirs(path)
@@ -956,6 +898,7 @@ class Fu:
 						return ('error', '内置函数返回类型{None,bool,tuple}')
 				
 				except:
+					print("eeadsas",traceback.format_exc())
 					try:
 						methodname = call_str.split('(')[0]
 						print('methodname=>', methodname)
@@ -996,9 +939,8 @@ class Fu:
 			else:
 				##外部调用
 				logger.info('funcobj:',funcobj)
-				user = funcobj.author
 				flag = funcobj.flag
-				f = __import__('manager.storage.private.Function.%s.func_%s' % (user, flag), fromlist=True)
+				f = __import__('manager.storage.private.Function.func_%s' % (flag), fromlist=True)
 				callstr = "f.%s" % (call_str)
 				# print(callstr)
 				callstr = callstr.replace('\n', '')
@@ -1006,7 +948,7 @@ class Fu:
 				print('\n' in callstr)
 				res = eval(callstr)
 				print("调用用户定义表达式:%s 结果为:%s" % (callstr, res))
-				del sys.modules['manager.storage.private.Function.%s.func_%s' % (user, flag)]
+				del sys.modules['manager.storage.private.Function.func_%s' %flag]
 			return ('success', res)
 		
 		except Exception as e:

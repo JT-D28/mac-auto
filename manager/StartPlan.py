@@ -4,21 +4,22 @@ import json
 import os
 import re
 import socket
+import sys
 import time
 import traceback
 from urllib import parse
-
 import requests
 from django.db.models import Q
 from requests import compat
-
+from manager.builtin import *
 from manager.context import Me2Log as logger, setRunningInfo, set_top_common_config, get_space_dir
 from manager.core import ordered, getbuiltin, Fu
 from manager.db import Mysqloper
 from manager.invoker import _get_final_run_node_id, beforePlanCases, get_node_upper_case, _replace_property, \
-	_replace_variable, _replace_function, XMLParser, JSONParser, _get_step_params, _callfunction, _legal, \
+	XMLParser, JSONParser, _get_step_params, _legal, \
 	_eval_expression
 from manager.models import Plan, DBCon, Order, Case, Step, BusinessData, Function, ResultDetail, User, Variable, Tag
+from manager.operate.DesktopNotification import notification
 from manager.operate.apiInfo import dump_request
 from manager.operate.generateReport import dealruninfo
 from manager.operate.mongoUtil import Mongo
@@ -144,10 +145,8 @@ class RunPlan:
 		finally:
 			setRunningInfo(self.planId, self.taskId, '0')
 			processSendReport(self.taskId, self.plan.mail_config_id, self.user.name)
-	
-	# clear_data(callername, _tempinfo)
-	# notification(callername,
-	#              "计划【%s】%s任务运行结束，前往查看" % (plan.description, {"1": "验证", "2": "调试", "3": "定时"}[runkind]))
+			notification(self.user.name,
+			             "计划【%s】%s任务运行结束，前往查看" % (self.plan.description, {"1": "验证", "2": "调试", "3": "定时"}[self.runKind]))
 	
 	def runCase(self, case):
 		caseSuccess = True
@@ -155,7 +154,6 @@ class RunPlan:
 		# 获取该用例下最终执行的节点
 		case_run_nodes = _get_final_run_node_id('case_%s' % case.id)
 		# 设置标记
-		print("bbb", case_run_nodes, self.finalNode)
 		subFlag = True if set(case_run_nodes).issubset(self.finalNode) else False
 		logger.info('用例[%s]下有测试点ID：%s' % (case.description, case_run_nodes))
 		caseCount = 0 if case.count in [0, '0', '', None] else int(case.count)
@@ -210,13 +208,10 @@ class RunPlan:
 			if groupId not in groupSkip:
 				for i in range(0, pointCount):
 					result, error = self.process_process(point, step.id)
-					print('result',result,result != 'success' and not result.startswith('db_'))
 					if result != 'success' and not result.startswith('db_'):
-						print("aaaaaaaaaaaaaadsadsadsadasd")
 						stepSuccessFlag = False
 						num += 1
 						groupSkip.append(groupId)
-						print('resultgroupSkip',groupSkip)
 						break
 			else:
 				result, error = ('omit', "测试点[%s]执行次数=0 略过." % point.businessname) if point.count == 0 else (
@@ -251,7 +246,7 @@ class RunPlan:
 	def process_process(self, point, stepId):
 		# 预处理测试点数据
 		# 1. 超时时间
-		timeout = 10.0 if not point.timeout else float(point.timeout)
+		timeout = 30.0 if not point.timeout else float(point.timeout)
 		# 2. 前置、后置操作列表
 		prepPosition_List = point.preposition.split("|") if point.preposition is not None else ''
 		postPosition_List = point.postposition.split("|") if point.postposition is not None else ''
@@ -288,11 +283,10 @@ class RunPlan:
 				return status, requestData
 			
 			status, responseData = self.apiRequest(method, requestData, timeout)
-			print("aaasdadasdsa",status,requestData)
 			if status != 'success':
 				return status, responseData
 			# 打印请求报文
-			self.log('<pre>%s</pre>'%dump_request(responseData))
+			self.log('<xmp>%s</xmp>'%dump_request(responseData))
 
 			status_code = responseData.status_code
 			response_headers = responseData.headers
@@ -318,7 +312,6 @@ class RunPlan:
 				parse_type = 'xml' if 'xml' in step.content_type else 'json'
 				resultList = self.formulaCheck(checkStr, rps_text=response_text, parse_type=parse_type,
 				                               rps_header=response_headers)
-				print(resultList,"ddddddddddddddd")
 				failFlag = False
 				for res in resultList:
 					if res[0] != 'success':
@@ -333,25 +326,16 @@ class RunPlan:
 		elif step.step_type == 'function':
 			param = point.params
 			functionId = step.related_id
-			methodName = step.body
+			funcName = step.body
 			self.log("调用函数=>%s" % step.body)
 			isOk, param = self.ParameterReplace(param, '函数参数')
 			if not isOk:
 				return 'fail', param
 			
-			builtin = methodName in [x.name for x in getbuiltin()]
-			f = None
-			try:
-				f = Function.objects.get(id=functionId)
-			except:
-				pass
-			
-			call_str = "%s(%s,taskid='%s')" % (methodName, param, self.taskId)
-			logger.info('测试函数调用=>', call_str)
-			res, msg = Fu.call(f, call_str, builtin=builtin)
-			self.log("函数执行结果=>%s" % res)
+			res, msg = executeFunction(funcName, param, self.taskId)
+			self.log("函数%s(%s)执行结果=>%s" %(funcName, param,res))
 			if res is not 'success':
-				self.log("函数执行报错信息:%s" % msg)
+				self.log("函数%s(%s)执行报错信息:%s" % (funcName, param,msg))
 				return 'db_%s' % res, msg
 			
 			# 进行后置操作
@@ -383,34 +367,12 @@ class RunPlan:
 				if not isSuccess:
 					return isSuccess, newStr
 				try:
-					methodName = re.findall('(.*?)\(', s)[0]
-					args = re.findall('{}\((.*)\)'.format(methodName), s)[0]
-					argsStr = "%s,taskid='%s'" % (args.strip(), self.taskId)
-					logger.info('拼接完成的函数参数:', argsStr)
-					call_str = '%s(%s)' % (methodName, argsStr)
-					logger.info('拼接完成的函数整体:', call_str)
+					funcName = re.findall('(.*?)\(', s)[0]
+					params = re.findall('{}\((.*)\)'.format(funcName), s)[0]
 				except:
 					return 'error', '解析%s[%s]失败[%s]' % (kind, s, traceback.format_exc())
 				
-				isbuiltin = (methodName in [x.name for x in getbuiltin()])
-				
-				func = None
-				if not isbuiltin:
-					flag = Fu.tzm_compute(s, '(.*?)\((.*?)\)')
-					likeFuncLists = Function.objects.filter(flag=flag)
-					if len(likeFuncLists) == 0:
-						flag = Fu.tzm_compute(s, '(.*?)\(.*?\)')
-						func = Function.objects.filter(flag=flag).first()
-						if not func:
-							return 'fail', '库中没发现可用函数[%s]' % methodName
-					elif len(likeFuncLists) == 1:
-						func = likeFuncLists[0]
-					else:
-						func = likeFuncLists[0]
-						self.log("<span style='color:#FF3333;'>函数库中发现多个匹配函数 使用第一个匹配项</span>")
-				
-				status, res = Fu.call(func, call_str, isbuiltin)
-				
+				status, res = executeFunction(funcName, params, self.taskId)
 				if status == 'success':
 					self.log("执行[<span style='color:#009999;'>%s</span>]%s【成功】" % (kind, s))
 					continue
@@ -421,7 +383,6 @@ class RunPlan:
 	
 	def ParameterReplace(self, original, type, responseText=None):
 		# 替换属性
-		user = self.user
 		isOk, str = self.replaceProperty(original)
 		if not isOk:
 			return False, str
@@ -498,7 +459,6 @@ class RunPlan:
 				print(traceback.format_exc())
 				return 'error', "headers转换失败，可能有误"
 			# 兼容旧的数据
-			print('ggggggggggggg', body)
 			if 'json' in content_type:
 				headers["Content-Type"] = 'application/json;charset=UTF-8'
 				# 	body最终由dict类型转换成json字符串
@@ -518,7 +478,6 @@ class RunPlan:
 			
 			elif 'urlencode' in content_type:
 				headers["Content-Type"] = 'application/x-www-form-urlencoded;charset=UTF-8'
-				print("llllllllll",body)
 				try:
 					# 	body最终转换成a=1&b=2格式  字符串类型map 单引号双引号通用
 					body = parse.urlencode(ast.literal_eval(body.replace('\r', '').replace('\n', '').replace('\t', '')))
@@ -693,7 +652,7 @@ class RunPlan:
 			logger.info('varnames:', varnames)
 			for varname in varnames:
 				if varname.strip() == 'STEP_PARAMS':
-					dictparams = _get_step_params(text, self.taskId, self.user.name)
+					dictparams = self.get_step_params(text)
 					logger.info('==获取内置变量STEP_PARAMS=>\n', dictparams)
 					logger.info('==STEP_PARAMS替换前=>\n', text)
 					text = text.replace('{{%s}}' % varname, str(dictparams))
@@ -763,31 +722,87 @@ class RunPlan:
 			print(traceback.format_exc())
 			return False, e
 	
+	def get_step_params(self,paraminfo):
+		'''
+		获取内置变量STEP_PARAMS
+		'''
+		def _next(cur):
+			if isinstance(cur, (dict,)):
+				i = 0
+				for k in list(cur.keys()):
+					i += 1
+					v = cur[k]
+					try:
+						v = eval(v)
+					except:
+						pass
+					if isinstance(v, (str,)):
+						find_var = len(re.findall('\{\{.*?\}\}', v))
+						if find_var:
+							if v.__contains__('{{STEP_PARAMS}}'):
+								logger.info('字符串发现STEP_PARAMS', v)
+								del cur[k]
+							else:
+								cur[k] = self.replaceVariable(v)[1]
+					else:
+						_next(v)
+					print(k,cur)
+
+			elif isinstance(cur, (list,)):
+				itemindex = -1
+				for sb in cur:
+					itemindex  += 1
+					if isinstance(sb, (str,)):
+						find_var = len(re.findall('\{\{.*?\}\}', sb))
+						if find_var:
+							if sb.__contains__('{{STEP_PARAMS}}'):
+								# del parent[key]
+								cur.remove(sb)
+							else:
+								cur[itemindex] = self.replaceVariable(sb)[1]
+					else:
+						_next(sb)
+		ps = paraminfo
+		try:
+			ps = eval(paraminfo)
+			if isinstance(ps, (dict,)):
+				logger.info('ps=>',ps)
+				_next(ps)
+				self.log('获取内置变量[字典模式]STEP_PARAMS=> %s ' % str(ps))
+				return ps
+		except:
+			try:
+				dl = dict()
+				for s1 in ps.split('&'):
+					# a=1&b=2
+					p1 = s1.split('=')[0]  # a
+					p2 = '='.join(s1.split('=')[1:])
+					if p1.__contains__('?'):
+						p1 = p1.split('?')[1]
+					
+					try:
+						import json
+						logger.info('p1=>', p1)
+						dl[p1] = eval(p2)
+					except:
+						dl[p1] = p2
+				_next(dl)
+				self.log('获取内置变量[a=1&b=2模式]STEP_PARAMS=> %s ' % str(dl))
+				return dl
+			except:
+				return ('error', 'a=1&b=2模式获取内置变量STEP_PARAMS异常')
+			
+	
 	# 变量获取方式计算
 	def gainCompute(self, gain):
 		try:
 			res_1 = re.findall('\s+', gain)
 			res_2 = re.findall("\w{1,}\(.*?\)", gain)
 			if len(res_1) == 0 and len(res_2) > 0:
-				# 	函数格式
-				flag = Fu.tzm_compute(gain, '(.*?)\((.*?)\)')
-				functions = Function.objects.filter(flag=flag)
-				functionid = None
-				
-				if len(functions) == 1:
-					functionid = functions.first().id
-				elif len(functions) > 1:
-					functionid = functions.first().id
-					self.log("<span style='color:#FF3333;'>函数库中发现多个匹配函数 这里使用第一个匹配项</span>")
-				
-				# if functionid is None:
-				# 	return 'error', '没查到匹配函数请先定义[%s,%s]' % (gain, flag)
-				
 				a = re.findall('(.*?)\((.*?)\)', gain)
-				call_method_name = a[0][0]
-				call_method_params = a[0][1].split(',')
-				print(call_method_name,call_method_params,"aaaaaaaa")
-				return _callfunction(self.user, functionid, call_method_name, call_method_params, taskid=self.taskId)
+				funcName = a[0][0]
+				params = a[0][1]
+				return executeFunction(funcName,params,self.taskId)
 			
 			else:
 				op = Mysqloper()
@@ -805,34 +820,19 @@ class RunPlan:
 	
 	def replaceFunction(self, str_):
 		resultlist = []
-		builtinmethods = [x.name for x in getbuiltin()]
-		
 		functionsList = re.findall('\$\[(.*?)\((.*?)\)\]', str_)
-		
 		if len(functionsList) == 0: return True, str_
 		
 		for function in functionsList:
-			functionName = function[0]
-			func = None
-			try:
-				func = Function.objects.get(name=functionName)
-				logger.info('通过函数名[%s]获取函数对象' % functionName)
-			except:
-				pass
-			
-			if function[1]:
-				invstr = "%s(%s,taskid='%s')" % (functionName, function[1], self.taskId)
-			else:
-				invstr = "%s(taskid='%s')" % (functionName, self.taskId)
-			logger.info('invstr=>', invstr)
-			
-			status, res = Fu.call(func, invstr, builtin=functionName in builtinmethods)
-			self.log('计算函数表达式:<br/>%s <br/>结果:<br/>%s' % (invstr, res if res else '成功'))
+			funcName,params = function
+			status, res = executeFunction(funcName, params, self.taskId)
+			self.log('计算函数表达式:<br/>%s(%s) <br/>结果:<br/>%s' % (funcName,params, res if res else '成功'))
 			resultlist.append((status, res))
 			
 			if status is 'success':
-				logger.info('替换函数引用 %s\n =>\n %s ' % ('$[%s]' % invstr, str(res)))
-				str_ = str_.replace('$[%s]' % '%s(%s)' % (functionName, function[1]), str(res))
+				old = '$[%s(%s)]' %(funcName, function[1])
+				str_ = str_.replace(old, str(res))
+				logger.info('替换函数引用 %s\n =>\n %s ' % (old, str(res)))
 		
 		if len([x for x in resultlist if x[0] is 'success']) == len(resultlist):
 			logger.info('--成功计算引用表达式 结果=>', str_)
@@ -841,3 +841,50 @@ class RunPlan:
 			alist = [x[1] for x in resultlist if x[0] is not 'success']
 			logger.info('--异常计算引用表达式=>', alist[0])
 			return 'error', alist[0]
+
+
+
+
+def executeFunction(funcName,params,taskid):
+	params = params.replace('\n','')
+	
+	isBuiltin = funcName in [x.name for x in getbuiltin()]
+	if funcName.startswith('dbexecute'):
+		execStr = '%s("""%s""",taskid="%s")' % (funcName, params, taskid)
+	else:
+		if params:
+			execStr = '%s(%s,taskid="%s")' % (funcName, params, taskid)
+		else:
+			execStr = '%s(taskid="%s")' % (funcName,taskid)
+	result = (None,'')
+	try:
+		if isBuiltin:
+			result = eval(execStr)
+			logger.info("调用内置函数表达式:%s 结果为:%s" % (execStr, result))
+
+		else:
+			function = Function.objects.filter(name=funcName.strip())
+			if function:
+				flag = function.first().flag
+				f = __import__('manager.storage.private.Function.func_%s' % flag, fromlist=True)
+				execStr = "f.%s" % execStr.replace('\n', '')
+				result = eval(execStr)
+				del sys.modules['manager.storage.private.Function.func_%s' % flag]
+				logger.info("调用用户定义表达式:%s 结果为:%s" % (execStr, result))
+
+	except:
+		logger.error(traceback.format_exc())
+		msg = '函数参数数量错误，请检查' if 'got an unexpected keyword' in traceback.format_exc() else traceback.format_exc()
+		return 'error', '函数执行错误' + msg
+	
+	if isinstance(result, (tuple,)):
+		return result
+	
+	elif isinstance(result, (bool,)):
+		if result is False:
+			return 'fail', '[%s]返回结果[false]不符合预期' % funcName
+	elif result is None or isinstance(result, (str,)):
+		return 'success', result
+	else:
+		return 'error', '内置函数返回类型{None,bool,tuple}'
+	

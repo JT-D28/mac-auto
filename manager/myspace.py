@@ -34,7 +34,7 @@ class SpaceMeta(object):
 			return ('error', 'ftp上传异常[%s]' % traceback.format_exc())
 	
 	@classmethod
-	def ftp_to_local(cls, ip, port, username, password, remotefile, callername):
+	def ftp_to_local(cls, ip, port, username, password, remotefile):
 		try:
 			ftp = FTP()
 			ftp.set_debuglevel(0)
@@ -44,7 +44,7 @@ class SpaceMeta(object):
 			# remotefilename=os.sep.split(remotefile)[-1]
 			remotefilename = remotefile.split('/')[-1]
 			logger.info('remotefilename=>', remotefilename)
-			localfile = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File', callername,
+			localfile = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File',
 			                         remotefilename)
 			logger.info('localfile=>', localfile)
 			# logger.info(os.path.dirname(__file__))
@@ -60,10 +60,10 @@ class SpaceMeta(object):
 			return ('error', 'ftp下载异常[%s]' % traceback.format_exc())
 	
 	@classmethod
-	def local_file_check(cls, filename, templatename, checklist, callername, jarname='jiemi_rh_20200326.jar'):
+	def local_file_check(cls, filename, templatename, checklist, jarname='jiemi_rh_20200326.jar'):
 		logger.info('开始本地文件校验')
 		toolpath = os.path.join(os.path.dirname(__file__), 'storage', 'public', 'tools', jarname)
-		filepath = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File', callername, filename)
+		filepath = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File', filename)
 		if not os.path.exists(toolpath):
 			return ('error', '文件[%s]不存在' % jarname)
 		if not os.path.exists(filepath):

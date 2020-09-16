@@ -2,14 +2,12 @@
 import time, traceback, re, json
 from django.db.models import *
 from login.models import *
-from manager.ar import RoleData
 from manager.context import Me2Log as logger
 
 # Create your models here.
 
 class Function(Model):
 	kind = CharField(max_length=12, default='用户定义')
-	author = ForeignKey(User, on_delete=CASCADE)
 	name = CharField(max_length=64)
 	description = CharField(max_length=128)
 	flag = CharField(max_length=32)
@@ -47,7 +45,6 @@ class Template(Model):
 	kind = CharField(max_length=32)  # length/separator
 	name = CharField(max_length=16)
 	description = TextField()
-	author = ForeignKey(User, on_delete=CASCADE)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 	fieldinfo = ManyToManyField(TemplateField, blank=True, db_column='field_id')
@@ -132,7 +129,6 @@ class Step(Model):
 	choice = (('interface', '接口'), ('function', '函数'))
 	count = IntegerField(default=1, null=True)
 	
-	author = ForeignKey(User, on_delete=CASCADE)
 	step_type = CharField(choices=choice, max_length=12, null=True)
 	##如果是接口类型 这个字段暂时无用
 	related_id = CharField(max_length=32, blank=True, null=True)
@@ -162,7 +158,6 @@ class Step(Model):
 
 class Case(Model):
 	count = IntegerField(default=1)
-	author = ForeignKey(User, on_delete=CASCADE)
 	# priority=CharField(max_length=32)
 	description = CharField(max_length=128)
 	db_id = CharField(max_length=64, blank=True, null=True)
@@ -176,7 +171,6 @@ class Case(Model):
 
 
 class Plan(Model):
-	author = ForeignKey(User, on_delete=CASCADE)
 	description = CharField(max_length=128)
 	db_id = CharField(max_length=64, blank=True, null=True)
 	schemename = CharField(max_length=64, blank=True, null=True)
@@ -245,7 +239,6 @@ class Order(Model):
 	kind = CharField(choices=(('plan', '计划'), ('case', '用例')), max_length=32)
 	value = CharField(max_length=64, blank=True)
 	isdelete = IntegerField(default=0)
-	author = ForeignKey(User, on_delete=CASCADE)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 	
@@ -262,7 +255,6 @@ class DBCon(Model):
 	username = CharField(max_length=15)
 	password = CharField(max_length=15)
 	description = TextField()
-	author = ForeignKey(User, on_delete=CASCADE)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 
@@ -273,7 +265,6 @@ class Crontab(Model):
 	value = CharField(max_length=32)
 	status = CharField(choices=(('close', '关闭'), ('open', '开启')), max_length=12, default='close')
 	
-	author = ForeignKey(User, on_delete=CASCADE)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 
@@ -294,7 +285,6 @@ class MailConfig(Model):
 	is_send_dingding = CharField(max_length=125, default='close')
 	
 	dingdingtoken = CharField(max_length=64, blank=True, null=True)
-	author = ForeignKey(User, on_delete=CASCADE, null=True)
 	createtime = DateTimeField(auto_now_add=True, null=True)
 	updatetime = DateTimeField(auto_now=True, null=True)
 
@@ -304,7 +294,6 @@ class Product(Model):
 	产品表
 	'''
 	description = CharField(max_length=64)
-	author = ForeignKey(User, on_delete=CASCADE)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 	isdelete = IntegerField(default=0)
@@ -319,7 +308,6 @@ class OperateLog(Model):
 	opcode = CharField(max_length=32)
 	opname = CharField(max_length=32)
 	description = TextField(blank=True, null=True)
-	author = ForeignKey(User, on_delete=CASCADE)
 	createtime = DateTimeField(auto_now_add=True)
 	
 	def __str__(self):
@@ -331,7 +319,6 @@ class News(Model):
 	'''
 	title=TextField()
 	description=TextField()
-	sender=ForeignKey(User, on_delete=CASCADE)
 	createtime=DateTimeField(auto_now_add=True)
 	recv=IntegerField()
 	recv_kind=CharField(default='USER',max_length=5) #ROLE|USER
@@ -352,8 +339,8 @@ class News(Model):
 				'createtime':str(x.createtime)[:-7],
 				})
 
-		roleid=RoleData.queryuserrole(userid)
-		nwsr=list(News.objects.filter(recv=roleid,recv_kind='ROLE').order_by('-createtime'))
+		
+		nwsr=list(News.objects.filter(recv=userid,recv_kind='ROLE').order_by('-createtime'))
 		for x in nwsr:
 			data.append({
 				'id':x.id,
@@ -384,7 +371,7 @@ class Recover(Model):
 	old=CharField(max_length=60)
 	exp=CharField(max_length=60)
 	createtime=DateTimeField(auto_now_add=True)
-	creater = ForeignKey(User, on_delete=CASCADE)
+	creater = CharField(max_length=60)
 
 
 class SimpleTest(Model):
@@ -410,7 +397,7 @@ class Diff(Model):
 	uid=CharField(max_length=40)
 	fieldname=CharField(max_length=20)
 	diff=TextField()
-	creater = ForeignKey(User, on_delete=CASCADE)
+	creater = CharField(max_length=20)
 	createtime=DateTimeField(auto_now_add=True)
 
 
@@ -418,7 +405,6 @@ class EditLink(Model):
 	snid=CharField(max_length=20)
 	tnid=CharField(max_length=20)
 	flag=CharField(max_length=200)
-	creater=ForeignKey(User, on_delete=CASCADE)
 	createtime=DateTimeField(auto_now_add=True)
 
 

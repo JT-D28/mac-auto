@@ -362,9 +362,10 @@ class MainSender:
 			sender_nick = configs.EMAIL_sender_nick
 			sender_pass = configs.EMAIL_HOST_PASSWORD
 			to_receive = mail_config.to_receive
-
-			rich_text_rp = _replace_property(taskid, mail_config.rich_text)
-			rich_text = ''
+			if not to_receive:
+				return ''
+			rich_text = mail_config.rich_text if mail_config.rich_text else ''
+			rich_text_rp = _replace_property(taskid, rich_text)
 			if rich_text_rp[0] is 'success':
 				rich_text_rv = _replace_variable(user, rich_text_rp[1], taskid=taskid)
 				if rich_text_rv[0] is 'success':
@@ -379,7 +380,7 @@ class MainSender:
 			smtp_host = configs.EMAIL_HOST  # "smtp.qq.com"
 			smtp_port = configs.EMAIL_PORT  # 465
 			subject = ''
-			description = mail_config.description
+			description = mail_config.description if mail_config.description else ''
 			description_rp = _replace_property(taskid, description)
 			if description_rp[0] is 'success':
 				description_rv = _replace_variable(user, description_rp[1], taskid=taskid)

@@ -100,7 +100,6 @@ class TestMind(object):
                 b.description=''
                 b.itf_check=c.itf_check
                 b.db_check=c.db_check
-                b.author=User.objects.get(name=callername)
 
                 copytmp=copy.deepcopy(tmp)
                 paramkey=c.paramname

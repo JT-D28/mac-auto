@@ -205,7 +205,6 @@ redis key格式=>console.msg::username::taskid
 """
 
 
-cons={}
 
 def viewcache(taskid, *msg):
     try:
@@ -215,15 +214,6 @@ def viewcache(taskid, *msg):
         Me2Log.error("viewcache异常")
         Me2Log.error(traceback.format_exc())
 
-
-def remotecache(key, linemsg):
-    con = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
-    con.lpush(key, linemsg)
-    con.close()
-
-
-# 运行中的任务 以及taskid
-_runninginfo = dict()
 
 
 def setRunningInfo(planid, taskid, runkind, dbscheme='全局'):
@@ -540,7 +530,7 @@ class monitor(object):
 
             elif isinstance(news, (list,)):
                 for new in news:
-                    cls._push_user_message(userids, str(new),sendername=sendername,title=title)
+                    cls.push_user_message(userids, str(new),sendername=sendername,title=title)
 
         elif isinstance(userids, (list,)):
             if isinstance(news, (str,)):
@@ -628,7 +618,6 @@ class monitor(object):
             else:
                 params=kws2
 
-            Me2Log.info('params:',params)
 
             self.username=params['user']
             msg='用户%s%s '%(self.username,self.action)
@@ -642,10 +631,8 @@ class monitor(object):
             og.opcode=''
             og.opname=self.action
             og.description=msg
-            og.author=User.objects.get(name=self.username)
             og.save()
 
-            Me2Log.info('authorname:',authorname)
 
             if authorname and  authorname!=self.username:
                 news=News()
@@ -661,6 +648,8 @@ class monitor(object):
             return result
 
         return update_wrapper(_wrap,args1[0])
+    
+    
 def cache_sync(f):
     from tools.test import TreeUtil
     def _wrap(*args,**kws):
@@ -670,11 +659,11 @@ def cache_sync(f):
         ret=None
         try:
             ret=f(*args,**kws)
-            if f.__name__.startswith('add'):
-                TreeUtil.update_tree_cache(**{'action':'add','data':ret['data']})
-
-            elif f.__name__.startswith('edit'):
-                TreeUtil.update_tree_cache(**{'action':'edit','name':ret['data']['name']})
+            # if f.__name__.startswith('add'):
+            #     TreeUtil.update_tree_cache(**{'action':'add','data':ret['data']})
+            #
+            # elif f.__name__.startswith('edit'):
+            #     TreeUtil.update_tree_cache(**{'action':'edit','name':ret['data']['name']})
             # elif f.__name__.startswith('del'):
             #     if args[0].__class__.__name__ == 'AsgiRequest':
             #         TreeUtil.update_tree_cache(**{'action':'del',id:'step_xx'})

@@ -23,35 +23,13 @@ from .operate.dataMove import DataMove
 from tools.R import R
 from tools.test import TreeUtil
 
-def update_record_status(request):
-    v=request.GET.get('v')
-    try:
-        request.session['record_status']=v
-        logger.info('{}重置录制状态为{}'.format(request.session['username'],v))
-        return {
-            'status': 'success',
-            'msg': '操作成功',
-            'data': {
-                'flag': v
-            }
-        }
-    except:
-        logger.error('重置录制状态异常:',traceback.format_exc())
-        return {
-            'status': 'error',
-            'msg': '操作异常',
-        }
-
-
-# addproduct
 @cache_sync
 @monitor(action='添加产品')
 def addproduct(request):
     product = None
     try:
         description = request.POST.get('description')
-        author = lm.User.objects.get(name=request.session.get('username'))
-        product = mm.Product(description=description, author=author)
+        product = mm.Product(description=description)
         product.save()
         return {
             'status': 'success',
@@ -70,6 +48,7 @@ def addproduct(request):
             'status': 'error',
             'msg': '新增[%s]异常' % product.description
         }
+
 @cache_sync
 @monitor(action='删除产品')
 def delproduct(request):
@@ -141,25 +120,22 @@ def addplan(request):
         description = request.POST.get('description')
         db_id = request.POST.get('dbid')
         schemename = request.POST.get('scheme')
-        author = lm.User.objects.get(name=request.session.get('username', None))
         run_type = request.POST.get('run_type')
         before_plan = request.POST.get('before_plan')
-        proxy = request.POST.get('proxy')
+        proxy = request.POST.get('proxy','')
         is_send_mail = 'open' if request.POST.get('is_send_mail') == 'true' else 'close'
         is_send_dingding = 'open' if request.POST.get('is_send_dingding') == 'true' else 'close'
         mail_config = mm.MailConfig(is_send_mail=is_send_mail, is_send_dingding=is_send_dingding)
         mail_config.save()
         
-        plan = mm.Plan(description=description, db_id=db_id, schemename=schemename, author=author,
-                       run_type=run_type, mail_config_id=mail_config.id,before_plan=before_plan,proxy='')
+        plan = mm.Plan(description=description, db_id=db_id, schemename=schemename,run_type=run_type, mail_config_id=mail_config.id,before_plan=before_plan,proxy=proxy)
         plan.save()
-        addrelation('product_plan', author, pid, plan.id)
+        addrelation('product_plan',pid, plan.id)
         extmsg=''
         if run_type == '定时运行':
             config = request.POST.get('config')
             crontab = mm.Crontab()
             crontab.value = config
-            crontab.author = plan.author
             crontab.plan = plan
             crontab.status = 'close'
             crontab.save()
@@ -177,7 +153,6 @@ def addplan(request):
             }}
     except:
         return {
-            
             'status': 'error',
             'msg': '新增失败[%s]' % traceback.format_exc()
         }
@@ -249,7 +224,7 @@ def editplan(request):
         plan.schemename = request.POST.get('scheme')
         logger.info('description=>', plan.description)
         plan.run_type = request.POST.get('run_type')
-        plan.proxy = request.POST.get('proxy')
+        plan.proxy = request.POST.get('proxy','')
         plan.save()
         extmsg=''
         if run_type == '定时运行':
@@ -260,7 +235,6 @@ def editplan(request):
             except:
                 crontab = mm.Crontab()
                 crontab.value = config
-                crontab.author = plan.author
                 crontab.plan = plan
                 crontab.status = 'close'
                 crontab.save()
@@ -358,14 +332,11 @@ def export(request):
     planid = request.GET.get('planid')
     m = DataMove()
     res = m.export_plan(planid, flag, version=int(version))
+    print("eeeeeeeeeeeeeeeeeeeee",json.dumps(res[1],ensure_ascii=False))
     return {
         'status': res[0],
         'msg': res[1]
     }
-
-
-def importplan(request):
-    pass
 
 
 ##
@@ -374,20 +345,21 @@ def importplan(request):
 def addcase(request):
     msg = ''
     try:
-        pid = request.POST.get('pid').split('_')[1]
+        ptype,pid = request.POST.get('pid').split('_')
         case = mm.Case()
-        case.author = lm.User.objects.get(name=request.session.get('username', None))
         case.description = request.POST.get('description')
         case.db_id = request.POST.get('dbid')
         case.save()
-        
-        addrelation('plan_case', request.session.get('username'), pid, case.id)
+        if ptype=='plan':
+            addrelation('plan_case',pid, case.id)
+        else:
+            addrelation('case_case', pid, case.id)
         return {
             'status': 'success',
             'msg': '新增成功',
             'data': {
                 'id': 'case_%s' % case.id,
-                'pId': 'plan_%s' % pid,
+                'pId': '%s_%s' %(ptype,pid),
                 'name': case.description,
                 'type': 'case',
                 'textIcon': 'fa icon-fa-folder'
@@ -482,8 +454,6 @@ def addstep(request):
         content_type = request.POST.get('content_type')
         count = request.POST.get('count')
         tmp = request.POST.get('extract')
-        author = request.session.get('username')
-        logger.info("author=>", author)
         businessdata = request.POST.get('business_data')
         logger.info('businessdata=>', type(businessdata), businessdata)
         dbid = request.POST.get('dbid')
@@ -492,13 +462,10 @@ def addstep(request):
         if step_type == 'dir':
             case = mm.Case()
             case.description = description
-            
-            case.author = lm.User.objects.get(name=author)
-            
             case.db_id = dbid
             case.save()
             
-            addrelation('case_case', author, pid, case.id)
+            addrelation('case_case',pid, case.id)
             return {
                 'status': 'success',
                 'msg': '新建[%s]成功' % case.description,
@@ -523,7 +490,6 @@ def addstep(request):
         step.content_type = content_type
         step.temp = tmp
         step.count=count
-        step.author = lm.User.objects.get(name=author)
         
         step.db_id = dbid
         # step.encrypt_type=encrypt_type
@@ -560,7 +526,7 @@ def addstep(request):
         #       related_id=funcs[0].id
         #       step.related_id=related_id
         
-        addrelation('case_step', author, pid, step.id)
+        addrelation('case_step', pid, step.id)
         
         return {
             'status': 'success',
@@ -597,9 +563,6 @@ def editstep(request):
         content_type = request.POST.get('content_type')
         
         tmp = request.POST.get('extract')
-        username = request.session.get('username')
-        author = lm.User.objects.get(name=username)
-        
         step = mm.Step.objects.get(id=id_)
         stepcopy=copy.deepcopy(step)
         if step.step_type != step_type:
@@ -643,7 +606,7 @@ def editstep(request):
         }
     
     except Exception as e:
-        # logger.info(traceback.format_exc())
+        logger.info(traceback.format_exc())
         return {
             'status': 'error',
             'msg': '编辑失败[%s]' % traceback.format_exc()
@@ -684,7 +647,6 @@ def _check_params(param_value):
     if param_value.startswith('{') and param_value.endswith('}'):
         logger.info('f1')
         try:
-            
             eval(param_value)
             return True
         except:
@@ -731,7 +693,7 @@ def addbusiness(request):
             bname = '<s>%s</s>' % bname
         
         b.save()
-        addrelation('step_business', request.session.get('username'), pid, b.id)
+        addrelation('step_business',pid, b.id)
         
         ##funcion类型关联realted_id
         
@@ -1007,22 +969,17 @@ def movemulitnodes(request):
 
 
 
-################
-
-####################
 
 
 _order_value_cache = dict()
 
 
-def addrelation(kind, callername, main_id, follow_id):
+def addrelation(kind, main_id, follow_id):
     order = mm.Order()
     order.kind = kind
     order.main_id = main_id
     order.follow_id = follow_id
     order.value = getnextvalue(kind, main_id)
-    order.author = lm.User.objects.get(name=callername)
-    
     order.save()
 
 
@@ -1131,9 +1088,9 @@ def getchild(kind, main_id):
     orderlist = ordered(list(mm.Order.objects.filter(kind=kind, main_id=main_id,isdelete=0)))
     if kind == 'product_plan':
         for order in orderlist:
-            logger.info('planid=>', order.follow_id)
+            # logger.info('planid=>', order.follow_id)
             try:
-                logger.info('plan class=>', mm.Plan)
+                # logger.info('plan class=>', mm.Plan)
                 p = mm.Plan.objects.get(id=order.follow_id)
                 # logger.infoe('添加计划=>',plan)
                 child.append(p)
@@ -1461,7 +1418,6 @@ def _build_node(kind, src_uid, target_uid, move_type, user, build_nodes):
         order.main_id = target_uid
         order.follow_id = src.id
         order.value = getnextvalue(kind, target_uid)
-        order.author = user
         logger.info('inner 构建完成[%s]' % order)
         order.save()
     else:
@@ -1477,7 +1433,6 @@ def _build_node(kind, src_uid, target_uid, move_type, user, build_nodes):
         parent = eval("mm.%s.objects.get(id=%s)" % (parent_type_upper, parent_order.main_id))
         
         order = mm.Order()
-        order.author = user
         order.kind = '%s_%s' % (parent_type, src_type)  ###?
         order.main_id = parent.id
         order.follow_id = src.id
@@ -2413,7 +2368,7 @@ def editplanlink(request):
 
     ##
 
-    [_addlink(uid, planid,creater=params['user']) for planid in planids]
+    [_addlink(uid, planid) for planid in planids]
 
     return{
         'status':'success',
@@ -2508,7 +2463,6 @@ def _handlefulldata(data1,data2,user,flag):
                 el=mm.EditLink()
                 el.snid=d1['nid']
                 el.tnid=d2['nid']
-                el.creater=user
                 el.flag=el.flag
                 el.save()
                 count=count+1
@@ -2645,7 +2599,6 @@ def addeditlink(request):
                 el = mm.EditLink()
                 el.snid = x['nid']
                 el.tnid = y['nid']
-                el.creater = user
                 el.flag = flag
                 el.save()
                 count = count + 1
@@ -2686,7 +2639,6 @@ def addeditlink(request):
                     el=mm.EditLink()
                     el.snid=xnid
                     el.tnid=ynid
-                    el.creater=params['user']
                     el.flag=flag
                     el.save()
                     logger.info('[建立link {}->{}]'.format(el.snid,el.tnid))
@@ -2737,7 +2689,7 @@ def _filter_data(data):
 
 
 
-def _addlink(nid1,nid2,creater=None):
+def _addlink(nid1,nid2):
 
     logger.info('需要关联的期望节点 {}&&{}'.format(nid1,nid2))
     try:
@@ -2757,7 +2709,6 @@ def _addlink(nid1,nid2,creater=None):
                     el.tnid='step_%s'%s2
                     if mm.EditLink.objects.filter(snid='step_%s'%s1,tnid='step_%s'%s2).exists():
                         continue;
-                    el.creater=creater
                     el.p1=nid1.split('_')[1]
                     el.p2=nid2.split('_')[1]
                     el.save()
@@ -2774,7 +2725,6 @@ def _addlink(nid1,nid2,creater=None):
                     el.tnid='business_%s'%b2
                     if mm.EditLink.objects.filter(snid='business_%s'%b1,tnid='business_%s'%b2).exists():
                         continue;
-                    el.creater=creater
                     el.p1=nid1.split('_')[1]
                     el.p2=nid2.split('_')[1]
                     el.save()

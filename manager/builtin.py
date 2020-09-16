@@ -281,9 +281,8 @@ def local_to_ftp(filename, ip, port, username, password, remotedir, **kws):
     '''
     from .myspace import SpaceMeta
     taskid=kws.get('taskid',None)
-    callername=kws.get('callername',None)
-    status, msg = SpaceMeta.local_to_ftp(filename, ip, port, username, password, remotedir, callername)
-    cout(msg, taskid=taskid, callername=callername)
+    status, msg = SpaceMeta.local_to_ftp(filename, ip, port, username, password, remotedir)
+    cout(msg, taskid=taskid)
     return (status, msg)
 
 
@@ -293,10 +292,9 @@ def ftp_to_local(ip, port, username, password, remotefile,**kws):
     '''
     from .myspace import SpaceMeta
     taskid=kws.get('taskid',None)
-    callername=kws.get('callername',None)
 
-    status, msg = SpaceMeta.ftp_to_local(ip, port, username, password, remotefile, callername)
-    cout(msg, taskid=taskid, callername=callername)
+    status, msg = SpaceMeta.ftp_to_local(ip, port, username, password, remotefile)
+    cout(msg, taskid=taskid)
     return (status, msg)
 
 

@@ -20,7 +20,7 @@ class SpaceMeta(object):
 			ftp.connect(ip, int(port))
 			ftp.login(username, password)
 			bufsize = 1024
-			localfile = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File', callername, filename)
+			localfile = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File', filename)
 			if not os.path.exists(localfile):
 				return ('error', '本地文件[%s]不存在 请先上传' % localfile)
 			fp = open(localfile, 'rb')
@@ -44,7 +44,7 @@ class SpaceMeta(object):
 			# remotefilename=os.sep.split(remotefile)[-1]
 			remotefilename = remotefile.split('/')[-1]
 			logger.info('remotefilename=>', remotefilename)
-			localfile = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File',
+			localfile = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'File','默认',
 			                         remotefilename)
 			logger.info('localfile=>', localfile)
 			# logger.info(os.path.dirname(__file__))

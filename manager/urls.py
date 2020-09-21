@@ -81,5 +81,7 @@ urlpatterns = [
     path('stoprecord/', views.stoprecord),
     path('queryrecyclelist/', views.queryrecyclelist),
     path('recyclenode/', views.recyclenode),
-
+    path('getTree',views.getTree),
+    path('recordBuildNodes',views.recordBuildNodes),
+    path('getVars',views.getVars)
 ]

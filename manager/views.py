@@ -2,7 +2,7 @@ import difflib, time
 import hashlib
 
 import chardet
-from django.db import connection
+from django.db import connection, transaction
 from django.shortcuts import render, redirect
 from django.utils.encoding import escape_uri_path
 from django.views.decorators.csrf import csrf_exempt
@@ -10,6 +10,8 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from django.http import HttpResponse, JsonResponse
 
 from django.db.models import Q
+from typing import List
+
 from manager.models import *
 from manager.db import Mysqloper
 from django.conf import settings
@@ -1229,7 +1231,6 @@ def queryonebusiness(request):
         return JsonResponse(simplejson(code=code, msg=msg), safe=False)
 
 
-@csrf_exempt
 def querytreelist(request):
     from .cm import getchild, get_search_match,get_link_left_tree,get_link_right_tree
     datanode = []
@@ -2092,3 +2093,114 @@ def getStepKind(request):
     step_type = Step.objects.filter(id = id).first().step_type
     return JsonResponse({'code': 0, 'data': '操作成功', 'type': step_type})
 
+
+def getTree(request):
+    # 给外部用，获取用例节点数据
+    type = request.GET.get('type')
+    id = request.GET.get('id')
+    data = []
+    if type == 'root':
+        sql = "SELECT id,description as label,'product' as type,true as disabled from manager_product where isdelete=0"
+    elif type == 'product':
+        sql = """SELECT p.id,p.description as label,'plan' as type FROM manager_plan p ,manager_order o
+        where  o.main_id=%s and o.follow_id=p.id and o.kind='product_plan'
+        and o.isdelete=0 and p.isdelete=0 ORDER BY cast(SUBSTR(o.value,3) as DECIMAL(9,5))""" % id
+    elif type == 'plan':
+        sql = """ SELECT c.id,c.description as label,'case' as type FROM manager_case c ,manager_order o
+        where  o.main_id=%s and o.follow_id=c.id and o.kind='plan_case' and o.isdelete=0
+        and c.isdelete=0 ORDER BY cast(SUBSTR(o.value,3) as DECIMAL(9,5))""" % id
+    elif type == 'case':
+        sql = """ SELECT c.id,c.description as label,'case' as type FROM manager_case c ,manager_order o
+        where  o.main_id=%s and o.follow_id=c.id and o.kind='case_case' and o.isdelete=0
+        and c.isdelete=0 ORDER BY cast(SUBSTR(o.value,3) as DECIMAL(9,5))
+        """ % id
+    with connection.cursor() as cursor:
+        cursor.execute(sql)
+        data = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+    
+    return JsonResponse({'code': 0, 'data': data})
+
+@csrf_exempt
+def recordBuildNodes(request):
+    id = request.POST.get('id')
+    type = request.POST.get('type')
+    text = request.POST.get('text')
+    casename = request.POST.get('casename')
+    username = request.POST.get('username')
+    msg = ''
+    try:
+        with transaction.atomic():
+            case=Case(description=casename,db_id='')
+            case.save()
+            caseId = case.id
+            addrelation('%s_case'%type, id, caseId)
+            
+            for key,value in json.loads(text).items():
+                headers = value.get('headers',{})
+                content_type = headers.get('Content-Type','application/x-www-form-urlencoded')
+                content_type.replace('; charset=UTF-8','')
+                del headers['Content-Type']
+                url = value.get('url','')
+                businessName = value.get('测试点名','')
+                method =  value.get('method','POST')
+                body = value.get('body','')
+                response = value.get('response','')
+                
+                step=Step(step_type='interface',count=1,description=key,
+                          headers=json.dumps(headers,ensure_ascii=False),url=url,
+                          method=method,
+                          content_type=content_type,
+                          temp='',
+                          db_id='')
+                step.save()
+                stepId = step.id
+                addrelation('case_step', caseId, stepId)
+                
+                try:
+                    if 'urlencoded' in content_type:
+                        bodytype = 'KeyValue'
+                        body = parse.urlencode(ast.literal_eval(body))
+                    elif 'xml' in content_type:
+                        bodytype = 'xml'
+                    elif 'json' in content_type:
+                        body = json.dumps(body, ensure_ascii=False)
+                        bodytype = 'json'
+                    else:
+                        bodytype = 'text'
+                except:
+                    pass
+                params = url.split('?')[1] if url.find("?")!=-1 else ''
+    
+                check = []
+                if response:
+                    if isinstance(response, dict):
+                        for k, v in response.items():
+                            check.append('%s=%s' % (k, v))
+                    else:
+                        check = ['response.text$%s' % response]
+    
+                check = '|'.join(check)
+                for badstr in ['\\n', '\\r', '\n','<br>']:
+                    check = check.replace(badstr, '')
+                check = check.replace('null', "'None'").replace('true', "'True'").replace("false","'False'")
+                
+                bus = BusinessData(businessname=businessName,itf_check=check,queryparams=params,params=body,bodytype=bodytype,
+                                   db_check='',preposition='',postposition='',parser_id='',parser_check='',timeout=30,count=1,description='')
+                
+                bus.save()
+                addrelation('step_business', stepId, bus.id)
+    except:
+        logger.error("导入失败:%s"%traceback.format_exc())
+        msg = traceback.format_exc()
+        
+    return JsonResponse({'code': 0, 'data': text,'msg':msg})
+
+@csrf_exempt
+def getVars(request):
+    vars = Variable.objects.values("key","description").filter()
+    data = []
+    for i in vars:
+        tmp = {'value':'%s(%s)'%(i['key'],i['description'])}
+        if tmp not in data:
+            data.append(tmp)
+    return JsonResponse({'code': 0, 'data': data, 'msg': ''})

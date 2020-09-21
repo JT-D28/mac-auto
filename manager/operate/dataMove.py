@@ -61,43 +61,46 @@ class DataMove:
                                                                                                      export_flag)
 
     def _add_author(self, authorname):
-        namelist = [author.get('name') for author in self._data['entity']['authors']]
-        if authorname not in namelist:
-            author = User.objects.get(name=authorname)
-            self._data['entity']['authors'].append({
+        return
+        # namelist = [author.get('name') for author in self._data['entity']['authors']]
+        # if authorname not in namelist:
+        #     author = User.objects.get(name=authorname)
+        #     self._data['entity']['authors'].append({
+        #
+        #         'name': author.name,
+        #         'password': author.password,
+        #         'email': author.email,
+        #         'sex': author.sex,
+        #     })
 
-                'name': author.name,
-                'password': author.password,
-                'email': author.email,
-                'sex': author.sex,
-            })
-
-    def _add_dbcon(self, gain, dbid=None, scheme=None):
+    def _add_dbcon(self, gain, db=None, scheme=None):
         namelist = [x.get('description') for x in self._data['entity']['dbcons']]
         try:
-            if dbid is not None:
-                dbcon = DBCon.objects.get(id=dbid)
+            if db is not None and db.description in namelist:
+                dbcon = db
                 logger.info()
             else:
                 sep = gain.split('@')
                 if sep[-1] in namelist:
                     return
                 dbcon = DBCon.objects.get(scheme=scheme, description=sep[-1])
+
+            self._data['entity']['dbcons'].append({
+                'id': dbcon.id,
+                'dbname': dbcon.dbname,
+                'description': dbcon.description,
+                'host': dbcon.host,
+                'port': dbcon.port,
+                'username': dbcon.username,
+                'password': dbcon.password,
+                'authorname': dbcon.author.name,
+                'kind': dbcon.kind,
+                'scheme': dbcon.scheme
+            })
         except:
             logger.info('库中没找到连接 略过')
 
-        self._data['entity']['dbcons'].append({
-            'id': dbcon.id,
-            'dbname': dbcon.dbname,
-            'description': dbcon.description,
-            'host': dbcon.host,
-            'port': dbcon.port,
-            'username': dbcon.username,
-            'password': dbcon.password,
-            'authorname': dbcon.author.name,
-            'kind': dbcon.kind,
-            'scheme': dbcon.scheme
-        })
+
 
     def _add_var(self, key, planid):
         namelist = [x.get('key') for x in self._data['entity']['vars']]
@@ -118,7 +121,7 @@ class DataMove:
                         'value': usevar.value,
                         'gain': usevar.gain,
                         'is_cache': usevar.is_cache,
-                        'authorname': usevar.author.name,
+                        'authorname': 'admin',
                         'customize': Tag.objects.get(var=usevar).customize if Tag.objects.get(
                             var=usevar).customize is not None else '',
                     })
@@ -137,7 +140,7 @@ class DataMove:
                                     'value': v.value,
                                     'gain': v.gain,
                                     'is_cache': v.is_cache,
-                                    'authorname': v.author.name
+                                    'authorname': 'admin'
                                 })
             except:
                 logger.info('库中没找到变量 略过=>', key)
@@ -165,8 +168,6 @@ class DataMove:
             stepd['url'] = step.url if step.url is not None else ''
             stepd['content_type'] = step.content_type
             stepd['tmp'] = step.temp
-            stepd['authorname'] = step.author.name
-            self._add_author(step.author.name)
             stepd['db_id'] = step.db_id
             if step.db_id != '':
                 try:
@@ -247,10 +248,8 @@ class DataMove:
                             'name': func.name,
                             'description': func.description,
                             'flag': func.flag,
-                            'body': func.body,
-                            'authorname': func.author.name
+                            'body': func.body
                         })
-                        self._add_author(func.author.name)
 
         ##2.用例嵌套场景
         caselist0 = getchild('case_case', case.id)
@@ -258,7 +257,6 @@ class DataMove:
             cased = {}
             cased['id'] = case0.id
             cased['description'] = case0.description
-            cased['authorname'] = case0.author.name
             cased['db_id'] = case0.db_id
             if case0.db_id != '':
                 try:
@@ -281,36 +279,29 @@ class DataMove:
             planid = planid.split('_')[1]
             plan = Plan.objects.get(id=planid)
             schemename = plan.schemename
-            dbdescription = plan.db_id
-            self._data['entity']['schemename'] = schemename
-            self._data['entity']['plan']['id'] = plan.id
             self._data['entity']['plan']['description'] = plan.description
-            self._data['entity']['plan']['authorname'] = plan.author.name
-            self._add_author(plan.author.name)
             self._data['entity']['plan']['runtype'] = plan.run_type
-            # self._data['entity']['plan']['runvalue']=plan.run_value
             self._data['entity']['plan']['db_id'] = plan.db_id
+            self._data['entity']['plan']['proxy'] = plan.proxy
 
-            # caselist=list(plan.cases.all())
-            caselist = getchild('plan_case', plan.id)
-            if dbdescription != '':
+            if plan.db_id:
                 try:
-                    dbid = DBCon.objects.get(scheme=schemename, description=dbdescription).id
-                    self._add_dbcon('', dbid=dbid)
+                    db= DBCon.objects.get(scheme=schemename, description=plan.db_id)
+                    self._add_dbcon(db)
                 except:
                     pass
+                
+            caselist = getchild('plan_case', plan.id)
             for case in caselist:
                 cased = {}
                 cased['id'] = case.id
                 cased['description'] = case.description
                 cased['db_id'] = case.db_id
-                cased['authorname'] = case.author.name
-                self._add_author(case.author.name)
                 self._data['entity']['cases'].append(cased)
-                if case.db_id != '':
+                if case.db_id:
                     try:
-                        dbid = DBCon.objects.get(scheme=schemename, description=case.db_id).id
-                        self._add_dbcon('', dbid=dbid)
+                        db = DBCon.objects.get(scheme=schemename, description=case.db_id)
+                        self._add_dbcon('', db)
                     except:
                         pass
                 a = self._data['relation']['plan_case'].get(str(planid), [])
@@ -440,9 +431,7 @@ class DataMove:
                                     'description': func.description,
                                     'flag': func.flag,
                                     'body': func.body,
-                                    'authorname': func.author.name
                                 })
-                                self._add_author(func.author.name)
 
             # 统一导出变量
             for key in varkeys:
@@ -847,21 +836,8 @@ class DataMove:
                 continue;
 
             fo.body = f.get('body')
+            fo.save()
 
-            try:
-                author = User.objects.get(name=f.get('authorname'))
-                fo.author = author
-                fo.save()
-            except:
-                author = [author for author in authors if author.get('name') == f.get('authorname')][0]
-                authoro = User()
-                authoro.name = author.get('name')
-                authoro.password = author.get('password')
-                authoro.email = author.get('email')
-                authoro.sex = author.get('sex')
-                authoro.save()
-                fo.author = authoro
-                fo.save()
         # 建立依赖关系
         plan_cases = bl['relation']['plan_case']
         case_step = bl['relation']['case_step']

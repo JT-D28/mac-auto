@@ -85,7 +85,6 @@ class Transformer(object):
                         continue;
 
                     step = Step()
-                    step.author = User.objects.get(name=self.callername)
                     func_field_value = rowdata['函数名称']
                     # if func_field_value  not in all_function_name:
                     # logger.info('canshu=>',rowdata['参数值'])
@@ -610,7 +609,6 @@ class Transformer(object):
 
                                 step = Step()
                                 step.temp = ''
-                                step.author = User.objects.get(name=self.callername)
 
                                 basic_config = self._get_itf_basic_conifg()
                                 detail_config = self._get_itf_detail_config()
@@ -803,7 +801,6 @@ class Transformer(object):
                         # 函数
                         step = Step()
                         step.temp = ''
-                        step.author = User.objects.get(name=self.callername)
                         step.step_type = 'function'
                         step.body = func_field_value
                         # logger.info('functionname=>',step.body)

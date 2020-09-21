@@ -238,6 +238,9 @@ SAFE_URL = [
 	'/account/login/',
 	'/account/userRoute/',
 	'/account/logout/',
-	'/file'
+	'/file',
+	'/manager/getTree',
+	'/manager/recordBuildNodes',
+	'/manager/getVars'
 ]
 REGEX_URL = r'^{url}'  # url不作严格匹配  严格匹配 r'^{url}$'

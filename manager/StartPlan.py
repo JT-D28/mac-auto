@@ -386,14 +386,16 @@ class RunPlan:
 		isOk, str = self.replaceProperty(original)
 		if not isOk:
 			return False, str
+		print("替换属性后返回的",isOk,str)
+
 		isOk, str = self.replaceVariable(str, responseText)
-		print("返回的",isOk,str)
+		print("替换变量后返回的",isOk,str)
 		if not isOk:
 			return False, str
 		r, str = self.replaceFunction(str)
 		if not isOk:
 			return False, str
-		
+		print("替换函数后返回的", isOk, str)
 		if original != str:
 			self.log(
 				"<span style='color:#009999;'>原始的%s=><xmp style='color:#009999;'>%s</xmp></span>" % (type, original))
@@ -483,7 +485,10 @@ class RunPlan:
 					body = parse.urlencode(ast.literal_eval(body.replace('\r', '').replace('\n', '').replace('\t', '')))
 				except:
 					if body.startswith("{") and not body.startswith("{{") and '"' in body:
-						body = parse.urlencode(json.loads(body)).replace("None",'null').replace("True",'true').replace("False",'false')
+						try:
+							body = parse.urlencode(json.loads(body)).replace("None",'null').replace("True",'true').replace("False",'false')
+						except:
+							return 'error', '请求内容转换失败，请检查格式'
 					# 	转换失败则保留原格式
 				body = body.encode('utf-8')
 			elif 'xml' in content_type:
@@ -500,6 +505,7 @@ class RunPlan:
 								filepath = os.path.join(get_space_dir(), v)
 								if os.path.exists(filepath):
 									files[k] = (v, open(filepath, 'rb'))
+									
 								elif os.path.exists(os.path.join(get_space_dir(), '默认', v)):
 									files[k] = (v, open(os.path.join(get_space_dir(), '默认', v), 'rb'))
 								else:
@@ -507,6 +513,7 @@ class RunPlan:
 				except:
 					return 'error', 'form-data的参数内容转换失败'
 				body = None
+				del headers["Content-Type"]
 			else:
 				headers["Content-Type"] = content_type
 		
@@ -620,14 +627,17 @@ class RunPlan:
 			
 			for key, v in target.items():
 				cur = key
+				print("储存临时属性变量 响应内容:\n%s" % (responsetext))
 				jsonParser = JSONParser(responsetext)
-				
 				value = jsonParser.getValue(v)
 				if value != 0 and not value:
 					value = v
-				
-				self.tempVar[key] = value
-				self.log("储存临时属性变量 [%s]:\n%s" % (key, value))
+				print("储存临时属性变量 解析的值:\n%s" % (value))
+				if isinstance(value, str):
+					self.tempVar[key] = value
+				else:
+					self.tempVar[key] = json.dumps(value)
+				self.log("储存临时属性变量 [%s]:\n%s" % (key, self.tempVar[key]))
 		
 		except Exception as e:
 			logger.info(traceback.format_exc())

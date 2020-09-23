@@ -208,6 +208,7 @@ def createTenantCode(**kws):
 def createTransNo(**kws):
     '''
     createTransNo： 随机生成流水号
+    示例：createTransNo(name='test')   返回 test+随机数字
      参数：name 为字符串，此处表示英文名
      返回：name+当前时间（月日时分秒）+随机数字      共16位
 

@@ -1101,7 +1101,6 @@ def getchild(kind, main_id):
     elif kind == 'plan_case':
         for order in orderlist:
             #logger.info('case class=>', mm.Case)
-            print('hid:',order.follow_id)
             try:
                 child.append(mm.Case.objects.get(id=order.follow_id))
             except:

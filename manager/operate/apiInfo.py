@@ -53,7 +53,10 @@ def _dump_request_data(request, prefixes, bytearr):
 	if request.body:
 		body = request.body
 		if isinstance(body,bytes):
-			body = parse.unquote(body.decode('utf-8'))
+			try:
+				body = parse.unquote(body.decode('utf-8'))
+			except:
+				body = body
 		else:
 			body = parse.unquote(body)
 		if isinstance(body, compat.basestring):
@@ -111,5 +114,9 @@ def dump_request(response, request_prefix=b'', response_prefix=b''):
 		raise ValueError('Response has no associated request')
 
 	_dump_request_data(response.request, prefixes, request_data)
-
-	return request_data.decode('utf-8')
+	
+	try:
+		r = request_data.decode('utf-8')
+	except:
+		r ="请求成功，但结果打印失败"
+	return r

@@ -310,8 +310,14 @@ class RunPlan:
 				if not isOk:
 					return 'fail', checkStr
 				parse_type = 'xml' if 'xml' in step.content_type else 'json'
+				if content_type.__contains__("urlencode"):
+					bodytype = 'urlencode'
+				elif content_type.__contains__("xml"):
+					bodytype = 'xml'
+				else:
+					bodytype = 'json'
 				resultList = self.formulaCheck(checkStr, rps_text=response_text, parse_type=parse_type,
-				                               rps_header=response_headers)
+				                               rps_header=response_headers,request_body=responseData.request.body,body_type=bodytype)
 				failFlag = False
 				for res in resultList:
 					if res[0] != 'success':
@@ -526,7 +532,7 @@ class RunPlan:
 		}
 	
 	# 数据校验
-	def formulaCheck(self, formula, rps_text='', parse_type='', rps_header=''):
+	def formulaCheck(self, formula, rps_text='', parse_type='', rps_header='',request_body='',body_type='json'):
 		resultlist = []
 		try:
 			checklist = [x for x in formula.strip().split("|") if len(x) > 0]
@@ -571,7 +577,31 @@ class RunPlan:
 						return 'fail', '响应头校验暂时只支持=,$比较.'
 					result = ('success', successMsg) if flag else ('fail', failMsg + '期望值【%s】,实际值【%s】</span>' % (v, rh))
 					resultlist.append(result)
-				
+				elif k.startswith("request.body."):
+					p = None
+					if isinstance(request_body, bytes):
+						try:
+							request_body = parse.unquote(request_body.decode('utf-8'))
+						except:
+							pass
+					else:
+						request_body = parse.unquote(request_body)
+					if body_type =='urlencode':
+						obj = {}
+						for item in request_body.split("&"):
+							a,b = item.split("=")
+							obj[a] = b
+						p = JSONParser(json.dumps(obj))
+					elif body_type == 'json':
+						p = JSONParser(request_body)
+					elif body_type == 'xml':
+						p = XMLParser(request_body.replace('\n', '', 1))
+					if p:
+						key = p.getValue(k.replace("request.body.", ""))
+						print("getkey",p,key)
+						self.calculation(resultlist,str(key),op,str(v),successMsg,failMsg)
+					else:
+						resultlist.append(('error', "不支持的请求内容解析类型"))
 				else:
 					p = None
 					v = v.replace('true', 'True').replace('false', 'False').replace('null', 'None')
@@ -588,29 +618,35 @@ class RunPlan:
 						if tempv is None:
 							tempv = k
 						logger.info('表达式合成{%s,%s,%s}' % (str(tempv), op, v))
-						exp = "".join([str(tempv), op, str(v)])
-						try:
-							rr = eval(exp)
-							result = ('success', successMsg) if rr else ('fail', failMsg)
-							resultlist.append(result)
-						except:
-							logger.info('表达式等号两边加单引号后尝试判断..')
-							if op == '$':
-								res = eval("'%s'.__contains__('%s')" % (str(tempv), str(v)))
-							else:
-								res = eval('''"%s"%s"%s"''' % (str(tempv), op, str(v)))
-							logger.info('判断结果=>', res)
-							result = ('success', successMsg) if res else (
-								'fail', failMsg + '期望值【%s】,实际值【%s】' % (v, tempv))
-							resultlist.append(result)
+						self.calculation(resultlist,str(tempv),op,str(v),successMsg,failMsg)
 					except:
 						resultlist.append(('fail', failMsg + '响应内容与预期不一致'))
 						break
 		
 		except:
+			logger.error(traceback.format_exc())
 			resultlist.append(('error', traceback.format_exc()))
 		
 		return resultlist
+	
+	
+	def calculation(self,resultlist,k,op,v,successMsg,failMsg):
+		exp = "".join([k, op, v])
+		print(exp,successMsg,failMsg)
+		try:
+			rr = eval(exp)
+			result = ('success', successMsg) if rr else ('fail', failMsg)
+			resultlist.append(result)
+		except:
+			logger.info('表达式等号两边加单引号后尝试判断..')
+			if op == '$':
+				res = eval("'%s'.__contains__('%s')" % (k, v))
+			else:
+				res = eval('''"%s"%s"%s"''' % (k, op, v))
+			logger.info('判断结果=>', res)
+			result = ('success', successMsg) if res else (
+				'fail', failMsg + '期望值【%s】,实际值【%s】' % (v, k))
+			resultlist.append(result)
 	
 	# 属性变量保存
 	def saveProperty(self, target, responsetext):
@@ -857,7 +893,9 @@ class RunPlan:
 
 def executeFunction(funcName,params,taskid):
 	params = params.replace('\n','')
-	
+	if "r'" not in params and 'r"' not in params:
+		params = params.replace("\\\"", '"')
+	print(params,"dasdsadfasfdsgfsdgh")
 	isBuiltin = funcName in [x.name for x in getbuiltin()]
 	if funcName.startswith('dbexecute'):
 		execStr = '%s("""%s""",taskid="%s")' % (funcName, params, taskid)

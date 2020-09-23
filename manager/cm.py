@@ -783,7 +783,7 @@ def editbusiness(request):
         b.description=request.POST.get('description')
         b.timeout=request.POST.get('timeout')
         # check params
-        check_result = _check_params(b.params)
+        # check_result = _check_params(b.params)
         
         # if not check_result:
         #   return{

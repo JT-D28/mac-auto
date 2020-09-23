@@ -2090,9 +2090,25 @@ def recyclenodes(type, id):
 @csrf_exempt
 def getStepKind(request):
     id = request.POST.get('id')
-    step_type = Step.objects.filter(id = id).first().step_type
-    return JsonResponse({'code': 0, 'data': '操作成功', 'type': step_type})
+    step =  Step.objects.filter(id = id).first()
+    shuldJudge = False
+    uptime = int(time.mktime(step.updatetime.timetuple()))
+    if step.step_type=='interface' and step.content_type=='xml' and uptime<1600845096 and not step.url.__contains__("http"):
+        shuldJudge = True
+    
+    return JsonResponse({'code': 0, 'data': '操作成功', 'type': step.step_type,'shuldJudge':shuldJudge})
 
+def editStepKind(request):
+    id = request.POST.get('id')
+    step_type = request.POST.get('step_type')
+    step =  Step.objects.get(id = id)
+    step.step_type=step_type
+    if step_type=='interface':
+        step.content_type='application/xml'
+    else:
+        step.content_type= ''
+    step.save()
+    return JsonResponse({'code': 0, 'data': '操作成功'})
 
 def getTree(request):
     # 给外部用，获取用例节点数据

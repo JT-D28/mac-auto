@@ -634,7 +634,6 @@ def _callsocket(taskid, user, url, body=None, timeout=1024):
         body = body_rp[1]
         
         cs = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # cs.setblocking(False)
         # socket.setdefaulttimeout(30)
         cs.settimeout(timeout)
         url = url.replace('http://', '')

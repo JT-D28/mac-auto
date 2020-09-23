@@ -445,9 +445,9 @@ def addstep(request):
         pid = request.POST.get('pid').split('_')[1]
         step_type = request.POST.get('step_type')
         description = request.POST.get('description')
-        headers = request.POST.get('headers')
-        body = request.POST.get("body")
-        url = request.POST.get('url')
+        headers = request.POST.get('headers','')
+        body = request.POST.get("body",'')
+        url = request.POST.get('url','')
         if url:
             url = url.strip()
         method = request.POST.get('method')

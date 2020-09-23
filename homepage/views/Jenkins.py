@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from homepage.models import Jenkins
 from homepage.views.charts import dealJacocoJobName
+from manager.StartPlan import RunPlan
 from manager.context import getRunningInfo
 from manager.core import gettaskid
 from manager.models import Plan
@@ -106,14 +107,14 @@ def manyRun(jacocoConfig, callername):
     jenkinsBuild(url, name, pwd, [clearjob])
     # 2.运行me2自动化计划
     time.sleep(3)
-    from manager.invoker import runplan
     for i in buildplans.split(','):
         planid = i[5:]
         try:
             plan = Plan.objects.get(id=planid)
             taskid = gettaskid(planid)
             print('开始执行计划【%s】' % plan.description)
-            runplan(callername, taskid, planid, '1',planid)
+            x = RunPlan(taskid, planid, '1', callername, startNodeId=i)
+            x.start()
         except:
             pass
     jobs=[]

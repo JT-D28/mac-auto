@@ -83,5 +83,6 @@ urlpatterns = [
     path('recyclenode/', views.recyclenode),
     path('getTree',views.getTree),
     path('recordBuildNodes',views.recordBuildNodes),
-    path('getVars',views.getVars)
+    path('getVars',views.getVars),
+    path('editStepKind',views.editStepKind)
 ]

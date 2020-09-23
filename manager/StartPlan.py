@@ -269,80 +269,163 @@ class RunPlan:
 		if status is not 'success':
 			return status, res
 		
+		if step.step_type == 'interface' and step.content_type=='xml' and int(time.mktime(step.updatetime.timetuple()))<1600845096:
+			# 能够确定是socket请求 兼容老的数据，把socket筛选出来并且保存新的值
+			isOk, url = self.ParameterReplace(step.url, "地址",show=False)
+			if not isOk:
+				return 'fail', url
+			if not url.__contains__("http"):
+				step.step_type='socket'
+				step.content_type=''
+				step.save()
+				return self.runSocket(step,point,postPosition_List,checkStr,timeout)
+		
 		if step.step_type == 'interface':
-			params = point.queryparams if point.queryparams else ''
-			body = point.params if point.params else ''
-			url = step.url
-			method = step.method
-			headers = step.headers
-			content_type = step.content_type
-			temporaryVariable = step.temp
-			
-			status, requestData = self.handleRequestContent(url, headers, content_type, params, body)
-			if status != 'success':
-				return status, requestData
-			
-			status, responseData = self.apiRequest(method, requestData, timeout)
-			if status != 'success':
-				return status, responseData
-			# 打印请求报文
-			self.log('<xmp>%s</xmp>'%dump_request(responseData))
-
-			status_code = responseData.status_code
-			response_headers = responseData.headers
-			response_text = responseData.text
-			if response_text.lstrip().startswith('<!DOCTYPE html>'):
-				self.log("<span style='color:#009999;'>请求响应内容为HTML，不显示</xmp></span>")
-			else:
-				self.log('<xmp style="color:#009999;">接口返回结果：\n%s</xmp>' % response_text)
-			
-			if status_code != 200:
-				return 'fail', '响应状态码=%s' % status_code
-			
-			# 进行后置操作
-			status, res = self.extraHandle(postPosition_List, "后置操作", response_text)
-			if status is not 'success':
-				return status, res
-			
-			# 进行数据校验
-			if checkStr:
-				isOk, checkStr = self.ParameterReplace(checkStr, '校验内容', response_text)
-				if not isOk:
-					return 'fail', checkStr
-				parse_type = 'xml' if 'xml' in step.content_type else 'json'
-				if content_type.__contains__("urlencode"):
-					bodytype = 'urlencode'
-				elif content_type.__contains__("xml"):
-					bodytype = 'xml'
-				else:
-					bodytype = 'json'
-				resultList = self.formulaCheck(checkStr, rps_text=response_text, parse_type=parse_type,
-				                               rps_header=response_headers,request_body=responseData.request.body,body_type=bodytype)
-				failFlag = False
-				for res in resultList:
-					if res[0] != 'success':
-						failFlag = True
-					self.log(res[1])
-				if failFlag:
-					logger.info("数据校验没有全部通过")
-					return 'fail', '数据校验没有全部通过'
-			self.saveProperty(temporaryVariable, response_text)
-			return 'success', ''
+			return self.runInterface(step,point,postPosition_List,checkStr,timeout)
 		
 		elif step.step_type == 'function':
-			param = point.params
-			functionId = step.related_id
-			funcName = step.body
-			self.log("调用函数=>%s" % step.body)
-			isOk, param = self.ParameterReplace(param, '函数参数')
+			return self.runFunction(step,point,postPosition_List,checkStr)
+		
+		elif step.step_type =='socket':
+			return self.runSocket(step,point,postPosition_List,checkStr,timeout)
+	
+	def runInterface(self,step,point,postPosition_List,checkStr,timeout):
+		params = point.queryparams if point.queryparams else ''
+		body = point.params if point.params else ''
+		url = step.url
+		method = step.method
+		headers = step.headers
+		content_type = step.content_type
+		temporaryVariable = step.temp
+		
+		status, requestData = self.handleRequestContent(url, headers, content_type, params, body)
+		if status != 'success':
+			return status, requestData
+		
+		status, responseData = self.apiRequest(method, requestData, timeout)
+		if status != 'success':
+			return status, responseData
+		# 打印请求报文
+		self.log('<xmp>%s</xmp>' % dump_request(responseData))
+		
+		status_code = responseData.status_code
+		response_headers = responseData.headers
+		response_text = responseData.text
+		if response_text.lstrip().startswith('<!DOCTYPE html>'):
+			self.log("<span style='color:#009999;'>请求响应内容为HTML，不显示</span>")
+		else:
+			self.log('<pre><xmp style="color:#009999;">接口返回结果：\n%s</xmp></pre>' % response_text)
+		print("接口返回结果", response_text)
+		if status_code != 200:
+			return 'fail', '响应状态码=%s' % status_code
+		
+		# 进行后置操作
+		status, res = self.extraHandle(postPosition_List, "后置操作", response_text)
+		if status is not 'success':
+			return status, res
+		
+		# 进行数据校验
+		if checkStr:
+			isOk, checkStr = self.ParameterReplace(checkStr, '校验内容', response_text)
 			if not isOk:
-				return 'fail', param
+				return 'fail', checkStr
+			parse_type = 'xml' if 'xml' in step.content_type else 'json'
+			if content_type.__contains__("urlencode"):
+				bodytype = 'urlencode'
+			elif content_type.__contains__("xml"):
+				bodytype = 'xml'
+			else:
+				bodytype = 'json'
+			resultList = self.formulaCheck(checkStr, rps_text=response_text, parse_type=parse_type,
+			                               rps_header=response_headers, request_body=responseData.request.body,
+			                               body_type=bodytype)
+			failFlag = False
+			for res in resultList:
+				if res[0] != 'success':
+					failFlag = True
+				self.log(res[1])
+			if failFlag:
+				logger.info("数据校验没有全部通过")
+				return 'fail', '数据校验没有全部通过'
+		self.saveProperty(temporaryVariable, response_text)
+		return 'success', ''
+	
+	def runFunction(self,step,point,postPosition_List,checkStr):
+		param = point.params
+		functionId = step.related_id
+		funcName = step.body
+		self.log("调用函数=>%s" % step.body)
+		isOk, param = self.ParameterReplace(param, '函数参数')
+		if not isOk:
+			return 'fail', param
+		
+		res, msg = executeFunction(funcName, param, self.taskId)
+		self.log("函数%s(%s)执行结果=>%s" % (funcName, param, res))
+		if res is not 'success':
+			self.log("函数%s(%s)执行报错信息:%s" % (funcName, param, msg))
+			return 'db_%s' % res, msg
+		
+		# 进行后置操作
+		status, res = self.extraHandle(postPosition_List, "后置操作")
+		if status is not 'success':
+			return status, res
+		# 进行数据校验
+		if checkStr:
+			isOk, checkStr = self.ParameterReplace(checkStr, '校验内容')
+			if not isOk:
+				return 'fail', checkStr
+			resultList = self.formulaCheck(checkStr, parse_type='db')
+			failFlag = False
+			for res in resultList:
+				if res[0] != 'success':
+					failFlag = True
+				self.log(res[1])
+			if failFlag:
+				logger.info("数据校验没有全部通过")
+				return 'fail', '数据校验没有全部通过'
+		return 'success', ''
+	
+	def runSocket(self,step,point,postPosition_List,checkStr,timeout):
+		body = point.params if point.params else ''
+		url = step.url
+		temporaryVariable = step.temp
+		self.log("处理socket请求中的变量：")
+		if url:
+			isOk, url = self.ParameterReplace(url, "地址")
+			if not isOk:
+				return 'fail', url
+		if body:
+			isOk, body = self.ParameterReplace(body, "请求内容")
+			if not isOk:
+				return 'fail', body
+		cs = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		cs.settimeout(timeout)
+		
+		length = str(len(body.encode('GBK'))).rjust(8)
+		sendmsg = 'Content-Length:' + str(length) + '\r\n' + body
+		url = url.replace('http://', '')
+		host = url.split(':')[0].strip()
+		port = url.split(':')[1].strip()
+		try:
+			cs.connect((host, int(port)))
+			self.log('执行socket请求 IP=>%s   端口=>%s' % (host, port))
+			self.log("<span style='color:#009999;'>发送内容=><xmp style='color:#009999;'>%s</xmp></span>" % sendmsg)
+			cs.sendall(bytes(sendmsg, encoding='GBK'))
+			recvdata = ''
+			try:
+				lenstr = cs.recv(25)
+				recvdata += lenstr.decode('GBK')
+				data = cs.recv(int(lenstr[15:23]))
+				data = data.decode('GBK')
+				recvdata += data
+			except:
+				# 失败时读取所有
+				temp = cs.recv(1024).decode('GBK')
+				while temp != '':
+					recvdata += temp
+					temp = cs.recv(1024).decode('GBK')
 			
-			res, msg = executeFunction(funcName, param, self.taskId)
-			self.log("函数%s(%s)执行结果=>%s" %(funcName, param,res))
-			if res is not 'success':
-				self.log("函数%s(%s)执行报错信息:%s" % (funcName, param,msg))
-				return 'db_%s' % res, msg
+			self.log("<span style='color:#009999;'>响应内容=><xmp style='color:#009999;'>%s</xmp></span>" % recvdata)
 			
 			# 进行后置操作
 			status, res = self.extraHandle(postPosition_List, "后置操作")
@@ -350,10 +433,11 @@ class RunPlan:
 				return status, res
 			# 进行数据校验
 			if checkStr:
-				isOk, checkStr = self.ParameterReplace(checkStr, '校验内容')
+				isOk, checkStr = self.ParameterReplace(checkStr, '校验内容', recvdata)
 				if not isOk:
 					return 'fail', checkStr
-				resultList = self.formulaCheck(checkStr, parse_type='db')
+				resultList = self.formulaCheck(checkStr, rps_text=recvdata, parse_type='xml', rps_header='',
+				                               request_body=body, body_type='xml')
 				failFlag = False
 				for res in resultList:
 					if res[0] != 'success':
@@ -362,7 +446,13 @@ class RunPlan:
 				if failFlag:
 					logger.info("数据校验没有全部通过")
 					return 'fail', '数据校验没有全部通过'
-			return 'success', ''
+			self.saveProperty(temporaryVariable, recvdata, 'xml')
+		except:
+			logger.info(traceback.format_exc())
+			return 'error', traceback.format_exc()
+		finally:
+			cs.close()
+		return 'success', ''
 	
 	def extraHandle(self, handleList, kind, responseText=None):
 		for s in handleList:
@@ -387,7 +477,7 @@ class RunPlan:
 					return status, res
 		return 'success', ''
 	
-	def ParameterReplace(self, original, type, responseText=None):
+	def ParameterReplace(self, original, type, responseText=None,show=True):
 		# 替换属性
 		isOk, str = self.replaceProperty(original)
 		if not isOk:
@@ -402,11 +492,11 @@ class RunPlan:
 		if not isOk:
 			return False, str
 		print("替换函数后返回的", isOk, str)
-		if original != str:
+		if original != str and show:
 			self.log(
 				"<span style='color:#009999;'>原始的%s=><xmp style='color:#009999;'>%s</xmp></span>" % (type, original))
 			self.log("<span style='color:#009999;'>替换变量后的%s=><xmp style='color:#009999;'>%s</xmp></span>" % (type, str))
-		elif original.strip() != '{}':
+		elif original.strip() != '{}' and show:
 			self.log(
 				"<span style='color:#009999;'>%s=><xmp style='color:#009999;'>%s</xmp></span>" % (type, original))
 		return True, str
@@ -613,6 +703,8 @@ class RunPlan:
 							p = JSONParser(rps_text)
 							tempv = p.getValue(k)
 						elif parse_type == 'xml':
+							if rps_text.startswith("Content-Length"):
+								rps_text = '\n'.join(rps_text.split('\n')[1:])
 							p = XMLParser(rps_text.replace('\n', '', 1))
 							tempv = p.getValue(k)
 						if tempv is None:
@@ -620,6 +712,7 @@ class RunPlan:
 						logger.info('表达式合成{%s,%s,%s}' % (str(tempv), op, v))
 						self.calculation(resultlist,str(tempv),op,str(v),successMsg,failMsg)
 					except:
+						logger.error(traceback.format_exc())
 						resultlist.append(('fail', failMsg + '响应内容与预期不一致'))
 						break
 		
@@ -628,7 +721,6 @@ class RunPlan:
 			resultlist.append(('error', traceback.format_exc()))
 		
 		return resultlist
-	
 	
 	def calculation(self,resultlist,k,op,v,successMsg,failMsg):
 		exp = "".join([k, op, v])
@@ -649,7 +741,7 @@ class RunPlan:
 			resultlist.append(result)
 	
 	# 属性变量保存
-	def saveProperty(self, target, responsetext):
+	def saveProperty(self, target, responsetext,type='json'):
 		cur = None
 		try:
 			if target is None or len(target) == 0:
@@ -664,8 +756,8 @@ class RunPlan:
 			for key, v in target.items():
 				cur = key
 				print("储存临时属性变量 响应内容:\n%s" % (responsetext))
-				jsonParser = JSONParser(responsetext)
-				value = jsonParser.getValue(v)
+				p = JSONParser(responsetext) if type=='json' else XMLParser(responsetext)
+				value = p.getValue(v)
 				if value != 0 and not value:
 					value = v
 				print("储存临时属性变量 解析的值:\n%s" % (value))

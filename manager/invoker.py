@@ -1706,9 +1706,10 @@ class XMLParser(Struct):
                 route_path += '[1]'
             
             if propname:
+                logger.info('xml搜索结果为:' + self.root.find('.' + route_path).attrib.get(propname, 'None'))
                 return self.root.find('.' + route_path).attrib.get(propname, 'None')
         try:
-            # logger.info('search=>','.'+route_path)
+            logger.info('xml搜索结果为:'+self.root.find('.' + route_path).text)
             return self.root.find('.' + route_path).text
         except:
             return 'None'

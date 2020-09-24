@@ -688,8 +688,9 @@ class RunPlan:
 						p = XMLParser(request_body.replace('\n', '', 1))
 					if p:
 						key = p.getValue(k.replace("request.body.", ""))
-						print("getkey",p,key)
-						self.calculation(resultlist,str(key),op,str(v),successMsg,failMsg)
+						key = str(key.replace('\r','').replace('\n','').strip())
+						
+						self.calculation(resultlist,key,op,str(v),successMsg,failMsg)
 					else:
 						resultlist.append(('error', "不支持的请求内容解析类型"))
 				else:
@@ -727,7 +728,7 @@ class RunPlan:
 		print(exp,successMsg,failMsg)
 		try:
 			rr = eval(exp)
-			result = ('success', successMsg) if rr else ('fail', failMsg)
+			result = ('success', successMsg) if rr else ('fail', failMsg+'期望值【%s】,实际值【%s】' % (v, k))
 			resultlist.append(result)
 		except:
 			logger.info('表达式等号两边加单引号后尝试判断..')
@@ -784,11 +785,16 @@ class RunPlan:
 		return True, text
 	
 	# 替换变量
-	def replaceVariable(self, text, responseText=''):
+	def replaceVariable(self, text, responseText='',needCacheVar=False):
 		try:
 			varnames = re.findall('{{(.*?)}}', text)
 			logger.info('varnames:', varnames)
 			for varname in varnames:
+				oldvarname = varname
+				if varname.startswith('CACHE_'):
+					varname = varname.replace("CACHE_","")
+					needCacheVar = True
+				print("asdasdsad",varname)
 				if varname.strip() == 'STEP_PARAMS':
 					dictparams = self.get_step_params(text)
 					logger.info('==获取内置变量STEP_PARAMS=>\n', dictparams)
@@ -823,10 +829,10 @@ class RunPlan:
 					self.log('使用全局变量 %s 描述：%s' % (varname, useVar.description))
 				if len(vars) == 0 or useVar is None:
 					return False, '字符串[%s]变量【%s】替换异常,未在局部变量和全局变量中找到，请检查是否已正确配置' % (text, varname)
-				isOk, gain = self.replaceVariable(useVar.gain)
+				isOk, gain = self.replaceVariable(useVar.gain,needCacheVar=needCacheVar)
 				if not isOk:
 					return False, gain
-				isOk, value = self.replaceVariable(useVar.value)
+				isOk, value = self.replaceVariable(useVar.value,needCacheVar=needCacheVar)
 				if not isOk:
 					return False, value
 				
@@ -838,20 +844,29 @@ class RunPlan:
 				elif len(gain) > 0 and len(value) == 0:
 					print("计算 gain",gain)
 					
-					isOk, gainValue = self.gainCompute(gain)
-					print("计算 gain", isOk, gainValue)
-					if isOk is not 'success':
-						return False,gainValue
-					
-					if useVar.is_cache is True:
+					if useVar.is_cache is True or needCacheVar:
 						varCache = self.redisCon.hget(self.taskId + '_varCache', varname)
 						if varCache:
 							gainValue = varCache
 						else:
+							isOk, gainValue = self.gainCompute(gain)
+							if isOk is not 'success':
+								return False,gainValue
 							self.redisCon.hset(self.taskId + '_varCache', varname, gainValue)
+					else:
+						isOk, gainValue = self.gainCompute(gain)
+						print("计算 gain", isOk, gainValue)
+						if isOk is not 'success':
+							return False, gainValue
+						self.redisCon.hset(self.taskId + '_varCache', varname, gainValue)
 					
-					self.log('替换变量 {{%s}}=>%s' % (varname, gainValue))
-					text = text.replace('{{%s}}' % varname, gainValue, 1)
+					
+					# 通过获取方式计算的变量都加入缓存中，后面使用的会覆盖老的值，在进行校验步骤时先尝试从缓存中获取，没有的话再重新计算。开启了缓存按钮的变量从始至终保持。
+					
+
+					
+					self.log('替换变量 {{%s}}=>%s' % (oldvarname, gainValue))
+					text = text.replace('{{%s}}' % oldvarname, gainValue, 1)
 				elif len(gain) == 0 and len(value) == 0:
 					return False, '变量【%s】未设定获取方式或者值，请修改' % varname
 			

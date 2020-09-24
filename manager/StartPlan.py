@@ -323,7 +323,7 @@ class RunPlan:
 		status, res = self.extraHandle(postPosition_List, "后置操作", response_text)
 		if status is not 'success':
 			return status, res
-		
+		self.saveProperty(temporaryVariable, response_text)
 		# 进行数据校验
 		if checkStr:
 			isOk, checkStr = self.ParameterReplace(checkStr, '校验内容', response_text)
@@ -347,7 +347,6 @@ class RunPlan:
 			if failFlag:
 				logger.info("数据校验没有全部通过")
 				return 'fail', '数据校验没有全部通过'
-		self.saveProperty(temporaryVariable, response_text)
 		return 'success', ''
 	
 	def runFunction(self,step,point,postPosition_List,checkStr):
@@ -431,6 +430,8 @@ class RunPlan:
 			status, res = self.extraHandle(postPosition_List, "后置操作")
 			if status is not 'success':
 				return status, res
+			
+			self.saveProperty(temporaryVariable, recvdata, 'xml')
 			# 进行数据校验
 			if checkStr:
 				isOk, checkStr = self.ParameterReplace(checkStr, '校验内容', recvdata)
@@ -446,7 +447,6 @@ class RunPlan:
 				if failFlag:
 					logger.info("数据校验没有全部通过")
 					return 'fail', '数据校验没有全部通过'
-			self.saveProperty(temporaryVariable, recvdata, 'xml')
 		except:
 			logger.info(traceback.format_exc())
 			return 'error', traceback.format_exc()

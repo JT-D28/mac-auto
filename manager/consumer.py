@@ -284,7 +284,6 @@ class ContinuousConsumer(WebsocketConsumer):
 		key = self.scope['cookies']['user']
 		con = RedisUtils()
 		con.set(key, self.channel_name, 14400)
-		con.close()
 	
 	def send_message(self, event):
 		self.send(text_data=json.dumps({
@@ -295,7 +294,6 @@ class ContinuousConsumer(WebsocketConsumer):
 	def send_notification(cls, user, message):
 		con = RedisUtils()
 		channel_name = con.get(user)
-		con.close()
 		if channel_name:
 			async_to_sync(get_channel_layer().send)(
 				channel_name,

@@ -696,10 +696,7 @@ class RunPlan:
 					p = None
 					v = v.replace('true', 'True').replace('false', 'False').replace('null', 'None')
 					try:
-						tempv = None
-						if parse_type == 'db':
-							tempv = k
-						elif parse_type == 'json':
+						if parse_type == 'json':
 							p = JSONParser(rps_text)
 							tempv = p.getValue(k)
 						elif parse_type == 'xml':
@@ -707,7 +704,10 @@ class RunPlan:
 								rps_text = '\n'.join(rps_text.split('\n')[1:])
 							p = XMLParser(rps_text.replace('\n', '', 1))
 							tempv = p.getValue(k)
-						if tempv is None:
+						else:
+							# 	保持原生字符串
+							tempv = k
+						if tempv in ['None',None]:
 							tempv = k
 						logger.info('表达式合成{%s,%s,%s}' % (str(tempv), op, v))
 						self.calculation(resultlist,str(tempv),op,str(v),successMsg,failMsg)
@@ -848,7 +848,7 @@ class RunPlan:
 						if varCache:
 							gainValue = varCache
 						else:
-							self.redisCon.hset(self.taskId + '_varCache', varname, varCache)
+							self.redisCon.hset(self.taskId + '_varCache', varname, gainValue)
 					
 					self.log('替换变量 {{%s}}=>%s' % (varname, gainValue))
 					text = text.replace('{{%s}}' % varname, gainValue, 1)

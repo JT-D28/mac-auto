@@ -853,13 +853,14 @@ class RunPlan:
 							if isOk is not 'success':
 								return False,gainValue
 							self.redisCon.hset(self.taskId + '_varCache', varname, gainValue)
+							self.redisCon.expire(self.taskId + '_varCache', 3600)
 					else:
 						isOk, gainValue = self.gainCompute(gain)
 						print("计算 gain", isOk, gainValue)
 						if isOk is not 'success':
 							return False, gainValue
 						self.redisCon.hset(self.taskId + '_varCache', varname, gainValue)
-					
+						self.redisCon.expire(self.taskId + '_varCache',3600)
 					
 					# 通过获取方式计算的变量都加入缓存中，后面使用的会覆盖老的值，在进行校验步骤时先尝试从缓存中获取，没有的话再重新计算。开启了缓存按钮的变量从始至终保持。
 					

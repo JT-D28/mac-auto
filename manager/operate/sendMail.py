@@ -316,7 +316,7 @@ class MainSender:
 		bodyhtml = ''
 		# bodyhtml='<span style="float:right;font-size:1px;font-color:#eee;">%s-%s</span>'%(data['taskid'],data['planid'])
 		bodyhtml += '<h2 style="text-align: center;">[%s]接口测试报告</h2>' % data['planname']
-		bodyhtml += "<p class='attribute'><strong>测试结果</strong></p><button class='layui-btn btn' id='querybtn'>查询</button>"
+		bodyhtml += "<p class='attribute'><strong>测试结果</strong></p>"
 		bodyhtml += "<table><tr><th>#Samples</th><th>Failures</th><th>Success Rate</th><th>Average Time</th><th>Min Time</th><th>Max Time</th></tr><tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr></table>" % (
 			data['total'], data['fail'], data['success_rate'], data['average'], data['min'], data['max'])
 		bodyhtml += "<strong>测试详情</strong>"

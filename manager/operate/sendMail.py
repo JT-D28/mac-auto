@@ -339,7 +339,7 @@ class MainSender:
 					bodyhtml += '<td style="width:100px;" class="%s">%s</td>' % (step['result'], step['result'])
 					bodyhtml += '<td style="width:100px;">%s</td>' % step['spend']
 					bodyhtml += '<td style="width:200px;" title="%s">%s</td>' % (step['stepname'], step['stepname'])
-					bodyhtml += '<td style="width:200px;">%s</td>' % step['api']
+					bodyhtml += '<td style="width:200px;">%s</td>' % (step['api'] if len(step['api'])<100 else step['api'][0:90]+'...')
 					bodyhtml += '<td style="width:100px;">%s</td>' % step['itf_check']
 					bodyhtml += '<td style="width:100px;">%s</td>' % step['db_check']
 					bodyhtml += '<td>%s</td>' % step['error']

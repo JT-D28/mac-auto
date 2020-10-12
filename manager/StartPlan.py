@@ -156,7 +156,10 @@ class RunPlan:
 		# 设置标记
 		subFlag = True if set(case_run_nodes).issubset(self.finalNode) else False
 		logger.info('用例[%s]下有测试点ID：%s' % (case.description, case_run_nodes))
-		caseCount = 0 if case.count in [0, '0', '', None] else int(case.count)
+		if case.count in [ None,"None"]:
+			case.count = 1
+			case.save()
+		caseCount = 0 if case.count in [0, '0', ''] else int(case.count)
 
 		if subFlag and caseCount!=0:
 			self.log("开始执行用例[<span id='case_%s' style='color:#FF3399'>%s</span>]" % (case.id, case.description))
@@ -174,6 +177,9 @@ class RunPlan:
 					elif subNode.kind == 'case_step':
 						stepId = subNode.follow_id
 						step = Step.objects.get(id=stepId)
+						if step.count in [None, "None"]:
+							step.count = 1
+							step.save()
 						stepCount = 0 if step.count in [0, '0', '', None] else int(step.count)
 						for i in range(stepCount):
 							self.setDbUse(case.db_id, 'step')
@@ -201,6 +207,9 @@ class RunPlan:
 			print('groupId', groupId)
 			PointStart = time.time()
 			point = BusinessData.objects.get(id=order.follow_id)
+			if point.count in [None, "None"]:
+				point.count = 1
+				point.save()
 			pointCount = 0 if point.count in [0, '0', '', None] else int(point.count)
 			result, error = 'omit', ''
 			if point.id not in self.finalNode:

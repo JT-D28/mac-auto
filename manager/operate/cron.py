@@ -5,6 +5,8 @@
 # @to      :定时任务调度
 import traceback
 
+from django.db import connection
+
 from manager.StartPlan import RunPlan
 from manager.models import Crontab, Plan
 from manager.invoker import runplan
@@ -12,7 +14,23 @@ from manager.core import gettaskid
 import threading
 
 
+def is_connection_usable():
+    try:
+        connection.connection.ping()
+    except:
+        return False
+    else:
+        return True
+
+
 def cronRun(planid):
+    # 加入数据库连接失效的判断，避免定时任务执行时出现MySQL server has gone away情况
+    while True:
+        if is_connection_usable:
+            break
+        else:
+            connection.close()
+            
     taskid = gettaskid(planid)
     x = RunPlan(taskid,planid,'3','定时任务',startNodeId='plan_' + str(planid))
     threading.Thread(target=x.start).start()

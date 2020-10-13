@@ -552,11 +552,12 @@ class RunPlan:
 			isOk, body = self.ParameterReplace(body, "请求内容")
 			if not isOk:
 				return 'fail', body
-		
-		if headers:
+		if headers or content_type:
 			isOk, headers = self.ParameterReplace(headers, "请求头")
 			if not isOk:
 				return 'fail', headers
+			if headers=="":
+				headers="{}"
 			try:
 				headers = eval(headers)
 				if not headers.get('User-Agent', None):
@@ -1048,6 +1049,8 @@ def executeFunction(funcName,params,taskid):
 	elif isinstance(result, (bool,)):
 		if result is False:
 			return 'fail', '[%s]返回结果[false]不符合预期' % funcName
+		else:
+			return 'success',"执行成功"
 	elif result is None or isinstance(result, (str,)):
 		return 'success', result
 	else:

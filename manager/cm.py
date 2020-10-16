@@ -567,10 +567,11 @@ def editstep(request):
         try:
             tmp = json.dumps(json.loads(tmp))
         except:
-            return {
-                'status': 'error',
-                'msg': '编辑失败[%s]' % "提取内容格式错误"
-            }
+            if tmp.strip()=="":
+                return {
+                    'status': 'error',
+                    'msg': '编辑失败[%s]' % "提取内容格式错误"
+                }
         
         step = mm.Step.objects.get(id=id_)
         stepcopy=copy.deepcopy(step)

@@ -562,12 +562,12 @@ def editstep(request):
         method = request.POST.get('method')
         content_type = request.POST.get('content_type')
         
-        tmp = request.POST.get('extract')
-
+        tmp = request.POST.get('extract',"")
+        
         try:
             tmp = json.dumps(json.loads(tmp))
         except:
-            if tmp.strip()=="":
+            if tmp.strip() not in [None,""]:
                 return {
                     'status': 'error',
                     'msg': '编辑失败[%s]' % "提取内容格式错误"

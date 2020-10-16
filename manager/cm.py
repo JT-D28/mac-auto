@@ -563,6 +563,15 @@ def editstep(request):
         content_type = request.POST.get('content_type')
         
         tmp = request.POST.get('extract')
+
+        try:
+            tmp = json.dumps(json.loads(tmp))
+        except:
+            return {
+                'status': 'error',
+                'msg': '编辑失败[%s]' % "提取内容格式错误"
+            }
+        
         step = mm.Step.objects.get(id=id_)
         stepcopy=copy.deepcopy(step)
         if step.step_type != step_type:

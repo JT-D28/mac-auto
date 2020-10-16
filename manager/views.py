@@ -422,14 +422,14 @@ def queryvar(request):
 
     with connection.cursor() as cursor:
         sql = '''SELECT t.customize ,t.planids,v.id,description,`key`,gain,value,is_cache,u.name as author FROM `manager_variable` v,login_user u
-                    ,manager_tag t where (description like %s or `key` like %s or gain like %s)
+                    ,manager_tag t where (description like %s or `key` like %s or gain like %s or value like %s)
                     and t.customize like %s and v.author_id=u.id AND t.var_id=v.id  and planids like %s '''
         
         if userid != '-1':
             sql += 'and v.author_id=%s'
-            cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag, bindstr, userid])
+            cursor.execute(sql, [searchvalue, searchvalue,searchvalue, searchvalue, strtag, bindstr, userid])
         else:
-            cursor.execute(sql, [searchvalue, searchvalue, searchvalue, strtag, bindstr])
+            cursor.execute(sql, [searchvalue, searchvalue,searchvalue, searchvalue, strtag, bindstr])
         desc = cursor.description
 
         rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]

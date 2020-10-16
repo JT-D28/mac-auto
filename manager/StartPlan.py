@@ -497,7 +497,7 @@ class RunPlan:
 		print("替换变量后返回的",isOk,str)
 		if not isOk:
 			return False, str
-		r, str = self.replaceFunction(str)
+		isOk, str = self.replaceFunction(str)
 		if not isOk:
 			return False, str
 		print("替换函数后返回的", isOk, str)
@@ -877,7 +877,7 @@ class RunPlan:
 
 					
 					self.log('替换变量 {{%s}}=>%s' % (oldvarname, gainValue))
-					text = text.replace('{{%s}}' % oldvarname, gainValue, 1)
+					text = text.replace('{{%s}}' % oldvarname, str(gainValue), 1)
 				elif len(gain) == 0 and len(value) == 0:
 					return False, '变量【%s】未设定获取方式或者值，请修改' % varname
 			
@@ -1000,11 +1000,11 @@ class RunPlan:
 		
 		if len([x for x in resultlist if x[0] is 'success']) == len(resultlist):
 			logger.info('--成功计算引用表达式 结果=>', str_)
-			return 'success', str_
+			return True, str_
 		else:
 			alist = [x[1] for x in resultlist if x[0] is not 'success']
 			logger.info('--异常计算引用表达式=>', alist[0])
-			return 'error', alist[0]
+			return False, alist[0]
 
 
 
@@ -1013,7 +1013,6 @@ def executeFunction(funcName,params,taskid):
 	params = params.replace('\n','')
 	if "r'" not in params and 'r"' not in params:
 		params = params.replace("\\\"", '"')
-	print(params,"dasdsadfasfdsgfsdgh")
 	isBuiltin = funcName in [x.name for x in getbuiltin()]
 	if funcName.startswith('dbexecute'):
 		execStr = '%s("""%s""",taskid="%s")' % (funcName, params, taskid)

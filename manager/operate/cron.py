@@ -5,7 +5,7 @@
 # @to      :定时任务调度
 import traceback
 
-from django.db import connection
+from django.db import connection, close_old_connections
 
 from manager.StartPlan import RunPlan
 from manager.models import Crontab, Plan
@@ -18,6 +18,7 @@ def is_connection_usable():
     try:
         connection.connection.ping()
     except:
+        print(traceback.format_exc())
         return False
     else:
         return True
@@ -25,11 +26,14 @@ def is_connection_usable():
 
 def cronRun(planid):
     # 加入数据库连接失效的判断，避免定时任务执行时出现MySQL server has gone away情况
+    close_old_connections()
     while True:
         if is_connection_usable:
+            print("连接可用")
             break
         else:
-            connection.close()
+            print("连接不可用")
+            connection.close_all()
             
     taskid = gettaskid(planid)
     x = RunPlan(taskid,planid,'3','定时任务',startNodeId='plan_' + str(planid))
@@ -80,11 +84,11 @@ class Cron(object):
                 break
         msg = cls._addcrontab(cronRun, args=[planid], id=cronid, **cls.getcron(cron.value))
         if msg !='':
-            return "<br>定时时间异常%s" % msg
+            return "定时时间异常%s" % msg
         else:
             cron.status = 'open'
             cron.save()
-            return "<br>下次运行时间:"+str(cls._getcronmanager().get_job(cronid).next_run_time).split('+')[0]
+            return "下次运行时间:"+str(cls._getcronmanager().get_job(cronid).next_run_time).split('+')[0]
 
 
 

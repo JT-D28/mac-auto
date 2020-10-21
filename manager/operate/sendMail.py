@@ -18,9 +18,9 @@ from manager.models import ResultDetail, BusinessData, Order, MailConfig, Case
 from manager.operate.mongoUtil import Mongo
 
 
-def processSendReport(taskid, config_id, callername):
+def processSendReport(taskid, config_id, callername,spendTime):
 	# 	1.从数据库中获取该次任务的结果数据集合存到db中
-	gettaskresult(taskid)
+	gettaskresult(taskid,spendTime)
 	if config_id:
 		_save_builtin_property(taskid, callername)
 		mail_config = MailConfig.objects.get(id=config_id)
@@ -71,7 +71,7 @@ def _save_builtin_property(taskid, username):
 	save_data(username, _tempinfo, 'PLAN_SUCCESS_RATE', detail['success_rate'])
 
 
-def gettaskresult(taskid):
+def gettaskresult(taskid,totalTime):
 	##区分迭代次数
 	bset = set()
 	bmap = {}
@@ -121,6 +121,7 @@ def gettaskresult(taskid):
 	detail['min'] = 99999
 	detail['max'] = 0
 	detail['average'] = 0
+	detail['totalTime']= totalTime
 
 	for d in cases:
 		caseobj = {}

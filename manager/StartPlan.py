@@ -144,7 +144,7 @@ class RunPlan:
 		
 		finally:
 			setRunningInfo(self.planId, self.taskId, '0')
-			processSendReport(self.taskId, self.plan.mail_config_id, self.user.name)
+			processSendReport(self.taskId, self.plan.mail_config_id, self.user.name,spendTime)
 			notification(self.user.name,
 			             "计划【%s】%s任务运行结束，前往查看" % (self.plan.description, {"1": "验证", "2": "调试", "3": "定时"}[self.runKind]))
 	

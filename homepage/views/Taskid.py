@@ -13,7 +13,6 @@ def querytaskid(request):  # 查询验证任务最新id
 	code = 0
 	msg = ''
 	is_running = ''
-	username = request.session.get("username")
 	action = request.POST.get('action')
 
 	if action == 'plan':

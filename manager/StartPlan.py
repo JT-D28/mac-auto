@@ -513,9 +513,9 @@ class RunPlan:
 	def apiRequest(self, method, requestData, timeout):
 		if method.upper()=='GET':
 			if requestData['params'] in [None,'','{}',{}]:
-				requestData['params'] = requestData['body']
+				requestData['params'] = requestData['body'].decode()
 				requestData['body'] = None
-
+		print("++++++++请求参数+++++++\n",requestData)
 		try:
 			rps = self.taskSession.request(
 				method=method,

@@ -204,7 +204,7 @@ class RunPlan:
 		for order in subTestPoints:
 			groupSkip.append(order)
 			groupId = order.value.split(".")[0]
-			print('groupId', groupId)
+			# print('groupId', groupId)
 			PointStart = time.time()
 			point = BusinessData.objects.get(id=order.follow_id)
 			if point.count in [None, "None"]:

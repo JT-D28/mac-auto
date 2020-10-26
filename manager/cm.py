@@ -565,7 +565,7 @@ def editstep(request):
         tmp = request.POST.get('extract',"")
         
         try:
-            tmp = json.dumps(json.loads(tmp))
+            tmp = json.dumps(json.loads(tmp),ensure_ascii=False)
         except:
             if tmp.strip() not in [None,""]:
                 return {

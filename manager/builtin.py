@@ -467,6 +467,7 @@ def replaceAndSend(filename, **kws):
     from manager.context import get_space_dir
     from manager.models import FileMap,DBCon
     filepath = os.path.join(get_space_dir(), filename)
+    
     if os.path.exists(filepath):
         cout('【{}】文件存在'.format(filename), **kws)
         with open(filepath, 'rb') as f:
@@ -510,4 +511,4 @@ def replaceAndSend(filename, **kws):
         time.sleep(2)
 
     else:
-        cout('【{}】文件不存在，请检查'.format(filename), **kws)
+        cout('【{}】文件不存在，请检查'.format(filepath), **kws)

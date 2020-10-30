@@ -499,11 +499,11 @@ def replaceAndSend(filename, **kws):
         cout('=====开始重启dps服务=====', **kws)
         ret = win.run_cmd(
             r"""
-            cd E:\simbank\0226dsp\dsp\bin && E: && shutdown.bat
+            cd E:\simbank\DSP_6070\DSP_6080_自动化用\dsp\bin && E: && shutdown.bat
             """)
         ret = win.run_cmd(
             r"""
-            cd E:\simbank\0226dsp\dsp && E: && dsp.exe restart
+            cd E:\simbank\DSP_6070\DSP_6080_自动化用\dsp && E: && dsp.exe restart
             """)
         cout(ret.std_out.decode(), **kws)
         cout(ret.std_err.decode(), **kws)

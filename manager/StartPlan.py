@@ -423,6 +423,7 @@ class RunPlan:
 			try:
 				lenstr = cs.recv(25)
 				recvdata += lenstr.decode('GBK')
+				print("aaaaaaaa",recvdata)
 				data = cs.recv(int(lenstr[15:23]))
 				data = data.decode('GBK')
 				recvdata += data
@@ -804,7 +805,6 @@ class RunPlan:
 				if varname.startswith('CACHE_'):
 					varname = varname.replace("CACHE_","")
 					needCacheVar = True
-				print("asdasdsad",varname)
 				if varname.strip() == 'STEP_PARAMS':
 					dictparams = self.get_step_params(text)
 					logger.info('==获取内置变量STEP_PARAMS=>\n', dictparams)

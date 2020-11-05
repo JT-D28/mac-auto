@@ -787,6 +787,8 @@ class RunPlan:
 	def replaceProperty(self, text):
 		tempVars = re.findall("\$\{(.*?)\}", text)
 		for var in tempVars:
+			if "=" in var:
+				continue
 			logger.info(self.tempVar, var)
 			value = self.tempVar.get(var, None)
 			if value is None:

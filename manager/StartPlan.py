@@ -1050,7 +1050,7 @@ def executeFunction(funcName,params,taskid):
 			return 'fail', '[%s]返回结果[false]不符合预期' % funcName
 		else:
 			return 'success',"执行成功"
-	elif result is None or isinstance(result, (str,)):
+	elif result is None or isinstance(result, (str,int,)):
 		return 'success', result
 	else:
 		return 'error', '内置函数返回类型{None,bool,tuple}'

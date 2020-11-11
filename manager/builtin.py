@@ -458,7 +458,7 @@ def  tuipiao_file_check(timeflag,t_templatename,td_templatename,t_checklist,td_c
         return False
 
 
-def replaceAndSend(filename, **kws):
+def replaceAndSend(filenames, **kws):
     '''
     DSP配置文件替换及重启通用方法
     '''
@@ -466,49 +466,53 @@ def replaceAndSend(filename, **kws):
     from ME2.settings import BASE_URL
     from manager.context import get_space_dir
     from manager.models import FileMap,DBCon
-    filepath = os.path.join(get_space_dir(), filename)
     
-    if os.path.exists(filepath):
-        cout('【{}】文件存在'.format(filename), **kws)
-        with open(filepath, 'rb') as f:
-            file_encoding = chardet.detect(f.read()).get('encoding')
-        with open(filepath, 'r', encoding=file_encoding) as f:
-            text = f.read()
-            for key, v in kws.items():
-                p = re.compile(r'\{%s}'%(key))
-                text = p.sub(str(v), text)
-    # 		生成临时文件
-        tempfile = os.path.join(get_space_dir(), 'tempfile')
-        with open(tempfile, 'w',encoding='utf-8') as tf:
-            tf.write(text)
-    # 		远程服务器下载文件
-        fileinfo = FileMap.objects.values('customname','targetserver','targetpath','filename').get(path=filename)
-        fileurl = r"%s/file/tempfile?name=%s"%(BASE_URL,fileinfo['customname'])
-        cout('下载路径{}'.format(fileurl), **kws)
-        downloadPath = fileinfo['targetpath'] if fileinfo['targetpath'].__contains__(fileinfo['customname']) else fileinfo['targetpath']+'/'+fileinfo['customname']
-        cout('服务器文件路径：{}'.format(downloadPath), **kws)
-
-        hostinfo = DBCon.objects.values('host','port','username','password','description').get(id=int(fileinfo['targetserver']))
-
-        win = winrm.Session("http://{}:{}/wsman".format(hostinfo['host'],hostinfo['port']), auth=(hostinfo['username'], hostinfo['password']))
-        ret = win.run_ps(
-            r"""$client = new-object System.Net.WebClient;$client.DownloadFile("{}","{}")""".format(fileurl, downloadPath))
-        cout(ret.std_out.decode(), **kws)
-        cout(ret.std_err.decode(), **kws)
-        cout('服务器%s上文件下载成功<br>'%hostinfo['description'], **kws)
-        cout('=====开始重启dps服务=====', **kws)
-        ret = win.run_cmd(
-            r"""
+    fileList = filenames.split(",")
+    for filename in fileList:
+        filepath = os.path.join(get_space_dir(), filename)
+    
+        if os.path.exists(filepath):
+            cout('【{}】文件存在'.format(filename), **kws)
+            with open(filepath, 'rb') as f:
+                file_encoding = chardet.detect(f.read()).get('encoding')
+            with open(filepath, 'r', encoding=file_encoding) as f:
+                text = f.read()
+                for key, v in kws.items():
+                    p = re.compile(r'\{%s}'%(key))
+                    text = p.sub(str(v), text)
+        # 		生成临时文件
+            tempfile = os.path.join(get_space_dir(), 'tempfile')
+            with open(tempfile, 'w',encoding='utf-8') as tf:
+                tf.write(text)
+        # 		远程服务器下载文件
+            fileinfo = FileMap.objects.values('customname','targetserver','targetpath','filename').get(path=filename)
+            fileurl = r"%s/file/tempfile?name=%s"%(BASE_URL,fileinfo['customname'])
+            cout('下载路径{}'.format(fileurl), **kws)
+            downloadPath = fileinfo['targetpath'] if fileinfo['targetpath'].__contains__(fileinfo['customname']) else fileinfo['targetpath']+'/'+fileinfo['customname']
+            cout('服务器文件路径：{}'.format(downloadPath), **kws)
+    
+            hostinfo = DBCon.objects.values('host','port','username','password','description').get(id=int(fileinfo['targetserver']))
+    
+            win = winrm.Session("http://{}:{}/wsman".format(hostinfo['host'],hostinfo['port']), auth=(hostinfo['username'], hostinfo['password']))
+            ret = win.run_ps(
+                r"""$client = new-object System.Net.WebClient;$client.DownloadFile("{}","{}")""".format(fileurl, downloadPath))
+            cout(ret.std_out.decode(), **kws)
+            cout(ret.std_err.decode(), **kws)
+            cout('服务器%s上文件下载成功<br>'%hostinfo['description'], **kws)
+        else:
+            cout('【{}】文件不存在，请检查'.format(filepath), **kws)
+            
+    cout('=====开始重启dps服务=====', **kws)
+    ret = win.run_cmd(
+          r"""
             cd E:\simbank\DSP_6070\DSP_6080_自动化用\dsp\bin && E: && shutdown.bat
             """)
-        ret = win.run_cmd(
-            r"""
-            cd E:\simbank\DSP_6070\DSP_6080_自动化用\dsp && E: && dsp.exe restart
-            """)
-        cout(ret.std_out.decode(), **kws)
-        cout(ret.std_err.decode(), **kws)
-        cout('=重启dps服务成功=', **kws)
-        time.sleep(2)
+    ret = win.run_cmd(
+        r"""
+        cd E:\simbank\DSP_6070\DSP_6080_自动化用\dsp && E: && dsp.exe restart
+         """)
+    cout(ret.std_out.decode(), **kws)
+    cout(ret.std_err.decode(), **kws)
+    cout('=重启dps服务成功=', **kws)
+    time.sleep(2)
 
-    else:
-        cout('【{}】文件不存在，请检查'.format(filepath), **kws)

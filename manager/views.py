@@ -399,9 +399,6 @@ def queryvar(request):
     searchvalue = request.POST.get('searchvalue').strip()
     limit = request.POST.get('limit')
     page = request.POST.get('page')
-    if searchvalue:
-        page=1
-    
     searchvalue = '%' + searchvalue + '%'
     userid = request.POST.get('userid')
     tags = request.POST.getlist('tags[]')
@@ -417,6 +414,7 @@ def queryvar(request):
 
     bindplan = request.POST.get('bindplan') if request.POST.get('bindplan') != '' else ''
     bindstr = '%","' + bindplan + '"]%' if bindplan != '' else '%%'
+    logger.info("bindstr=>", bindstr)
     userid = userid if userid != '0' else str(User.objects.values('id').get(name=request.session.get('username'))['id'])
     logger.info("searchvalue=>", searchvalue)
 
@@ -887,7 +885,6 @@ def querytaskdetail(request):
     detail = Mongo.taskreport().find_one({"taskid":taskid})
     if request.POST.get('taskid'):
         detail = Mongo.taskreport().find_one({"taskid":request.POST.get('taskid')},{ '_id': 0})
-        print(detail)
         return JsonResponse({'data':json.dumps(detail)})
 
     return render(request, 'manager/taskdetail.html', locals())

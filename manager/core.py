@@ -639,6 +639,9 @@ def getpagedata(data, page, limit):
 	if data is None:
 		data = []
 	
+	if (int(page)-1)*int(limit)>len(data):
+		page = len(data)/int(limit) +1
+	
 	old = copy.copy(data)
 	start = (int(page) - 1) * int(limit)
 	end = int(page) * int(limit)

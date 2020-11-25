@@ -247,7 +247,7 @@ def getRunningInfo(planid='', type='isrunning'):
         return _runninginfo.get('runkind','0')
     elif type == 'dbscheme':
         from .models import Plan
-        nofind = Plan.objects.get(id=planid).schemename
+        nofind = Plan.objects.get(id=planid).dbscheme
         dbscheme = _runninginfo.get('dbscheme', nofind)
         return dbscheme
 

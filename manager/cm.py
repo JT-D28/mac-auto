@@ -119,7 +119,7 @@ def addplan(request):
         pid = request.POST.get('pid').split('_')[1]
         description = request.POST.get('description')
         db_id = request.POST.get('dbid')
-        schemename = request.POST.get('scheme')
+        dbschemename = request.POST.get('dbscheme')
         run_type = request.POST.get('run_type')
         before_plan = request.POST.get('before_plan')
         proxy = request.POST.get('proxy','')
@@ -128,7 +128,7 @@ def addplan(request):
         mail_config = mm.MailConfig(is_send_mail=is_send_mail, is_send_dingding=is_send_dingding)
         mail_config.save()
         
-        plan = mm.Plan(description=description, db_id=db_id, schemename=schemename,run_type=run_type, mail_config_id=mail_config.id,before_plan=before_plan,proxy=proxy)
+        plan = mm.Plan(description=description, db_id=db_id, dbscheme=dbschemename,run_type=run_type, mail_config_id=mail_config.id,before_plan=before_plan,proxy=proxy)
         plan.save()
         addrelation('product_plan',pid, plan.id)
         extmsg=''
@@ -221,7 +221,7 @@ def editplan(request):
         plan.description = newdescription
         plan.db_id = request.POST.get('dbid')
         plan.before_plan = request.POST.get('before_plan')
-        plan.schemename = request.POST.get('scheme')
+        plan.dbscheme = request.POST.get('dbscheme')
         logger.info('description=>', plan.description)
         plan.run_type = request.POST.get('run_type')
         plan.proxy = request.POST.get('proxy','')
@@ -1106,7 +1106,10 @@ def getchild(kind, main_id):
                 child.append(p)
             # pirnt('child=>',child)
             except:
+                logme.error(traceback.format_exc())
                 logme.warn('找不到计划 ID=%s'%order.follow_id)
+                logme.info("删除多余计划顺序 id = %s",order.follow_id)
+                # order.delete()
                 #logger.info(traceback.format_exc())
     elif kind == 'plan_case':
         for order in orderlist:
@@ -2227,7 +2230,7 @@ def add_record_step(request):
     try:
         plan=mm.Plan.objects.get(description='录制步骤',isdelete=0)
     except:
-        plan=mm.Plan(description='录制步骤', db_id=None, schemename=None, author=params['user'],
+        plan=mm.Plan(description='录制步骤', db_id=None, dbscheme=None, author=params['user'],
                        run_type='手动运行', mail_config_id=None,before_plan=None,proxy='')
         plan.save()
 

@@ -30,7 +30,6 @@ from .context import set_top_common_config, viewcache, get_task_session, \
 import re, traceback, time, threading, json, warnings, datetime, socket
 import copy, base64,os
 
-from .operate.DesktopNotification import notification
 from .operate.generateReport import dealDeBuginfo, dealruninfo
 from .operate.getIp import get_host_ip
 from .operate.mongoUtil import Mongo
@@ -387,7 +386,7 @@ def beforePlanCases(planid):
 
 def runplan(callername, taskid, planid, runkind, startnodeid=None):
     plan = Plan.objects.get(id=planid)
-    dbscheme = plan.schemename
+    dbscheme = plan.dbscheme
     setRunningInfo(planid, taskid, runkind, dbscheme)
     viewcache(taskid, "=======正在初始化任务中=======")
     viewcache(taskid, "在主机ip："+get_host_ip()+"上执行")

@@ -3,20 +3,8 @@ import os
 from ME2 import configs
 
 DEBUG = True
-DEBUG_TOOLS_ON = False
 
 BASE_URL = 'http://' + configs.ME2_URL
-
-FILE_UPLOAD_MAX_MEMORY_SIZE = 26214400  # 上传文件大小，改成25M
-DATA_UPLOAD_MAX_MEMORY_SIZE = 26214400  # 上传数据大小，也改成了25M
-
-##Redis配置
-REDIS_HOST = configs.REDIS_HOST
-REDIS_PORT = configs.REDIS_PORT
-
-##mongodb配置
-MONGO_HOST = configs.MONGO_HOST
-MONGO_PORT = configs.MONGO_PORT
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -36,7 +24,6 @@ DEBUG_TOOLBAR_PANELS = [
 	'debug_toolbar.panels.sql.SQLPanel',
 	'debug_toolbar.panels.staticfiles.StaticFilesPanel',
 	'debug_toolbar.panels.templates.TemplatesPanel',
-	# 'pympler.panels.MemoryPanel',
 ]
 
 ALLOWED_HOSTS = ['*']
@@ -53,6 +40,7 @@ INSTALLED_APPS = [
 	'login',
 	'manager',
 	'homepage',
+	'performance',
 	'corsheaders',
 	# 'debug_toolbar.apps.DebugToolbarConfig',
 	# 'pympler',
@@ -73,7 +61,6 @@ MIDDLEWARE = [
 
 ]
 
-# MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware'] + MIDDLEWARE_O if DEBUG_TOOLS_ON else MIDDLEWARE_O
 
 # 指定ASGI的路由地址
 ASGI_APPLICATION = 'manager.routing.application'
@@ -99,8 +86,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ME2.wsgi.application'
 
-# Database
-# https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 
 if configs.dbtype == 'sqlite3':
@@ -223,7 +208,7 @@ CHANNEL_LAYERS = {
 	'default': {
 		'BACKEND': 'channels_redis.core.RedisChannelLayer',
 		'CONFIG': {
-			"hosts": [(REDIS_HOST, REDIS_PORT)],
+			"hosts": [(configs.REDIS_HOST, configs.REDIS_PORT)],
 		},
 	},
 }
@@ -241,6 +226,7 @@ SAFE_URL = [
 	'/file',
 	'/manager/getTree',
 	'/manager/recordBuildNodes',
-	'/manager/getVars'
+	'/manager/getVars',
+	'/RPC'
 ]
 REGEX_URL = r'^{url}'  # url不作严格匹配  严格匹配 r'^{url}$'

@@ -646,7 +646,7 @@ class DataMove:
 
         plano.run_type = plan.get('runtype')
         plano.db_id = plan.get('db_id')
-        plano.schemename = scheme
+        plano.dbscheme = scheme
         try:
             author = User.objects.get(name=plan.get('authorname'))
             plano.author = author

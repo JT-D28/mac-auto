@@ -173,7 +173,8 @@ class Case(Model):
 class Plan(Model):
 	description = CharField(max_length=128)
 	db_id = CharField(max_length=64, blank=True, null=True)
-	schemename = CharField(max_length=64, blank=True, null=True)
+	dbscheme = CharField(max_length=64, blank=True, null=True)
+	varspace = IntegerField(null=False,default=0,max_length=11)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
 	before_plan = CharField(max_length=128, blank=True, null=True)
@@ -215,7 +216,6 @@ class ResultDetail(Model):
 
 
 class Variable(Model):
-	author = ForeignKey(User, on_delete=CASCADE)
 	description = CharField(max_length=128)
 	key = CharField(max_length=255)
 	value = TextField(blank=True, null=True)
@@ -224,9 +224,16 @@ class Variable(Model):
 	# is_default=BooleanField(default=True)
 	createtime = DateTimeField(auto_now_add=True)
 	updatetime = DateTimeField(auto_now=True)
-	
+	author_id = IntegerField(default=0)
+	space_id = IntegerField(default=0)
+	label = TextField(blank=True, null=True)
 	def __str__(self):
-		return "%s_%s" % (self.author, self.key)
+		return "%s_%s" % (self.description, self.key)
+
+
+class Varspace(Model):
+	name = CharField(max_length=255, blank=True,null=False)
+	planid = IntegerField()
 
 
 class Order(Model):

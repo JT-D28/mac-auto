@@ -1,11 +1,9 @@
-
 import configparser
 import os
 
 confs = configparser.ConfigParser()
 confs.read(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.ini'), encoding="utf-8")
 conf = confs['useconfig']
-
 
 #
 dbtype = conf['dbtype']
@@ -22,6 +20,9 @@ REDIS_PASSWORD = conf['REDIS_PASSWORD']
 ##MONGODB配置
 MONGO_HOST = conf['MONGO_HOST']
 MONGO_PORT = conf['MONGO_PORT']
+
+Consul_ADDR = conf['Consul_ADDR']
+Fabio_ADDR = conf['Fabio_ADDR']
 
 # 邮件服务器配置 SMTP
 EMAIL_HOST = 'smtp.qq.com'

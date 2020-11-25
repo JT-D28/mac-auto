@@ -1,11 +1,11 @@
 from pymongo import MongoClient
 
-from ME2.settings import MONGO_HOST, MONGO_PORT
+from ME2 import configs
 
 
 class Mongo():
-	host = MONGO_HOST
-	port = MONGO_PORT
+	host = configs.MONGO_HOST
+	port = configs.MONGO_PORT
 	mongocon = MongoClient(host, int(port))
 
 ##############################################
@@ -34,3 +34,7 @@ class Mongo():
 	@classmethod
 	def taskid(cls):
 		return cls.mongocon.plandata['taskid']
+	
+	@classmethod
+	def performanceTaskId(cls):
+		return cls.mongocon.plandata['loadTask']

@@ -13,7 +13,6 @@ import json
 
 from ME2.settings import BASE_DIR
 from manager import cm
-from manager.consumer import logConsumer
 from manager.context import getRunningInfo
 from manager.models import Case, Order, BusinessData, Plan, Step, ResultDetail
 from manager.operate.mongoUtil import Mongo

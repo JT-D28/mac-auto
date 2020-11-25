@@ -18,8 +18,8 @@ from manager.db import Mysqloper
 from manager.invoker import _get_final_run_node_id, beforePlanCases, get_node_upper_case, _replace_property, \
 	XMLParser, JSONParser, _get_step_params, _legal, \
 	_eval_expression
-from manager.models import Plan, DBCon, Order, Case, Step, BusinessData, Function, ResultDetail, User, Variable, Tag
-from manager.operate.DesktopNotification import notification
+from manager.models import Plan, DBCon, Order, Case, Step, BusinessData, Function, ResultDetail, User, Variable, Tag, \
+	Varspace
 from manager.operate.apiInfo import dump_request
 from manager.operate.generateReport import dealruninfo
 from manager.operate.mongoUtil import Mongo
@@ -69,7 +69,7 @@ class RunPlan:
 	
 	def setDbUse(self, dbname, type):
 		try:
-			dbId = DBCon.objects.get(scheme=self.plan.schemename, description=dbname).id
+			dbId = DBCon.objects.get(scheme=self.plan.dbscheme, description=dbname).id
 		except:
 			db = DBCon.objects.filter(scheme='全局', description=dbname).first()
 			dbId = db.id if db else None
@@ -79,7 +79,7 @@ class RunPlan:
 			set_top_common_config(self.taskId, desp, src=type)
 	
 	def getReady(self):
-		setRunningInfo(self.planId, self.taskId, self.runKind, self.plan.schemename)
+		setRunningInfo(self.planId, self.taskId, self.runKind, self.plan.dbscheme)
 		self.log("=======计划【%s】正在初始化中,任务类型【%s】=======" % (
 			self.plan.description, {"1": "验证", "2": "调试", "3": "定时"}[self.runKind]))
 		self.log("在主机ip：" + getHostIp() + "上执行")
@@ -93,7 +93,7 @@ class RunPlan:
 		groupskip = []
 		
 		self.log(
-			"=======开始执行【<span style='color:#FF3399'>%s</span>】,使用数据连接配置【%s】====" % (self.taskId, self.plan.schemename))
+			"=======开始执行【<span style='color:#FF3399'>%s</span>】,使用数据连接配置【%s】====" % (self.taskId, self.plan.dbscheme))
 		
 		if self.plan.proxy:
 			self.proxy = {'http': self.plan.proxy}
@@ -135,7 +135,7 @@ class RunPlan:
 			loop = asyncio.get_event_loop()
 			loop.run_until_complete(
 				dealruninfo(self.planId, self.taskId,
-				            {'spend': spendTime, 'dbscheme': self.plan.schemename, 'planname': self.plan.description,
+				            {'spend': spendTime, 'dbscheme': self.plan.dbscheme, 'planname': self.plan.description,
 				             'user': self.user.name, 'runkind': self.runKind}, self.startNodeId))
 		
 		except Exception as e:
@@ -501,7 +501,7 @@ class RunPlan:
 		isOk, str = self.replaceFunction(str)
 		if not isOk:
 			return False, str
-		print("替换函数后返回的", isOk, str)
+
 		if original != str and show:
 			self.log(
 				"<span style='color:#009999;'>原始的%s=><xmp style='color:#009999;'>%s</xmp></span>" % (type, original))
@@ -509,6 +509,7 @@ class RunPlan:
 		elif original.strip() != '{}' and show:
 			self.log(
 				"<span style='color:#009999;'>%s=><xmp style='color:#009999;'>%s</xmp></span>" % (type, original))
+			
 		return True, str
 	
 	def apiRequest(self, method, requestData, timeout):
@@ -800,47 +801,42 @@ class RunPlan:
 	# 替换变量
 	def replaceVariable(self, text, responseText='',needCacheVar=False):
 		try:
-			varnames = re.findall('{{(.*?)}}', text)
-			logger.info('varnames:', varnames)
-			for varname in varnames:
-				oldvarname = varname
-				if varname.startswith('CACHE_'):
-					varname = varname.replace("CACHE_","")
+			varKeys = re.findall('{{(.*?)}}', text)
+			logger.info('varnames:', varKeys)
+			for varKey in varKeys:
+				oldvarKey = varKey
+				if varKey.startswith('CACHE_'):
+					varKey = varKey.replace("CACHE_","")
 					needCacheVar = True
-				if varname.strip() == 'STEP_PARAMS':
+				if varKey.strip() == 'STEP_PARAMS':
 					dictparams = self.get_step_params(text)
 					logger.info('==获取内置变量STEP_PARAMS=>\n', dictparams)
 					logger.info('==STEP_PARAMS替换前=>\n', text)
-					text = text.replace('{{%s}}' % varname, str(dictparams))
+					text = text.replace('{{%s}}' % varKey, str(dictparams))
 					logger.info('==STEP_PARAMS替换后=>\n', text)
 					continue
 				
-				elif varname.strip() == 'RESPONSE_TEXT':
+				elif varKey.strip() == 'RESPONSE_TEXT':
 					logger.info('==获取text/html响应报文用于替换 responsetext={}'.format(responseText))
 					if responseText:
 						text = text.replace('{{RESPONSE_TEXT}}', responseText)
 						logger.info('==RESPONSE_TEXT替换后=>\n', text)
 						continue
 				# 筛选全局或者局部变量useVar
-				vars = Variable.objects.raw(
-					"select v.id, v.description,v.gain,v.value,v.is_cache, t.planids,t.isglobal from manager_variable v ,manager_tag t WHERE v.key='%s' and v.id=t.var_id" % varname)
-				useVar = None
-				globaleVar = None
-				for var in vars:
-					if int(var.isglobal) == 1:
-						globaleVar = var
-					if int(var.isglobal) == 0:
-						planids = json.loads(var.planids)
-						ob = planids.get(self.plan.description, None)
-						if ob and ob[1] == str(self.planId):
-							useVar = var
-							self.log('使用局部变量 %s 描述：%s' % (varname, var.description))
-							break
-				if useVar is None and globaleVar:
-					useVar = globaleVar
-					self.log('使用全局变量 %s 描述：%s' % (varname, useVar.description))
-				if len(vars) == 0 or useVar is None:
-					return False, '字符串[%s]变量【%s】替换异常,未在局部变量和全局变量中找到，请检查是否已正确配置' % (text, varname)
+				useVar = Variable.objects.filter(key=varKey, space_id=0)
+				spaceName = "全局"
+				if self.plan.varspace!=0:
+					spaceVar = Variable.objects.filter(key=varKey,space_id=self.plan.varspace)
+					if spaceVar.exists():
+						useVar = spaceVar
+						
+					elif not useVar.exists():
+						return False, '字符串[%s]变量【%s】替换异常,未在局部变量和全局变量中找到，请检查是否已正确配置' % (text, varKey)
+				useVar = useVar.first()
+				
+				spaceName ="全局" if useVar.space_id==0 else Varspace.objects.get(id=useVar.space_id).name
+				self.log('使用[%s]变量 %s 描述：%s' % (spaceName,varKey, useVar.description))
+				
 				isOk, gain = self.replaceVariable(useVar.gain,needCacheVar=needCacheVar)
 				if not isOk:
 					return False, gain
@@ -849,39 +845,39 @@ class RunPlan:
 					return False, value
 				
 				if len(gain) > 0 and len(value) > 0:
-					return False, '变量【%s】同时设定了获取方式和值，请修改' % varname
+					return False, '变量【%s】同时设定了获取方式和值，请修改' % varKey
 				elif len(gain) == 0 and len(value) > 0:
-					text = text.replace('{{%s}}' % varname, value, 1)
-					self.log('替换变量 {{%s}}=>%s' % (varname, value))
+					text = text.replace('{{%s}}' % varKey, value, 1)
+					self.log('替换变量 {{%s}}=>%s' % (varKey, value))
 				elif len(gain) > 0 and len(value) == 0:
 					print("计算 gain",gain)
 					
 					if useVar.is_cache is True or needCacheVar:
-						varCache = self.redisCon.hget(self.taskId + '_varCache', varname)
+						varCache = self.redisCon.hget(self.taskId + '_varCache', varKey)
 						if varCache:
 							gainValue = varCache
 						else:
 							isOk, gainValue = self.gainCompute(gain)
 							if isOk is not 'success':
 								return False,gainValue
-							self.redisCon.hset(self.taskId + '_varCache', varname, gainValue)
+							self.redisCon.hset(self.taskId + '_varCache', varKey, gainValue)
 							self.redisCon.expire(self.taskId + '_varCache', 3600)
 					else:
 						isOk, gainValue = self.gainCompute(gain)
 						print("计算 gain", isOk, gainValue)
 						if isOk is not 'success':
 							return False, gainValue
-						self.redisCon.hset(self.taskId + '_varCache', varname, gainValue)
+						self.redisCon.hset(self.taskId + '_varCache', varKey, gainValue)
 						self.redisCon.expire(self.taskId + '_varCache',3600)
 					
 					# 通过获取方式计算的变量都加入缓存中，后面使用的会覆盖老的值，在进行校验步骤时先尝试从缓存中获取，没有的话再重新计算。开启了缓存按钮的变量从始至终保持。
 					
 
 					
-					self.log('替换变量 {{%s}}=>%s' % (oldvarname, gainValue))
-					text = text.replace('{{%s}}' % oldvarname, str(gainValue), 1)
+					self.log('替换变量 {{%s}}=>%s' % (oldvarKey, gainValue))
+					text = text.replace('{{%s}}' % oldvarKey, str(gainValue), 1)
 				elif len(gain) == 0 and len(value) == 0:
-					return False, '变量【%s】未设定获取方式或者值，请修改' % varname
+					return False, '变量【%s】未设定获取方式或者值，请修改' % varKey
 			
 			return True, text
 		except Exception as e:

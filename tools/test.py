@@ -1,9 +1,10 @@
-from django.conf import  settings
-import  redis
+import redis
+from ME2 import configs
 from manager.models import  *
+
 class TreeUtil(object):
     key='treecache'
-    pool = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0, decode_responses=True)
+    pool = redis.ConnectionPool(host=configs.REDIS_HOST, port=configs.REDIS_PORT, db=0, decode_responses=True)
     con = redis.Redis(connection_pool=pool)
     @classmethod
     def get_tree_data_fast(cls):

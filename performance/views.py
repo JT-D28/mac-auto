@@ -45,28 +45,25 @@ def querySql(sql, args):
 def getNodes(request):
 	kind = request.POST.get("type")
 	nodeList = []
+	id = request.POST.get("id")
 	
 	with connection.cursor() as cursor:
-		if kind == "root" or request.POST.get("id") == "-1":
+		if kind == "root" or id == "-1":
 			if kind == "root":
 				nodeList.append({"id": -1, "name": "任务表", "kind": "root", "open": True})
 			sql = """select id,name,kind,'fa icon-plan' AS textIcon,-1 as pId  from performance_node where kind='plan'"""
 			cursor.execute(sql)
+			desc = cursor.description
+			for row in cursor.fetchall():
+				nodeList.append(dict(zip([col[0] for col in desc], row)))
 		else:
-			id = request.POST.get("id")
-			sql = """SELECT id,name,kind,(CASE
-			WHEN kind='function' THEN 'fa icon-function'
-			WHEN kind='request' THEN 'fa icon-request'
-			WHEN kind='transaction' THEN 'fa icon-transaction'
-			WHEN kind='group' THEN 'fa icon-thread-group'
-			when kind='judge' THEN  'fa icon-judge'
-			when kind='beforehand' THEN  'fa icon-checkbox-unchecked'
-			ELSE '' END) AS textIcon ,%s as pId FROM `performance_node` WHERE id IN (SELECT substring_index(substring_index(t.childs,',',b.help_topic_id+1),',',-1)
-			FROM performance_node t JOIN mysql.help_topic b ON b.help_topic_id< (LENGTH(t.childs)-LENGTH(REPLACE (t.childs,',',''))+1) AND t.id=%s)"""
-			cursor.execute(sql, [id, id])
-		desc = cursor.description
-		for row in cursor.fetchall():
-			nodeList.append(dict(zip([col[0] for col in desc], row)))
+			childList = Node.objects.get(id=id).childs.split(",")
+			for cid in childList:
+				if cid != "":
+					temp = Node.objects.values().get(id=cid)
+					temp["textIcon"] = iconMap[temp.get("kind")]
+					nodeList.append(temp)
+	
 	return JsonResponse({'code': 0, 'msg': "", "nodes": nodeList})
 
 
@@ -163,7 +160,7 @@ def NodeDel(request):
 					return JsonResponse({"code": 1, "msg": '删除[%s]失败，有子节点' % name})
 			else:
 				for i in node.childs.split(","):
-					if i !="":
+					if i != "":
 						delnode = Node.objects.filter(id=i)
 						if delnode.first():
 							delnode.delete()
@@ -276,9 +273,11 @@ def runPerformance(request):
 	try:
 		if runId != "" or kind != "":
 			r = requests.post("http://" + Fabio_ADDR + "/task/base/performance",
-			                  data={"id": runId, "username": request.session.get('username'), "runKind": runKind})
+			                  data={"id": runId, "username": request.session.get('username'), "runKind": runKind,
+			                        "from": configs.ID})
+			Me2Log.info(r.request.body)
 			try:
-				print(r.json())
+				Me2Log.info(r.json())
 				return JsonResponse(r.json())
 			except:
 				return JsonResponse({"code": 1, "msg": r.text})
@@ -303,12 +302,12 @@ def queryTasks(request):
 	res = list(Mongo.performanceTaskId().find({'planid': int(id)}, {'_id': 0}).sort('time', -1).limit(10))
 	for i in res:
 		i["time"] = time.strftime("%m-%d %H:%M:%S", time.localtime(i["time"]))
-		
+	
 	return JsonResponse({"code": 0, "data": res})
 
 
 class reportConsumer(WebsocketConsumer):
-	def sendmsg(self,threadId):
+	def sendmsg(self, threadId):
 		mongoCon = MongoClient(configs.MONGO_HOST, int(configs.MONGO_PORT))
 		coll = mongoCon.load[self.taskid]
 		try:
@@ -348,8 +347,8 @@ class reportConsumer(WebsocketConsumer):
 		self.taskid = data.get("taskid")
 		self.interval = data.get("interval")
 		self.kind = data.get("kind")
-		self.nowId = data.get("kind")+str(self.interval)
-		self.thread = threading.Thread(target=self.sendmsg,args=(self.nowId,))
+		self.nowId = data.get("kind") + str(self.interval)
+		self.thread = threading.Thread(target=self.sendmsg, args=(self.nowId,))
 		self.thread.start()
 	
 	def disconnect(self, code=None):
@@ -491,7 +490,7 @@ def generateReport1(allData, interval, kind):
 					else:
 						Temp[obj["name"] + "[发送]"] = [obj["sendbytes"]]
 						Temp[obj["name"] + "[接收]"] = [obj["receivedbytes"]]
-			
+	
 	legend = []
 	source.append(timeList)
 	for name, value in Temp.items():
@@ -499,4 +498,4 @@ def generateReport1(allData, interval, kind):
 		list = [name]
 		list.extend(value)
 		source.append(list)
-	return {"source":source,"legend":legend}
+	return {"source": source, "legend": legend}

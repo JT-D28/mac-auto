@@ -1,6 +1,10 @@
+import json
+
+import consul
 from django.conf.urls import url
 from django.urls import path, include
 
+from ME2 import configs
 from ME2.DataUpdate import varUpdate, spaceUpdate
 from login import views
 from rpc4django.views import serve_rpc_request
@@ -15,6 +19,8 @@ urlpatterns = [
 
 ]
 
+
+# 启动时执行
 try:
 	from manager.operate.cron import Cron
 	from tools.test import TreeUtil
@@ -23,4 +29,9 @@ try:
 except:
 	pass
 
+c = consul.Consul(host=configs.Consul_ADDR,port=int(configs.Consul_PORT),scheme='http')
+c.kv.put(configs.ID,json.dumps(configs.WorkerInfo,ensure_ascii=False))
 
+# varUpdate()
+#
+# spaceUpdate()

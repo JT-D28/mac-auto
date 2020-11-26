@@ -123,12 +123,14 @@ def addplan(request):
         run_type = request.POST.get('run_type')
         before_plan = request.POST.get('before_plan')
         proxy = request.POST.get('proxy','')
+        varspace = request.POST.get('varspace',0)
         is_send_mail = 'open' if request.POST.get('is_send_mail') == 'true' else 'close'
         is_send_dingding = 'open' if request.POST.get('is_send_dingding') == 'true' else 'close'
         mail_config = mm.MailConfig(is_send_mail=is_send_mail, is_send_dingding=is_send_dingding)
         mail_config.save()
         
-        plan = mm.Plan(description=description, db_id=db_id, dbscheme=dbschemename,run_type=run_type, mail_config_id=mail_config.id,before_plan=before_plan,proxy=proxy)
+        plan = mm.Plan(description=description, db_id=db_id, dbscheme=dbschemename,run_type=run_type, mail_config_id=mail_config.id,
+                       before_plan=before_plan,proxy=proxy,varspace=int(varspace))
         plan.save()
         addrelation('product_plan',pid, plan.id)
         extmsg=''
@@ -225,6 +227,7 @@ def editplan(request):
         logger.info('description=>', plan.description)
         plan.run_type = request.POST.get('run_type')
         plan.proxy = request.POST.get('proxy','')
+        plan.varspace = int(request.POST.get('varspace',0))
         plan.save()
         extmsg=''
         if run_type == '定时运行':
@@ -276,10 +279,6 @@ def editplan(request):
             _update_object(linkobj, _diff_object(plancopy,plan,ignore_attr=['id']))
 
 
-        
-        if olddescription != newdescription:
-            threading.Thread(target=handlebindplans, args=(olddescription, newdescription, id_)).start()
-        
         return {
             'status': 'success',
             'msg': '编辑[%s]成功%s' % (plan.description,extmsg),
@@ -288,6 +287,7 @@ def editplan(request):
             }
         }
     except:
+        Me2Log.error(traceback.format_exc())
         return {
             'status': 'error',
             'msg': "编辑异常[%s]" % traceback.format_exc()

@@ -857,7 +857,8 @@ def queryoneplan(request):
 		'run_type': plan.run_type,
 		'is_send_mail': mail,
 		'is_send_dingding': dingding,
-		'cron': cron
+		'cron': cron,
+		'varspace':plan.varspace
 	}
 	
 	return JsonResponse({'code': code, 'data': data})

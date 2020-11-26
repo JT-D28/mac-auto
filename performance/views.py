@@ -162,12 +162,13 @@ def NodeDel(request):
 					return JsonResponse({"code": 1, "msg": '删除[%s]失败，有子节点' % name})
 			else:
 				for i in node.childs.split(","):
-					delnode = Node.objects.filter(id=i)
-					if delnode.first():
-						delnode.delete()
-					delnodeinfo = NodeInfo.objects.filter(node_id=i)
-					if delnodeinfo.first():
-						delnodeinfo.delete()
+					if i !="":
+						delnode = Node.objects.filter(id=i)
+						if delnode.first():
+							delnode.delete()
+						delnodeinfo = NodeInfo.objects.filter(node_id=i)
+						if delnodeinfo.first():
+							delnodeinfo.delete()
 				node.delete()
 				NodeInfo.objects.get(node_id=id).delete()
 			

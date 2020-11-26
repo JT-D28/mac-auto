@@ -47,8 +47,9 @@ def getNodes(request):
 	nodeList = []
 	
 	with connection.cursor() as cursor:
-		if kind == "root":
-			nodeList.append({"id": -1, "name": "任务表", "kind": "root", "open": True})
+		if kind == "root" or request.POST.get("id") == "-1":
+			if kind == "root":
+				nodeList.append({"id": -1, "name": "任务表", "kind": "root", "open": True})
 			sql = """select id,name,kind,'fa icon-plan' AS textIcon,-1 as pId  from performance_node where kind='plan'"""
 			cursor.execute(sql)
 		else:

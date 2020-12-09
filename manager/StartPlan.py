@@ -568,7 +568,7 @@ class RunPlan:
 				print(traceback.format_exc())
 				return 'error', "headers转换失败，可能有误"
 			# 兼容旧的数据
-			if 'json' in content_type:
+			if content_type=="json" or "application/json" in content_type :
 				headers["Content-Type"] = 'application/json;charset=UTF-8'
 				# 	body最终由dict类型转换成json字符串
 				p1 = lambda x: json.loads(x)  # 格式是{"a":1,"b":2} 正确json格式

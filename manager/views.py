@@ -1025,7 +1025,6 @@ def queryfunclist(request):
 	try:
 		res = list(Function.objects.all())
 		
-		res = res + getbuiltin()
 		data = list()
 		for x in res:
 			op = {}
@@ -1035,7 +1034,7 @@ def queryfunclist(request):
 		
 		logger.info('查函数下拉信息=>', data)
 		
-		return JsonResponse(simplejson(code=0, msg='操作成功', data=data), safe=False)
+		return JsonResponse({"code":"0", "msg":"操作成功", "data":data})
 	
 	except:
 		logger.info(traceback.format_exc())

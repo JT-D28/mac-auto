@@ -5,8 +5,11 @@
 # @to      :定时任务调度
 import traceback
 
+import requests
 from django.db import connection, close_old_connections
 
+from ME2 import configs
+from ME2.configs import Fabio_ADDR
 from manager.StartPlan import RunPlan
 from manager.models import Crontab, Plan
 from manager.invoker import runplan
@@ -35,9 +38,14 @@ def cronRun(planid):
             print("连接不可用")
             connection.close_all()
             
-    taskid = gettaskid(planid)
-    x = RunPlan(taskid,planid,'3','定时任务',startNodeId='plan_' + str(planid))
-    threading.Thread(target=x.start).start()
+    requests.post("http://" + Fabio_ADDR + "/task/base/interface",
+                      data={"planid": planid, "username": "定时任务", "runkind": "3","startnode":'plan_' + str(planid),
+                            "from": configs.ID})
+
+        
+    # taskid = gettaskid(planid)
+    # x = RunPlan(taskid,planid,'3','定时任务',startNodeId='plan_' + str(planid))
+    # threading.Thread(target=x.start).start()
 
 class Cron(object):
     __cronmanager = None

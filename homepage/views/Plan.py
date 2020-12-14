@@ -109,7 +109,7 @@ def queryPlanState(request):
 		taskid = getRunningInfo(planid, 'debug_taskid')
 		return JsonResponse({'running': fl,'taskid':taskid})
 	runkind = getRunningInfo(planid,'isrunning')
-	msg = {"0":"未运行","1": "验证", "2": "调试", "3": "定时"}[runkind]
+	msg = {0:"未运行",1: "验证", 2: "调试", 3: "定时"}[runkind]
 	return JsonResponse({'data': msg})
 
 

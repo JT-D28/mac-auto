@@ -12,7 +12,7 @@ import requests
 from django.db.models import Q
 from requests import compat
 from manager.builtin import *
-from manager.context import Me2Log as logger, setRunningInfo, set_top_common_config, get_space_dir
+from manager.context import Me2Log as logger, setRunningInfo, set_top_common_config, get_space_dir, Me2Log
 from manager.core import ordered, getbuiltin, Fu
 from manager.db import Mysqloper
 from manager.invoker import _get_final_run_node_id, beforePlanCases, get_node_upper_case, _replace_property, \
@@ -134,9 +134,9 @@ class RunPlan:
 			asyncio.set_event_loop(asyncio.new_event_loop())
 			loop = asyncio.get_event_loop()
 			loop.run_until_complete(
-				dealruninfo(self.planId, self.taskId,
-				            {'spend': spendTime, 'dbscheme': self.plan.dbscheme, 'planname': self.plan.description,
-				             'user': self.user.name, 'runkind': self.runKind}, self.startNodeId))
+				dealruninfo(self.planId, self.taskId,spendTime,self.runKind,
+				            {'dbscheme': self.plan.dbscheme, 'planname': self.plan.description,
+				             'user': self.user.name, 'runkind': {"1": "验证", "2": "调试", "3": "定时"}[self.runKind]}, self.startNodeId))
 		
 		except Exception as e:
 			logger.error('执行计划未知异常：', traceback.format_exc())
@@ -422,7 +422,6 @@ class RunPlan:
 			try:
 				lenstr = cs.recv(25)
 				recvdata += lenstr.decode('GBK')
-				print("aaaaaaaa",recvdata)
 				data = cs.recv(int(lenstr[15:23]))
 				data = data.decode('GBK')
 				recvdata += data
@@ -1010,7 +1009,7 @@ def executeFunction(funcName,params,taskid):
 	params = params.replace('\n','')
 	if "r'" not in params and 'r"' not in params:
 		params = params.replace("\\\"", '"')
-	isBuiltin = funcName in [x.name for x in getbuiltin()]
+		
 	if funcName.startswith('dbexecute'):
 		execStr = '%s("""%s""",taskid="%s")' % (funcName, params, taskid)
 	else:
@@ -1018,21 +1017,24 @@ def executeFunction(funcName,params,taskid):
 			execStr = '%s(%s,taskid="%s")' % (funcName, params, taskid)
 		else:
 			execStr = '%s(taskid="%s")' % (funcName,taskid)
-	result = (None,'')
+	result = ("fail","")
 	try:
-		if isBuiltin:
-			result = eval(execStr)
-			logger.info("调用内置函数表达式:%s 结果为:%s" % (execStr, result))
-
-		else:
-			function = Function.objects.filter(name=funcName.strip())
-			if function:
-				flag = function.first().flag
-				f = __import__('manager.storage.private.Function.func_%s' % flag, fromlist=True)
+		function = Function.objects.filter(name=funcName.strip())
+		if function:
+			f = function.first()
+			if f.kind=="内置":
+				Me2Log.info("执行内置：",execStr)
+				result = eval(execStr)
+				logger.info("调用内置函数表达式:%s 结果为:%s" % (execStr, result))
+			else:
+				logger.info("尝试调用用户定义函数:%s" %execStr)
+				f = __import__('manager.storage.private.Function.func_%s' % f.name, fromlist=True)
 				execStr = "f.%s" % execStr.replace('\n', '')
 				result = eval(execStr)
-				del sys.modules['manager.storage.private.Function.func_%s' % flag]
+				del sys.modules['manager.storage.private.Function.func_%s' % f.name]
 				logger.info("调用用户定义表达式:%s 结果为:%s" % (execStr, result))
+		else:
+			result = ("fail", "未找到对应的函数")
 
 	except:
 		logger.error(traceback.format_exc())

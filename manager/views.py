@@ -12,6 +12,7 @@ from django.http import HttpResponse, JsonResponse
 from django.db.models import Q
 from typing import List
 
+from ME2.configs import Fabio_ADDR
 from manager.models import *
 from manager.db import Mysqloper
 from django.conf import settings
@@ -30,7 +31,6 @@ from .operate.transformer import Transformer
 from .pa import MessageParser
 
 from manager.context import Me2Log as logger
-from tools.mock import TestMind
 from manager.cm import getchild
 
 
@@ -875,16 +875,24 @@ def runtask(request):
 	planid = request.POST.get('ids')
 	runkind = request.POST.get('runkind')
 	logger.info('获取待运行节点计划ID:', planid)
-	taskid = gettaskid(planid)
+	# taskid = gettaskid(planid)
 	
 	state_running = getRunningInfo(planid=planid, type='isrunning')
 	
-	if state_running != '0':
-		msg = {"1": "验证", "2": "调试", "3": "定时"}[state_running]
+	if state_running != 0:
+		msg = {1: "验证", 2: "调试", 3: "定时"}[state_running]
 		return JsonResponse(simplejson(code=1, msg='计划正在运行[%s]任务，稍后再试！' % msg), safe=False)
 	
-	x = RunPlan(taskid, planid, runkind, callername, startNodeId='plan_%s' % planid)
-	threading.Thread(target=x.start).start()
+	r = requests.post("http://" + Fabio_ADDR + "/task/base/interface",
+	                  data={"planid": planid, "username": callername, "runkind": runkind, "startnode": 'plan_%s' % planid,
+	                        "from": configs.ID})
+	m = r.json()
+	if m.get("code") == 0:
+		taskid = m.get("data")
+	else:
+		return JsonResponse(simplejson(code=1, msg="启动失败"), safe=False)
+	# x = RunPlan(taskid, planid, runkind, callername, startNodeId='plan_%s' % planid)
+	# threading.Thread(target=x.start).start()
 	
 	request.session['console_taskid'] = taskid
 	return JsonResponse(simplejson(code=0, msg="你的任务开始运行", taskid=taskid), safe=False)
@@ -915,8 +923,6 @@ def queryonefunc(request):
 	res = None
 	try:
 		res = Function.objects.get(id=request.POST.get('id'))
-		res.body = base64.b64decode(res.body).decode(encoding='utf-8')
-	
 	except:
 		code = 1
 		msg = '查询异常[%s]' % traceback.format_exc()
@@ -932,10 +938,8 @@ def queryfunc(request):
 	res = []
 	if searchvalue:
 		res = list(Function.objects.filter(Q(name__icontains=searchvalue.strip())))
-		res = res + getbuiltin(searchvalue)
-	
 	else:
-		res = list(Function.objects.all()) + getbuiltin()
+		res = list(Function.objects.all())
 	
 	limit = request.GET.get('limit')
 	page = request.GET.get('page')
@@ -969,12 +973,13 @@ def editfunc(request):
 	code = 0
 	msg = ''
 	try:
+		body = request.POST.get("body").lstrip()
 		func = Function.objects.get(id=id_)
 		func.description = request.POST.get('description')
-		func.name = Fu.getfuncname(request.POST.get('body'))[0]
-		func.body = base64.b64encode(request.POST.get('body').encode('utf-8')).decode()
-		func.flag = Fu.tzm_compute(request.POST.get('body'), "def\s+(.*?)\((.*?)\):")
-		
+		kind = request.POST.get("kind")
+		func.kind = kind
+		func.name = Fu.getfuncname(body,kind)
+		func.body = body
 		func.save()
 		msg = '编辑成功'
 	except:
@@ -994,10 +999,10 @@ def addfunc(request):
 		f = Function()
 		f.description = request.POST.get("description")
 		# base64 str 存储
-		tbody = request.POST.get("body")
-		f.name = Fu.getfuncname(tbody)[0]
-		f.body = base64.b64encode(tbody.encode('utf-8')).decode()
-		f.flag = Fu.tzm_compute(tbody, "def\s+(.*?)\((.*?)\):")
+		kind = request.POST.get("kind")
+		f.kind = kind
+		f.body = request.POST.get("body").lstrip()
+		f.name = Fu.getfuncname(f.body,kind)
 		f.save()
 		msg = '添加成功'
 	except Exception as e:
@@ -1237,7 +1242,7 @@ def queryonebusiness(request):
 	id = request.POST.get('vid').split('_')[1]
 	try:
 		sql = '''SELECT id,count,businessname,params as body,preposition,postposition,description,timeout,queryparams as params ,bodytype,
-        CONCAT_WS('|',itf_check,db_check) as dataCheck FROM manager_businessdata where id =%s and isdelete=0'''
+        CONCAT_WS('|',itf_check,db_check) as dataCheck,delay,`final` FROM manager_businessdata where id =%s and isdelete=0'''
 		with connection.cursor() as cursor:
 			cursor.execute(sql, [id])
 			row = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()][0]
@@ -1311,7 +1316,6 @@ def querytreelist(request):
 			# orders = Order.objects.filter(kind__contains='case_', main_id=idx,isdelete=0).extra(
 			# select={"value": "cast( substring_index(value,'.',-1) AS DECIMAL(10,0))"}).order_by("value")
 			orders = list(Order.objects.filter(kind__contains='case_', main_id=idx, isdelete=0))
-			print("aaaaaaaaaaa", orders, idx)
 			orders.sort(key=lambda a: int(a.value.split('.')[1]))
 			
 			for order in orders:
@@ -1408,7 +1412,6 @@ def querytreelist(request):
 	
 	if id_:
 		datanode = _get_pid_data(id_, type_, datanode, srcid=nid, checkflag=checkflag, flag=flag)
-		print("aaaaaaaaaaa", datanode)
 		if get_params(request).get('flag') == '1':
 			for node in datanode:
 				if node['id'] == get_params(request).get('srcid'):
@@ -1888,26 +1891,6 @@ def simpletest(request):
 	return render(request, 'manager/simpletest.html', locals())
 
 
-@csrf_exempt
-def querysimpletest(request):
-	node_id = request.GET.get('nodeid')
-	return JsonResponse(TestMind().query_simple_test(node_id), safe=False)
-
-
-@csrf_exempt
-def updatesimpletest(request):
-	return JsonResponse(TestMind().update_simple_test(**get_params(request)), safe=False)
-
-
-@csrf_exempt
-def opensimpletest(request):
-	return JsonResponse(TestMind().open_simple_test(request.POST.get('tid'), request.POST.get('checked')), safe=False)
-
-
-@csrf_exempt
-def openstepmock(request):
-	return JsonResponse(TestMind().open_step_mock(request.POST.get('tid'), request.POST.get('checked')), safe=False)
-
 
 @csrf_exempt
 def querysteptype(request):
@@ -1936,11 +1919,6 @@ def querysteptype(request):
 		'code': code,
 		'msg': msg}, safe=False)
 
-
-@csrf_exempt
-def regentest(request):
-	TestMind().gen_simple_test_cases(request.POST.get('uid'))
-	return JsonResponse(pkg(code=0, msg=''), safe=False)
 
 
 @csrf_exempt

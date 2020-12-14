@@ -5,6 +5,7 @@
 # @to      :
 
 import traceback, time, datetime, random, re, requests
+from base64 import b64encode
 
 from .context import get_top_common_config, viewcache
 from .db import Mysqloper
@@ -486,7 +487,7 @@ def replaceAndSend(filenames, **kws):
                 tf.write(text)
         # 		远程服务器下载文件
             fileinfo = FileMap.objects.values('customname','targetserver','targetpath','filename').get(path=filename)
-            fileurl = r"%s/file/tempfile?name=%s"%(BASE_URL,fileinfo['customname'])
+            fileurl = r"%s/api/file/tempfile?name=%s"%(BASE_URL,fileinfo['customname'])
             cout('下载路径{}'.format(fileurl), **kws)
             downloadPath = fileinfo['targetpath'] if fileinfo['targetpath'].__contains__(fileinfo['customname']) else fileinfo['targetpath']+'/'+fileinfo['customname']
             cout('服务器文件路径：{}'.format(downloadPath), **kws)
@@ -494,8 +495,11 @@ def replaceAndSend(filenames, **kws):
             hostinfo = DBCon.objects.values('host','port','username','password','description').get(id=int(fileinfo['targetserver']))
     
             win = winrm.Session("http://{}:{}/wsman".format(hostinfo['host'],hostinfo['port']), auth=(hostinfo['username'], hostinfo['password']))
-            ret = win.run_ps(
-                r"""$client = new-object System.Net.WebClient;$client.DownloadFile("{}","{}")""".format(fileurl, downloadPath))
+            # ret = win.run_ps(
+            #     r"""$client = new-object System.Net.WebClient;$client.DownloadFile("{}","{}")""".format(fileurl, downloadPath))
+            script = r"""curl {} -o {}""".format(fileurl, downloadPath)
+            print(script)
+            ret = win.run_cmd(script)
             cout(ret.std_out.decode(), **kws)
             cout(ret.std_err.decode(), **kws)
             cout('服务器%s上文件下载成功<br>'%hostinfo['description'], **kws)
@@ -516,3 +520,25 @@ def replaceAndSend(filenames, **kws):
     cout('=重启dps服务成功=', **kws)
     time.sleep(2)
 
+def DspForward(to,**kws):
+    ok = "fail"
+    msg = ""
+    import socket
+    import traceback
+    cs = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sendmsg = "r" if to==1 else "l"
+    host = "10.60.44.248"
+    port = 9090
+    try:
+        cs.connect((host,port))
+        cs.settimeout(3)
+        cs.sendall(bytes(sendmsg, encoding='GBK'))
+        lenstr = cs.recv(50)
+        msg = lenstr.decode('GBK')
+        ok = "success"
+        import time
+        time.sleep(1)
+    except:
+        msg = "失败"+traceback.format_exc()
+    cout(msg,**kws)
+    return ok, msg

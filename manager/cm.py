@@ -5,6 +5,9 @@
 # @to      :用例管理
 
 import traceback, datetime,json,threading,difflib,asyncio
+
+from ME2 import configs
+from ME2.configs import Fabio_ADDR
 from manager.operate.cron import Cron
 from django.db.models import Q
 from manager import models as mm
@@ -305,20 +308,27 @@ def run(request):
     taskid = gettaskid(planid)
 
     state_running =getRunningInfo(planid=planid,type='isrunning')
-
-    if state_running != '0':
-        msg = {"1":"验证","2":"调试","3":"定时"}[state_running]
+    if state_running != 0:
+        msg = {1:"验证",2:"调试",3:"定时"}[state_running]
         return {
             'status': 'fail',
             'msg': '计划正在运行[%s]任务，稍后再试！'%msg
         }
     logger.info('runidd:',runid)
 
-    x = RunPlan(taskid,planid,runkind,callername,startNodeId=runid)
-    threading.Thread(target=x.start).start()
+    r = requests.post("http://" + Fabio_ADDR + "/task/base/interface",
+                      data={"planid": planid, "username": callername, "runkind": runkind,"startnode":runid,
+                            "from": configs.ID})
+    m =r.json()
+    if m.get("code")==0:
+        taskid = m.get("data")
+    else:
+        return {'status': 'fail', 'msg': m.get("msg"), 'data': planid}
 
-    # t=threading.Thread(target=runplan,args=(callername, taskid, planid, runkind,runid))
-    # t.start()
+    # x = RunPlan(taskid,planid,runkind,callername,startNodeId=runid)
+    # threading.Thread(target=x.start).start()
+
+
     request.session['console_taskid'] = taskid
     return {'status': 'success','msg': taskid,'data':planid}
 
@@ -688,6 +698,10 @@ def addbusiness(request):
         b.description=request.POST.get('description')
         timeout=request.POST.get('timeout')
         b.timeout = timeout if timeout else 60
+        delay = request.POST.get('delay')
+        b.delay = int(delay)  if delay else 0
+        final = request.POST.get('final')
+        b.final = 1 if final== "true" else 0
         # check_result=_check_params(b.params)
         # logger.info('nn=>',check_result)
         # if not check_result:
@@ -792,6 +806,10 @@ def editbusiness(request):
         b.parser_id = request.POST.get('parser_id')
         b.description=request.POST.get('description')
         b.timeout=request.POST.get('timeout')
+        delay = request.POST.get('delay')
+        b.delay = int(delay) if delay else 0
+        final = request.POST.get('final')
+        b.final = 1 if final== "true" else 0
         # check params
         # check_result = _check_params(b.params)
         

@@ -42,9 +42,7 @@ INSTALLED_APPS = [
 	'homepage',
 	'performance',
 	'corsheaders',
-	# 'debug_toolbar.apps.DebugToolbarConfig',
-	# 'pympler',
-	# 'django_crontab',
+	'rpc4django'
 ]
 
 MIDDLEWARE = [

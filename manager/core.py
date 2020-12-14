@@ -783,12 +783,11 @@ class Fu:
 		print("开始更新本地函数信息..")
 		
 		try:
-			list_ = list(models.Function.objects.values('flag','body','name'))
+			list_ = list(models.Function.objects.values('body','name').filter(kind="python"))
 			for x in list_:
 				
-				filename = "func_%s" % x.get('flag')
+				filename = "func_%s" % x.get('name')
 				body = x.get('body')
-				# path = os.path.join(os.path.dirname(__file__), 'Function', author)
 				path = os.path.join(os.path.dirname(__file__), 'storage', 'private', 'Function')
 				print(path)
 				if not os.path.exists(path):
@@ -801,19 +800,9 @@ class Fu:
 						pass
 				
 				path = os.path.join(path, filename + '.py')
-				with open(path, 'w', encoding='utf-8') as f:
-					# print("body=>",body)
-					# print(type(body))
-					a = base64.b64decode(body).decode(encoding='utf-8')
-					# print(a)
-					f.write(a)
+				with open(path, 'w') as f:
+					f.write(body)
 					print("更新函数:%s 完毕." % x.get('name'))
-
-				# if id_ is not None and id_ == x.id:
-				# 	print("*" * 20)
-				# 	print("更新函数:%s 完毕." % x.name)
-				# 	print("*" * 20)
-				# 	return 0
 			
 			print("*" * 20)
 			print("更新所有函数完毕.")
@@ -959,8 +948,13 @@ class Fu:
 			return ('error', '调用表达式[%s]异常[%s]' % (call_str, traceback.format_exc()))
 	
 	@classmethod
-	def getfuncname(cls, body):
-		return re.findall("def[\s+]{1,}(.*?)\(.*?\):", body)
+	def getfuncname(cls, body,kind):
+		if kind == "python":
+			return re.findall("def[\s+]{1,}(.*?)\(.*?\):", body)[0]
+		elif kind == "go":
+			return re.findall("func[\s+]{1,}(.*?)\(.*?\)", body)[0]
+		else:
+			return ""
 
 
 class EncryptUtils:

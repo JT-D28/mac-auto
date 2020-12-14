@@ -100,10 +100,7 @@ class Migration(migrations.Migration):
                 ('kind', models.CharField(default='用户定义', max_length=12)),
                 ('name', models.CharField(max_length=64)),
                 ('description', models.CharField(max_length=128)),
-                ('flag', models.CharField(max_length=32)),
                 ('body', models.TextField(null=True)),
-                ('createtime', models.DateTimeField(auto_now_add=True)),
-                ('updatetime', models.DateTimeField(auto_now=True)),
             ],
         ),
         migrations.CreateModel(

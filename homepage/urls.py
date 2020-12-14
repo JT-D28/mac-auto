@@ -4,7 +4,7 @@ import homepage.views as views
 urlpatterns = [
 	path('queryPlanState/', views.queryPlanState),
 	path('runnodes/', views.runnodes),
-	path('geterrorinfo/', views.geterrorinfo),
+	path('getBusinessLog', views.getBusinessLog),
 	path('getnodes/', views.getnodes),
 	path('gettaskdata/', views.get_task_data),
 	path('gettaskidplan/', views.gettaskidplan),
@@ -26,23 +26,21 @@ urlpatterns = [
 	path('queryallplan/', views.queryallplan),
 	path('globalsetting/', views.globalsetting),
 	path('restart/', views.restart),
-	path('badresult/', views.badresult),
 	path('initbugcount/', views.initbugcount),
 	path('downloadlog/', views.downloadlog),
 	path('downloadReport/', views.downloadReport),
 	path('jenkinsJobRun/', views.jenkinsJobRun),
-	path('statisticalAnalysis/', views.statisticalAnalysis),
 	path('runstatus/', views.runstatus),
 	path('stauteofbusiness/', views.stauteofbusiness),
 
-	path('planreport/', views.planreport),
-	path('planrunnum/', views.planrunnum),
-	path('planpassrate/', views.planpassrate),
-	path('planRunChart/', views.planRunChart),
-	path('planBusinessNum/', views.planBusinessNum),
 	path('HasJacoco/', views.HasJacoco),
 	path('HasGit/', views.HasGit),
 	path('queryCoveryInfo/', views.queryCoveryInfo),
 	path('queryGitCommit/', views.queryGitCommit),
-	path('queryJenkinsUpdatetimes/', views.queryJenkinsUpdatetimes)
+	path('queryJenkinsUpdatetimes/', views.queryJenkinsUpdatetimes),
+	
+	path('queryApiTaskRangeDate',views.queryApiTaskRangeDate),
+	path('queryApiTestReportByTaskId',views.queryApiTestReportByTaskId),
+	path('deleteTask',views.deleteTask),
+	path('queryFailBusiness',views.queryFailBusiness)
 ]

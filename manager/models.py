@@ -7,13 +7,10 @@ from manager.context import Me2Log as logger
 # Create your models here.
 
 class Function(Model):
-	kind = CharField(max_length=12, default='用户定义')
+	kind = CharField(max_length=12)
 	name = CharField(max_length=64)
 	description = CharField(max_length=128)
-	flag = CharField(max_length=32)
 	body = TextField(null=True)
-	createtime = DateTimeField(auto_now_add=True)
-	updatetime = DateTimeField(auto_now=True)
 	
 	def __str__(self):
 		return self.name
@@ -79,6 +76,8 @@ class BusinessData(Model):
 	parser_check = TextField(null=True)  # 解析器校验
 	timeout=IntegerField(default=60)
 	isdelete = IntegerField(default=0)
+	delay = IntegerField(default=0)
+	final = IntegerField(default=0)
 	
 	def __str__(self):
 		return '[%s]%s' % (self.id, self.businessname)

@@ -262,7 +262,6 @@ def _runcase(username, taskid, case0, plan, planresult, runkind, startnodeid=Non
     
     case_run_nodes=_get_final_run_node_id('case_%s'%case0.id)
     subflag=True if set(case_run_nodes).issubset(L) else False
-    print("aaaaaaaaaaaaaaaaaaaaaa,",subflag,case_run_nodes,L)
     logger.info('节点[%s]下有测试点ID：%s'%(case0.description,case_run_nodes))
     # logger.info('传入的最终执行测试点ID：%s'%L)
     if subflag:

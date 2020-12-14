@@ -28,7 +28,6 @@ class Interceptor(MiddlewareMixin):
 		"""
 		
 		_meta = {
-			'Function': 'description',
 			'Interface': 'name',
 			'Tag': 'name',
 			# 'Variable': 'key',
@@ -39,7 +38,6 @@ class Interceptor(MiddlewareMixin):
 			'RemoteLog': 'description'
 		}
 		_m1 = {
-			'Function': '函数',
 			'Interface': '接口',
 			# 'Variable': '变量',
 			'DBCon': '数据连接',
@@ -72,12 +70,6 @@ class Interceptor(MiddlewareMixin):
 				logger.info('==[新增]字段重复校验====')
 				actionV = request.POST.get(_meta[mkey])
 				callstr = "list(models.%s.objects.filter(%s='%s'))" % (mkey, _meta[mkey], actionV)
-				if mkey == 'Function':
-					try:
-						callstr = "list(models.Function.objects.filter(name='%s'))" % \
-						          re.findall('def (.*?)\(.*?\)', request.POST.get('body'))[0]
-					except:
-						return 'error', "函数内容错误"
 				if mkey == 'DBCon':
 					schemevalue=request.POST.get('scheme')
 					description=request.POST.get('description')

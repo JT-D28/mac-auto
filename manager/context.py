@@ -223,11 +223,11 @@ def setRunningInfo(planid, taskid, runkind, dbscheme='全局'):
         Mongo.taskid().insert_one({"planid": planid, "runkind": "0", "dbscheme": "全局", "verify": "", "debug": ""})
     updatestr=''
     if runkind in ['1', '3']:
-        updatestr = {"runkind": runkind, "verify": taskid, "dbscheme": dbscheme}
+        updatestr = {"runkind": int(runkind), "verify": taskid, "dbscheme": dbscheme}
     elif runkind == '2':
-        updatestr = {"runkind": "2", "debug": taskid, "dbscheme": dbscheme}
+        updatestr = {"runkind": 2, "debug": taskid, "dbscheme": dbscheme}
     elif runkind == '0':
-        updatestr = {"runkind": "0"}
+        updatestr = {"runkind": 0}
 
     Mongo.taskid().update({"planid": planid}, {"$set": updatestr})
 
@@ -244,7 +244,7 @@ def getRunningInfo(planid='', type='isrunning'):
     elif type == 'verify_taskid':
         return _runninginfo.get('verify','')
     elif type == 'isrunning':
-        return _runninginfo.get('runkind','0')
+        return _runninginfo.get('runkind',0)
     elif type == 'dbscheme':
         from .models import Plan
         nofind = Plan.objects.get(id=planid).dbscheme

@@ -2,9 +2,12 @@ import threading
 import traceback
 import time
 import jenkins
+import requests
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from ME2 import configs
+from ME2.configs import Fabio_ADDR
 from homepage.models import Jenkins
 from homepage.views.charts import dealJacocoJobName
 from manager.StartPlan import RunPlan
@@ -106,15 +109,20 @@ def manyRun(jacocoConfig, callername):
     # 1.执行清理
     jenkinsBuild(url, name, pwd, [clearjob])
     # 2.运行me2自动化计划
-    time.sleep(3)
+    time.sleep(10)
     for i in buildplans.split(','):
         planid = i[5:]
         try:
-            plan = Plan.objects.get(id=planid)
-            taskid = gettaskid(planid)
-            print('开始执行计划【%s】' % plan.description)
-            x = RunPlan(taskid, planid, '1', callername, startNodeId=i)
-            x.start()
+            r = requests.post("http://" + Fabio_ADDR + "/task/base/interface",
+                              data={"planid": planid, "username": callername, "runkind": "1",
+                                    "startnode": i,
+                                    "from": configs.ID})
+            # plan = Plan.objects.get(id=planid)
+            # taskid = gettaskid(planid)
+            
+            # print('开始执行计划【%s】' % plan.description)
+            # x = RunPlan(taskid, planid, '1', callername, startNodeId=i)
+            # x.start()
         except:
             pass
     jobs=[]

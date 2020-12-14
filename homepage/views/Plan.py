@@ -13,6 +13,7 @@ from manager.context import getRunningInfo, setRunningInfo
 from manager.core import simplejson
 from manager.models import Plan
 
+
 @csrf_exempt
 def queryplanlist(request):
 	productid = request.POST.get('id')
@@ -50,17 +51,21 @@ def queryallplan(request):
 def queryplan(request):
 	code, msg = 0, ''
 	pid = request.POST.get('id')
-	sql = '''
-    SELECT COUNT(DISTINCT taskid) as 'total',sum(CASE WHEN r.result='success' THEN 1 ELSE 0 END) AS '成功数' ,count(*) as '总数'
-    FROM manager_resultdetail r WHERE r.plan_id IN (SELECT follow_id FROM manager_order WHERE main_id=%s)
-    AND r.result NOT IN ('omit') AND r.is_verify in (1,3)
-    '''
-	with connection.cursor() as cursor:
-		cursor.execute(sql, [pid])
-		desc = cursor.description
-		rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
-	success_rate = rows[0]['成功数'] / rows[0]['总数'] * 100 if rows[0]['总数'] != 0 else 0
-	total = rows[0]['total'] if rows[0]['total'] is not None else 0
+	
+	# sql = '''
+    # SELECT COUNT(DISTINCT taskid) as 'total',sum(CASE WHEN r.result='success' THEN 1 ELSE 0 END) AS '成功数' ,count(*) as '总数'
+    # FROM manager_resultdetail r WHERE r.plan_id IN (SELECT follow_id FROM manager_order WHERE main_id=%s)
+    # AND r.result NOT IN ('omit') AND r.is_verify in (1,3)
+    # '''
+	# with connection.cursor() as cursor:
+	# 	cursor.execute(sql, [pid])
+	# 	desc = cursor.description
+	# 	rows = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+	# success_rate = rows[0]['成功数'] / rows[0]['总数'] * 100 if rows[0]['总数'] != 0 else 0
+	# total = rows[0]['total'] if rows[0]['total'] is not None else 0
+	
+	
+	
 	
 	jacocoset = Jenkins.objects.values().filter(productid=pid) if pid != '' else None
 	service = [{'id': 0, 'name': '总计'}]
@@ -84,7 +89,7 @@ def queryplan(request):
 				'name': '%s' % plan.description,
 			})
 		return JsonResponse(
-			simplejson(code=0, msg='操作成功', data=datanode, rate=str(success_rate)[0:5], total=total, service=service),
+			simplejson(code=0, msg='操作成功', data=datanode, service=service),
 			safe=False)
 	except:
 		print(traceback.format_exc())

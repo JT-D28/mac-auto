@@ -42,5 +42,6 @@ urlpatterns = [
 	path('queryApiTaskRangeDate',views.queryApiTaskRangeDate),
 	path('queryApiTestReportByTaskId',views.queryApiTestReportByTaskId),
 	path('deleteTask',views.deleteTask),
-	path('queryFailBusiness',views.queryFailBusiness)
+	path('queryFailBusiness',views.queryFailBusiness),
+	path('getPlanExportData',views.getPlanExportData)
 ]

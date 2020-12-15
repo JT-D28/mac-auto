@@ -1021,25 +1021,25 @@ def executeFunction(funcName,params,taskid):
 	try:
 		function = Function.objects.filter(name=funcName.strip())
 		if function:
-			f = function.first()
-			if f.kind=="内置":
+			func = function.first()
+			if func.kind=="内置":
 				Me2Log.info("执行内置：",execStr)
 				result = eval(execStr)
 				logger.info("调用内置函数表达式:%s 结果为:%s" % (execStr, result))
 			else:
 				logger.info("尝试调用用户定义函数:%s" %execStr)
-				f = __import__('manager.storage.private.Function.func_%s' % f.name, fromlist=True)
+				f = __import__('manager.storage.private.Function.func_%s' % func.name, fromlist=True)
 				execStr = "f.%s" % execStr.replace('\n', '')
 				result = eval(execStr)
-				del sys.modules['manager.storage.private.Function.func_%s' % f.name]
+				del sys.modules['manager.storage.private.Function.func_%s' % func.name]
 				logger.info("调用用户定义表达式:%s 结果为:%s" % (execStr, result))
 		else:
 			result = ("fail", "未找到对应的函数")
 
 	except:
 		logger.error(traceback.format_exc())
-		msg = '函数参数数量错误，请检查' if 'got an unexpected keyword' in traceback.format_exc() else traceback.format_exc()
-		return 'error', '函数执行错误' + msg
+		msg =  traceback.format_exc()
+		return 'error', '函数执行错误:' + msg
 	
 	if isinstance(result, (tuple,)):
 		return result

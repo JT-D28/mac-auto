@@ -28,8 +28,8 @@ def reportchart(request):
 			 info["successrate"], r["taskid"]])
 	
 	pipeline = [
-		{'$match': {'planid': int(planid), 'info.runkind': {'$in': [1, 3]}}},
-		{'$group': {'_id': "$planid", "rate": {"$avg": "$statistics.rate"}, "total": {"$sum": 1}}}
+		{'$match': {'planid': int(planid), 'kind': {'$in': [1, 3]}}},
+		{'$group': {'_id': "$planid", "rate": {"$avg": "$statistics.successrate"}, "total": {"$sum": 1}}}
 	]
 	planAggregate = list(Mongo.taskResult().aggregate(pipeline))
 	print(planAggregate)

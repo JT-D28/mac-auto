@@ -196,7 +196,13 @@ def queryApiTaskRangeDate(request):
 	res = list(Mongo.taskResult().find(
 		{'planid': planId, 'kind': {'$in': runkind}, "timestamp": {"$lt": endDate, "$gt": startDate}},
 		{"_id": 0, "time": 1, "info": 1, "taskid": 1, "statistics": 1}).sort("_id", -1))
-	return JsonResponse({"code": 0, "data": {"tasks": res, "total": len(res)}})
+	
+	pipeline = [
+		{'$match': {'planid': planId, "timestamp": {"$lt": endDate, "$gt": startDate}}},
+		{'$group': {'_id': "$kind", "total": {"$sum": 1},"rate": {"$avg": "$statistics.successrate"}, }}
+	]
+	kindAggregate = list(Mongo.taskResult().aggregate(pipeline))
+	return JsonResponse({"code": 0, "data": {"tasks": res, "total": kindAggregate}})
 
 
 def deleteTask(request):
@@ -295,4 +301,16 @@ def queryFailBusiness(request):
 	else:
 		res = Mongo.logsplit(taskid).find({'result.state': {"$in": ["fail", "error"]}}, {"_id": 0})
 	return JsonResponse({'code': 0, 'data': list(res)})
+
+
+def getPlanExportData(request):
+	id = request.POST.get("id")
+	name = Plan.objects.get(id=id).name
+	data = {
+		"name":name,
+		"now":{},
+		"last":{},
+	}
 	
+	
+	return JsonResponse({'code': 0, 'data': data})

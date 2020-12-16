@@ -318,8 +318,9 @@ class MainSender:
 		# bodyhtml='<span style="float:right;font-size:1px;font-color:#eee;">%s-%s</span>'%(data['taskid'],data['planid'])
 		bodyhtml += '<h2 style="text-align: center;">[%s]接口测试报告</h2>' % data['planname']
 		bodyhtml += "<p class='attribute'><strong>测试结果</strong></p>"
-		bodyhtml += "<table><tr><th>#Samples</th><th>Failures</th><th>Success Rate</th><th>Average Time</th><th>Min Time</th><th>Max Time</th></tr><tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr></table>" % (
-			data['total'], data['fail'], data['success_rate'], data['average'], data['min'], data['max'])
+		bodyhtml += "<table><tr><th>用例数</th><th>成功数</th><th>失败数</th><th>成功率</th><th>平均时间(ms)</th><th>最小时间(ms)</th><th>最大时间(ms)</th><th>耗时</th></tr><tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr></table>" % (
+			data['total'], data['success'], data['fail'], data['success_rate'], data['average'], data['min'], data['max'],
+		str(round(data["totaltime"]/60))+' 分钟' if data["totaltime"]>100 else (data["totaltime"])+ ' 秒')
 		bodyhtml += "<strong>测试详情</strong>"
 
 		for case in data['cases']:

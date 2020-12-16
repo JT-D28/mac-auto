@@ -183,8 +183,8 @@ def genTime(timestr, format_string='%Y-%m-%d %H:%M:%S'):
 def queryApiTestReportByTaskId(request):
 	taskId = request.POST.get("taskId")
 	planId = request.POST.get("planId")
-	r = Mongo.taskResult().find_one({'planid':int(planId),"taskid":taskId},{"_id":0})
-	return JsonResponse({"code": 0, "data":r})
+	r = Mongo.taskResult().find_one({'planid': int(planId), "taskid": taskId}, {"_id": 0})
+	return JsonResponse({"code": 0, "data": r})
 
 
 def queryApiTaskRangeDate(request):
@@ -197,12 +197,7 @@ def queryApiTaskRangeDate(request):
 		{'planid': planId, 'kind': {'$in': runkind}, "timestamp": {"$lt": endDate, "$gt": startDate}},
 		{"_id": 0, "time": 1, "info": 1, "taskid": 1, "statistics": 1}).sort("_id", -1))
 	
-	pipeline = [
-		{'$match': {'planid': planId, "timestamp": {"$lt": endDate, "$gt": startDate}}},
-		{'$group': {'_id': "$kind", "total": {"$sum": 1},"rate": {"$avg": "$statistics.successrate"}, }}
-	]
-	kindAggregate = list(Mongo.taskResult().aggregate(pipeline))
-	return JsonResponse({"code": 0, "data": {"tasks": res, "total": kindAggregate}})
+	return JsonResponse({"code": 0, "data": res})
 
 
 def deleteTask(request):
@@ -256,8 +251,8 @@ def getnodes(request):
 	kind = request.POST.get('kind')
 	taskid = request.POST.get('taskid')
 	try:
-		key = "%s_%s"%(kind,nodeid)
-		data =Mongo.taskRecords().find_one({"taskid": taskid})["node"][key]
+		key = "%s_%s" % (kind, nodeid)
+		data = Mongo.taskRecords().find_one({"taskid": taskid})["node"][key]
 		print(data)
 		if request.POST.get('viewkind') == 'fail':
 			for i in range(len(data) - 1, -1, -1):
@@ -297,7 +292,8 @@ def queryFailBusiness(request):
 	taskid = request.POST.get('taskid')
 	oldCount = request.POST.get('oldCount')
 	if oldCount:
-		res = Mongo.logsplit(taskid).find({'result.state': {"$in":["fail","error"]}},{"_id":0}).limit(10).skip(int(oldCount))
+		res = Mongo.logsplit(taskid).find({'result.state': {"$in": ["fail", "error"]}}, {"_id": 0}).limit(10).skip(
+			int(oldCount))
 	else:
 		res = Mongo.logsplit(taskid).find({'result.state': {"$in": ["fail", "error"]}}, {"_id": 0})
 	return JsonResponse({'code': 0, 'data': list(res)})
@@ -305,12 +301,56 @@ def queryFailBusiness(request):
 
 def getPlanExportData(request):
 	id = request.POST.get("id")
-	name = Plan.objects.get(id=id).name
-	data = {
-		"name":name,
-		"now":{},
-		"last":{},
+	startDate = int(request.POST.get("startDate"))
+	endDate = int(request.POST.get("endDate"))
+	info = {"time": [], "合计": {"num": 0, "rate": 0, "avgCase": 0, "maxCase": 0},
+	        "验证": {"num": 0, "rate": 0},
+	        "定时": {"num": 0, "rate": 0},
+	        "调试": {"num": 0, "rate": 0},
+	        "rank": []}
+	data = {"name": Plan.objects.get(id=id).description,
+	        "current": info.copy(),
+	        "last": info.copy()
+	        }
+	timeRange = {
+		"current": [startDate, endDate],
+		"last": [startDate-1 - (endDate - startDate), startDate-1]
 	}
-	
+	for kind, timeR in timeRange.items():
+		td = data[kind]
+		match = {'$match': {'planid': int(id), "timestamp": {"$lt": timeR[1], "$gt": timeR[0]}}}
+		Total_NUM_RATE_CASE = [
+			match, {'$group': {'_id': '', 'num': {'$sum': 1}, 'rate': {'$avg': '$statistics.successrate'},
+			                   'avgCase': {'$avg': '$statistics.total'},
+			                   'maxCase': {'$max': '$statistics.total'}}}
+		]
+		
+		kind_NUM_RATE = [match,
+		                 {'$group': {'_id': "$info.runkind", "num": {"$sum": 1},
+		                             "rate": {"$avg": "$statistics.successrate"}}}]
+		user_rank = [match, {'$group': {'_id': '$info.user', 'num': {'$sum': 1}}}, {'$sort': {'num': -1}},
+		             {'$limit': 3}]
+		
+		td["time"] = [timeFormat(timeR[0]), timeFormat(timeR[1])]
+		
+		tl = list(Mongo.taskResult().aggregate(Total_NUM_RATE_CASE))
+		if len(tl) > 0:
+			r = tl[0]
+			td["合计"] = {'num': r["num"], 'rate': round(r["rate"], 2), 'avgCase': round(r["avgCase"], 2),
+			            'maxCase': r["maxCase"]}
+		
+		Aggregate = Mongo.taskResult().aggregate(kind_NUM_RATE)
+		for i in Aggregate:
+			td[i["_id"]] = {'num': i["num"], 'rate': round(i["rate"], 2)}
+		
+		td["rank"] = []
+		for i in Mongo.taskResult().aggregate(user_rank):
+			td["rank"].append({"user": i["_id"], "num": i["num"]})
+		
+		data[kind] = td
 	
 	return JsonResponse({'code': 0, 'data': data})
+
+
+def timeFormat(timeStamp):
+	return time.strftime("%m-%d", time.localtime(timeStamp))

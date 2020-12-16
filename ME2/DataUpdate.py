@@ -6,6 +6,8 @@ from manager.models import Variable, Tag, Product, Plan, Varspace, Order
 
 
 def varUpdate():
+	Varspace(name="全局").save()
+	
 	for var in Variable.objects.all():
 		tag = Tag.objects.get(var_id=var.id)
 		planids = eval(tag.planids)
@@ -40,6 +42,8 @@ def varUpdate():
 					p.varspace = vs.id
 					p.save()
 	
+	gsid = Varspace.objects.get(name="全局").id
+	
 	for var in Variable.objects.all():
 		tag = Tag.objects.get(var_id=var.id)
 		if tag.customize != "Tag object (None)":
@@ -52,7 +56,7 @@ def varUpdate():
 			var.label = ""
 		planids = eval(tag.planids)
 		if tag.isglobal == 1 and len(planids.keys()) == 0:
-			var.space_id = "0"
+			var.space_id = gsid
 			var.save()
 		else:
 			if len(planids.keys()) > 1:
@@ -85,7 +89,7 @@ def varUpdate():
 
 
 def spaceUpdate():
-	vs = Varspace.objects.all()
+	vs = Varspace.objects.exclude(name="全局")
 	
 	for v in vs:
 		planname = v.name.split("_")[0]

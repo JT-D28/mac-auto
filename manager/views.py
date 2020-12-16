@@ -1517,11 +1517,20 @@ def querytag(request):
 
 
 def queryVarSpace(request):
-	spaceList = [{"id": 0, "name": "全局", "planid": 0}]
-	spaces = Varspace.objects.values().all()
-	spaceList.extend(list(spaces))
-	return JsonResponse({'code': 0, 'data': spaceList})
-
+	if request.POST.get("type")=="all":
+		spaceList = list(Varspace.objects.values().all())
+		return JsonResponse({'code': 0, 'data': spaceList})
+	else:
+		page = int(request.POST.get("page"))
+		limit = int(request.POST.get("limit"))
+		
+		sql = '''SELECT id,name,num from manager_varspace s left join
+		(SELECT v.space_id sid,COUNT(*) num FROM `manager_variable` v GROUP BY v.space_id) t on s.id=t.sid order by num desc limit %s,%s'''
+		with connection.cursor() as cursor:
+			cursor.execute(sql,[(page-1)*limit,limit])
+			spaceList = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+		total = Varspace.objects.count()
+		return JsonResponse({'code': 0, 'data': spaceList,"total":total})
 
 '''
 报文模板

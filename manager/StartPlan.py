@@ -7,6 +7,7 @@ import socket
 import sys
 import time
 import traceback
+from decimal import Decimal
 from urllib import parse
 import requests
 from django.db.models import Q
@@ -134,9 +135,10 @@ class RunPlan:
 			asyncio.set_event_loop(asyncio.new_event_loop())
 			loop = asyncio.get_event_loop()
 			loop.run_until_complete(
-				dealruninfo(self.planId, self.taskId,spendTime,self.runKind,
+				dealruninfo(self.planId, self.taskId, spendTime, self.runKind,
 				            {'dbscheme': self.plan.dbscheme, 'planname': self.plan.description,
-				             'user': self.user.name, 'runkind': {"1": "验证", "2": "调试", "3": "定时"}[self.runKind]}, self.startNodeId))
+				             'user': self.user.name, 'runkind': {"1": "验证", "2": "调试", "3": "定时"}[self.runKind]},
+				            self.startNodeId))
 		
 		except Exception as e:
 			logger.error('执行计划未知异常：', traceback.format_exc())
@@ -144,8 +146,7 @@ class RunPlan:
 		
 		finally:
 			setRunningInfo(self.planId, self.taskId, '0')
-			processSendReport(self.taskId, self.plan.mail_config_id, self.user.name,spendTime)
-
+			processSendReport(self.taskId, self.plan.mail_config_id, self.user.name, spendTime)
 	
 	def runCase(self, case):
 		caseSuccess = True
@@ -155,18 +156,18 @@ class RunPlan:
 		# 设置标记
 		subFlag = True if set(case_run_nodes).issubset(self.finalNode) else False
 		logger.info('用例[%s]下有测试点ID：%s' % (case.description, case_run_nodes))
-		if case.count in [ None,"None"]:
+		if case.count in [None, "None"]:
 			case.count = 1
 			case.save()
 		caseCount = 0 if case.count in [0, '0', ''] else int(case.count)
-
-		if subFlag and caseCount!=0:
+		
+		if subFlag and caseCount != 0:
 			self.log("开始执行用例[<span id='case_%s' style='color:#FF3399'>%s</span>]" % (case.id, case.description))
 		# 获取用例的子节点（有用例和步骤两种情况，需要按照正常顺序）
 		subList = ordered(list(Order.objects.filter(Q(kind='case_step') | Q(kind='case_case'), main_id=case.id)))
 		for i in range(caseCount):
 			self.setDbUse(case.db_id, 'case')
-		
+			
 			for subNode in subList:
 				try:
 					if subNode.kind == 'case_case':
@@ -182,19 +183,19 @@ class RunPlan:
 						stepCount = 0 if step.count in [0, '0', '', None] else int(step.count)
 						for i in range(stepCount):
 							self.setDbUse(case.db_id, 'step')
-							if not self.runStep(step, case.id,groupSkip):
+							if not self.runStep(step, case.id, groupSkip):
 								caseSuccess = False
 				except:
 					print(traceback.format_exc())
 					continue
-		if subFlag and caseCount!=0:
+		if subFlag and caseCount != 0:
 			color, succss = ('green', 'success') if caseSuccess else ('red', 'fail')
 			self.log("结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-%s'>%s</span>" % (
 				case.description, color, succss))
 		
 		return caseSuccess
 	
-	def runStep(self, step, caseId,groupSkip):
+	def runStep(self, step, caseId, groupSkip):
 		case = Case.objects.get(id=caseId)
 		stepSuccessFlag = True
 		num = 0
@@ -277,27 +278,28 @@ class RunPlan:
 		if status is not 'success':
 			return status, res
 		
-		if step.step_type == 'interface' and step.content_type=='xml' and int(time.mktime(step.updatetime.timetuple()))<1600845096:
+		if step.step_type == 'interface' and step.content_type == 'xml' and int(
+				time.mktime(step.updatetime.timetuple())) < 1600845096:
 			# 能够确定是socket请求 兼容老的数据，把socket筛选出来并且保存新的值
-			isOk, url = self.ParameterReplace(step.url, "地址",show=False)
+			isOk, url = self.ParameterReplace(step.url, "地址", show=False)
 			if not isOk:
 				return 'fail', url
 			if not url.__contains__("http"):
-				step.step_type='socket'
-				step.content_type=''
+				step.step_type = 'socket'
+				step.content_type = ''
 				step.save()
-				return self.runSocket(step,point,postPosition_List,checkStr,timeout)
+				return self.runSocket(step, point, postPosition_List, checkStr, timeout)
 		
 		if step.step_type == 'interface':
-			return self.runInterface(step,point,postPosition_List,checkStr,timeout)
+			return self.runInterface(step, point, postPosition_List, checkStr, timeout)
 		
 		elif step.step_type == 'function':
-			return self.runFunction(step,point,postPosition_List,checkStr)
+			return self.runFunction(step, point, postPosition_List, checkStr)
 		
-		elif step.step_type =='socket':
-			return self.runSocket(step,point,postPosition_List,checkStr,timeout)
+		elif step.step_type == 'socket':
+			return self.runSocket(step, point, postPosition_List, checkStr, timeout)
 	
-	def runInterface(self,step,point,postPosition_List,checkStr,timeout):
+	def runInterface(self, step, point, postPosition_List, checkStr, timeout):
 		params = point.queryparams if point.queryparams else ''
 		body = point.params if point.params else ''
 		url = step.url
@@ -357,7 +359,7 @@ class RunPlan:
 				return 'fail', '数据校验没有全部通过'
 		return 'success', ''
 	
-	def runFunction(self,step,point,postPosition_List,checkStr):
+	def runFunction(self, step, point, postPosition_List, checkStr):
 		param = point.params
 		functionId = step.related_id
 		funcName = step.body
@@ -392,7 +394,7 @@ class RunPlan:
 				return 'fail', '数据校验没有全部通过'
 		return 'success', ''
 	
-	def runSocket(self,step,point,postPosition_List,checkStr,timeout):
+	def runSocket(self, step, point, postPosition_List, checkStr, timeout):
 		body = point.params if point.params else ''
 		url = step.url
 		temporaryVariable = step.temp
@@ -485,21 +487,21 @@ class RunPlan:
 					return status, res
 		return 'success', ''
 	
-	def ParameterReplace(self, original, type, responseText=None,show=True):
+	def ParameterReplace(self, original, type, responseText=None, show=True):
 		# 替换属性
 		isOk, str = self.replaceProperty(original)
 		if not isOk:
 			return False, str
-		print("替换属性后返回的",isOk,str)
-
+		print("替换属性后返回的", isOk, str)
+		
 		isOk, str = self.replaceVariable(str, responseText)
-		print("替换变量后返回的",isOk,str)
+		print("替换变量后返回的", isOk, str)
 		if not isOk:
 			return False, str
 		isOk, str = self.replaceFunction(str)
 		if not isOk:
 			return False, str
-
+		
 		if original != str and show:
 			self.log(
 				"<span style='color:#009999;'>原始的%s=><xmp style='color:#009999;'>%s</xmp></span>" % (type, original))
@@ -507,15 +509,15 @@ class RunPlan:
 		elif original.strip() != '{}' and show:
 			self.log(
 				"<span style='color:#009999;'>%s=><xmp style='color:#009999;'>%s</xmp></span>" % (type, original))
-			
+		
 		return True, str
 	
 	def apiRequest(self, method, requestData, timeout):
-		if method.upper()=='GET':
-			if requestData['params'] in [None,'','{}',{}]:
+		if method.upper() == 'GET':
+			if requestData['params'] in [None, '', '{}', {}]:
 				requestData['params'] = requestData['body'].decode()
 				requestData['body'] = None
-		print("++++++++请求参数+++++++\n",requestData)
+		print("++++++++请求参数+++++++\n", requestData)
 		try:
 			rps = self.taskSession.request(
 				method=method,
@@ -527,7 +529,7 @@ class RunPlan:
 				timeout=(10, timeout),
 				proxies=self.proxy)
 		except Exception as e:
-			logger.info("请求发生异常",e)
+			logger.info("请求发生异常", e)
 			if 'timed out' in e.__str__():
 				info = 'fail'
 				msg = '请求超时 %s' % e
@@ -556,8 +558,8 @@ class RunPlan:
 			isOk, headers = self.ParameterReplace(headers, "请求头")
 			if not isOk:
 				return 'fail', headers
-			if headers=="":
-				headers="{}"
+			if headers == "":
+				headers = "{}"
 			try:
 				headers = eval(headers)
 				if not headers.get('User-Agent', None):
@@ -567,7 +569,7 @@ class RunPlan:
 				print(traceback.format_exc())
 				return 'error', "headers转换失败，可能有误"
 			# 兼容旧的数据
-			if content_type=="json" or "application/json" in content_type :
+			if content_type == "json" or "application/json" in content_type:
 				headers["Content-Type"] = 'application/json;charset=UTF-8'
 				# 	body最终由dict类型转换成json字符串
 				p1 = lambda x: json.loads(x)  # 格式是{"a":1,"b":2} 正确json格式
@@ -592,10 +594,12 @@ class RunPlan:
 				except:
 					if body.startswith("{") and not body.startswith("{{") and '"' in body:
 						try:
-							body = parse.urlencode(json.loads(body)).replace("None",'null').replace("True",'true').replace("False",'false')
+							body = parse.urlencode(json.loads(body)).replace("None", 'null').replace("True",
+							                                                                         'true').replace(
+								"False", 'false')
 						except:
 							return 'error', '请求内容转换失败，请检查格式'
-					# 	转换失败则保留原格式
+				# 	转换失败则保留原格式
 				body = body.encode('utf-8')
 			elif 'xml' in content_type:
 				headers["Content-Type"] = 'application/xml'
@@ -611,7 +615,7 @@ class RunPlan:
 								filepath = os.path.join(get_space_dir(), v)
 								if os.path.exists(filepath):
 									files[k] = (v, open(filepath, 'rb'))
-									
+								
 								elif os.path.exists(os.path.join(get_space_dir(), '默认', v)):
 									files[k] = (v, open(os.path.join(get_space_dir(), '默认', v), 'rb'))
 								else:
@@ -632,7 +636,7 @@ class RunPlan:
 		}
 	
 	# 数据校验
-	def formulaCheck(self, formula, rps_text='', parse_type='', rps_header='',request_body='',body_type='json'):
+	def formulaCheck(self, formula, rps_text='', parse_type='', rps_header='', request_body='', body_type='json'):
 		resultlist = []
 		try:
 			checklist = [x for x in formula.strip().split("|") if len(x) > 0]
@@ -686,10 +690,10 @@ class RunPlan:
 							pass
 					else:
 						request_body = parse.unquote(request_body)
-					if body_type =='urlencode':
+					if body_type == 'urlencode':
 						obj = {}
 						for item in request_body.split("&"):
-							a,b = item.split("=")
+							a, b = item.split("=")
 							obj[a] = b
 						p = JSONParser(json.dumps(obj))
 					elif body_type == 'json':
@@ -698,9 +702,9 @@ class RunPlan:
 						p = XMLParser(request_body.replace('\n', '', 1))
 					if p:
 						key = p.getValue(k.replace("request.body.", ""))
-						key = str(key.replace('\r','').replace('\n','').strip())
+						key = str(key.replace('\r', '').replace('\n', '').strip())
 						
-						self.calculation(resultlist,key,op,str(v),successMsg,failMsg)
+						self.calculation(resultlist, key, op, str(v), successMsg, failMsg)
 					else:
 						resultlist.append(('error', "不支持的请求内容解析类型"))
 				else:
@@ -718,10 +722,10 @@ class RunPlan:
 						else:
 							# 	保持原生字符串
 							tempv = k
-						if tempv in ['None',None]:
+						if tempv in ['None', None]:
 							tempv = k
 						logger.info('表达式合成{%s,%s,%s}' % (str(tempv), op, v))
-						self.calculation(resultlist,str(tempv),op,str(v),successMsg,failMsg)
+						self.calculation(resultlist, str(tempv), op, str(v), successMsg, failMsg)
 					except:
 						logger.error(traceback.format_exc())
 						resultlist.append(('fail', failMsg + '响应内容与预期不一致'))
@@ -733,12 +737,12 @@ class RunPlan:
 		
 		return resultlist
 	
-	def calculation(self,resultlist,k,op,v,successMsg,failMsg):
+	def calculation(self, resultlist, k, op, v, successMsg, failMsg):
 		exp = "".join([k, op, v])
-		print(exp,successMsg,failMsg)
+		print(exp, successMsg, failMsg)
 		try:
 			rr = eval(exp)
-			result = ('success', successMsg) if rr else ('fail', failMsg+'期望值【%s】,实际值【%s】' % (v, k))
+			result = ('success', successMsg) if rr else ('fail', failMsg + '期望值【%s】,实际值【%s】' % (v, k))
 			resultlist.append(result)
 		except:
 			logger.info('表达式等号两边加单引号后尝试判断..')
@@ -752,7 +756,7 @@ class RunPlan:
 			resultlist.append(result)
 	
 	# 属性变量保存
-	def saveProperty(self, target, responsetext,type='json'):
+	def saveProperty(self, target, responsetext, type='json'):
 		cur = None
 		try:
 			if target is None or len(target) == 0:
@@ -767,7 +771,7 @@ class RunPlan:
 			for key, v in target.items():
 				cur = key
 				print("储存临时属性变量 响应内容:\n%s" % (responsetext))
-				p = JSONParser(responsetext) if type=='json' else XMLParser(responsetext)
+				p = JSONParser(responsetext) if type == 'json' else XMLParser(responsetext)
 				value = p.getValue(v)
 				if value != 0 and not value:
 					value = v
@@ -797,14 +801,19 @@ class RunPlan:
 		return True, text
 	
 	# 替换变量
-	def replaceVariable(self, text, responseText='',needCacheVar=False):
+	def replaceVariable(self, text, responseText='', needCacheVar=False):
 		try:
 			varKeys = re.findall('{{(.*?)}}', text)
 			logger.info('varnames:', varKeys)
+			
+			sumVar = {}
+			for needSumVar in re.findall('{{SUM_(.*?)}}', text):
+				sumVar[needSumVar] = 0
+			
 			for varKey in varKeys:
 				oldvarKey = varKey
 				if varKey.startswith('CACHE_'):
-					varKey = varKey.replace("CACHE_","")
+					varKey = varKey.replace("CACHE_", "")
 					needCacheVar = True
 				if varKey.strip() == 'STEP_PARAMS':
 					dictparams = self.get_step_params(text)
@@ -812,6 +821,8 @@ class RunPlan:
 					logger.info('==STEP_PARAMS替换前=>\n', text)
 					text = text.replace('{{%s}}' % varKey, str(dictparams))
 					logger.info('==STEP_PARAMS替换后=>\n', text)
+					continue
+				if varKey.startswith("SUM_"):
 					continue
 				
 				elif varKey.strip() == 'RESPONSE_TEXT':
@@ -823,22 +834,22 @@ class RunPlan:
 				# 筛选全局或者局部变量useVar
 				useVar = Variable.objects.filter(key=varKey, space_id=0)
 				spaceName = "全局"
-				if self.plan.varspace!=0:
-					spaceVar = Variable.objects.filter(key=varKey,space_id=self.plan.varspace)
+				if self.plan.varspace != 0:
+					spaceVar = Variable.objects.filter(key=varKey, space_id=self.plan.varspace)
 					if spaceVar.exists():
 						useVar = spaceVar
-						
+					
 					elif not useVar.exists():
 						return False, '字符串[%s]变量【%s】替换异常,未在局部变量和全局变量中找到，请检查是否已正确配置' % (text, varKey)
 				useVar = useVar.first()
 				
-				spaceName ="全局" if useVar.space_id==0 else Varspace.objects.get(id=useVar.space_id).name
-				self.log('使用[%s]变量 %s 描述：%s' % (spaceName,varKey, useVar.description))
+				spaceName = "全局" if useVar.space_id == 0 else Varspace.objects.get(id=useVar.space_id).name
+				self.log('使用[%s]变量 %s 描述：%s' % (spaceName, varKey, useVar.description))
 				
-				isOk, gain = self.replaceVariable(useVar.gain,needCacheVar=needCacheVar)
+				isOk, gain = self.replaceVariable(useVar.gain, needCacheVar=needCacheVar)
 				if not isOk:
 					return False, gain
-				isOk, value = self.replaceVariable(useVar.value,needCacheVar=needCacheVar)
+				isOk, value = self.replaceVariable(useVar.value, needCacheVar=needCacheVar)
 				if not isOk:
 					return False, value
 				
@@ -847,8 +858,15 @@ class RunPlan:
 				elif len(gain) == 0 and len(value) > 0:
 					text = text.replace('{{%s}}' % varKey, value, 1)
 					self.log('替换变量 {{%s}}=>%s' % (varKey, value))
+					
+					if varKey in sumVar:
+						try:
+							sumVar[varKey] += Decimal(value)
+						except:
+							pass
+					
 				elif len(gain) > 0 and len(value) == 0:
-					print("计算 gain",gain)
+					print("计算 gain", gain)
 					
 					if useVar.is_cache is True or needCacheVar:
 						varCache = self.redisCon.hget(self.taskId + '_varCache', varKey)
@@ -857,7 +875,7 @@ class RunPlan:
 						else:
 							isOk, gainValue = self.gainCompute(gain)
 							if isOk is not 'success':
-								return False,gainValue
+								return False, gainValue
 							self.redisCon.hset(self.taskId + '_varCache', varKey, gainValue)
 							self.redisCon.expire(self.taskId + '_varCache', 3600)
 					else:
@@ -866,26 +884,34 @@ class RunPlan:
 						if isOk is not 'success':
 							return False, gainValue
 						self.redisCon.hset(self.taskId + '_varCache', varKey, gainValue)
-						self.redisCon.expire(self.taskId + '_varCache',3600)
+						self.redisCon.expire(self.taskId + '_varCache', 3600)
 					
 					# 通过获取方式计算的变量都加入缓存中，后面使用的会覆盖老的值，在进行校验步骤时先尝试从缓存中获取，没有的话再重新计算。开启了缓存按钮的变量从始至终保持。
-					
-
+					if oldvarKey in sumVar:
+						try:
+							sumVar[oldvarKey] += Decimal(gainValue)
+						except:
+							pass
 					
 					self.log('替换变量 {{%s}}=>%s' % (oldvarKey, gainValue))
 					text = text.replace('{{%s}}' % oldvarKey, str(gainValue), 1)
 				elif len(gain) == 0 and len(value) == 0:
 					return False, '变量【%s】未设定获取方式或者值，请修改' % varKey
+				
+			for needSumVar in re.findall('{{SUM_(.*?)}}', text):
+				self.log('替换累加变量 {{SUM_%s}}=>%s' % (needSumVar, sumVar.get(needSumVar,0)))
+				text = text.replace("{{SUM_%s}}"%needSumVar, str(sumVar.get(needSumVar,0)), 1)
 			
 			return True, text
 		except Exception as e:
 			print(traceback.format_exc())
 			return False, e
 	
-	def get_step_params(self,paraminfo):
+	def get_step_params(self, paraminfo):
 		'''
 		获取内置变量STEP_PARAMS
 		'''
+		
 		def _next(cur):
 			if isinstance(cur, (dict,)):
 				i = 0
@@ -906,12 +932,12 @@ class RunPlan:
 								cur[k] = self.replaceVariable(v)[1]
 					else:
 						_next(v)
-					print(k,cur)
-
+					print(k, cur)
+			
 			elif isinstance(cur, (list,)):
 				itemindex = -1
 				for sb in cur:
-					itemindex  += 1
+					itemindex += 1
 					if isinstance(sb, (str,)):
 						find_var = len(re.findall('\{\{.*?\}\}', sb))
 						if find_var:
@@ -922,11 +948,12 @@ class RunPlan:
 								cur[itemindex] = self.replaceVariable(sb)[1]
 					else:
 						_next(sb)
+		
 		ps = paraminfo
 		try:
 			ps = eval(paraminfo)
 			if isinstance(ps, (dict,)):
-				logger.info('ps=>',ps)
+				logger.info('ps=>', ps)
 				_next(ps)
 				self.log('获取内置变量[字典模式]STEP_PARAMS=> %s ' % str(ps))
 				return ps
@@ -951,7 +978,6 @@ class RunPlan:
 				return dl
 			except:
 				return ('error', 'a=1&b=2模式获取内置变量STEP_PARAMS异常')
-			
 	
 	# 变量获取方式计算
 	def gainCompute(self, gain):
@@ -962,7 +988,7 @@ class RunPlan:
 				a = re.findall('(.*?)\((.*?)\)', gain)
 				funcName = a[0][0]
 				params = a[0][1]
-				return executeFunction(funcName,params,self.taskId)
+				return executeFunction(funcName, params, self.taskId)
 			
 			else:
 				op = Mysqloper()
@@ -984,13 +1010,13 @@ class RunPlan:
 		if len(functionsList) == 0: return True, str_
 		
 		for function in functionsList:
-			funcName,params = function
+			funcName, params = function
 			status, res = executeFunction(funcName, params, self.taskId)
-			self.log('计算函数表达式:<br/>%s(%s) <br/>结果:<br/>%s' % (funcName,params, res if res else '成功'))
+			self.log('计算函数表达式:<br/>%s(%s) <br/>结果:<br/>%s' % (funcName, params, res if res else '成功'))
 			resultlist.append((status, res))
 			
 			if status is 'success':
-				old = '$[%s(%s)]' %(funcName, function[1])
+				old = '$[%s(%s)]' % (funcName, function[1])
 				str_ = str_.replace(old, str(res))
 				logger.info('替换函数引用 %s\n =>\n %s ' % (old, str(res)))
 		
@@ -1003,31 +1029,29 @@ class RunPlan:
 			return False, alist[0]
 
 
-
-
-def executeFunction(funcName,params,taskid):
-	params = params.replace('\n','')
+def executeFunction(funcName, params, taskid):
+	params = params.replace('\n', '')
 	if "r'" not in params and 'r"' not in params:
 		params = params.replace("\\\"", '"')
-		
+	
 	if funcName.startswith('dbexecute'):
 		execStr = '%s("""%s""",taskid="%s")' % (funcName, params, taskid)
 	else:
 		if params:
 			execStr = '%s(%s,taskid="%s")' % (funcName, params, taskid)
 		else:
-			execStr = '%s(taskid="%s")' % (funcName,taskid)
-	result = ("fail","")
+			execStr = '%s(taskid="%s")' % (funcName, taskid)
+	result = ("fail", "")
 	try:
 		function = Function.objects.filter(name=funcName.strip())
 		if function:
 			func = function.first()
-			if func.kind=="内置":
-				Me2Log.info("执行内置：",execStr)
+			if func.kind == "内置":
+				Me2Log.info("执行内置：", execStr)
 				result = eval(execStr)
 				logger.info("调用内置函数表达式:%s 结果为:%s" % (execStr, result))
 			else:
-				logger.info("尝试调用用户定义函数:%s" %execStr)
+				logger.info("尝试调用用户定义函数:%s" % execStr)
 				f = __import__('manager.storage.private.Function.func_%s' % func.name, fromlist=True)
 				execStr = "f.%s" % execStr.replace('\n', '')
 				result = eval(execStr)
@@ -1035,10 +1059,10 @@ def executeFunction(funcName,params,taskid):
 				logger.info("调用用户定义表达式:%s 结果为:%s" % (execStr, result))
 		else:
 			result = ("fail", "未找到对应的函数")
-
+	
 	except:
 		logger.error(traceback.format_exc())
-		msg =  traceback.format_exc()
+		msg = traceback.format_exc()
 		return 'error', '函数执行错误:' + msg
 	
 	if isinstance(result, (tuple,)):
@@ -1048,9 +1072,8 @@ def executeFunction(funcName,params,taskid):
 		if result is False:
 			return 'fail', '[%s]返回结果[false]不符合预期' % funcName
 		else:
-			return 'success',"执行成功"
-	elif result is None or isinstance(result, (str,int,)):
+			return 'success', "执行成功"
+	elif result is None or isinstance(result, (str, int,)):
 		return 'success', result
 	else:
 		return 'error', '内置函数返回类型{None,bool,tuple}'
-	

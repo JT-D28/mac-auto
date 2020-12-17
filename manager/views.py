@@ -1084,12 +1084,10 @@ def editmailconfig(request):
 		to_receive = request.POST.get('to_receive') if request.POST.get('to_receive') is not None else ''
 		description = request.POST.get('description') if request.POST.get('description') is not None else ''
 		rich_text = request.POST.get('rich_text') if request.POST.get('rich_text') is not None else ''
-		color_scheme = request.POST.get('color_scheme') if request.POST.get('color_scheme') is not None else 'red'
 		dingdingtoken = request.POST.get('dingdingtoken') if request.POST.get('dingdingtoken') is not None else ''
 		if mail_config_id:
 			config = MailConfig.objects.get(id=mail_config_id)
 			config.to_receive = to_receive
-			config.color_scheme = color_scheme
 			config.description = description
 			config.dingdingtoken = dingdingtoken
 			config.rich_text = rich_text
@@ -1098,7 +1096,6 @@ def editmailconfig(request):
 		else:
 			config = MailConfig()
 			config.to_receive = to_receive
-			config.color_scheme = color_scheme
 			config.description = description
 			config.dingdingtoken = dingdingtoken
 			config.rich_text = rich_text

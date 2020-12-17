@@ -278,21 +278,10 @@ class Crontab(Model):
 class MailConfig(Model):
 	description = CharField(max_length=64, blank=True, null=True)
 	to_receive = CharField(max_length=125, blank=True, null=True)
-	cc_receive = CharField(max_length=125, blank=True, null=True)
 	rich_text = CharField(max_length=500, blank=True, null=True)
-	color_scheme = CharField(max_length=32, default='blue', null=True)
-	
-	sender_name = CharField(max_length=32, blank=True, null=True)
-	sender_nick = CharField(max_length=32, blank=True, null=True)
-	sender_pass = CharField(max_length=32, blank=True, null=True)
-	smtp_host = CharField(max_length=32, blank=True, null=True)
-	smtp_port = CharField(max_length=32, blank=True, null=True)
 	is_send_mail = CharField(max_length=125, default='close')
 	is_send_dingding = CharField(max_length=125, default='close')
-	
 	dingdingtoken = CharField(max_length=64, blank=True, null=True)
-	createtime = DateTimeField(auto_now_add=True, null=True)
-	updatetime = DateTimeField(auto_now=True, null=True)
 
 
 class Product(Model):

@@ -361,35 +361,35 @@ class MainSender:
 			if not to_receive:
 				return ''
 			rich_text = mail_config.rich_text if mail_config.rich_text else ''
-			rich_text_rp = _replace_property(taskid, rich_text)
-			if rich_text_rp[0] is 'success':
-				rich_text_rv = _replace_variable(user, rich_text_rp[1], taskid=taskid)
-				if rich_text_rv[0] is 'success':
-					rich_text = rich_text_rv[1]
-				else:
-					ret = 1
-					error = '变量替换异常,检查变量是否已定义'
-			else:
-				ret = 1
-				error = '属性替换异常 可用属性'
+			# rich_text_rp = _replace_property(taskid, rich_text)
+			# if rich_text_rp[0] is 'success':
+			# 	rich_text_rv = _replace_variable(user, rich_text_rp[1], taskid=taskid)
+			# 	if rich_text_rv[0] is 'success':
+			# 		rich_text = rich_text_rv[1]
+			# 	else:
+			# 		ret = 1
+			# 		error = '变量替换异常,检查变量是否已定义'
+			# else:
+			# 	ret = 1
+			# 	error = '属性替换异常 可用属性'
 
 			smtp_host = configs.EMAIL_HOST  # "smtp.qq.com"
 			smtp_port = configs.EMAIL_PORT  # 465
 			subject = ''
 			description = mail_config.description if mail_config.description else ''
-			description_rp = _replace_property(taskid, description)
-			if description_rp[0] is 'success':
-				description_rv = _replace_variable(user, description_rp[1], taskid=taskid)
-				if description_rv[0] is 'success':
-					subject = description_rv[1] + '————' + str(time.strftime("%m-%d %H:%M", time.localtime()))
-				else:
-					ret = 1
-					error = '变量替换异常,检查变量是否已定义'
-
-			else:
-				ret = 1
-				error = '属性替换异常 可用属性'
-
+			# description_rp = _replace_property(taskid, description)
+			# if description_rp[0] is 'success':
+			# 	description_rv = _replace_variable(user, description_rp[1], taskid=taskid)
+			# 	if description_rv[0] is 'success':
+			# 		subject = description_rv[1] + '————' + str(time.strftime("%m-%d %H:%M", time.localtime()))
+			# 	else:
+			# 		ret = 1
+			# 		error = '变量替换异常,检查变量是否已定义'
+			#
+			# else:
+			# 	ret = 1
+			# 	error = '属性替换异常 可用属性'
+			subject = description+"("+str(time.strftime("%m-%d %H:%M", time.localtime()))+")"
 			htmlcontent = cls.gethtmlcontent(taskid, rich_text)
 			msg = MIMEText(htmlcontent, 'html', 'utf-8')
 			msg['From'] = formataddr([sender_nick, sender_name])  # 括号里的对应发件人邮箱昵称、发件人邮箱账号

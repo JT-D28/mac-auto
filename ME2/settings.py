@@ -225,6 +225,8 @@ SAFE_URL = [
 	'/manager/getTree',
 	'/manager/recordBuildNodes',
 	'/manager/getVars',
-	'/RPC'
+	'/RPC',
+	'/homepage',
+	
 ]
 REGEX_URL = r'^{url}'  # url不作严格匹配  严格匹配 r'^{url}$'

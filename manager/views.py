@@ -898,18 +898,6 @@ def runtask(request):
 	return JsonResponse(simplejson(code=0, msg="你的任务开始运行", taskid=taskid), safe=False)
 
 
-@csrf_exempt
-def querytaskdetail(request):
-	detail = {}
-	taskid = request.GET.get('taskid')
-	detail = Mongo.taskreport().find_one({"taskid": taskid})
-	if request.POST.get('taskid'):
-		detail = Mongo.taskreport().find_one({"taskid": request.POST.get('taskid')}, {'_id': 0})
-		return JsonResponse({'data': json.dumps(detail)})
-	
-	return render(request, 'manager/taskdetail.html', locals())
-
-
 """
 
 函数相关

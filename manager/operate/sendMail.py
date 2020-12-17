@@ -56,7 +56,7 @@ def _save_builtin_property(taskid, username):
 		return
 	from manager.invoker import save_data, _tempinfo
 	base_url = settings.BASE_URL
-	url = "%s/manager/querytaskdetail/?taskid=%s" % (base_url, taskid)
+	url = "%s/homepage/querytaskdetail/?taskid=%s" % (base_url, taskid)
 	save_data(username, _tempinfo, 'TASK_ID', detail['taskid'])
 	save_data(username, _tempinfo, 'TASK_REPORT_URL', url)
 	save_data(username, _tempinfo, 'PLAN_ID', detail['planid'])
@@ -320,7 +320,7 @@ class MainSender:
 		bodyhtml += "<p class='attribute'><strong>测试结果</strong></p>"
 		bodyhtml += "<table><tr><th>用例数</th><th>成功数</th><th>失败数</th><th>成功率</th><th>平均时间(ms)</th><th>最小时间(ms)</th><th>最大时间(ms)</th><th>耗时</th></tr><tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr></table>" % (
 			data['total'], data['success'], data['fail'], data['success_rate'], data['average'], data['min'], data['max'],
-		str(round(data["totaltime"]/60))+' 分钟' if data["totaltime"]>100 else (data["totaltime"])+ ' 秒')
+		str(round(data["totaltime"]/60))+' 分钟' if data["totaltime"]>100 else str(data["totaltime"])+ ' 秒')
 		bodyhtml += "<strong>测试详情</strong>"
 
 		for case in data['cases']:
@@ -453,7 +453,7 @@ class MainSender:
 						        ">          失败数量：%s\n\n" % (res["fail"]) +
 						        ">          成功率：%s\n\n" % (res["success_rate"]) +
 						        "> ###### %s [详情](%s) \n" % (time.strftime('%m-%d %H:%M', time.localtime(time.time())),
-						                                     settings.BASE_URL + "/manager/querytaskdetail/?taskid=" + taskid)
+						                                     settings.BASE_URL + "/homepage/querytaskdetail/?taskid=" + taskid)
 					},
 					"at": {
 						"isAtAll": True

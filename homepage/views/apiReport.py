@@ -227,8 +227,7 @@ def get_task_data(request):
 				stepid = Order.objects.get(follow_id=id, kind='step_business', isdelete=0).main_id
 				tps = x['step_' + str(stepid)]
 				for tp in tps:
-					tpid = tp['id'].split("_")[1]
-					if str(tpid) == str(id):
+					if int(id) == tp['id']:
 						casesdata = [tp]
 						break
 			else:
@@ -354,3 +353,8 @@ def getPlanExportData(request):
 
 def timeFormat(timeStamp):
 	return time.strftime("%m-%d", time.localtime(timeStamp))
+
+def querytaskdetail(request):
+	taskid = request.POST.get('taskid')
+	detail = Mongo.taskreport().find_one({"taskid": taskid}, {'_id': 0})
+	return JsonResponse({'data': json.dumps(detail)})

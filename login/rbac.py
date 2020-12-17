@@ -37,14 +37,10 @@ class RbacMiddleware(MiddlewareMixin):
 				return None
 		if not request.session.get('is_login'):
 			return HttpResponseRedirect('/api/account/login/')
-		
-		print("1111",request_url,permission_url)
-		
+			
 		if request_url in request.session[settings.SESSION_MENU_KEY].get(settings.ALL_PERMISSION_KEY,[]):
-			print("2222", request_url, settings.ALL_PERMISSION_KEY)
 			flag = False
 			for url in permission_url:
-				print("2222", url, settings.ALL_PERMISSION_KEY)
 				url_pattern = settings.REGEX_URL.format(url=url)
 				if re.match(url_pattern, request_url):
 					flag = True

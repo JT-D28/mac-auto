@@ -85,6 +85,5 @@ urlpatterns = [
     path('recordBuildNodes',views.recordBuildNodes),
     path('getVars',views.getVars),
     path('editStepKind',views.editStepKind),
-    path('querytaskdetail/',views.querytaskdetail),
     path('queryVarSpace',views.queryVarSpace)
 ]

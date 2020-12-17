@@ -5,8 +5,8 @@ urlpatterns = [
 	path('queryPlanState/', views.queryPlanState),
 	path('runnodes/', views.runnodes),
 	path('getBusinessLog', views.getBusinessLog),
-	path('getnodes/', views.getnodes),
-	path('gettaskdata/', views.get_task_data),
+	path('getnodes', views.getnodes),
+	path('gettaskdata', views.get_task_data),
 	path('gettaskidplan/', views.gettaskidplan),
 	path('queryproduct/', views.queryproduct),
 	path('queryplan/', views.queryplan),
@@ -43,5 +43,7 @@ urlpatterns = [
 	path('queryApiTestReportByTaskId',views.queryApiTestReportByTaskId),
 	path('deleteTask',views.deleteTask),
 	path('queryFailBusiness',views.queryFailBusiness),
-	path('getPlanExportData',views.getPlanExportData)
+	path('getPlanExportData',views.getPlanExportData),
+	path('querytaskdetail', views.querytaskdetail),
+
 ]

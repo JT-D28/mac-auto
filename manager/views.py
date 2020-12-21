@@ -552,87 +552,6 @@ def editVariable(request):
 	return JsonResponse({"code":code,"msg":msg})
 
 
-@csrf_exempt
-def editmultivar(request):
-	# 绑定计划修改不考虑
-	datas = eval(request.POST.get('datas'))
-	code = 0
-	msg = '修改成功'
-	try:
-		for data in datas:
-			bindplans = Tag.objects.get(var=Variable.objects.get(id=data['id'])).planids
-			state = varRepeatCheck(data['key'], bindplans, data['id'])
-			if state != '':
-				msg = state
-				break
-			data['customize'] = data['customize'].replace(
-				"<span class='layui-badge' onclick=tagSpanClick(this) style='cursor:pointer;'>", '').replace('</span> ',
-			                                                                                                 ';')
-			var = Variable.objects.get(id=data['id'])
-			var.value = data['value']
-			var.description = data['description']
-			var.gain = data['gain']
-			var.key = data['key']
-			var.save()
-			tag = Tag.objects.get(var=var)
-			tag.customize = data['customize']
-			tag.save()
-	except:
-		logger.error(traceback.format_exc())
-		msg = traceback.format_exc()
-		code = 1
-	finally:
-		return JsonResponse(simplejson(code=code, msg=msg), safe=False)
-
-
-def varRepeatCheck(key, bindplans, editid=0):
-	# 校验重复：同一个key只能最多只能有一个全局变量：isglobal=1;可以有多个绑定了计划的变量，其中绑定的计划不能有重复项
-	logger.info(key, bindplans)
-	bindplans = json.loads(bindplans)
-	state = '变量重复校验出错！'
-	try:
-		if editid != 0:
-			vars = Variable.objects.filter(key=key).exclude(id=editid)
-		else:
-			vars = Variable.objects.filter(key=key)
-		logger.info(vars)
-		if vars:
-			# 如果没有传入绑定的计划id，先判断是否有全局变量
-			if not bindplans:
-				for var in vars:
-					try:
-						tag = Tag.objects.get(var=var, isglobal=1)
-						if tag:
-							state = "已经存在相同键名的全局变量！"
-							break
-					except:
-						state = ''
-			else:
-				str = ''
-				for var in vars:
-					try:
-						tag = Tag.objects.get(var=var, isglobal=0)
-						if tag:
-							planids = json.loads(tag.planids)
-							for k, v in planids.items():
-								if k in bindplans and bindplans[k] == v:
-									str += k + '<br>'
-					except:
-						tag = Tag.objects.get(var=var, isglobal=1)
-						if tag:
-							logger.info('没有绑定计划的变量,有全局变量;')
-							state = ''
-				state = "变量%s已经绑定过计划：<br>%s" % (key, str) if str != '' else ''
-		
-		else:
-			state = ''
-	except:
-		logger.info(traceback.format_exc())
-		state = traceback.format_exc()
-	finally:
-		logger.info(state)
-		return state
-
 
 @csrf_exempt
 def addVariable(request):
@@ -662,68 +581,6 @@ def addVariable(request):
 	return JsonResponse({'code': code, 'msg': msg})
 
 
-@csrf_exempt
-def copyVar(request):
-	code = 0
-	msg = ''
-	varids = request.POST.getlist('varids[]')
-	if not varids:
-		varids = request.POST.get('varids', []).split(',')
-	bindplans = request.POST.get('bindplans')
-	action = request.POST.get('action')
-	tags = request.POST.get('tags')
-	logger.info(varids, bindplans)
-	
-	repvarkey = []
-	for varid in varids:
-		key = Variable.objects.get(id=varid).key
-		if key not in repvarkey:
-			repvarkey.append(key)
-		else:
-			return JsonResponse({'code': 1, 'msg': '你选择了多个相同键名的变量'})
-	
-	if action == '1':
-		for varid in varids:
-			key = Variable.objects.get(id=varid).key
-			state = varRepeatCheck(key, bindplans)
-			if state != '':
-				return JsonResponse({'code': 1, 'msg': state})
-			try:
-				var = Variable.objects.get(id=varid)
-				copyvar = Variable()
-				tag = Tag()
-				copyvar.description = var.description
-				copyvar.key = var.key
-				copyvar.gain = var.gain
-				copyvar.is_cache = var.is_cache
-				copyvar.value = var.value
-				copyvar.author_id = User.objects.get(name=request.session.get('username', None)).id
-				copyvar.save()
-				tag.var = copyvar
-				tag.isglobal = 1 if bindplans == '{}' else 0
-				tag.customize = Tag.objects.get(var=var).customize if tags == '' else tags
-				tag.planids = bindplans
-				tag.save()
-			except:
-				msg = traceback.format_exc()
-				logger.info(traceback.format_exc())
-	elif action == '0':
-		for varid in varids:
-			key = Variable.objects.get(id=varid).key
-			state = varRepeatCheck(key, bindplans, varid)
-			if state != '':
-				return JsonResponse({'code': 1, 'msg': state})
-			try:
-				tag = Tag.objects.get(var=Variable.objects.get(id=varid))
-				tag.planids = bindplans
-				if tags != '':
-					tag.customize = tags
-				tag.save()
-			except:
-				msg = traceback.format_exc()
-				logger.info(traceback.format_exc())
-	logger.info(msg)
-	return JsonResponse({'code': code, 'msg': msg})
 
 
 """
@@ -1636,30 +1493,6 @@ def queryDbScheme(request):
 	for row in rows:
 		data.append(row)
 	return JsonResponse({'code': 0, 'data': data})
-
-
-@csrf_exempt
-def queryDbSchemebyVar(request):
-	code = 0
-	msg = ''
-	dbs = list((DBCon.objects.values('scheme').filter(description=request.POST.get('db'))))
-	try:
-		planbinds = json.loads(
-			Tag.objects.values('planids').get(var=Variable.objects.get(id=request.POST.get('id'))).get('planids'))
-		plans = []
-		for i in planbinds:
-			plans.append({'label': i, 'value': '"%s":%s' % (i, json.dumps(planbinds[i]).replace(' ', ''))})
-		if not plans:
-			plans.append({'label': '全局', 'value': '{}'})
-	except:
-		print(traceback.format_exc())
-		code = 1
-		msg = '这个变量可能有些问题'
-		planbinds = {}
-	if len(dbs) == 0:
-		code = 1
-		msg = '@的库名没有在任何方案下找到'
-	return JsonResponse({'code': code, 'msg': msg, 'data': dbs, 'plans': plans})
 
 
 '''

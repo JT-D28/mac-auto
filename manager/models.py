@@ -15,7 +15,7 @@ class Function(Model):
 	def __str__(self):
 		return self.name
 
-
+# 不用
 class Tag(Model):
 	planids = CharField(max_length=128, null=True)
 	customize = TextField(null=True)
@@ -53,12 +53,6 @@ class Template(Model):
 '''
 业务数据定义
 '''
-
-
-class Param(Model):
-	key = CharField(max_length=32)
-	value = TextField(blank=True)
-
 
 class BusinessData(Model):
 	count = IntegerField(default=1, null=True)

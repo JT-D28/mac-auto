@@ -19,7 +19,7 @@ from manager.db import Mysqloper
 from manager.invoker import _get_final_run_node_id, beforePlanCases, get_node_upper_case, _replace_property, \
 	XMLParser, JSONParser, _get_step_params, _legal, \
 	_eval_expression
-from manager.models import Plan, DBCon, Order, Case, Step, BusinessData, Function, ResultDetail, User, Variable, Tag, \
+from manager.models import Plan, DBCon, Order, Case, Step, BusinessData, Function, ResultDetail, User, Variable, \
 	Varspace
 from manager.operate.apiInfo import dump_request
 from manager.operate.generateReport import dealruninfo

@@ -120,7 +120,7 @@ def queryaccount(request):
 		users = User.objects.filter(~Q(name__in=['定时任务', 'system']))
 		total = users.count()
 	# print(total)
-	usersList = users[start:end] if end < total else users[start:total]
+	usersList = users[start:end+1] if end < total else users[start:total+1]
 	userSerializer = serializers.serialize('json', usersList)
 	usersList = []
 	for user in json.loads(userSerializer):

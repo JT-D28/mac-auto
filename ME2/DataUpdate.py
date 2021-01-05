@@ -5,11 +5,18 @@ from django.db import transaction
 from manager.models import Variable, Tag, Product, Plan, Varspace, Order
 
 
+# select * from (SELECT var_id,count(*) as t FROM `manager_tag` GROUP BY var_id)b  where t>1
 def varUpdate():
-	Varspace(name="全局").save()
+	if not Varspace.objects.filter(name="全局").first():
+		Varspace(name="全局").save()
 	
 	for var in Variable.objects.all():
-		tag = Tag.objects.get(var_id=var.id)
+		print(var.id)
+		judgetag = Tag.objects.filter(var_id=var.id)
+		if not judgetag.first():
+			var.delete()
+			continue
+		tag = judgetag.first()
 		planids = eval(tag.planids)
 		tempPlanids = eval(tag.planids)
 		for k, v in planids.items():
@@ -45,7 +52,11 @@ def varUpdate():
 	gsid = Varspace.objects.get(name="全局").id
 	
 	for var in Variable.objects.all():
-		tag = Tag.objects.get(var_id=var.id)
+		judgetag = Tag.objects.filter(var_id=var.id)
+		if not judgetag.first():
+			var.delete()
+			continue
+		tag = judgetag.first()
 		if tag.customize != "Tag object (None)":
 			list = []
 			for i in tag.customize.split(";"):
@@ -92,6 +103,9 @@ def spaceUpdate():
 	vs = Varspace.objects.exclude(name="全局")
 	
 	for v in vs:
+		if Variable.objects.filter(space_id=v.id).count() == 0:
+			v.delete()
+			continue
 		planname = v.name.split("_")[0]
 		productname = v.name.replace(planname+"_","")
 		print(planname,productname)

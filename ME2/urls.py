@@ -9,6 +9,9 @@ from ME2.DataUpdate import varUpdate, spaceUpdate
 from login import views
 from rpc4django.views import serve_rpc_request
 from xmlrpc.client import ServerProxy
+
+from manager.operate.redisUtils import ConsulClient
+
 urlpatterns = [
 	path('account/', include('login.urls')),
 	path('manager/', include('manager.urls')),
@@ -29,9 +32,8 @@ try:
 except:
 	pass
 
-c = consul.Consul(host=configs.Consul_ADDR,port=int(configs.Consul_PORT),scheme='http')
-c.kv.put(configs.ID,json.dumps(configs.WorkerInfo,ensure_ascii=False))
+ConsulClient().kv.put(configs.ID,json.dumps(configs.WorkerInfo,ensure_ascii=False))
 
 # varUpdate()
-#
+
 # spaceUpdate()

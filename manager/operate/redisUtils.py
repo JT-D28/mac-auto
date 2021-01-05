@@ -1,3 +1,4 @@
+import consul
 import redis
 from ME2 import configs
 
@@ -7,3 +8,5 @@ def RedisUtils():
     con = redis.Redis(connection_pool=pool)
     return con
 
+def ConsulClient():
+    return consul.Consul(host=configs.Consul_ADDR,port=int(configs.Consul_PORT),scheme='http')

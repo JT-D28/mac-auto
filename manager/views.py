@@ -879,7 +879,7 @@ def queryfunclist(request):
 		
 		logger.info('查函数下拉信息=>', data)
 		
-		return JsonResponse({"code":"0", "msg":"操作成功", "data":data})
+		return JsonResponse({"code":0, "msg":"操作成功", "data":data})
 	
 	except:
 		logger.info(traceback.format_exc())

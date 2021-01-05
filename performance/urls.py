@@ -14,4 +14,5 @@ urlpatterns = [
 	path('queryTasks', views.queryTasks),
 	path('nodeCopy', views.nodeCopy),
 	path('nodeMove', views.nodeMove),
+	path('queryTestResources',views.queryTestResources)
 ]

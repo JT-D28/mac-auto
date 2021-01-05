@@ -61,8 +61,8 @@ class RunPlan:
 	
 	def log(self, msg):
 		try:
-			what = "%s        %s<br>" % (
-				time.strftime("[%m-%d %H:%M:%S]", time.localtime()), "".join([str(x) for x in msg if x]))
+			msg = msg[0:5000]+"(省略)" if len(msg)>5000 else msg
+			what = "%s        %s<br>" % (time.strftime("[%m-%d %H:%M:%S]", time.localtime()),msg)
 			Mongo.tasklog(self.taskId).insert_one({'time': time.time(), 'info': what})
 		except Exception as e:
 			logger.error("运行日志记录异常")
@@ -148,7 +148,7 @@ class RunPlan:
 			setRunningInfo(self.planId, self.taskId, '0')
 			processSendReport(self.taskId, self.plan.mail_config_id, self.user.name, spendTime)
 	
-	def runCase(self, case):
+	def runCase(self, case,extraRun= False):
 		caseSuccess = True
 		groupSkip = []
 		# 获取该用例下最终执行的节点
@@ -161,7 +161,7 @@ class RunPlan:
 			case.save()
 		caseCount = 0 if case.count in [0, '0', ''] else int(case.count)
 		
-		if subFlag and caseCount != 0:
+		if subFlag and caseCount != 0 and not extraRun:
 			self.log("开始执行用例[<span id='case_%s' style='color:#FF3399'>%s</span>]" % (case.id, case.description))
 		# 获取用例的子节点（有用例和步骤两种情况，需要按照正常顺序）
 		subList = ordered(list(Order.objects.filter(Q(kind='case_step') | Q(kind='case_case'), main_id=case.id)))
@@ -172,7 +172,7 @@ class RunPlan:
 				try:
 					if subNode.kind == 'case_case':
 						subCase = Case.objects.get(id=subNode.follow_id)
-						if not self.runCase(subCase):
+						if not self.runCase(subCase,extraRun):
 							caseSuccess = False
 					elif subNode.kind == 'case_step':
 						stepId = subNode.follow_id
@@ -183,19 +183,19 @@ class RunPlan:
 						stepCount = 0 if step.count in [0, '0', '', None] else int(step.count)
 						for i in range(stepCount):
 							self.setDbUse(case.db_id, 'step')
-							if not self.runStep(step, case.id, groupSkip):
+							if not self.runStep(step, case.id, groupSkip,extraRun):
 								caseSuccess = False
 				except:
 					print(traceback.format_exc())
 					continue
-		if subFlag and caseCount != 0:
+		if subFlag and caseCount != 0 and not extraRun:
 			color, succss = ('green', 'success') if caseSuccess else ('red', 'fail')
 			self.log("结束用例[<span style='color:#FF3399'>%s</span>] 结果<span class='layui-bg-%s'>%s</span>" % (
 				case.description, color, succss))
 		
 		return caseSuccess
 	
-	def runStep(self, step, caseId, groupSkip):
+	def runStep(self, step, caseId, groupSkip,extraRun=False):
 		case = Case.objects.get(id=caseId)
 		stepSuccessFlag = True
 		num = 0
@@ -216,7 +216,7 @@ class RunPlan:
 				continue
 			if groupId not in groupSkip:
 				for i in range(0, pointCount):
-					result, error = self.process_process(point, step.id)
+					result, error = self.process_process(point, step.id,extraRun)
 					if result != 'success' and not result.startswith('db_'):
 						stepSuccessFlag = False
 						num += 1
@@ -249,10 +249,13 @@ class RunPlan:
 				businessinfo = "<span style='color:#FF3399' id='business_%s'>%s</span>" % (
 					point.id, point.businessname)
 				error = '   原因=>%s' % error if 'success' not in result else ''
-				self.log("步骤[%s]=>测试点[%s]=>执行结果%s   %s" % (stepinfo, businessinfo, result, error))
+				if not extraRun:
+					self.log("步骤[%s]=>测试点[%s]=>执行结果%s   %s" % (stepinfo, businessinfo, result, error))
+				else:
+					self.log("附加的测试点[%s]=>执行%s   %s" % (point.businessname, result, error))
 		return stepSuccessFlag if num > 0 else 'omit'
 	
-	def process_process(self, point, stepId):
+	def process_process(self, point, stepId,extraRun=False):
 		# 预处理测试点数据
 		# 1. 超时时间
 		timeout = 30.0 if not point.timeout else float(point.timeout)
@@ -269,8 +272,10 @@ class RunPlan:
 		self.setDbUse(step.db_id, 'business')
 		
 		self.log("-" * 50)
-		self.log(
-			"开始执行步骤[<span style='color:#FF3399' id='step_%s'>%s</span>] 测试点[<span style='color:#FF3399' id='business_%s'>%s</span>]" % (
+		if extraRun:
+			self.log("执行附加的测试点[%s]"%(point.businessname))
+		else:
+			self.log("开始执行步骤[<span style='color:#FF3399' id='step_%s'>%s</span>] 测试点[<span style='color:#FF3399' id='business_%s'>%s</span>]" % (
 				step.id, step.description, point.id, point.businessname))
 		
 		# 进行前置操作
@@ -477,6 +482,16 @@ class RunPlan:
 					params = re.findall('{}\((.*)\)'.format(funcName), s)[0]
 				except:
 					return 'error', '解析%s[%s]失败[%s]' % (kind, s, traceback.format_exc())
+				
+				if funcName=="runcase":
+					case = Case.objects.get(id=params)
+					self.log("执行runcase 用例名 "+case.description)
+					points = _get_final_run_node_id('case_%s' % case.id)
+					for p in points:
+						self.finalNode.add(p)
+					self.runCase(case)
+					self.log("----------runcase执行完成----------")
+					continue
 				
 				status, res = executeFunction(funcName, params, self.taskId)
 				if status == 'success':
@@ -815,14 +830,8 @@ class RunPlan:
 				if varKey.startswith('CACHE_'):
 					varKey = varKey.replace("CACHE_", "")
 					needCacheVar = True
-				if varKey.strip() == 'STEP_PARAMS':
-					dictparams = self.get_step_params(text)
-					logger.info('==获取内置变量STEP_PARAMS=>\n', dictparams)
-					logger.info('==STEP_PARAMS替换前=>\n', text)
-					text = text.replace('{{%s}}' % varKey, str(dictparams))
-					logger.info('==STEP_PARAMS替换后=>\n', text)
-					continue
-				if varKey.startswith("SUM_"):
+				
+				if varKey.startswith("SUM_") or varKey.strip() == 'STEP_PARAMS':
 					continue
 				
 				elif varKey.strip() == 'RESPONSE_TEXT':
@@ -864,7 +873,7 @@ class RunPlan:
 							sumVar[varKey] += Decimal(value)
 						except:
 							pass
-					
+				
 				elif len(gain) > 0 and len(value) == 0:
 					print("计算 gain", gain)
 					
@@ -897,10 +906,17 @@ class RunPlan:
 					text = text.replace('{{%s}}' % oldvarKey, str(gainValue), 1)
 				elif len(gain) == 0 and len(value) == 0:
 					return False, '变量【%s】未设定获取方式或者值，请修改' % varKey
-				
+			
 			for needSumVar in re.findall('{{SUM_(.*?)}}', text):
-				self.log('替换累加变量 {{SUM_%s}}=>%s' % (needSumVar, sumVar.get(needSumVar,0)))
-				text = text.replace("{{SUM_%s}}"%needSumVar, str(sumVar.get(needSumVar,0)), 1)
+				self.log('替换累加变量 {{SUM_%s}}=>%s' % (needSumVar, sumVar.get(needSumVar, 0)))
+				text = text.replace("{{SUM_%s}}" % needSumVar, str(sumVar.get(needSumVar, 0)), 1)
+			
+			for v in re.findall('{{(.*?)}}', text):
+				if v.strip() == 'STEP_PARAMS':
+					logger.info('==获取内置变量STEP_PARAMS=>')
+					dictparams = self.get_step_params(text)
+					text = text.replace('{{STEP_PARAMS}}', str(dictparams))
+					logger.info('==STEP_PARAMS替换后=>\n', text)
 			
 			return True, text
 		except Exception as e:
@@ -956,7 +972,8 @@ class RunPlan:
 				logger.info('ps=>', ps)
 				_next(ps)
 				self.log('获取内置变量[字典模式]STEP_PARAMS=> %s ' % str(ps))
-				return ps
+				import json
+				return json.dumps(ps,ensure_ascii=False)
 		except:
 			try:
 				dl = dict()
@@ -977,6 +994,7 @@ class RunPlan:
 				self.log('获取内置变量[a=1&b=2模式]STEP_PARAMS=> %s ' % str(dl))
 				return dl
 			except:
+				self.log(traceback.format_exc())
 				return ('error', 'a=1&b=2模式获取内置变量STEP_PARAMS异常')
 	
 	# 变量获取方式计算
@@ -1056,7 +1074,7 @@ def executeFunction(funcName, params, taskid):
 				execStr = "f.%s" % execStr.replace('\n', '')
 				result = eval(execStr)
 				del sys.modules['manager.storage.private.Function.func_%s' % func.name]
-				logger.info("调用用户定义表达式:%s 结果为:%s" % (execStr, result))
+				# logger.info("调用用户定义表达式 结果为:%s" % result)
 		else:
 			result = ("fail", "未找到对应的函数")
 	

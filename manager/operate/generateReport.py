@@ -142,14 +142,21 @@ async def dealDeBuginfo(taskid):
 	               ''.join(list))
 	bmatchs = re.findall(r"开始执行步骤.*?步骤.*?执行结果.*?</span>.*?<br>", temp2, flags=re.S)
 	for b in bmatchs:
-		await insertBusinessInfo(b, taskid)
-	for i in list:
-		failbmatch = re.findall(
-			r"步骤\[<span style='color:#FF3399' id='step_.*?</span>]=>测试点\[<span style='color:#FF3399' id='business_.*?</span>]=>执行结果<span id=.*? class='layui-bg-orange'>skip</span>      原因=>skip<br>",
-			i)
-		if failbmatch:
-			b = failbmatch[0]
+		try:
 			await insertBusinessInfo(b, taskid)
+		except:
+			pass
+	for i in list:
+		try:
+			failbmatch = re.findall(
+				r"步骤\[<span style='color:#FF3399' id='step_.*?</span>]=>测试点\[<span style='color:#FF3399' id='business_.*?</span>]=>执行结果<span id=.*? class='layui-bg-orange'>skip</span>      原因=>skip<br>",
+				i)
+			if failbmatch:
+				b = failbmatch[0]
+				await insertBusinessInfo(b, taskid)
+		except:
+			pass
+
 
 
 async def insertBusinessInfo(str, taskid):

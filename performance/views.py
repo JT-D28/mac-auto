@@ -3,6 +3,7 @@ import threading
 import time
 import traceback
 
+import consul
 import requests
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
@@ -16,7 +17,7 @@ from ME2 import configs
 from ME2.configs import Fabio_ADDR
 from manager.context import Me2Log
 from manager.operate.mongoUtil import Mongo
-from manager.operate.redisUtils import RedisUtils
+from manager.operate.redisUtils import RedisUtils, ConsulClient
 from performance.models import *
 
 iconMap = {
@@ -499,3 +500,38 @@ def generateReport1(allData, interval, kind):
 		list.extend(value)
 		source.append(list)
 	return {"source": source, "legend": legend}
+
+
+def queryTestResources(request):
+	(index, services_tags) = ConsulClient().catalog.services(index=1)
+	services_names = services_tags.keys()
+	# service_exclude = ["consul","fabio"]
+	services_names = [i for i in services_names if i.startswith("MEE-")]
+	ip = []
+	for i in services_names:
+		ip.append(i.split("-")[1])
+	return JsonResponse({"code": 0, "data": ip})
+
+def get_other_instance_result(service_name, prefix_url):
+    # 调用consul api
+    consul_service = consulClient.catalog.service(service_name)
+    print(consul_service)
+    consul_service_instances = []
+    # 获取实例的真实ip
+    if len(consul_service[1]) > 0:
+        instance_address_infos = consul_service[1]
+        for instance_address_info in instance_address_infos:
+            consul_service_instances.append(
+                "http://" + instance_address_info["ServiceTaggedAddresses"]["lan_ipv4"]["Address"] + ":" +
+                str(instance_address_info["ServiceTaggedAddresses"]["lan_ipv4"]["Port"]) + "/")
+    else:
+        return "no instance"
+    # 随机返回一个可用实例
+    instance_url = choice(consul_service_instances)
+    print(instance_url)
+    try:
+        # 发起请求
+        result = requests.get(instance_url + prefix_url).text
+    except Exception as e:
+        result = "ERROR:" + str(e)
+    return result
